@@ -1,0 +1,549 @@
+/* ============================================ */
+/* BODY LOCK — prevents any access until auth */
+/* ============================================ */
+body.admin-locked {
+        overflow: hidden;
+}
+
+body.admin-unlocked {
+        overflow: auto;
+}
+
+/* ============================================ */
+/* AUTH OVERLAY — full screen, unbypassable */
+/* ============================================ */
+.auth-overlay {
+        position: fixed;
+            top: 0;
+                left: 0;
+                    width: 100%;
+                        height: 100%;
+                            background: linear-gradient(135deg, #1a1a2e, #16213e);
+                                z-index: 99999;
+                                    display: flex;
+                                        justify-content: center;
+                                            align-items: center;
+                                                padding: 20px;
+}
+
+
+/* ============================================ */
+/* EKOYINI ADMIN DASHBOARD */
+/* ============================================ */
+
+* {
+        margin: 0;
+            padding: 0;
+                box-sizing: border-box;
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+body {
+        background: #f5f5f5;
+            padding-bottom: 30px;
+}
+
+/* HEADER */
+.admin-header {
+        background: black;
+            color: white;
+                padding: 20px;
+                    text-align: center;
+                        position: sticky;
+                            top: 0;
+                                z-index: 100;
+}
+
+.admin-header h1 {
+        font-size: 22px;
+            margin-bottom: 15px;
+}
+
+.header-stats {
+        display: flex;
+            justify-content: center;
+                gap: 15px;
+}
+
+.stat-box {
+        background: rgba(255,255,255,0.15);
+            border-radius: 10px;
+                padding: 10px 15px;
+                    text-align: center;
+                        min-width: 70px;
+}
+
+.stat-number {
+        display: block;
+            font-size: 24px;
+                font-weight: bold;
+}
+
+.stat-label {
+        display: block;
+            font-size: 11px;
+                color: #ccc;
+}
+
+/* TABS */
+.tabs {
+        display: flex;
+            overflow-x: auto;
+                background: white;
+                    padding: 10px;
+                        gap: 5px;
+                            border-bottom: 1px solid #eee;
+                                position: sticky;
+                                    top: 120px;
+                                        z-index: 99;
+}
+
+.tab {
+        white-space: nowrap;
+            padding: 8px 16px;
+                border: none;
+                    background: #eee;
+                        border-radius: 20px;
+                            font-size: 13px;
+                                cursor: pointer;
+}
+
+.tab.active {
+        background: black;
+            color: white;
+}
+
+/* ORDER CARDS */
+#ordersList {
+        padding: 15px;
+}
+
+.order-card {
+        background: white;
+            border-radius: 12px;
+                padding: 15px;
+                    margin-bottom: 12px;
+                        box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+
+.order-header {
+        display: flex;
+            justify-content: space-between;
+                align-items: center;
+                    margin-bottom: 10px;
+}
+
+.order-code {
+        font-weight: bold;
+            font-size: 16px;
+                font-family: monospace;
+                    letter-spacing: 1px;
+}
+
+.order-status {
+        padding: 4px 12px;
+            border-radius: 15px;
+                font-size: 12px;
+                    font-weight: bold;
+}
+
+.status-payment_pending {
+        background: #fff3cd;
+            color: #856404;
+}
+
+.status-pending {
+        background: #cce5ff;
+            color: #004085;
+}
+
+.status-dispatched {
+        background: #d4edda;
+            color: #155724;
+}
+
+.status-delivered {
+        background: #e2e3e5;
+            color: #383d41;
+}
+
+.order-details {
+        font-size: 14px;
+            margin-bottom: 10px;
+}
+
+.order-details p {
+        margin: 4px 0;
+}
+
+.order-items {
+        background: #f9f9f9;
+            border-radius: 8px;
+                padding: 10px;
+                    margin: 10px 0;
+                        font-size: 13px;
+}
+
+.order-items .item-row {
+        display: flex;
+            justify-content: space-between;
+                padding: 3px 0;
+}
+
+.order-items .total-row {
+        display: flex;
+            justify-content: space-between;
+                padding-top: 8px;
+                    margin-top: 5px;
+                        border-top: 2px solid #000;
+                            font-weight: bold;
+                                font-size: 15px;
+}
+
+.assigned-info {
+        background: #e8f5e9;
+            border-radius: 8px;
+                padding: 10px;
+                    margin: 10px 0;
+                        font-size: 13px;
+}
+
+.assigned-info p {
+        margin: 3px 0;
+}
+
+.order-actions {
+        display: flex;
+            gap: 8px;
+                margin-top: 10px;
+}
+
+.btn {
+        flex: 1;
+            padding: 10px;
+                border: none;
+                    border-radius: 8px;
+                        font-size: 13px;
+                            cursor: pointer;
+                                font-weight: bold;
+}
+
+.btn-assign {
+        background: black;
+            color: white;
+}
+
+.btn-dispatch {
+        background: #25D366;
+            color: white;
+}
+
+.btn-deliver {
+        background: #4CAF50;
+            color: white;
+}
+
+.btn-delete {
+        background: #ff4444;
+            color: white;
+}
+
+.no-orders {
+        text-align: center;
+            padding: 40px;
+                color: #999;
+                    font-size: 16px;
+}
+
+/* ASSIGN MODAL */
+.assign-modal-content {
+        width: 90%;
+            max-width: 400px;
+}
+
+.assign-modal-content h2 {
+        margin-bottom: 10px;
+}
+
+.assign-section {
+        margin: 15px 0;
+}
+
+.assign-section h3 {
+        font-size: 14px;
+            margin-bottom: 8px;
+                color: #666;
+}
+
+.assign-section select,
+.assign-section input {
+        width: 100%;
+            padding: 12px;
+                border: 1px solid #ddd;
+                    border-radius: 8px;
+                        font-size: 14px;
+                            margin-bottom: 8px;
+}
+
+.assign-actions {
+        display: flex;
+            flex-direction: column;
+                gap: 8px;
+                    margin-top: 15px;
+}
+
+.dispatch-btn {
+        background: #25D366;
+            color: white;
+                border: none;
+                    padding: 14px;
+                        border-radius: 8px;
+                            font-size: 15px;
+                                cursor: pointer;
+                                    font-weight: bold;
+}
+
+/* MODAL */
+.modal {
+        display: flex;
+            position: fixed;
+                z-index: 1000;
+                    left: 0; top: 0;
+                        width: 100%; height: 100%;
+                            background: rgba(0,0,0,0.8);
+                                justify-content: center;
+                                    align-items: center;
+}
+
+.modal-content {
+        background: white;
+            padding: 25px;
+                border-radius: 12px;
+                    width: 85%;
+                        max-width: 350px;
+}
+
+.secondary-btn {
+        background: #eee;
+            color: #333;
+                border: none;
+                    padding: 12px;
+                        border-radius: 8px;
+                            font-size: 14px;
+                                cursor: pointer;
+                                    width: 100%;
+}
+
+/* ============================================ */
+/* PIN SCREEN */
+/* ============================================ */
+.pin-screen {
+        display: flex;
+            justify-content: center;
+                align-items: center;
+                    min-height: 100vh;
+                        background: linear-gradient(135deg, #1a1a2e, #16213e);
+                            padding: 20px;
+}
+
+.pin-card {
+        background: white;
+            border-radius: 20px;
+                padding: 30px;
+                    text-align: center;
+                        width: 100%;
+                            max-width: 320px;
+                                box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+}
+
+.pin-logo {
+        font-size: 50px;
+            margin-bottom: 15px;
+}
+
+.pin-card h2 {
+        font-size: 20px;
+            margin-bottom: 5px;
+                color: #1a1a2e;
+}
+
+.pin-card p {
+        font-size: 13px;
+            color: #666;
+                margin-bottom: 20px;
+}
+
+.pin-dots {
+        display: flex;
+            justify-content: center;
+                gap: 15px;
+                    margin-bottom: 25px;
+}
+
+.pin-dots .dot {
+        width: 14px;
+            height: 14px;
+                border-radius: 50%;
+                    border: 2px solid #ddd;
+                        transition: all 0.2s;
+}
+
+.pin-dots .dot.filled {
+        background: #1a1a2e;
+            border-color: #1a1a2e;
+}
+
+.pin-keypad {
+        display: grid;
+            grid-template-columns: repeat(3, 1fr);
+                gap: 10px;
+                    max-width: 250px;
+                        margin: 0 auto;
+}
+
+.pin-keypad button {
+        padding: 16px;
+            font-size: 20px;
+                font-weight: 600;
+                    border: 1px solid #e0e0e0;
+                        background: #f8f9fa;
+                            border-radius: 12px;
+                                cursor: pointer;
+}
+
+/* ============================================ */
+/* SHAKE ANIMATION */
+/* ============================================ */
+.shake {
+        animation: shake 0.5s ease;
+}
+
+@keyframes shake {
+        0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-10px); }
+                40% { transform: translateX(10px); }
+                    60% { transform: translateX(-6px); }
+                        80% { transform: translateX(6px); }
+}
+
+/* ============================================ */
+/* OTP INPUTS */
+/* ============================================ */
+.otp-inputs {
+        display: flex;
+            justify-content: center;
+                gap: 8px;
+                    margin: 20px 0;
+}
+
+.otp-box {
+        width: 42px;
+            height: 50px;
+                border: 2px solid #ddd;
+                    border-radius: 10px;
+                        text-align: center;
+                            font-size: 22px;
+                                font-weight: 700;
+                                    outline: none;
+                                        transition: border-color 0.2s;
+}
+
+.otp-box:focus {
+        border-color: #1a1a2e;
+            box-shadow: 0 0 0 3px rgba(26, 26, 46, 0.1);
+}
+
+.otp-box:not(:placeholder-shown) {
+        border-color: #1a1a2e;
+            background: #f8f9fa;
+}
+
+.resend-btn {
+        width: 100%;
+            padding: 12px;
+                background: #f0f0f0;
+                    border: none;
+                        border-radius: 10px;
+                            font-size: 14px;
+                                cursor: pointer;
+                                    margin-top: 10px;
+                                        color: #666;
+}
+
+.resend-btn:not(:disabled) {
+        background: #1a1a2e;
+            color: white;
+                cursor: pointer;
+}
+
+.resend-btn:disabled {
+        opacity: 0.6;
+            cursor: not-allowed;
+}
+
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}

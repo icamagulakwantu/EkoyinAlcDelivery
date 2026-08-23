@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Ekoyini — Order Confirmed</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .confirmation-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      text-align: center;
+    }
+    .confirmation-icon { font-size: 64px; margin-bottom: 20px; }
+    .confirmation-container h1 {
+      font-family: var(--font-display);
+      font-size: 28px;
+      color: var(--white);
+      margin-bottom: 8px;
+    }
+    .confirmation-container p {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+    .order-code-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      padding: 20px;
+      margin-bottom: 24px;
+      width: 100%;
+    }
+    .order-code-label {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+    .order-code {
+      font-family: monospace;
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--green-light);
+      letter-spacing: 2px;
+    }
+    .copy-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 11px;
+      margin-top: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .copy-btn:hover { border-color: var(--green-mid); color: var(--green-light); }
+    .next-steps {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      padding: 16px;
+      margin-bottom: 24px;
+      text-align: left;
+    }
+    .next-steps h3 {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 12px;
+    }
+    .step {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 12px;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    .step-num {
+      width: 24px;
+      height: 24px;
+      background: var(--green);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .step-text { color: var(--muted); }
+    .action-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
+    }
+    .action-btn {
+      padding: 12px;
+      border-radius: var(--r-sm);
+      border: none;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .action-btn.primary { background: var(--green); color: #fff; }
+    .action-btn.primary:hover { background: var(--green-mid); }
+    .action-btn.secondary { background: var(--card); color: var(--green-light); border: 1px solid var(--border); }
+    .action-btn.secondary:hover { border-color: var(--green-mid); }
+  </style>
+</head>
+<body>
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="logo">
+      <img src="logo.png" alt="Ekoyini">
+      <div class="logo-text">Eko<span style="color:var(--green-light)">yini</span></div>
+    </div>
+    <div style="width: 38px;"></div>
+  </nav>
+
+  <!-- PAGE -->
+  <div class="page">
+    <div class="confirmation-container">
+      <div class="confirmation-icon">✅</div>
+      <h1>Order Confirmed!</h1>
+      <p>Your order has been placed successfully.<br>A driver will be matched within 5–10 minutes.</p>
+
+      <!-- ORDER CODE -->
+      <div class="order-code-box">
+        <div class="order-code-label">Your Order Code</div>
+        <div class="order-code" id="orderCode">EKO-XXXXX</div>
+        <button class="copy-btn" onclick="copyCode()">📋 Copy Code</button>
+      </div>
+
+      <!-- NEXT STEPS -->
+      <div class="next-steps">
+        <h3>What happens next?</h3>
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-text">Driver assigned within 5–10 min. You'll get a WhatsApp notification with their details and live GPS tracking.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-text">Driver picks up your order from the tavern. Watch their location on the map.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-text">Driver arrives at your door. Pay on delivery or via your selected method.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-text">Rate your delivery experience so we can keep improving.</div>
+        </div>
+      </div>
+
+      <!-- ACTION BUTTONS -->
+      <div class="action-buttons">
+        <button class="action-btn primary" onclick="goToHome()">🏠 Back to Home</button>
+        <button class="action-btn secondary" onclick="goToShop()">🛒 Continue Shopping</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <a href="index.html" class="bnav-item active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Home
+    </a>
+    <a href="shop.html" class="bnav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+      Shop
+    </a>
+    <a href="cart.html" class="bnav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+      Cart
+    </a>
+    <a href="#" class="bnav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Track
+    </a>
+    <a href="#" class="bnav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Profile
+    </a>
+  </nav>
+
+  <!-- TOAST -->
+  <div class="toast" id="toastEl"></div>
+
+  <script>
+  const params = new URLSearchParams(window.location.search);
+  const orderCode = params.get('code') || 'EKO-?????';
+  document.getElementById('orderCode').textContent = orderCode;
+
+  function copyCode() {
+    navigator.clipboard.writeText(orderCode).then(() => {
+      showToast('📋 Order code copied!');
+    });
+  }
+
+  function goToHome() {
+    window.location.href = 'index.html';
+  }
+
+  function goToShop() {
+    window.location.href = 'shop.html';
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toastEl');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 1800);
+  }
+  </script>
+</body>
+</html>

@@ -1,0 +1,258 @@
+name,category,bottleFormat,singlePriceZAR,unitsPerCase,caseDiscountPct,casePriceZAR,palletPackQty,palletDiscountPct,palletPriceZAR,supplierPortfolio,productType
+Black Label,BEER,Quart (750ml),24.00,12,3.0,279.36,60,7.0,16070.40,SAB,ALCOHOL
+Black Label,BEER,Dumpy (340ml),14.00,24,3.0,325.92,84,7.0,26248.32,SAB,ALCOHOL
+Black Label,BEER,Can (330ml),15.00,24,3.0,349.20,84,7.0,28123.20,SAB,ALCOHOL
+Heineken,BEER,Quart (500ml),28.00,12,3.0,325.92,60,7.0,18748.80,Heineken SA,ALCOHOL
+Heineken,BEER,Dumpy (340ml),16.00,24,3.0,372.48,84,7.0,29998.08,Heineken SA,ALCOHOL
+Heineken,BEER,Can (330ml),18.00,24,3.0,419.04,84,7.0,33747.84,Heineken SA,ALCOHOL
+Castle Lager,BEER,Quart (750ml),24.00,12,3.0,279.36,60,7.0,16070.40,SAB,ALCOHOL
+Castle Lager,BEER,Dumpy (340ml),14.00,24,3.0,325.92,84,7.0,26248.32,SAB,ALCOHOL
+Castle Lager,BEER,Can (330ml),15.00,24,3.0,349.20,84,7.0,28123.20,SAB,ALCOHOL
+Castle Milk Stout,BEER,Quart (750ml),28.00,12,3.0,325.92,60,7.0,18748.80,SAB,ALCOHOL
+Castle Milk Stout,BEER,Dumpy (340ml),16.00,24,3.0,372.48,84,7.0,29998.08,SAB,ALCOHOL
+Castle Milk Stout,BEER,Can (330ml),17.00,24,3.0,395.76,84,7.0,31872.96,SAB,ALCOHOL
+Castle Lite,BEER,Quart (750ml),24.00,12,3.0,279.36,60,7.0,16070.40,SAB,ALCOHOL
+Castle Lite,BEER,Dumpy (340ml),14.00,24,3.0,325.92,84,7.0,26248.32,SAB,ALCOHOL
+Castle Lite,BEER,Can (330ml),15.00,24,3.0,349.20,84,7.0,28123.20,SAB,ALCOHOL
+Corona,BEER,Dumpy (355ml),20.00,24,3.0,465.60,84,7.0,37497.60,SAB,ALCOHOL
+Corona,BEER,Can (330ml),22.00,24,3.0,512.16,84,7.0,41247.36,SAB,ALCOHOL
+Sol,BEER,Dumpy (340ml),16.00,24,3.0,372.48,84,7.0,29998.08,Heineken SA,ALCOHOL
+Sol,BEER,Can (330ml),18.00,24,3.0,419.04,84,7.0,33747.84,Heineken SA,ALCOHOL
+Windhoek Lager/Light,BEER,Quart (500ml),26.00,12,3.0,302.64,60,7.0,17409.60,Heineken SA,ALCOHOL
+Windhoek Lager/Light,BEER,Dumpy (340ml),16.00,24,3.0,372.48,84,7.0,29998.08,Heineken SA,ALCOHOL
+Windhoek Lager/Light,BEER,Can (330ml),18.00,24,3.0,419.04,84,7.0,33747.84,Heineken SA,ALCOHOL
+Windhoek Draught,BEER,Quart (440ml),29.00,12,3.0,337.56,60,7.0,19418.40,Heineken SA,ALCOHOL
+Windhoek Draught,BEER,Can (440ml),20.00,24,3.0,465.60,84,7.0,37497.60,Heineken SA,ALCOHOL
+Flying Fish Lemon/Apple,BEER,Dumpy (340ml),14.00,24,3.0,325.92,84,7.0,26248.32,SAB,ALCOHOL
+Flying Fish Lemon/Apple,BEER,Can (330ml),16.00,24,3.0,372.48,84,7.0,29998.08,SAB,ALCOHOL
+Amstel Lager,BEER,Quart (750ml),25.00,12,3.0,291.00,60,7.0,16740.00,Heineken SA,ALCOHOL
+Amstel Lager,BEER,Dumpy (340ml),14.00,24,3.0,325.92,84,7.0,26248.32,Heineken SA,ALCOHOL
+Amstel Lager,BEER,Can (330ml),16.00,24,3.0,372.48,84,7.0,29998.08,Heineken SA,ALCOHOL
+Budweiser,BEER,Dumpy (340ml),15.00,24,3.0,349.20,84,7.0,28123.20,SAB,ALCOHOL
+Budweiser,BEER,Can (330ml),17.00,24,3.0,395.76,84,7.0,31872.96,SAB,ALCOHOL
+Stella Artois,BEER,Dumpy (340ml),18.00,24,3.0,419.04,84,7.0,33747.84,SAB,ALCOHOL
+Stella Artois,BEER,Can (330ml),19.00,24,3.0,442.32,84,7.0,35622.72,SAB,ALCOHOL
+Hansa Pilsener,BEER,Quart (750ml),23.00,12,3.0,267.72,60,7.0,15400.80,SAB,ALCOHOL
+Hansa Pilsener,BEER,Dumpy (340ml),13.00,24,3.0,302.64,84,7.0,24373.44,SAB,ALCOHOL
+Hansa Pilsener,BEER,Can (330ml),14.00,24,3.0,325.92,84,7.0,26248.32,SAB,ALCOHOL
+Guinness Foreign Extra,BEER,Dumpy (340ml),24.00,24,3.0,558.72,84,7.0,44997.12,Diageo SA,ALCOHOL
+Guinness Foreign Extra,BEER,Can (440ml),26.00,24,3.0,605.28,84,7.0,48746.88,Diageo SA,ALCOHOL
+Lion Lager,BEER,Quart (750ml),21.00,12,3.0,244.44,60,7.0,14061.60,SAB,ALCOHOL
+Lion Lager,BEER,Can (330ml),13.00,24,3.0,302.64,84,7.0,24373.44,SAB,ALCOHOL
+Savanna Dry/Light,CIDER_RTD,Quart (750ml),35.00,12,3.0,407.40,60,7.0,23436.00,Heineken SA,ALCOHOL
+Savanna Dry/Light,CIDER_RTD,Dumpy (340ml),17.00,24,3.0,395.76,84,7.0,31872.96,Heineken SA,ALCOHOL
+Savanna Dry/Light,CIDER_RTD,Can (330ml),19.00,24,3.0,442.32,84,7.0,35622.72,Heineken SA,ALCOHOL
+Savanna Angry Lemon,CIDER_RTD,Dumpy (340ml),18.00,24,3.0,419.04,84,7.0,33747.84,Heineken SA,ALCOHOL
+Savanna Angry Lemon,CIDER_RTD,Can (330ml),20.00,24,3.0,465.60,84,7.0,37497.60,Heineken SA,ALCOHOL
+Breezer (Red/Watermelon),CIDER_RTD,Dumpy (275ml),20.00,24,3.0,465.60,84,7.0,37497.60,Martini Bacardi,ALCOHOL
+Brutal Fruit Ruby/Litchi,CIDER_RTD,Quart (750ml),35.00,12,3.0,407.40,60,7.0,23436.00,SAB,ALCOHOL
+Brutal Fruit Ruby/Litchi,CIDER_RTD,Dumpy (340ml),16.00,24,3.0,372.48,84,7.0,29998.08,SAB,ALCOHOL
+Brutal Fruit Ruby/Litchi,CIDER_RTD,Can (330ml),18.00,24,3.0,419.04,84,7.0,33747.84,SAB,ALCOHOL
+Bernini Classic/Blush/Ruby,CIDER_RTD,Dumpy (275ml),14.00,24,3.0,325.92,84,7.0,26248.32,Heineken SA,ALCOHOL
+Bernini Classic/Blush/Ruby,CIDER_RTD,Can (330ml),16.00,24,3.0,372.48,84,7.0,29998.08,Heineken SA,ALCOHOL
+Redd's Berry/Orig/Green,CIDER_RTD,Dumpy (340ml),16.00,24,3.0,372.48,84,7.0,29998.08,SAB,ALCOHOL
+Redd's Berry/Orig/Green,CIDER_RTD,Can (330ml),18.00,24,3.0,419.04,84,7.0,33747.84,SAB,ALCOHOL
+Redd's MXD Pine/Guarana,CIDER_RTD,Dumpy (340ml),16.00,24,3.0,372.48,84,7.0,29998.08,SAB,ALCOHOL
+Redd's MXD Pine/Guarana,CIDER_RTD,Can (330ml),18.00,24,3.0,419.04,84,7.0,33747.84,SAB,ALCOHOL
+Extreme Energy,CIDER_RTD,Dumpy (500ml),15.00,24,3.0,349.20,84,7.0,28123.20,Heineken SA,ALCOHOL
+Extreme Energy,CIDER_RTD,Can (500ml),17.00,24,3.0,395.76,84,7.0,31872.96,Heineken SA,ALCOHOL
+Chillers Punch,CIDER_RTD,Dumpy (500ml),14.00,24,3.0,325.92,84,7.0,26248.32,Local Value Portfolio,ALCOHOL
+Chillers Punch,CIDER_RTD,Can (500ml),16.00,24,3.0,372.48,84,7.0,29998.08,Local Value Portfolio,ALCOHOL
+Hunter's Dry/Gold,CIDER_RTD,Quart (750ml),36.00,12,3.0,419.04,60,7.0,24105.60,Heineken SA,ALCOHOL
+Hunter's Dry/Gold,CIDER_RTD,Dumpy (340ml),16.00,24,3.0,372.48,84,7.0,29998.08,Heineken SA,ALCOHOL
+Hunter's Dry/Gold,CIDER_RTD,Can (330ml),18.00,24,3.0,419.04,84,7.0,33747.84,Heineken SA,ALCOHOL
+Hunter's Chilled,CIDER_RTD,Dumpy (340ml),17.00,24,3.0,395.76,84,7.0,31872.96,Heineken SA,ALCOHOL
+Hunter's Chilled,CIDER_RTD,Can (330ml),19.00,24,3.0,442.32,84,7.0,35622.72,Heineken SA,ALCOHOL
+Strongbow Gold/Apple,CIDER_RTD,Quart (750ml),34.00,12,3.0,395.76,60,7.0,22766.40,Heineken SA,ALCOHOL
+Strongbow Gold/Apple,CIDER_RTD,Dumpy (340ml),16.00,24,3.0,372.48,84,7.0,29998.08,Heineken SA,ALCOHOL
+Strongbow Gold/Apple,CIDER_RTD,Can (330ml),18.00,24,3.0,419.04,84,7.0,33747.84,Heineken SA,ALCOHOL
+Kopparberg Strawberry/Lime,CIDER_RTD,Dumpy (500ml),22.00,24,3.0,512.16,84,7.0,41247.36,Heineken SA,ALCOHOL
+Kopparberg Strawberry/Lime,CIDER_RTD,Can (500ml),25.00,24,3.0,582.00,84,7.0,46872.00,Heineken SA,ALCOHOL
+Smirnoff Spin/Storm,CIDER_RTD,Dumpy (250ml),17.00,24,3.0,395.76,84,7.0,31872.96,Diageo SA,ALCOHOL
+Smirnoff Spin/Storm,CIDER_RTD,Can (440ml),19.00,24,3.0,442.32,84,7.0,35622.72,Diageo SA,ALCOHOL
+Flying Fish Chill,CIDER_RTD,Dumpy (340ml),15.00,24,3.0,349.20,84,7.0,28123.20,SAB,ALCOHOL
+Flying Fish Chill,CIDER_RTD,Can (330ml),17.00,24,3.0,395.76,84,7.0,31872.96,SAB,ALCOHOL
+Belgravia G&T (Asstd),CIDER_RTD,Dumpy (275ml),19.00,24,3.0,442.32,84,7.0,35622.72,Edward Snell & Co.,ALCOHOL
+Belgravia G&T (Asstd),CIDER_RTD,Can (440ml),21.00,24,3.0,488.88,84,7.0,39372.48,Edward Snell & Co.,ALCOHOL
+Klipdrift Export,BRANDY,750ml Bottle,190.00,12,4.0,2188.80,60,8.0,125856.00,Heineken (Distell),ALCOHOL
+Viceroy 5 Year Old,BRANDY,750ml Bottle,160.00,12,4.0,1843.20,60,8.0,105984.00,Heineken (Distell),ALCOHOL
+Wellington VO,BRANDY,750ml Bottle,165.00,12,4.0,1900.80,60,8.0,109296.00,Distell Portfolio,ALCOHOL
+Jameson Original Irish,WHISKY,750ml Bottle,280.00,12,4.0,3225.60,60,8.0,185472.00,Pernod Ricard,ALCOHOL
+Jameson Original Irish,WHISKY,375ml Bottle,150.00,12,4.0,1728.00,60,8.0,99360.00,Pernod Ricard,ALCOHOL
+Jameson Select Reserve,WHISKY,750ml Bottle,420.00,12,4.0,4838.40,60,8.0,278208.00,Pernod Ricard,ALCOHOL
+Jameson Caskmates,WHISKY,750ml Bottle,380.00,12,4.0,4377.60,60,8.0,251712.00,Pernod Ricard,ALCOHOL
+Johnnie Walker Red Label,WHISKY,750ml Bottle,250.00,12,4.0,2880.00,60,8.0,165600.00,Diageo SA,ALCOHOL
+Johnnie Walker Red Label,WHISKY,375ml Bottle,135.00,12,4.0,1555.20,60,8.0,89424.00,Diageo SA,ALCOHOL
+Johnnie Walker Black Label,WHISKY,750ml Bottle,380.00,12,4.0,4377.60,60,8.0,251712.00,Diageo SA,ALCOHOL
+Johnnie Walker Black Label,WHISKY,375ml Bottle,200.00,12,4.0,2304.00,60,8.0,132480.00,Diageo SA,ALCOHOL
+Johnnie Walker Double Black,WHISKY,750ml Bottle,480.00,12,4.0,5529.60,60,8.0,317952.00,Diageo SA,ALCOHOL
+Johnnie Walker Gold Label Reserve,WHISKY,750ml Bottle,750.00,12,4.0,8640.00,60,8.0,496800.00,Diageo SA,ALCOHOL
+Jack Daniel's Old No.7,WHISKY,750ml Bottle,360.00,12,4.0,4147.20,60,8.0,238464.00,Brown-Forman,ALCOHOL
+Jack Daniel's Old No.7,WHISKY,375ml Bottle,190.00,12,4.0,2188.80,60,8.0,125856.00,Brown-Forman,ALCOHOL
+Jack Daniel's Tennessee Honey,WHISKY,750ml Bottle,360.00,12,4.0,4147.20,60,8.0,238464.00,Brown-Forman,ALCOHOL
+Jack Daniel's Tennessee Honey,WHISKY,375ml Bottle,190.00,12,4.0,2188.80,60,8.0,125856.00,Brown-Forman,ALCOHOL
+J&B Rare,WHISKY,750ml Bottle,200.00,12,4.0,2304.00,60,8.0,132480.00,Diageo SA,ALCOHOL
+J&B Rare,WHISKY,375ml Bottle,110.00,12,4.0,1267.20,60,8.0,72864.00,Diageo SA,ALCOHOL
+Bells Extra Special,WHISKY,750ml Bottle,210.00,12,4.0,2419.20,60,8.0,139104.00,Diageo SA,ALCOHOL
+Bells Extra Special,WHISKY,375ml Bottle,115.00,12,4.0,1324.80,60,8.0,76176.00,Diageo SA,ALCOHOL
+Chivas Regal 12 Year Old,WHISKY,750ml Bottle,420.00,12,4.0,4838.40,60,8.0,278208.00,Pernod Ricard,ALCOHOL
+Chivas Regal 12 Year Old,WHISKY,375ml Bottle,220.00,12,4.0,2534.40,60,8.0,145728.00,Pernod Ricard,ALCOHOL
+Chivas Regal 15 Year Old,WHISKY,750ml Bottle,680.00,12,4.0,7833.60,60,8.0,450432.00,Pernod Ricard,ALCOHOL
+Glenfiddich 12 Year,WHISKY,750ml Bottle,690.00,12,4.0,7948.80,60,8.0,457056.00,William Grant & Sons,ALCOHOL
+The Glenlivet 12 Year,WHISKY,750ml Bottle,680.00,12,4.0,7833.60,60,8.0,450432.00,Pernod Ricard,ALCOHOL
+Bain's Cape Mountain,WHISKY,750ml Bottle,240.00,12,4.0,2764.80,60,8.0,158976.00,Distell Portfolio,ALCOHOL
+Bain's Cape Mountain,WHISKY,375ml Bottle,130.00,12,4.0,1497.60,60,8.0,86112.00,Distell Portfolio,ALCOHOL
+Scottish Leader Original,WHISKY,750ml Bottle,180.00,12,4.0,2073.60,60,8.0,119232.00,Distell Portfolio,ALCOHOL
+Scottish Leader Original,WHISKY,375ml Bottle,100.00,12,4.0,1152.00,60,8.0,66240.00,Distell Portfolio,ALCOHOL
+Three Ships 5 Year Old,WHISKY,750ml Bottle,190.00,12,4.0,2188.80,60,8.0,125856.00,Distell Portfolio,ALCOHOL
+Three Ships 5 Year Old,WHISKY,375ml Bottle,105.00,12,4.0,1209.60,60,8.0,69552.00,Distell Portfolio,ALCOHOL
+Firstwatch Whisky,WHISKY,750ml Bottle,175.00,12,4.0,2016.00,60,8.0,115920.00,Edward Snell & Co.,ALCOHOL
+Hennessy VS,COGNAC,750ml Bottle,620.00,12,4.0,7142.40,60,8.0,410688.00,Moet Hennessy,ALCOHOL
+Hennessy VS,COGNAC,375ml Bottle,340.00,12,4.0,3916.80,60,8.0,225216.00,Moet Hennessy,ALCOHOL
+Hennessy VSOP,COGNAC,750ml Bottle,1250.00,12,4.0,14400.00,60,8.0,828000.00,Moet Hennessy,ALCOHOL
+Hennessy XO,COGNAC,750ml Bottle,3200.00,12,4.0,36864.00,60,8.0,2119680.00,Moet Hennessy,ALCOHOL
+Remy Martin VSOP,COGNAC,750ml Bottle,850.00,12,4.0,9792.00,60,8.0,563040.00,Remy Cointreau,ALCOHOL
+Remy Martin 1738 Accord Royal,COGNAC,750ml Bottle,1200.00,12,4.0,13824.00,60,8.0,794880.00,Remy Cointreau,ALCOHOL
+Honor VS,COGNAC,750ml Bottle,450.00,12,4.0,5184.00,60,8.0,298080.00,Local Value Brand,ALCOHOL
+Honor VS,COGNAC,375ml Bottle,250.00,12,4.0,2880.00,60,8.0,165600.00,Local Value Brand,ALCOHOL
+Martell VS,COGNAC,750ml Bottle,550.00,12,4.0,6336.00,60,8.0,364320.00,Pernod Ricard,ALCOHOL
+Martell Blue Swift VSOP,COGNAC,750ml Bottle,980.00,12,4.0,11289.60,60,8.0,649152.00,Pernod Ricard,ALCOHOL
+Courvoisier VS,COGNAC,750ml Bottle,520.00,12,4.0,5990.40,60,8.0,344448.00,Suntory,ALCOHOL
+Courvoisier VSOP,COGNAC,750ml Bottle,820.00,12,4.0,9446.40,60,8.0,543168.00,Suntory,ALCOHOL
+Bisquit & Dubouche VS,COGNAC,750ml Bottle,490.00,12,4.0,5644.80,60,8.0,324576.00,Local Import,ALCOHOL
+Bisquit & Dubouche VSOP,COGNAC,750ml Bottle,840.00,12,4.0,9676.80,60,8.0,556416.00,Local Import,ALCOHOL
+D'USSE VSOP,COGNAC,750ml Bottle,950.00,12,4.0,10944.00,60,8.0,629280.00,Moet Hennessy,ALCOHOL
+Strettons London Dry,GIN,750ml Bottle,170.00,12,4.0,1958.40,60,8.0,112608.00,Edward Snell & Co.,ALCOHOL
+Strettons London Dry,GIN,375ml Bottle,95.00,12,4.0,1094.40,60,8.0,62928.00,Edward Snell & Co.,ALCOHOL
+Strettons Wild Berry,GIN,750ml Bottle,170.00,12,4.0,1958.40,60,8.0,112608.00,Edward Snell & Co.,ALCOHOL
+Strettons Wild Berry,GIN,375ml Bottle,95.00,12,4.0,1094.40,60,8.0,62928.00,Edward Snell & Co.,ALCOHOL
+Old Buck Gin,GIN,750ml Bottle,160.00,12,4.0,1843.20,60,8.0,105984.00,Distell Portfolio,ALCOHOL
+Old Buck Gin,GIN,375ml Bottle,90.00,12,4.0,1036.80,60,8.0,59616.00,Distell Portfolio,ALCOHOL
+Gordons Premium Pink,GIN,750ml Bottle,180.00,12,4.0,2073.60,60,8.0,119232.00,Diageo SA,ALCOHOL
+Gordons Premium Pink,GIN,375ml Bottle,100.00,12,4.0,1152.00,60,8.0,66240.00,Diageo SA,ALCOHOL
+Gordons London Dry,GIN,750ml Bottle,170.00,12,4.0,1958.40,60,8.0,112608.00,Diageo SA,ALCOHOL
+Gordons London Dry,GIN,375ml Bottle,95.00,12,4.0,1094.40,60,8.0,62928.00,Diageo SA,ALCOHOL
+KEM Gin,GIN,750ml Bottle,250.00,12,4.0,2880.00,60,8.0,165600.00,Local Craft,ALCOHOL
+Kwande Gin,GIN,750ml Bottle,280.00,12,4.0,3225.60,60,8.0,185472.00,Local Craft,ALCOHOL
+Royal Flush Premium,GIN,750ml Bottle,200.00,12,4.0,2304.00,60,8.0,132480.00,Local Value Brand,ALCOHOL
+Royal Flush Premium,GIN,375ml Bottle,110.00,12,4.0,1267.20,60,8.0,72864.00,Local Value Brand,ALCOHOL
+Tanqueray London Dry Export,GIN,750ml Bottle,360.00,12,4.0,4147.20,60,8.0,238464.00,Diageo SA,ALCOHOL
+Tanqueray London Dry Export,GIN,375ml Bottle,195.00,12,4.0,2246.40,60,8.0,129168.00,Diageo SA,ALCOHOL
+Tanqueray No. TEN,GIN,750ml Bottle,600.00,12,4.0,6912.00,60,8.0,397440.00,Diageo SA,ALCOHOL
+Tanqueray Flor de Sevilla,GIN,750ml Bottle,360.00,12,4.0,4147.20,60,8.0,238464.00,Diageo SA,ALCOHOL
+Hendrick's Original,GIN,750ml Bottle,450.00,12,4.0,5184.00,60,8.0,298080.00,William Grant & Sons,ALCOHOL
+Hendrick's Original,GIN,375ml Bottle,250.00,12,4.0,2880.00,60,8.0,165600.00,William Grant & Sons,ALCOHOL
+Bombay Sapphire,GIN,750ml Bottle,310.00,12,4.0,3571.20,60,8.0,205344.00,Bacardi SA,ALCOHOL
+Bombay Sapphire,GIN,375ml Bottle,170.00,12,4.0,1958.40,60,8.0,112608.00,Bacardi SA,ALCOHOL
+Inverroche Classic,GIN,750ml Bottle,360.00,12,4.0,4147.20,60,8.0,238464.00,Local Craft,ALCOHOL
+Inverroche Amber/Verdant,GIN,750ml Bottle,390.00,12,4.0,4492.80,60,8.0,258336.00,Local Craft,ALCOHOL
+Musgrave Pink,GIN,750ml Bottle,290.00,12,4.0,3340.80,60,8.0,192096.00,Local Craft,ALCOHOL
+Flowstone African Bush Botanical,GIN,750ml Bottle,310.00,12,4.0,3571.20,60,8.0,205344.00,Local Craft,ALCOHOL
+Cruxland Gin,GIN,750ml Bottle,320.00,12,4.0,3686.40,60,8.0,211968.00,Local Craft,ALCOHOL
+Wixworth Gin,GIN,750ml Bottle,280.00,12,4.0,3225.60,60,8.0,185472.00,Local Craft,ALCOHOL
+Belvedere Pure Vodka,VODKA_PREMIUM,750ml Bottle,480.00,12,4.0,5529.60,60,8.0,317952.00,Moet Hennessy,ALCOHOL
+Belvedere Pure Vodka,VODKA_PREMIUM,375ml Bottle,260.00,12,4.0,2995.20,60,8.0,172224.00,Moet Hennessy,ALCOHOL
+Ciroc Original Premium,VODKA_PREMIUM,750ml Bottle,420.00,12,4.0,4838.40,60,8.0,278208.00,Diageo SA,ALCOHOL
+Ciroc Original Premium,VODKA_PREMIUM,375ml Bottle,230.00,12,4.0,2649.60,60,8.0,152352.00,Diageo SA,ALCOHOL
+Ciroc (Apple/Mango/Pineapple),VODKA_PREMIUM,750ml Bottle,440.00,12,4.0,5068.80,60,8.0,291456.00,Diageo SA,ALCOHOL
+Smirnoff Red No. 21,VODKA,750ml Bottle,160.00,12,4.0,1843.20,60,8.0,105984.00,Diageo SA,ALCOHOL
+Smirnoff Red No. 21,VODKA,375ml Bottle,90.00,12,4.0,1036.80,60,8.0,59616.00,Diageo SA,ALCOHOL
+Smirnoff Infusions,VODKA,750ml Bottle,170.00,12,4.0,1958.40,60,8.0,112608.00,Diageo SA,ALCOHOL
+Russian Bear Standard,VODKA,750ml Bottle,140.00,12,4.0,1612.80,60,8.0,92736.00,Edward Snell & Co.,ALCOHOL
+Russian Bear Standard,VODKA,375ml Bottle,80.00,12,4.0,921.60,60,8.0,52992.00,Edward Snell & Co.,ALCOHOL
+Russian Bear Flavours,VODKA,750ml Bottle,140.00,12,4.0,1612.80,60,8.0,92736.00,Edward Snell & Co.,ALCOHOL
+Wyborowa Vodka,VODKA,750ml Bottle,180.00,12,4.0,2073.60,60,8.0,119232.00,Pernod Ricard,ALCOHOL
+Wyborowa Vodka,VODKA,375ml Bottle,100.00,12,4.0,1152.00,60,8.0,66240.00,Pernod Ricard,ALCOHOL
+Grey Goose Luxury,VODKA_PREMIUM,750ml Bottle,550.00,12,4.0,6336.00,60,8.0,364320.00,Bacardi SA,ALCOHOL
+Grey Goose Luxury,VODKA_PREMIUM,375ml Bottle,300.00,12,4.0,3456.00,60,8.0,198720.00,Bacardi SA,ALCOHOL
+Absolut Original Blue,VODKA,750ml Bottle,230.00,12,4.0,2649.60,60,8.0,152352.00,Pernod Ricard,ALCOHOL
+Absolut Original Blue,VODKA,375ml Bottle,125.00,12,4.0,1440.00,60,8.0,82800.00,Pernod Ricard,ALCOHOL
+Absolut (Watermelon/Lime/Citron),VODKA,750ml Bottle,240.00,12,4.0,2764.80,60,8.0,158976.00,Pernod Ricard,ALCOHOL
+Cruz Vintage Black Vodka,VODKA,750ml Bottle,220.00,12,4.0,2534.40,60,8.0,145728.00,Distell Portfolio,ALCOHOL
+Cruz Vintage Black Vodka,VODKA,375ml Bottle,120.00,12,4.0,1382.40,60,8.0,79488.00,Distell Portfolio,ALCOHOL
+Skyy Vodka Original,VODKA,750ml Bottle,210.00,12,4.0,2419.20,60,8.0,139104.00,Campari Group,ALCOHOL
+Skyy Vodka Original,VODKA,375ml Bottle,115.00,12,4.0,1324.80,60,8.0,76176.00,Campari Group,ALCOHOL
+Count Pushkin Vodka,VODKA,750ml Bottle,130.00,12,4.0,1497.60,60,8.0,86112.00,Heineken SA,ALCOHOL
+Count Pushkin Vodka,VODKA,375ml Bottle,75.00,12,4.0,864.00,60,8.0,49680.00,Heineken SA,ALCOHOL
+Olmeca Plata,TEQUILA,750ml Bottle,280.00,12,4.0,3225.60,60,8.0,185472.00,Pernod Ricard,ALCOHOL
+Olmeca Plata,TEQUILA,375ml Bottle,160.00,12,4.0,1843.20,60,8.0,105984.00,Pernod Ricard,ALCOHOL
+Olmeca Reposado,TEQUILA,750ml Bottle,290.00,12,4.0,3340.80,60,8.0,192096.00,Pernod Ricard,ALCOHOL
+Olmeca Reposado,TEQUILA,375ml Bottle,165.00,12,4.0,1900.80,60,8.0,109296.00,Pernod Ricard,ALCOHOL
+Jose Cuervo Especial Silver,TEQUILA,750ml Bottle,250.00,12,4.0,2880.00,60,8.0,165600.00,Edward Snell & Co.,ALCOHOL
+Jose Cuervo Especial Silver,TEQUILA,375ml Bottle,140.00,12,4.0,1612.80,60,8.0,92736.00,Edward Snell & Co.,ALCOHOL
+Jose Cuervo Especial Reposado,TEQUILA,750ml Bottle,260.00,12,4.0,2995.20,60,8.0,172224.00,Edward Snell & Co.,ALCOHOL
+Jose Cuervo Especial Reposado,TEQUILA,375ml Bottle,145.00,12,4.0,1670.40,60,8.0,96048.00,Edward Snell & Co.,ALCOHOL
+Aljimardo Silver,TEQUILA,750ml Bottle,200.00,12,4.0,2304.00,60,8.0,132480.00,Local Value Brand,ALCOHOL
+Aljimardo Silver,TEQUILA,375ml Bottle,110.00,12,4.0,1267.20,60,8.0,72864.00,Local Value Brand,ALCOHOL
+Don Julio Blanco,TEQUILA_PREMIUM,750ml Bottle,620.00,12,4.0,7142.40,60,8.5,408456.00,Diageo SA,ALCOHOL
+Don Julio Reposado,TEQUILA_PREMIUM,750ml Bottle,740.00,12,4.0,8524.80,60,8.5,487512.00,Diageo SA,ALCOHOL
+Patron Silver Luxury,TEQUILA_PREMIUM,750ml Bottle,850.00,12,4.0,9792.00,60,8.5,559980.00,Bacardi SA,ALCOHOL
+Patron Reposado,TEQUILA_PREMIUM,750ml Bottle,980.00,12,4.0,11289.60,60,8.5,645624.00,Bacardi SA,ALCOHOL
+Clase Azul Plata,TEQUILA_PREMIUM,750ml Bottle,4000.00,12,4.0,46080.00,60,8.5,2635200.00,Global Premium Import,ALCOHOL
+Clase Azul Reposado,TEQUILA_PREMIUM,750ml Bottle,5500.00,12,4.0,63360.00,60,8.5,3623400.00,Global Premium Import,ALCOHOL
+Casamigos Blanco,TEQUILA_PREMIUM,750ml Bottle,720.00,12,4.0,8294.40,60,8.5,474336.00,Diageo SA,ALCOHOL
+Casamigos Reposado,TEQUILA_PREMIUM,750ml Bottle,850.00,12,4.0,9792.00,60,8.5,559980.00,Diageo SA,ALCOHOL
+El Jimador Blanco/Reposado,TEQUILA,750ml Bottle,240.00,12,4.0,2764.80,60,8.0,158976.00,Edward Snell & Co.,ALCOHOL
+Ponchos Blanco/Caramel Tequila,TEQUILA,750ml Bottle,180.00,12,4.0,2073.60,60,8.0,119232.00,Distell Portfolio,ALCOHOL
+Ponchos Blanco/Caramel Tequila,TEQUILA,375ml Bottle,100.00,12,4.0,1152.00,60,8.0,66240.00,Distell Portfolio,ALCOHOL
+Blue Curacao (Butlers),LIQUEUR,750ml Bottle,220.00,12,4.0,2534.40,60,8.0,145728.00,Heineken SA,ALCOHOL
+Blue Curacao (Peddler's),LIQUEUR,750ml Bottle,240.00,12,4.0,2764.80,60,8.0,158976.00,Local Value Brand,ALCOHOL
+Blue Curacao Generic,LIQUEUR,750ml Bottle,85.00,12,4.0,979.20,60,8.0,56304.00,Local Value Brand,ALCOHOL
+Triple Sec (Butlers),LIQUEUR,750ml Bottle,205.00,12,4.0,2361.60,60,8.0,135792.00,Heineken SA,ALCOHOL
+Triple Sec (Peddler's),LIQUEUR,750ml Bottle,240.00,12,4.0,2764.80,60,8.0,158976.00,Local Value Brand,ALCOHOL
+Triple Sec Premium (San Basile),LIQUEUR,750ml Bottle,480.00,12,4.0,5529.60,60,8.0,317952.00,Local Craft,ALCOHOL
+Peach Schnapps (Relic),LIQUEUR,750ml Bottle,205.00,12,4.0,2361.60,60,8.0,135792.00,Local Craft,ALCOHOL
+Peach Schnapps (Butlers),LIQUEUR,750ml Bottle,180.00,12,4.0,2073.60,60,8.0,119232.00,Heineken SA,ALCOHOL
+Peach Schnapps Generic,LIQUEUR,750ml Bottle,90.00,12,4.0,1036.80,60,8.0,59616.00,Local Value Brand,ALCOHOL
+Strawberry Liqueur (Butlers),LIQUEUR,750ml Bottle,180.00,12,4.0,2073.60,60,8.0,119232.00,Heineken SA,ALCOHOL
+Strawberry Liqueur Generic,LIQUEUR,750ml Bottle,100.00,12,4.0,1152.00,60,8.0,66240.00,Local Value Brand,ALCOHOL
+Peppermint Liqueur (Butlers),LIQUEUR,750ml Bottle,190.00,12,4.0,2188.80,60,8.0,125856.00,Heineken SA,ALCOHOL
+Banana Liqueur (Butlers),LIQUEUR,750ml Bottle,190.00,12,4.0,2188.80,60,8.0,125856.00,Heineken SA,ALCOHOL
+Cherry Kirsch Liqueur (Butlers),LIQUEUR,750ml Bottle,210.00,12,4.0,2419.20,60,8.0,139104.00,Heineken SA,ALCOHOL
+Espresso/Coffee Liqueur (Butlers),LIQUEUR,750ml Bottle,190.00,12,4.0,2188.80,60,8.0,125856.00,Heineken SA,ALCOHOL
+Ginger Liqueur (Butlers),LIQUEUR,750ml Bottle,190.00,12,4.0,2188.80,60,8.0,125856.00,Heineken SA,ALCOHOL
+Van Der Hum Tangerine (Butlers),LIQUEUR,750ml Bottle,190.00,12,4.0,2188.80,60,8.0,125856.00,Heineken SA,ALCOHOL
+Amarula Original Cream,LIQUEUR,750ml Bottle,180.00,12,4.0,2073.60,60,8.0,119232.00,Heineken SA,ALCOHOL
+Amarula Ethiopian Coffee,LIQUEUR,750ml Bottle,190.00,12,4.0,2188.80,60,8.0,125856.00,Heineken SA,ALCOHOL
+Baileys Original Irish Cream,LIQUEUR,750ml Bottle,250.00,12,4.0,2880.00,60,8.0,165600.00,Diageo SA,ALCOHOL
+Jagermeister Herbal Liqueur,LIQUEUR,750ml Bottle,320.00,12,4.0,3686.40,60,8.0,211968.00,Jagermeister AG,ALCOHOL
+Sambuca Lupini Black/Gold,LIQUEUR,750ml Bottle,170.00,12,4.0,1958.40,60,8.0,112608.00,Edward Snell & Co.,ALCOHOL
+Sambuca Generic Blue/White,LIQUEUR,750ml Bottle,140.00,12,4.0,1612.80,60,8.0,92736.00,Local Value Brand,ALCOHOL
+Tequila Rose Cream Liqueur,LIQUEUR,750ml Bottle,200.00,12,4.0,2304.00,60,8.0,132480.00,Global Premium Import,ALCOHOL
+Strawberry Lips,LIQUEUR,750ml Bottle,140.00,12,4.0,1612.80,60,8.0,92736.00,DGB Portfolio,ALCOHOL
+Cointreau Orange Liqueur,LIQUEUR,750ml Bottle,320.00,12,4.0,3686.40,60,8.0,211968.00,Spirits SA Import,ALCOHOL
+Grand Marnier Cordon Rouge,LIQUEUR,750ml Bottle,390.00,12,4.0,4492.80,60,8.0,258336.00,Campari Group,ALCOHOL
+Cape Velvet Cream,LIQUEUR,750ml Bottle,130.00,12,4.0,1497.60,60,8.0,86112.00,Distell Portfolio,ALCOHOL
+Tia Maria Coffee Liqueur,LIQUEUR,750ml Bottle,220.00,12,4.0,2534.40,60,8.0,145728.00,Pernod Ricard,ALCOHOL
+Frangelico Hazelnut Liqueur,LIQUEUR,750ml Bottle,260.00,12,4.0,2995.20,60,8.0,172224.00,Campari Group,ALCOHOL
+Disaronno Amaretto Liqueur,LIQUEUR,750ml Bottle,300.00,12,4.0,3456.00,60,8.0,198720.00,Spirits SA Import,ALCOHOL
+Malibu Coconut Rum Liqueur,LIQUEUR,750ml Bottle,180.00,12,4.0,2073.60,60,8.0,119232.00,Pernod Ricard,ALCOHOL
+Kahlua Coffee Liqueur,LIQUEUR,750ml Bottle,250.00,12,4.0,2880.00,60,8.0,165600.00,Pernod Ricard,ALCOHOL
+Drambuie Honey/Scotch,LIQUEUR,750ml Bottle,320.00,12,4.0,3686.40,60,8.0,211968.00,Spirits SA Import,ALCOHOL
+Chambord Black Raspberry,LIQUEUR,500ml Bottle,380.00,12,4.0,4377.60,60,8.0,251712.00,Global Premium Import,ALCOHOL
+Nachtmusik Chocolate Liqueur,LIQUEUR,750ml Bottle,130.00,12,4.0,1497.60,60,8.0,86112.00,Distell Portfolio,ALCOHOL
+Wild Africa Cream Liqueur,LIQUEUR,750ml Bottle,120.00,12,4.0,1382.40,60,8.0,79488.00,KWV Spirits,ALCOHOL
+Grenadine Syrup Cordial,MIXER,1 Litre Jug,70.00,12,2.0,823.20,60,5.0,47880.00,Bar Mixer Supply,ALCOHOL
+Lime/Passion Fruit Cordial,MIXER,750ml Bottle,45.00,12,2.0,529.20,60,5.0,30780.00,Tiger Brands (Roses),ALCOHOL
+Kola Tonic Cordial,MIXER,750ml Bottle,45.00,12,2.0,529.20,60,5.0,30780.00,Tiger Brands (Roses),ALCOHOL
+Maraschino Cherries (Syrup),MIXER,350ml Jar,60.00,12,2.0,705.60,60,5.0,41040.00,Bar Mixer Supply,ALCOHOL
+Angostura Aromatic Bitters,MIXER,200ml Bottle,90.00,12,2.0,1058.40,60,5.0,61560.00,House of Angostura,ALCOHOL
+4th Street Sweet Red/White,WINE,750ml Bottle,50.00,6,5.0,285.00,100,10.0,27000.00,Heineken SA,ALCOHOL
+Robertson Winery Sweet Merlot,WINE,750ml Bottle,65.00,6,5.0,370.50,100,10.0,35100.00,Robertson Winery,ALCOHOL
+Drostdy-Hof Adelpracht Sweet,WINE,750ml Bottle,60.00,6,5.0,342.00,100,10.0,32400.00,Heineken SA,ALCOHOL
+Nederburg Baronne,WINE,750ml Bottle,85.00,6,5.0,484.50,100,10.0,45900.00,Heineken SA,ALCOHOL
+Nederburg Sauvignon Blanc,WINE,750ml Bottle,80.00,6,5.0,456.00,100,10.0,43200.00,Heineken SA,ALCOHOL
+Kanonkop Kadette Cabernet,WINE,750ml Bottle,140.00,6,5.0,798.00,100,10.0,75600.00,Kanonkop Wine Estate,ALCOHOL
+Beyerskloof Pinotage,WINE,750ml Bottle,110.00,6,5.0,627.00,100,10.0,59400.00,Beyerskloof Estate,ALCOHOL
+Saint Raphael Sweet Red,WINE,750ml Bottle,55.00,6,5.0,313.50,100,10.0,29700.00,DGB Portfolio,ALCOHOL
+Castillo de Liria Sweet Red,WINE,750ml Bottle,75.00,6,5.0,427.50,100,10.0,40500.00,Premium Wine Imports,ALCOHOL
+JC Le Roux Le Domaine,SPARKLING,750ml Bottle,100.00,6,5.0,570.00,100,10.0,54000.00,Heineken SA,ALCOHOL
+JC Le Roux La Fleurette,SPARKLING,750ml Bottle,100.00,6,5.0,570.00,100,10.0,54000.00,Heineken SA,ALCOHOL
+Krone Borealis Brut (MCC),SPARKLING,750ml Bottle,210.00,6,5.0,1197.00,100,10.0,113400.00,Vinimark Portfolio,ALCOHOL
+Pongracz Brut,SPARKLING,750ml Bottle,190.00,6,5.0,1083.00,100,10.0,102600.00,Heineken SA,ALCOHOL
+Moet & Chandon Imperial Brut,CHAMPAGNE,750ml Bottle,790.00,6,5.0,4503.00,100,10.0,426600.00,Moet Hennessy,ALCOHOL
+Veuve Clicquot Yellow Label,CHAMPAGNE,750ml Bottle,920.00,6,5.0,5244.00,100,10.0,496800.00,Moet Hennessy,ALCOHOL
+4th Street Sweet Red/Rose,WINE_BOX,5 Litre Box,170.00,4,4.0,652.80,75,8.0,46920.00,Heineken SA,ALCOHOL
+Robertson Winery Smooth Red,WINE_BOX,3 Litre Box,135.00,4,4.0,518.40,75,8.0,37260.00,Robertson Winery,ALCOHOL
+Drostdy-Hof Claret Select,WINE_BOX,5 Litre Box,190.00,4,4.0,729.60,75,8.0,52440.00,Heineken SA,ALCOHOL
+Paarl Perle White,WINE_BOX,2 Litre Co-Pack,85.00,4,4.0,326.40,75,8.0,23460.00,Distell Portfolio,ALCOHOL

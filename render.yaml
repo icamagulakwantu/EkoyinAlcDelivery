@@ -1,0 +1,28 @@
+# render.yaml
+# Deploy to Render with: git push origin main
+# Render will auto-detect this file and configure everything.
+
+services:
+  - type: web
+    name: ekoyini-api
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /api/products
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ekoyini-db
+          property: connectionString
+      - key: ADMIN_API_TOKEN
+        sync: false
+      - key: PORT
+        value: "3000"
+    autoDeploy: true
+
+databases:
+  - name: ekoyini-db
+    plan: free
+    ipAllowList: []
+    postgresMajorVersion: 15
