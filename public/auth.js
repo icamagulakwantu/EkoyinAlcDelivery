@@ -8,9 +8,8 @@
 // ═══════════════════════════════════════════════
 
 // Safe to expose client-side — this is the public anon key, not a secret.
-// Replace with your real Supabase project values before deploying.
-const SUPABASE_URL = 'https://YOUR-PROJECT-REF.supabase.co';
-const SUPABASE_ANON_KEY = 'YOUR-ANON-PUBLIC-KEY';
+const SUPABASE_URL = 'https://tvuyimcgspxyiuxwymjr.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2dXlpbWNnc3B4eWl1eHd5bWpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4NjAzNjAsImV4cCI6MjEwMTQzNjM2MH0.AYTW46FXVqSpZya4jW1rlLgB3QQXwCqpisFy9TCY8OA';
 
 const ekoyiniAuth = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
