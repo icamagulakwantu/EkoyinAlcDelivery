@@ -7,14 +7,18 @@ services:
     name: ekoyini-api
     env: node
     plan: free
-    buildCommand: npm install
+    buildCommand: npm install && npx prisma generate
     startCommand: node server.js
-    healthCheckPath: /api/products
+    healthCheckPath: /api/health
     envVars:
       - key: DATABASE_URL
         fromDatabase:
           name: ekoyini-db
           property: connectionString
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
       - key: ADMIN_API_TOKEN
         sync: false
       - key: PORT

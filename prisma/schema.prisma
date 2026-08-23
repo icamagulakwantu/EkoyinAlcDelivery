@@ -1,37 +1,39 @@
 // prisma/schema.prisma
 generator client {
-      provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-      provider = "postgresql"
-        url      = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 enum Category {
-      BEER
-        CIDER_RTD
-          BRANDY
-            WHISKY
-              COGNAC
-                GIN
-                  VODKA
-                    VODKA_PREMIUM
-                      TEQUILA
-                        TEQUILA_PREMIUM
-                          LIQUEUR
-                            MIXER
-                              WINE
-                                WINE_BOX
-                                  SPARKLING
-                                    CHAMPAGNE
+  BEER
+  CIDER_RTD
+  BRANDY
+  WHISKY
+  COGNAC
+  GIN
+  VODKA
+  VODKA_PREMIUM
+  TEQUILA
+  TEQUILA_PREMIUM
+  LIQUEUR
+  MIXER
+  WINE
+  WINE_BOX
+  SPARKLING
+  CHAMPAGNE
+  WATER
+  ICE
 }
 
 enum OrderStatus {
-      PAYMENT_PENDING
-        PENDING
-          DISPATCHED
-            DELIVERED
+  PAYMENT_PENDING
+  PENDING
+  DISPATCHED
+  DELIVERED
 }
 
 // ── Catalog ──────────────────────────────────────────────
@@ -39,69 +41,78 @@ enum OrderStatus {
 // (skus.csv). Retail fields are Ekoyini's own customer-facing pricing,
 // computed in prisma/seed.js — see the rationale comment there.
 model SkuItem {
-      id                String   @id @default(cuid())
-        name              String
-          category          Category
-            productType       String
-              bottleFormat      String
-                supplierPortfolio String
+  id                String   @id @default(cuid())
+  name              String
+  category          Category
+  productType       String
+  bottleFormat      String
+  supplierPortfolio String
 
-                  // Supplier price sheet (cost/procurement reference — not shown to customers)
-                    listPriceZAR              Float // supplier's single-unit price
-                      unitsPerCase              Int
-                        supplierCaseDiscountPct   Float
-                          supplierCasePriceZAR      Float
-                            palletPackQty              Int
-                              supplierPalletDiscountPct Float
-                                supplierPalletPriceZAR    Float
+  // Supplier price sheet (cost/procurement reference — not shown to customers)
+  listPriceZAR              Float // supplier's single-unit price
+  unitsPerCase              Int
+  supplierCaseDiscountPct   Float
+  supplierCasePriceZAR      Float
+  palletPackQty              Int
+  supplierPalletDiscountPct Float
+  supplierPalletPriceZAR    Float
 
-                                  // Retail pricing (customer-facing, computed at seed time)
-                                    retailSingleZAR       Float // = listPriceZAR (already shelf-realistic)
-                                      retailCaseDiscountPct Float // Ekoyini's own carry-pack discount, by category
-                                        retailCaseZAR          Float // = retailSingleZAR * unitsPerCase * (1 - retailCaseDiscountPct/100)
+  // Retail pricing (customer-facing, computed at seed time)
+  retailSingleZAR       Float // = listPriceZAR (already shelf-realistic)
+  retailCaseDiscountPct Float // Ekoyini's own carry-pack discount, by category
+  retailCaseZAR          Float // = retailSingleZAR * unitsPerCase * (1 - retailCaseDiscountPct/100)
 
-                                          imageUrl   String?
-                                            orderItems OrderItem[]
+  imageUrl   String?
+  orderItems OrderItem[]
 
-                                              createdAt DateTime @default(now())
-                                                updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-                                                  @@unique([name, bottleFormat])
+  @@unique([name, bottleFormat])
 }
 
 // ── Taverns (supply partners) ───────────────────────────
 model Tavern {
-      id     String  @id @default(cuid())
-        name   String
-          area   String
-            phone  String
-              orders Order[]
+  id     String  @id @default(cuid())
+  name   String
+  area   String
+  phone  String
+  orders Order[]
 }
 
 // ── Orders ───────────────────────────────────────────────
+// userId links back to the Supabase Auth user (auth.users.id) who placed
+// the order. It's a plain string, not a Prisma relation, because the
+// users table lives in Supabase's own "auth" schema, not this one.
 model Order {
-      id            String      @id @default(cuid())
-        code          String      @unique
-          address       String
-            status        OrderStatus @default(PAYMENT_PENDING)
-              total         Float
-                items         OrderItem[]
-                  tavern        Tavern?     @relation(fields: [tavernId], references: [id])
-                    tavernId      String?
-                      driverName    String?
-                        driverPhone   String?
-                          driverVehicle String?
-                            createdAt     DateTime    @default(now())
-                              updatedAt     DateTime    @updatedAt
+  id            String      @id @default(cuid())
+  code          String      @unique
+  userId        String?
+  address       String
+  customerName  String?
+  customerPhone String?
+  paymentMethod String      @default("cod")
+  status        OrderStatus @default(PAYMENT_PENDING)
+  total         Float
+  items         OrderItem[]
+  tavern        Tavern?     @relation(fields: [tavernId], references: [id])
+  tavernId      String?
+  driverName    String?
+  driverPhone   String?
+  driverVehicle String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([userId])
 }
 
 model OrderItem {
-      id       String   @id @default(cuid())
-        order    Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-          orderId  String
-            sku      SkuItem? @relation(fields: [skuId], references: [id])
-              skuId    String?
-                name     String
-                  price    Float
-                    quantity Int
+  id       String   @id @default(cuid())
+  order    Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId  String
+  sku      SkuItem? @relation(fields: [skuId], references: [id])
+  skuId    String?
+  name     String
+  price    Float
+  quantity Int
 }

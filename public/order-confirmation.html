@@ -120,7 +120,6 @@
   <!-- NAVBAR -->
   <nav class="navbar">
     <div class="logo">
-      <img src="logo.png" alt="Ekoyini">
       <div class="logo-text">Eko<span style="color:var(--green-light)">yini</span></div>
     </div>
     <div style="width: 38px;"></div>
@@ -163,7 +162,7 @@
 
       <!-- ACTION BUTTONS -->
       <div class="action-buttons">
-        <button class="action-btn primary" onclick="goToHome()">🏠 Back to Home</button>
+        <button class="action-btn primary" onclick="goToTrack()">📍 Track This Order</button>
         <button class="action-btn secondary" onclick="goToShop()">🛒 Continue Shopping</button>
       </div>
     </div>
@@ -183,11 +182,11 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
       Cart
     </a>
-    <a href="#" class="bnav-item">
+    <a href="track.html" class="bnav-item">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
       Track
     </a>
-    <a href="#" class="bnav-item">
+    <a href="profile.html" class="bnav-item">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       Profile
     </a>
@@ -207,8 +206,8 @@
     });
   }
 
-  function goToHome() {
-    window.location.href = 'index.html';
+  function goToTrack() {
+    window.location.href = `track.html?code=${encodeURIComponent(orderCode)}`;
   }
 
   function goToShop() {

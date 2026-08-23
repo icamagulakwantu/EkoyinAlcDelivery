@@ -956,3 +956,283 @@
                                    text-transform: uppercase;
                                      letter-spacing: 0.5px;
          }
+
+/* ══════════════════════════════ NAV AUTH SLOT ══════════════════════════════ */
+.nav-auth-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--white);
+}
+.nav-auth-pill {
+  background: var(--green);
+  padding: 7px 14px;
+  border-radius: 20px;
+  color: #fff;
+}
+.nav-auth-pill:hover { background: var(--green-mid); }
+.nav-auth-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--green);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* ══════════════════════════════ TOP TOAST (Instagram-style) ══════════════════════════════ */
+.toast-top {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-140%);
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--white);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 10px 18px;
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  z-index: 999;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  white-space: nowrap;
+}
+.toast-top.show { transform: translateX(-50%) translateY(0); }
+
+/* ══════════════════════════════ AUTH PAGES ══════════════════════════════ */
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 32px 24px;
+}
+.auth-page .auth-logo {
+  font-family: var(--font-display);
+  font-size: 26px;
+  text-align: center;
+  margin-bottom: 6px;
+}
+.auth-page .auth-logo span { color: var(--green-light); }
+.auth-page .auth-sub {
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 28px;
+}
+.auth-field { margin-bottom: 16px; }
+.auth-field label {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+.auth-field input {
+  width: 100%;
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 13px 14px;
+  border-radius: var(--r-sm);
+  color: var(--white);
+  font-size: 14px;
+}
+.auth-field input:focus { outline: none; border-color: var(--green-mid); }
+.auth-error {
+  background: rgba(224, 82, 82, 0.1);
+  border: 1px solid rgba(224, 82, 82, 0.3);
+  color: var(--danger);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 12px;
+  margin-bottom: 14px;
+  display: none;
+}
+.auth-error.show { display: block; }
+.auth-switch {
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 20px;
+}
+.auth-switch a { color: var(--green-light); font-weight: 600; }
+
+/* ══════════════════════════════ COOLER BOX BUILDER ══════════════════════════════ */
+.cooler-bar {
+  margin: 12px;
+  background: linear-gradient(135deg, #0d3020 0%, #0d1a14 100%);
+  border: 1px solid var(--green);
+  border-radius: var(--r-md);
+  padding: 14px 16px;
+}
+.cooler-bar-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.cooler-bar-title {
+  font-family: var(--font-display);
+  font-size: 15px;
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.cooler-bar-total { font-size: 13px; font-weight: 700; color: var(--green-light); }
+.cooler-progress-track {
+  height: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+  position: relative;
+}
+.cooler-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--green) 0%, var(--green-light) 100%);
+  border-radius: 4px;
+  transition: width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+  overflow: hidden;
+}
+.cooler-progress-fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  animation: cooler-shimmer 1.8s infinite;
+}
+@keyframes cooler-shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+.cooler-tier-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+.cooler-tier-labels span.hit { color: var(--green-light); font-weight: 700; }
+.cooler-slots {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+.cooler-slot {
+  aspect-ratio: 1;
+  border: 1.5px dashed var(--border);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  background-size: cover;
+  background-position: center;
+  transition: border-color 0.2s, transform 0.2s;
+}
+.cooler-slot.filled {
+  border-style: solid;
+  border-color: var(--green-mid);
+  animation: cooler-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes cooler-pop {
+  0% { transform: scale(0.6); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* ══════════════════════════════ SKELETON LOADERS ══════════════════════════════ */
+@keyframes skel-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skel-product-card, .skel-store-card {
+  background: linear-gradient(90deg, var(--card) 25%, var(--surface) 50%, var(--card) 75%);
+  background-size: 200% 100%;
+  animation: skel-shimmer 1.4s infinite;
+  border-radius: var(--r-md);
+  border: 1px solid var(--border);
+}
+.skel-product-card { height: 168px; }
+.skel-store-card { height: 122px; width: 160px; flex-shrink: 0; }
+
+/* ══════════════════════════════ PRICE DETAILS SHEET (read-only) ══════════════════════════════ */
+.price-details-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.price-details-row:last-child { border-bottom: none; }
+.price-details-row .pd-label { color: var(--muted); }
+.price-details-row .pd-value { color: var(--white); font-weight: 700; }
+.price-details-save { color: var(--green-light); font-size: 11px; }
+
+/* ══════════════════════════════ EMBEDDED QTY STEPPER ══════════════════════════════ */
+.stepper-inline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--green);
+  border-radius: 8px;
+  padding: 3px 6px;
+  animation: cooler-pop 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.stepper-inline button {
+  background: none;
+  border: none;
+  color: #fff;
+  width: 20px;
+  height: 20px;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+}
+.stepper-inline span { color: #fff; font-size: 12px; font-weight: 700; min-width: 14px; text-align: center; }
+
+/* ══════════════════════════════ TRACK STATUS TIMELINE ══════════════════════════════ */
+.track-timeline { padding: 4px 4px 4px 12px; }
+.track-step {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding-bottom: 24px;
+  position: relative;
+}
+.track-step:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 13px;
+  top: 30px;
+  width: 2px;
+  height: calc(100% - 30px);
+  background: var(--border);
+}
+.track-step.done:not(:last-child)::after { background: var(--green-mid); }
+.track-step-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+  font-size: 12px;
+}
+.track-step.done .track-step-dot { background: var(--green); border-color: var(--green-mid); }
+.track-step.current .track-step-dot { border-color: var(--green-light); box-shadow: 0 0 0 4px var(--green-glow); }
+.track-step-label { font-size: 13px; font-weight: 700; color: var(--white); }
+.track-step-desc { font-size: 11px; color: var(--muted); margin-top: 2px; }

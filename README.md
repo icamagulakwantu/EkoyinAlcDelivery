@@ -7,291 +7,193 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 ## 🎯 Architecture Overview
 
 ```
-Frontend (Mobile Web)          Backend (Node.js + Prisma)      Data (Supabase Postgres)
-──────────────────────        ──────────────────────           ────────────────────
-index.html                     server.js                        SkuItem (257 SKUs)
-shop.html                      ├─ /api/products                 Order
-cart.html                      ├─ /order (POST)                 OrderItem
-checkout.html                  ├─ /orders (admin)               Tavern
-order-confirmation.html        └─ /order/:code/*
-                               (Prisma client)
-                               ```
+Frontend (Mobile Web)              Backend (Node.js + Prisma)         Data (Supabase Postgres + Auth)
+──────────────────────             ──────────────────────             ───────────────────────────────
+index.html, shop.html              server.js                          SkuItem (264 SKUs)
+cart.html, checkout.html           ├─ /api/products, /api/taverns     Order, OrderItem
+order-confirmation.html            ├─ /api/health                     Tavern
+login.html, signup.html            ├─ /order (POST, auth-gated)       Supabase Auth (auth.users)
+profile.html, track.html           ├─ /api/my-orders (auth-gated)
+                                    ├─ /api/order/:code/track
+                                    └─ /orders, /admin/* (admin-gated)
+```
 
-                               **Key integrations (Phase 2+):**
-                               - Supabase Auth (admin login)
-                               - Resend (order confirmations, admin alerts)
-                               - Yoco / PayFast (payment gateway)
-                               - WhatsApp Business API (driver dispatch)
+**Key integrations:**
+- Supabase Auth (customer login + admin stopgap)
+- Supabase Postgres (via Prisma)
+- Resend (order confirmations, admin alerts) — Phase 2, not yet wired
+- Yoco / PayFast (payment gateway) — Phase 2, not yet wired
+- WhatsApp Business API (driver dispatch) — currently manual `wa.me` deep links from the admin dashboard
 
-                               ---
+---
 
-                               ## 🚀 Quick Start — Local Development
+## 🚀 Quick Start
 
-                               ### 1. Clone the repo
-                               ```bash
-                               git clone https://gitlab.com/ekoyini/webapp.git
-                               cd ekoyini-webapp
-                               ```
+See **`QUICKSTART.md`** for local setup and **`DEPLOYMENT.md`** for deploying to Render. Short version:
 
-                               ### 2. Install dependencies
-                               ```bash
-                               npm install
-                               ```
+```bash
+npm install                # also runs `prisma generate`
+cp .env.example .env       # fill in Supabase + admin token
+npx prisma db push
+npm run seed                # loads 264 SKUs + 5 taverns
+npm start                   # http://localhost:3000
+```
 
-                               ### 3. Set up environment variables
-                               ```bash
-                               cp .env.example .env
-                               ```
-                               Then edit `.env`:
-                               ```
-                               DATABASE_URL="postgresql://postgres:[PASSWORD]@db.[PROJECT].supabase.co:5432/postgres"
-                               ADMIN_API_TOKEN="your-secure-random-token-here"
-                               PORT=3000
-                               ```
+---
 
-                               ### 4. Push the schema and seed the database
-                               ```bash
-                               # Create tables in Supabase
-                               npx prisma db push
+## 📂 Project Structure
 
-                               # Load all 257 SKUs + 5 taverns
-                               npm run seed
-                               ```
+```
+ekoyini-webapp/
+├── public/                          (customer-facing site)
+│   ├── index.html                   Landing page — hero, USP chips, promos, live Nearby Stores
+│   ├── shop.html                    Catalog — Cooler Box builder, stepper cart, skeleton loading
+│   ├── cart.html                    Cart — single/case pricing toggle, order summary
+│   ├── checkout.html                Age gate, delivery details, payment method, auth-gated
+│   ├── order-confirmation.html      Post-order thank-you, order code, link to tracking
+│   ├── login.html                   Supabase Auth sign-in
+│   ├── signup.html                  Supabase Auth registration
+│   ├── profile.html                 Account view — order history, logout, live auth-state switching
+│   ├── track.html                   Public order tracking by code (no login required)
+│   ├── style.css                    Full design system — all shared CSS
+│   ├── script.js                    Shared utilities: cart, address, toast, cross-tab sync, dead-end auditor
+│   └── auth.js                      Supabase client wrapper, session helpers, nav login-state renderer
+│
+├── admin/
+│   ├── admin.html                   Dispatch dashboard UI (PIN+OTP UI gate — Track B stopgap)
+│   ├── admin-api.js                 CURRENT version — calls the real backend API
+│   ├── admin.js                     OLD localStorage-based version (kept for reference only)
+│   └── admin.css                    Admin UI styles
+│
+├── prisma/
+│   ├── schema.prisma                Full DB schema
+│   ├── seed.js                      Parses skus.csv → computes retail pricing → seeds DB
+│   └── data/
+│       └── skus.csv                 264 SKU rows (257 alcohol + 7 water/ice)
+│
+├── scripts/
+│   └── enrich-images.js             Optional Phase 2: real product photos via Open Food Facts API
+│
+├── server.js                        Express API — all backend logic
+├── package.json                     Dependencies + npm scripts
+├── render.yaml                      Render deploy config
+├── .env.example                     Env var template
+├── QUICKSTART.md                    Local setup walkthrough
+├── DEPLOYMENT.md                    Render deployment walkthrough
+├── LAUNCH_CHECKLIST.md              Track A (done) vs. Track B (before real orders)
+└── .gitignore
+```
 
-                               ### 5. Start the server
-                               ```bash
-                               npm start
-                               ```
+---
 
-                               The app will be available at `http://localhost:3000`.
+## 💳 SKU Catalog & Pricing Strategy
 
-                               ---
+**264 SKUs** across 18 categories (beer, spirits, wine, ciders, mixers, water, ice, etc.), sourced from supplier price sheets.
 
-                               ## 📦 Deployment to Render
+### Pricing Logic
+- **Single-bottle price** (`retailSingleZAR`): Uses supplier's list price directly — already realistic SA shelf prices.
+- **Case discount** (`retailCaseDiscountPct`): Ekoyini's own tiered carry-pack discount:
+  - **8%** on beer, ciders, mixers, water, ice (high turnover, commonly bulk-bought)
+  - **6%** on wine/sparkling (event buying)
+  - **5%** on standard spirits (brandy, whisky, gin, vodka, tequila, liqueurs)
+  - **3%** on premium/luxury (cognac, champagne, premium vodka/tequila) — margins matter more here
 
-                               ### 1. Push to GitLab
-                               ```bash
-                               git add .
-                               git commit -m "Initial commit"
-                               git push origin main
-                               ```
+### 🧊 Cooler Box Package
+The flagship high-margin feature. Customers build a bundle from
+**dumpies, spirits, mixers, ice, and water** — the target market's actual
+buying pattern — and unlock tiered discounts as they add more:
 
-                               ### 2. Create a Render Web Service
-                               - Go to [render.com](https://render.com)
-                               - **New → Web Service**
-                               - Select your GitLab repo
-                               - **Build Command:** `npm install`
-                               - **Start Command:** `node server.js`
-                               - **Environment Variables:**
-                                 ```
-                                   DATABASE_URL=postgresql://postgres:[PASSWORD]@db.[PROJECT].supabase.co:5432/postgres
-                                     ADMIN_API_TOKEN=your-secure-token
-                                       ```
-                                       - Deploy
+| Cooler Box subtotal | Discount |
+|---|---|
+| R300+ | 5% |
+| R600+ | 10% |
+| R1000+ | 15% |
 
-                                       ### 3. Seed the production database
-                                       Once deployed, run the seed script in Render's shell:
-                                       ```bash
-                                       npm run seed
-                                       ```
+Shown live in `shop.html` via a shimmer progress bar and an 8-slot grid, and
+**applied server-side** on the eligible-items subtotal when the order is
+placed — `server.js` recomputes it independently of anything the client
+sends. Wine, sparkling, champagne, cognac, and brandy stay purchasable in
+the regular grid but don't feed the Cooler Box (slow-turnover, not what
+this feature is built for).
 
-                                       ---
+### Images
+- **Phase 1** (current): Category fallback images (Unsplash) — every SKU renders cleanly from day one.
+- **Phase 2**: Real product photos via Open Food Facts API (`npm run enrich-images`), Supabase Storage, or SerpApi.
 
-                                       ## 📂 Project Structure
+---
 
-                                       ```
-                                       ekoyini-webapp/
-                                       ├── public/
-                                       │   ├── index.html              (landing page)
-                                       │   ├── shop.html               (product catalog — fetches from /api/products)
-                                       │   ├── cart.html               (shopping cart with case/single pricing toggle)
-                                       │   ├── checkout.html           (age gate, delivery details, payment method)
-                                       │   ├── order-confirmation.html (post-order thank you + next steps)
-                                       │   ├── style.css               (global design system — dark green/black theme)
-                                       │   └── script.js               (shared utilities: cart, address, toast)
-                                       │
-                                       ├── admin/
-                                       │   ├── admin.html              (dispatch dashboard — PIN-gated)
-                                       │   ├── admin.js                (order management, tavern assignment)
-                                       │   └── admin.css               (admin UI styles)
-                                       │
-                                       ├── prisma/
-                                       │   ├── schema.prisma           (Postgres schema: SkuItem, Order, OrderItem, Tavern)
-                                       │   ├── seed.js                 (parses skus.csv, computes retail pricing, upserts DB)
-                                       │   └── data/
-                                       │       └── skus.csv            (257-SKU supplier price sheet)
-                                       │
-                                       ├── scripts/
-                                       │   └── enrich-images.js        (optional: fetch real product photos via Open Food Facts)
-                                       │
-                                       ├── server.js                   (Express backend: /api/products, /order, /orders, assign/status/delete)
-                                       ├── package.json                (dependencies: Express, Prisma, @prisma/client)
-                                       ├── .env.example                (template for environment variables)
-                                       ├── .gitignore                  (excludes node_modules, .env, OS files)
-                                       └── README.md                   (this file)
-                                       ```
+## 🛒 Customer Journey
 
-                                       ---
+1. **Browse** (`/`) → Filter by category or search
+2. **Shop** (`/shop.html`) → Add to cart, watch the Cooler Box discount unlock as you add eligible items
+3. **Cart** (`/cart.html`) → Review items, toggle single vs. case pricing
+4. **Sign up / Log in** (`/signup.html`, `/login.html`) → Required before checkout
+5. **Checkout** (`/checkout.html`) → Age gate (18+), delivery details, payment method (COD, card, EFT)
+6. **Confirm** (`/order-confirmation.html`) → Order code, link to live tracking
+7. **Track** (`/track.html`) → Status timeline by order code, no login required
+8. **Profile** (`/profile.html`) → Order history for the logged-in customer
 
-                                       ## 💳 SKU Catalog & Pricing Strategy
+---
 
-                                       **257 SKUs** across 16 categories (beer, spirits, wine, ciders, mixers, etc.), sourced from supplier price sheets.
+## 🔐 Security Notes
 
-                                       ### Pricing Logic
-                                       - **Single-bottle price** (`retailSingleZAR`): Uses supplier's list price directly — already realistic SA shelf prices.
-                                       - **Case discount** (`retailCaseDiscountPct`): Ekoyini's own tiered carry-pack discount:
-                                         - **8%** on beer, ciders, mixers (high turnover, commonly bulk-bought)
-                                           - **6%** on wine/sparkling (event buying)
-                                             - **5%** on standard spirits (brandy, whisky, gin, vodka, tequila, liqueurs)
-                                               - **3%** on premium/luxury (cognac, champagne, premium vodka/tequila) — margins matter more here
+### Fixed
+- **Client-side price editing exploit** — the old editable price field on `shop.html` is gone, replaced with a read-only price-details sheet. `POST /order` only accepts `skuId` + `quantity` + `purchaseType` from the client; every price is recomputed server-side from the current DB values.
+- **`/api/taverns` narrowed** — public response is `id`/`name`/`area` only; tavern phone numbers are only ever returned to `requireAdmin`-gated `/admin/taverns`.
+- **Orders are auth-gated** — `POST /order` and `GET /api/my-orders` require a valid Supabase session (`requireUser` middleware, verified against Supabase's `/auth/v1/user`).
 
-                                               ### Images
-                                               - **Phase 1**: Category fallback images (Unsplash) — every SKU renders cleanly from day one.
-                                               - **Phase 2**: Real product photos via:
-                                                 - Open Food Facts API (free, no key) — `npm run enrich-images`
-                                                   - Supabase Storage (upload branded bottle photos per SKU)
-                                                     - SerpApi / Google Images (automated search for transparent PNG bottles)
+### Still Track A / known limitations
+- **Admin auth is a stopgap.** `/admin/admin.html` gates access with a client-side PIN + OTP UI, but the real security boundary is the `ADMIN_API_TOKEN` shared secret the server checks on every admin route — not per-user auth. See `LAUNCH_CHECKLIST.md`.
+- **No real age verification** — UI checkbox only; needs ID capture at delivery.
+- **No real payment** — COD, manual EFT; Yoco/PayFast integration is Phase 2.
 
-                                                     ---
+---
 
-                                                     ## 🛒 Customer Journey
+## 📊 API Reference
 
-                                                     1. **Browse** (`/`) → Filter by category or search
-                                                     2. **Shop** (`/shop.html`) → Add to cart (toggle single vs. case pricing)
-                                                     3. **Cart** (`/cart.html`) → Review items, enter delivery address
-                                                     4. **Checkout** (`/checkout.html`) → Age gate (18+), delivery details, payment method (COD, card, EFT)
-                                                     5. **Confirm** (`/order-confirmation.html`) → Order code, next steps (driver match in 5–10 min)
-                                                     6. **Track** (planned) → Live driver location, WhatsApp updates
+### Public
+- `GET /api/health` — DB connectivity check
+- `GET /api/products?category=` — full catalog, filterable
+- `GET /api/taverns` — store list, `id`/`name`/`area` only
+- `GET /api/order/:code/track` — public order status lookup
 
-                                                     ---
+### Customer (`Authorization: Bearer <supabase_access_token>`)
+- `POST /order` — create order; server recomputes every price and the Cooler Box discount
+- `GET /api/my-orders` — the logged-in user's order history
 
-                                                     ## 🔐 Security Notes
+### Admin (`x-admin-token: <ADMIN_API_TOKEN>`)
+- `GET /orders` — all orders, newest first
+- `GET /admin/taverns` — full tavern records, including phone
+- `PATCH /order/:code/assign` — assign tavern + driver, sets status `PENDING`
+- `PATCH /order/:code/status` — update status
+- `DELETE /order/:code` — delete an order
 
-                                                     ### Current State (Track A — MVP)
-                                                     - Frontend stores cart in `localStorage` (not encrypted — for demo only)
-                                                     - Admin routes require `x-admin-token` header (shared static token, not user-specific)
-                                                     - **No real age verification** — UI checkbox only; needs ID capture at delivery (Track B)
-                                                     - **No real payment** — COD, manual EFT; Yoco/PayFast integration in Phase 2
+---
 
-                                                     ### Next (Track B — Production)
-                                                     - **Supabase Auth**: Replace PIN + static token with email/password or magic-link admin login
-                                                     - **Row-Level Security (RLS)**: Supabase policies so only authenticated users can read their own orders
-                                                     - **Age gate + ID capture**: On-delivery verification via driver photo
-                                                     - **Payment gateway**: Yoco / PayFast for card processing
-                                                     - **HTTPS enforcement**: All sensitive data over TLS
+## 🎨 Design System
 
-                                                     ---
+**Color Palette:** deep forest green (`#1a6b3a` → `#2eab5e`) on black (`#080c0a` → `#162019`), terracotta accent (`#c96a2e`).
+**Typography:** Playfair Display (display, 700/900) + DM Sans (body, 300–700).
 
-                                                     ## 📊 API Endpoints
+See `public/style.css` for the full token set — nav auth chip, top toast,
+Cooler Box builder, skeleton loaders, and the track-order timeline are all
+defined there alongside the original component library.
 
-                                                     ### Public
-                                                     - `GET /api/products` — all SKUs with images, retail pricing, supplier info
-                                                     - `POST /order` — create order (cart items, address, customer details)
+---
 
-                                                     ### Admin (requires `x-admin-token` header)
-                                                     - `GET /orders` — list all orders (paginated, sortable)
-                                                     - `PATCH /order/:code/assign` — assign tavern + driver details
-                                                     - `PATCH /order/:code/status` — update status (dispatch, deliver)
-                                                     - `DELETE /order/:code` — delete order
+## 📈 Roadmap
 
-                                                     ---
+See `LAUNCH_CHECKLIST.md` for the concrete Track A → Track B punch list
+(payments, real age verification, admin auth, Resend email, WhatsApp
+Business API, live GPS tracking, promo codes, RLS).
 
-                                                     ## 🌱 Seeding & Updates
+### Phase 3 (Scale)
+- 🎯 Tavern inventory sync (real-time SKU availability)
+- 🎯 Multi-region expansion (duplicate app for different metro areas)
+- 🎯 Analytics dashboard (order trends, driver performance)
+- 🎯 Driver & customer ratings
+- 🎯 Loyalty program (rewards for repeat orders)
 
-                                                     ### Initial Seed
-                                                     ```bash
-                                                     npm run seed
-                                                     ```
-                                                     Parses `prisma/data/skus.csv`, computes retail pricing, assigns category images, upserts into DB. Idempotent — safe to re-run.
+---
 
-                                                     ### Update SKU Data
-                                                     1. Edit `prisma/data/skus.csv` (add/remove/update rows)
-                                                     2. Run `npm run seed` again
-                                                     3. Commit and push
-
-                                                     ### Enrich Images (Optional Phase 2)
-                                                     ```bash
-                                                     npm run enrich-images
-                                                     ```
-                                                     Queries Open Food Facts for each product, updates `imageUrl` where a match is found. Takes ~5 min (polite API delays). Keeps category fallback if no match.
-
-                                                     ---
-
-                                                     ## 📞 WhatsApp Dispatch (Roadmap)
-
-                                                     **Phase 2 integration:**
-                                                     - When an order is assigned to a tavern, send a WhatsApp message to the tavern owner (template: `"New order EKO-XXXXX for [address]. Driver [name] [vehicle] arriving soon."`)
-                                                     - Driver gets a WhatsApp with order details + customer address + tracking link
-                                                     - Customer gets real-time updates: "Driver assigned", "Picking up", "On the way", "Arrived"
-
-                                                     ---
-
-                                                     ## 🎨 Design System
-
-                                                     **Color Palette:**
-                                                     - Primary green: `#1a6b3a` (deep forest) → `#2eab5e` (light)
-                                                     - Dark: `#080c0a` (black) → `#162019` (card)
-                                                     - Accent: `#c96a2e` (terra/bronze)
-
-                                                     **Typography:**
-                                                     - Display: Playfair Display (serif, 700/900)
-                                                     - Body: DM Sans (sans-serif, 300–700)
-
-                                                     **Component Library:**
-                                                     - Product cards (image, name, size, single + case pricing, add button)
-                                                     - Cart items (qty controls, remove)
-                                                     - Delivery cards (select payment/method)
-                                                     - CTA buttons (full-width, rounded, shadows)
-                                                     - Toast notifications (auto-dismiss)
-
-                                                     See `public/style.css` for the full design system with CSS variables.
-
-                                                     ---
-
-                                                     ## 🧪 Testing Checklist
-
-                                                     - [ ] Load `/api/products` → 257 SKUs returned with images
-                                                     - [ ] Add items to cart → localStorage persists across page reloads
-                                                     - [ ] Toggle single vs. case pricing → prices recalculate correctly
-                                                     - [ ] Complete checkout → POST `/order` succeeds, generates order code
-                                                     - [ ] Age gate + terms → checkboxes prevent submission if unchecked
-                                                     - [ ] Admin `/orders` → requires `x-admin-token` header, returns all orders
-                                                     - [ ] Assign driver → PATCH `/order/:code/assign` updates tavern + driver fields
-                                                     - [ ] Delete order → DELETE `/order/:code` removes from DB
-
-                                                     ---
-
-                                                     ## 📈 Roadmap
-
-                                                     ### Phase 1 (MVP — Current)
-                                                     - ✅ 257-SKU catalog with retail pricing
-                                                     - ✅ Single + case pricing toggle
-                                                     - ✅ Shopping cart (localStorage)
-                                                     - ✅ Checkout with age gate (UI only)
-                                                     - ✅ Admin dispatch dashboard (PIN-gated, demo only)
-
-                                                     ### Phase 2 (Production Ready)
-                                                     - 🚀 Supabase Auth (real admin login)
-                                                     - 🚀 Resend email (order confirmations, admin alerts)
-                                                     - 🚀 Yoco/PayFast payment gateway
-                                                     - 🚀 Real age verification (ID capture at delivery)
-                                                     - 🚀 WhatsApp Business API (driver dispatch)
-                                                     - 🚀 Live driver tracking (Google Maps API)
-
-                                                     ### Phase 3 (Scale)
-                                                     - 🎯 Tavern inventory sync (real-time SKU availability)
-                                                     - 🎯 Multi-region expansion (duplicate app for different metro areas)
-                                                     - 🎯 Analytics dashboard (order trends, driver performance)
-                                                     - 🎯 Driver & customer ratings
-                                                     - 🎯 Loyalty program (rewards for repeat orders)
-
-                                                     ---
-
-                                                     ## 💬 Support
-
-                                                     For questions or bugs, open an issue on GitLab or reach out to the team.
-
-                                                     ---
-
-                                                     **Built with ❤️ for South African kasis** 🇿🇦
-                                                     
+**Built for South African kasis** 🇿🇦

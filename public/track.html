@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Ekoyini — Track Order</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .track-search { display: flex; gap: 8px; padding: 12px; }
+    .track-search input { flex: 1; background: var(--card); border: 1px solid var(--border); padding: 12px 14px; border-radius: var(--r-sm); color: var(--white); font-size: 14px; text-transform: uppercase; }
+    .track-search input:focus { outline: none; border-color: var(--green-mid); }
+    .track-search button { background: var(--green); color: #fff; border: none; padding: 0 18px; border-radius: var(--r-sm); font-size: 13px; font-weight: 700; }
+    .track-result { margin: 12px; }
+    .track-result-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r-md); padding: 18px; margin-bottom: 16px; }
+    .track-result-code { font-family: monospace; font-size: 18px; font-weight: 700; color: var(--green-light); margin-bottom: 4px; }
+    .track-result-meta { font-size: 11px; color: var(--muted); }
+    .track-driver { background: var(--surface); border-radius: 8px; padding: 12px; margin-top: 12px; font-size: 12px; color: var(--muted); }
+    .track-driver strong { color: var(--white); }
+    .track-empty, .track-error { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 13px; }
+  </style>
+</head>
+<body>
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <a href="index.html" class="back-arrow">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><polyline points="15 18 9 12 15 6"/></svg>
+    </a>
+    <div class="logo">
+      <div class="logo-text">Eko<span style="color:var(--green-light)">yini</span></div>
+    </div>
+    <div id="navAuthSlot"></div>
+  </nav>
+
+  <!-- PAGE -->
+  <div class="page">
+    <div class="track-search">
+      <input type="text" id="codeInput" placeholder="EKO-XXXXXX">
+      <button onclick="lookup()">Track</button>
+    </div>
+    <div class="track-result" id="trackResult">
+      <div class="track-empty">🔍 Enter your order code to see live status — no login required.</div>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <a href="index.html" class="bnav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Home
+    </a>
+    <a href="shop.html" class="bnav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+      Shop
+    </a>
+    <a href="cart.html" class="bnav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+      Cart
+    </a>
+    <a href="track.html" class="bnav-item active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Track
+    </a>
+    <a href="profile.html" class="bnav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Profile
+    </a>
+  </nav>
+
+  <div class="toast" id="toastEl"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="auth.js"></script>
+  <script src="script.js"></script>
+  <script>
+  renderNavAuth();
+  const STATUS_STEPS = [
+    { key: 'PAYMENT_PENDING', label: 'Order Placed', desc: 'We\'ve received your order.' },
+    { key: 'PENDING', label: 'Driver Assigned', desc: 'A tavern and driver have been matched to your order.' },
+    { key: 'DISPATCHED', label: 'On The Way', desc: 'Your driver has picked up your order and is heading your way.' },
+    { key: 'DELIVERED', label: 'Delivered', desc: 'Enjoy! Thanks for ordering with Ekoyini.' },
+  ];
+
+  function renderTimeline(status) {
+    const currentIdx = STATUS_STEPS.findIndex((s) => s.key === status);
+    return STATUS_STEPS.map((s, i) => {
+      const state = i < currentIdx ? 'done' : i === currentIdx ? 'done current' : '';
+      const icon = i <= currentIdx ? '✓' : i + 1;
+      return `
+        <div class="track-step ${state}">
+          <div class="track-step-dot">${icon}</div>
+          <div>
+            <div class="track-step-label">${s.label}</div>
+            <div class="track-step-desc">${s.desc}</div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  async function lookup() {
+    const code = document.getElementById('codeInput').value.trim().toUpperCase();
+    const result = document.getElementById('trackResult');
+    if (!code) { showToast('❌ Enter an order code'); return; }
+
+    result.innerHTML = '<div class="track-empty">Looking up your order…</div>';
+    try {
+      const res = await fetch(`/api/order/${encodeURIComponent(code)}/track`);
+      if (res.status === 404) {
+        result.innerHTML = '<div class="track-error">❌ No order found with that code. Double-check and try again.</div>';
+        return;
+      }
+      if (!res.ok) throw new Error('Lookup failed');
+      const order = await res.json();
+
+      result.innerHTML = `
+        <div class="track-result-card">
+          <div class="track-result-code">${order.code}</div>
+          <div class="track-result-meta">${order.items.length} item${order.items.length !== 1 ? 's' : ''} · placed ${new Date(order.createdAt).toLocaleString('en-ZA')}</div>
+          ${order.tavern ? `<div class="track-driver"><strong>🏪 ${order.tavern.name}</strong> (${order.tavern.area})${order.driverName ? `<br>🛵 Driver: <strong>${order.driverName}</strong>${order.driverVehicle ? ` · ${order.driverVehicle}` : ''}` : ''}</div>` : ''}
+        </div>
+        <div class="track-timeline">${renderTimeline(order.status)}</div>
+      `;
+    } catch (err) {
+      console.error(err);
+      result.innerHTML = '<div class="track-error">❌ Something went wrong looking up your order.</div>';
+    }
+  }
+
+  // Init — support ?code= from order-confirmation.html / profile.html links
+  const params = new URLSearchParams(window.location.search);
+  const prefillCode = params.get('code');
+  if (prefillCode) {
+    document.getElementById('codeInput').value = prefillCode;
+    lookup();
+  }
+  </script>
+</body>
+</html>

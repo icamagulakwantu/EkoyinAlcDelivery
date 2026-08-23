@@ -6,12 +6,6 @@
   <title>Ekoyini — Shop</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    .price-edit-hint {
-      background: rgba(46,171,94,0.08); border: 1px solid rgba(46,171,94,0.2);
-      border-radius: 8px; padding: 9px 14px; margin: 10px 12px 0;
-      font-size: 11px; color: var(--green-light);
-      display: flex; align-items: center; gap: 8px;
-    }
     .cat-section { margin-bottom: 24px; }
     .cat-section-header {
       display: flex; align-items: center; gap: 8px;
@@ -27,6 +21,8 @@
       background: var(--card); border: 1px solid var(--border);
       padding: 2px 8px; border-radius: 10px;
     }
+    .retry-state { text-align: center; padding: 60px 20px; color: var(--muted); }
+    .retry-state button { margin-top: 12px; background: var(--green); color: #fff; border: none; padding: 10px 18px; border-radius: 8px; font-size: 12px; font-weight: 700; }
   </style>
 </head>
 <body>
@@ -36,16 +32,18 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><polyline points="15 18 9 12 15 6"/></svg>
     </a>
     <div class="logo">
-      <img src="logo.png" alt="Ekoyini">
       <div class="logo-text">Eko<span style="color:var(--green-light)">yini</span></div>
     </div>
-    <a href="cart.html" class="nav-icon-btn">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
-        <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
-        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
-      </svg>
-      <span class="badge" id="navCartCount">0</span>
-    </a>
+    <div style="display:flex; align-items:center; gap:10px;">
+      <div id="navAuthSlot"></div>
+      <a href="cart.html" class="nav-icon-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+          <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+        </svg>
+        <span class="badge" id="navCartCount">0</span>
+      </a>
+    </div>
   </nav>
 
   <!-- ADDRESS -->
@@ -60,8 +58,20 @@
   <!-- CATEGORY PILLS -->
   <div class="pill-scroll" id="catPills"></div>
 
-  <!-- PRICE EDIT HINT -->
-  <div class="price-edit-hint">✏️ Tap any price to override — changes saved locally. Supplier sync coming soon.</div>
+  <!-- COOLER BOX BUILDER -->
+  <div class="cooler-bar" id="coolerBar" style="display:none;">
+    <div class="cooler-bar-top">
+      <div class="cooler-bar-title">🧊 Cooler Box</div>
+      <div class="cooler-bar-total" id="coolerTotal">R0.00</div>
+    </div>
+    <div class="cooler-progress-track"><div class="cooler-progress-fill" id="coolerFill" style="width:0%"></div></div>
+    <div class="cooler-tier-labels">
+      <span id="tier300">R300 · 5%</span>
+      <span id="tier600">R600 · 10%</span>
+      <span id="tier1000">R1000 · 15%</span>
+    </div>
+    <div class="cooler-slots" id="coolerSlots"></div>
+  </div>
 
   <!-- PRODUCT SECTIONS -->
   <div class="page" id="shopPage" style="padding-top:8px"></div>
@@ -81,49 +91,80 @@
       Cart
       <span class="bnav-badge" id="bnavCartCount" style="display:none">0</span>
     </a>
-    <a href="#" class="bnav-item">
+    <a href="track.html" class="bnav-item">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
       Track
     </a>
-    <a href="#" class="bnav-item">
+    <a href="profile.html" class="bnav-item">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       Profile
     </a>
   </nav>
 
-  <!-- PRICE EDIT MODAL -->
+  <!-- PRICE DETAILS SHEET (read-only) -->
   <div class="modal-overlay" id="priceModal">
     <div class="modal-sheet">
       <div class="modal-handle"></div>
-      <h3 id="modalTitle">Edit Price</h3>
-      <input type="number" id="modalInput" placeholder="Enter price (ZAR)">
+      <h3 id="modalTitle">Price Details</h3>
+      <div id="priceDetailsBody"></div>
       <div class="modal-btns">
-        <button class="btn-save" onclick="savePrice()">Save Override</button>
-        <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+        <button class="btn-cancel" onclick="closeModal()">Close</button>
       </div>
     </div>
   </div>
 
-  <!-- CART TOAST -->
+  <!-- TOASTS -->
   <div class="toast" id="toastEl"></div>
+  <div class="toast-top" id="toastTopEl"></div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="auth.js"></script>
   <script src="script.js"></script>
   <script>
-  const cart = JSON.parse(localStorage.getItem('ekoyini_cart') || '{}');
+  renderNavAuth();
+
+  // Cooler Box eligibility — the target market's actual buying pattern
+  // (dumpies, spirits, mixers, ice, water). Wine/champagne/cognac/brandy
+  // stay purchasable in the regular grid but don't feed the Cooler Box.
+  const COOLER_ELIGIBLE = new Set([
+    'BEER', 'CIDER_RTD', 'WHISKY', 'GIN', 'VODKA', 'VODKA_PREMIUM',
+    'TEQUILA', 'TEQUILA_PREMIUM', 'LIQUEUR', 'MIXER', 'WATER', 'ICE',
+  ]);
+
+  let cart = EkoyiniCart.get();
   let products = [];
-  let editingId = null;
 
   function fmtPrice(v) { return v == null ? 'POA' : 'R' + v.toFixed(2); }
 
+  function renderSkeleton() {
+    const page = document.getElementById('shopPage');
+    const grid = document.createElement('div');
+    grid.className = 'product-grid';
+    for (let i = 0; i < 6; i++) {
+      const s = document.createElement('div');
+      s.className = 'skel-product-card';
+      grid.appendChild(s);
+    }
+    page.innerHTML = '';
+    page.appendChild(grid);
+  }
+
   async function loadCatalog() {
+    renderSkeleton();
     try {
       const res = await fetch('/api/products');
+      if (!res.ok) throw new Error('Bad response');
       products = await res.json();
       buildCatalog();
       updateBadges();
+      updateCoolerBox();
     } catch (err) {
       console.error('Failed to load catalog:', err);
-      showToast('❌ Failed to load products');
+      document.getElementById('shopPage').innerHTML = `
+        <div class="retry-state">
+          ❌ Failed to load products.
+          <div><button onclick="loadCatalog()">Retry</button></div>
+        </div>`;
     }
   }
 
@@ -133,7 +174,6 @@
     page.innerHTML = '';
     pills.innerHTML = '';
 
-    // Group by category
     const byCategory = {};
     products.forEach(p => {
       if (!byCategory[p.category]) byCategory[p.category] = [];
@@ -145,11 +185,11 @@
       COGNAC: '🍷', GIN: '🍸', VODKA: '🧊', VODKA_PREMIUM: '🧊',
       TEQUILA: '🌵', TEQUILA_PREMIUM: '🌵', LIQUEUR: '🍹', MIXER: '🫙',
       WINE: '🍷', WINE_BOX: '🍷', SPARKLING: '🥂', CHAMPAGNE: '🥂',
+      WATER: '💧', ICE: '🧊',
     };
 
     let first = true;
     Object.entries(byCategory).forEach(([cat, items]) => {
-      // Pill
       const pill = document.createElement('div');
       pill.className = 'pill-tag' + (first ? ' active' : '');
       pill.textContent = (categoryEmojis[cat] || '📦') + ' ' + cat.replace(/_/g, ' ');
@@ -160,12 +200,11 @@
       };
       pills.appendChild(pill);
 
-      // Section
       const sec = document.createElement('div');
       sec.className = 'cat-section';
       sec.id = 'sec-' + cat;
       sec.innerHTML = `<div class="cat-section-header">
-        <h2>${categoryEmojis[cat] || '📦'} ${cat.replace(/_/g, ' ')}</h2>
+        <h2>${categoryEmojis[cat] || '📦'} ${cat.replace(/_/g, ' ')}${COOLER_ELIGIBLE.has(cat) ? ' <span class="tag-terra" style="margin-left:6px;">🧊 Cooler Box</span>' : ''}</h2>
         <span class="cat-count">${items.length} items</span>
       </div>`;
       const grid = document.createElement('div');
@@ -181,15 +220,14 @@
             <h3>${p.name}</h3>
             <div class="product-size">${p.bottleFormat}</div>
             <div class="product-footer">
-              <div class="product-price" onclick="openModal('${p.id}','${p.name.replace(/'/g, '\\"')}')" title="Single: ${fmtPrice(p.retailSingleZAR)}, Case: ${fmtPrice(p.retailCaseZAR)} (${p.retailCaseDiscountPct}% off)">
+              <div class="product-price" onclick="showPriceDetails('${p.id}')">
                 ${fmtPrice(p.retailSingleZAR)}
               </div>
-              <button class="add-btn ${qty > 0 ? 'added' : ''}" id="btn-${p.id}" onclick="addToCart('${p.id}')">
-                ${qty > 0 ? qty : '+'}
-              </button>
+              <div id="ctrl-${p.id}"></div>
             </div>
           </div>`;
         grid.appendChild(card);
+        renderQtyControl(p.id);
       });
       sec.appendChild(grid);
       page.appendChild(sec);
@@ -197,13 +235,30 @@
     });
   }
 
-  function addToCart(id) {
-    cart[id] = (cart[id] || 0) + 1;
-    localStorage.setItem('ekoyini_cart', JSON.stringify(cart));
-    const btn = document.getElementById('btn-' + id);
-    if (btn) { btn.textContent = cart[id]; btn.classList.add('added'); }
+  function renderQtyControl(id) {
+    const holder = document.getElementById('ctrl-' + id);
+    if (!holder) return;
+    const qty = cart[id] || 0;
+    if (qty > 0) {
+      holder.innerHTML = `
+        <div class="stepper-inline">
+          <button onclick="changeQty('${id}', -1)">−</button>
+          <span>${qty}</span>
+          <button onclick="changeQty('${id}', 1)">+</button>
+        </div>`;
+    } else {
+      holder.innerHTML = `<button class="add-btn" onclick="changeQty('${id}', 1)">+</button>`;
+    }
+  }
+
+  function changeQty(id, delta) {
+    const newQty = (cart[id] || 0) + delta;
+    if (newQty <= 0) delete cart[id]; else cart[id] = newQty;
+    EkoyiniCart.save(cart);
+    renderQtyControl(id);
     updateBadges();
-    showToast('✅ Added to cart');
+    updateCoolerBox();
+    if (delta > 0) showToastTop('✅ Added to cart');
   }
 
   function updateBadges() {
@@ -214,44 +269,74 @@
     bn.style.display = count > 0 ? 'flex' : 'none';
   }
 
-  function openModal(id, name) {
-    editingId = id;
-    const p = products.find(x => x.id === id);
-    if (!p) return;
-    document.getElementById('modalTitle').textContent = `Edit price: ${p.name}`;
-    document.getElementById('modalInput').value = p.retailSingleZAR;
-    document.getElementById('priceModal').classList.add('open');
+  function updateCoolerBox() {
+    const bar = document.getElementById('coolerBar');
+    const eligibleEntries = Object.entries(cart).filter(([id]) => {
+      const p = products.find(x => x.id === id);
+      return p && COOLER_ELIGIBLE.has(p.category);
+    });
+
+    if (eligibleEntries.length === 0) { bar.style.display = 'none'; return; }
+    bar.style.display = 'block';
+
+    let subtotal = 0;
+    eligibleEntries.forEach(([id, qty]) => {
+      const p = products.find(x => x.id === id);
+      subtotal += p.retailSingleZAR * qty;
+    });
+
+    document.getElementById('coolerTotal').textContent = fmtPrice(subtotal);
+    const pct = Math.min(100, (subtotal / 1000) * 100);
+    document.getElementById('coolerFill').style.width = pct + '%';
+    document.getElementById('tier300').classList.toggle('hit', subtotal >= 300);
+    document.getElementById('tier600').classList.toggle('hit', subtotal >= 600);
+    document.getElementById('tier1000').classList.toggle('hit', subtotal >= 1000);
+
+    const slots = document.getElementById('coolerSlots');
+    slots.innerHTML = '';
+    for (let i = 0; i < 8; i++) {
+      const entry = eligibleEntries[i];
+      const slot = document.createElement('div');
+      slot.className = 'cooler-slot' + (entry ? ' filled' : '');
+      if (entry) {
+        const p = products.find(x => x.id === entry[0]);
+        slot.style.backgroundImage = `url('${p.imageUrl || ''}')`;
+        slot.title = `${p.name} × ${entry[1]}`;
+      }
+      slots.appendChild(slot);
+    }
   }
 
-  function savePrice() {
-    const val = parseFloat(document.getElementById('modalInput').value);
-    if (!isNaN(val) && val >= 0) {
-      const p = products.find(x => x.id === editingId);
-      if (p) {
-        p.retailSingleZAR = val;
-        const el = document.querySelector('#card-' + editingId + ' .product-price');
-        if (el) el.textContent = fmtPrice(val);
-      }
-    }
-    closeModal();
+  function showPriceDetails(id) {
+    const p = products.find(x => x.id === id);
+    if (!p) return;
+    document.getElementById('modalTitle').textContent = p.name;
+    const perUnitCase = p.retailCaseZAR / p.unitsPerCase;
+    document.getElementById('priceDetailsBody').innerHTML = `
+      <div class="price-details-row"><span class="pd-label">Single bottle</span><span class="pd-value">${fmtPrice(p.retailSingleZAR)}</span></div>
+      <div class="price-details-row"><span class="pd-label">Case (${p.unitsPerCase} units)</span><span class="pd-value">${fmtPrice(p.retailCaseZAR)}</span></div>
+      <div class="price-details-row"><span class="pd-label">Per unit (case)</span><span class="pd-value">${fmtPrice(perUnitCase)}</span></div>
+      <div class="price-details-row"><span class="pd-label">Case savings</span><span class="price-details-save">${p.retailCaseDiscountPct}% off</span></div>`;
+    document.getElementById('priceModal').classList.add('open');
   }
 
   function closeModal() { document.getElementById('priceModal').classList.remove('open'); }
 
   function saveAddress() {
     const v = document.getElementById('shopAddress').value.trim();
-    if (v) localStorage.setItem('ekoyini_address', v);
+    if (v) EkoyiniAddress.save(v);
   }
 
-  function showToast(msg) {
-    const t = document.getElementById('toastEl');
-    t.textContent = msg;
-    t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 1800);
-  }
+  // Live re-sync if the cart changes in another tab.
+  window.addEventListener('ekoyini:cart-updated', () => {
+    cart = EkoyiniCart.get();
+    products.forEach(p => renderQtyControl(p.id));
+    updateBadges();
+    updateCoolerBox();
+  });
 
   // Init
-  const addr = localStorage.getItem('ekoyini_address');
+  const addr = EkoyiniAddress.get();
   if (addr) document.getElementById('shopAddress').value = addr;
   loadCatalog();
   </script>

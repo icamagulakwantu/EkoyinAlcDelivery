@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Ekoyini — Profile</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .profile-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r-md); margin: 12px; padding: 20px; text-align: center; }
+    .profile-avatar { width: 64px; height: 64px; border-radius: 50%; background: var(--green); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 700; margin: 0 auto 12px; }
+    .profile-email { font-size: 14px; font-weight: 700; color: var(--white); margin-bottom: 4px; }
+    .profile-since { font-size: 11px; color: var(--muted); }
+    .logout-btn { background: var(--surface); border: 1px solid var(--border); color: var(--danger); padding: 10px 16px; border-radius: 8px; font-size: 12px; font-weight: 600; margin-top: 16px; }
+    .order-list { padding: 0 12px; }
+    .order-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r-md); padding: 14px; margin-bottom: 10px; }
+    .order-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .order-card-code { font-family: monospace; font-weight: 700; color: var(--green-light); font-size: 13px; }
+    .order-card-status { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 10px; text-transform: uppercase; background: var(--surface); color: var(--muted); }
+    .order-card-status.DELIVERED { background: var(--green-glow); color: var(--green-light); }
+    .order-card-status.DISPATCHED { background: rgba(201,106,46,0.15); color: var(--terra-light); }
+    .order-card-meta { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+    .order-card-total { font-size: 13px; font-weight: 700; color: var(--white); margin-top: 6px; }
+    .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 13px; }
+    .logged-out { text-align: center; padding: 60px 20px; }
+  </style>
+</head>
+<body>
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <a href="index.html" class="back-arrow">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><polyline points="15 18 9 12 15 6"/></svg>
+    </a>
+    <div class="logo">
+      <div class="logo-text">Eko<span style="color:var(--green-light)">yini</span></div>
+    </div>
+    <div style="width: 38px;"></div>
+  </nav>
+
+  <!-- PAGE -->
+  <div class="page" id="profilePage"></div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <a href="index.html" class="bnav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Home
+    </a>
+    <a href="shop.html" class="bnav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+      Shop
+    </a>
+    <a href="cart.html" class="bnav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+      Cart
+    </a>
+    <a href="track.html" class="bnav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Track
+    </a>
+    <a href="profile.html" class="bnav-item active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Profile
+    </a>
+  </nav>
+
+  <div class="toast" id="toastEl"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="auth.js"></script>
+  <script src="script.js"></script>
+  <script>
+  const fmtDate = (d) => new Date(d).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' });
+
+  // init() is safe to call more than once — it fully re-renders the page,
+  // so a live auth change (login/logout in this tab or another) can just
+  // re-run it instead of forcing a page reload.
+  async function init() {
+    const session = await getSession();
+    const page = document.getElementById('profilePage');
+
+    if (!session) {
+      page.innerHTML = `
+        <div class="logged-out">
+          <div style="font-size:40px;margin-bottom:12px;">👤</div>
+          <h3 style="color:var(--white);margin-bottom:8px;">You're not logged in</h3>
+          <p style="color:var(--muted);margin-bottom:20px;font-size:13px;">Log in to view your order history.</p>
+          <a href="login.html?redirect=profile.html" class="cta-btn" style="display:inline-block;">Log In</a>
+        </div>`;
+      return;
+    }
+
+    const initial = session.user.email[0].toUpperCase();
+    page.innerHTML = `
+      <div class="profile-card">
+        <div class="profile-avatar">${initial}</div>
+        <div class="profile-email">${session.user.email}</div>
+        <div class="profile-since">Member since ${fmtDate(session.user.created_at)}</div>
+        <button class="logout-btn" id="logoutBtn">Log Out</button>
+      </div>
+      <div class="section-header"><h2>📦 Your Orders</h2></div>
+      <div class="order-list" id="orderList"><div class="empty-state">Loading orders…</div></div>
+    `;
+    document.getElementById('logoutBtn').onclick = async () => { await signOut(); showToast('👋 Logged out'); };
+    loadOrders();
+  }
+
+  async function loadOrders() {
+    const list = document.getElementById('orderList');
+    if (!list) return;
+    try {
+      const res = await authedFetch('/api/my-orders');
+      if (!res.ok) throw new Error('Failed to load orders');
+      const orders = await res.json();
+      if (orders.length === 0) {
+        list.innerHTML = '<div class="empty-state">No orders yet — your first Ekoyini order will show up here.</div>';
+        return;
+      }
+      list.innerHTML = orders.map((o) => `
+        <a href="track.html?code=${o.code}" class="order-card" style="display:block;">
+          <div class="order-card-top">
+            <span class="order-card-code">${o.code}</span>
+            <span class="order-card-status ${o.status}">${o.status.replace(/_/g, ' ')}</span>
+          </div>
+          <div class="order-card-meta">${fmtDate(o.createdAt)} · ${o.items.length} item${o.items.length !== 1 ? 's' : ''}</div>
+          <div class="order-card-total">R${o.total.toFixed(2)}</div>
+        </a>
+      `).join('');
+    } catch (err) {
+      console.error(err);
+      list.innerHTML = '<div class="empty-state">❌ Failed to load orders.</div>';
+    }
+  }
+
+  window.addEventListener('ekoyini:auth-changed', init);
+  init();
+  </script>
+</body>
+</html>

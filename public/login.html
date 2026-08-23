@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Ekoyini — Log In</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="auth-page">
+    <div class="auth-logo">Eko<span>yini</span></div>
+    <div class="auth-sub">Log in to track orders and check out faster.</div>
+
+    <div class="auth-error" id="authError"></div>
+
+    <form id="loginForm">
+      <div class="auth-field">
+        <label>Email</label>
+        <input type="email" id="email" required autocomplete="email" placeholder="you@example.com">
+      </div>
+      <div class="auth-field">
+        <label>Password</label>
+        <input type="password" id="password" required autocomplete="current-password" placeholder="••••••••">
+      </div>
+      <button type="submit" class="cta-btn" id="submitBtn">Log In</button>
+    </form>
+
+    <div class="auth-switch">Don't have an account? <a href="signup.html">Sign up</a></div>
+  </div>
+
+  <div class="toast" id="toastEl"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="auth.js"></script>
+  <script src="script.js"></script>
+  <script>
+  const params = new URLSearchParams(window.location.search);
+  const redirect = params.get('redirect') || 'index.html';
+
+  // If already signed in, skip straight through.
+  getSession().then((session) => { if (session) window.location.href = redirect; });
+
+  document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const errEl = document.getElementById('authError');
+    errEl.classList.remove('show');
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.textContent = 'Logging in…';
+    try {
+      await signIn(document.getElementById('email').value.trim(), document.getElementById('password').value);
+      window.location.href = redirect;
+    } catch (err) {
+      errEl.textContent = err.message || 'Login failed. Check your email and password.';
+      errEl.classList.add('show');
+      btn.disabled = false;
+      btn.textContent = 'Log In';
+    }
+  });
+  </script>
+</body>
+</html>

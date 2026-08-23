@@ -34,7 +34,6 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><polyline points="15 18 9 12 15 6"/></svg>
     </a>
     <div class="logo">
-      <img src="logo.png" alt="Ekoyini">
       <div class="logo-text">Eko<span style="color:var(--green-light)">yini</span></div>
     </div>
     <div style="width: 38px;"></div>
@@ -82,21 +81,21 @@
     <!-- PAYMENT METHOD -->
     <div class="checkout-section">
       <h2>💳 Payment Method</h2>
-      <div class="payment-option selected" onclick="selectPayment('cod')">
+      <div class="payment-option selected" data-method="cod" onclick="selectPayment('cod')">
         <input type="radio" name="payment" value="cod" checked>
         <div>
           <div class="p-label">💵 Pay on Delivery (COD)</div>
           <div class="p-desc">Pay the driver when they arrive</div>
         </div>
       </div>
-      <div class="payment-option" onclick="selectPayment('card')">
+      <div class="payment-option" data-method="card" onclick="selectPayment('card')">
         <input type="radio" name="payment" value="card">
         <div>
           <div class="p-label">💳 Debit/Credit Card</div>
           <div class="p-desc">Secure payment via Yoco (coming soon)</div>
         </div>
       </div>
-      <div class="payment-option" onclick="selectPayment('eft')">
+      <div class="payment-option" data-method="eft" onclick="selectPayment('eft')">
         <input type="radio" name="payment" value="eft">
         <div>
           <div class="p-label">🏦 EFT Transfer</div>
@@ -106,7 +105,7 @@
     </div>
 
     <!-- SUBMIT BUTTON -->
-    <button class="cta-btn" onclick="submitOrder()" style="margin-bottom: 20px;">🚀 Place Order</button>
+    <button class="cta-btn" onclick="submitOrder()" id="submitBtn" style="margin-bottom: 20px;">🚀 Place Order</button>
   </div>
 
   <!-- BOTTOM NAV -->
@@ -123,11 +122,11 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
       Cart
     </a>
-    <a href="#" class="bnav-item">
+    <a href="track.html" class="bnav-item">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
       Track
     </a>
-    <a href="#" class="bnav-item">
+    <a href="profile.html" class="bnav-item">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       Profile
     </a>
@@ -136,67 +135,105 @@
   <!-- TOAST -->
   <div class="toast" id="toastEl"></div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="auth.js"></script>
   <script src="script.js"></script>
   <script>
+  // Cooler Box eligibility + tier thresholds — mirrors server.js exactly.
+  // This is a *preview only*; the server recomputes the real total and
+  // ignores anything sent from the client.
+  const COOLER_ELIGIBLE = new Set([
+    'BEER', 'CIDER_RTD', 'WHISKY', 'GIN', 'VODKA', 'VODKA_PREMIUM',
+    'TEQUILA', 'TEQUILA_PREMIUM', 'LIQUEUR', 'MIXER', 'WATER', 'ICE',
+  ]);
+  function coolerDiscountPct(sub) {
+    if (sub >= 1000) return 0.15;
+    if (sub >= 600) return 0.10;
+    if (sub >= 300) return 0.05;
+    return 0;
+  }
+
   const checkoutData = JSON.parse(localStorage.getItem('ekoyini_checkout_data') || '{}');
   let products = [];
   let selectedPayment = 'cod';
 
   async function loadCheckout() {
+    // Auth gate — checkout requires a session.
+    const session = await requireAuth('checkout.html');
+    if (!session) return;
+
+    if (!checkoutData.cart || Object.keys(checkoutData.cart).length === 0) {
+      showToast('❌ Your cart is empty');
+      setTimeout(() => { window.location.href = 'cart.html'; }, 1200);
+      return;
+    }
+
     try {
       const res = await fetch('/api/products');
       products = await res.json();
       renderOrderReview();
       document.getElementById('deliveryAddress').value = checkoutData.address || '';
+      if (session.user.email) document.getElementById('customerName').value = document.getElementById('customerName').value || '';
     } catch (err) {
       console.error('Failed to load products:', err);
       showToast('❌ Failed to load order');
     }
   }
 
-  function renderOrderReview() {
-    const review = document.getElementById('orderReview');
+  // If the user signs out in another tab mid-checkout, bounce them to login.
+  window.addEventListener('ekoyini:auth-changed', async () => {
+    const session = await getSession();
+    if (!session) window.location.href = 'login.html?redirect=checkout.html';
+  });
+
+  function computeTotals() {
     const { cart, purchaseType } = checkoutData;
     let subtotal = 0;
+    let coolerSubtotal = 0;
+    const lines = [];
 
-    review.innerHTML = '';
     Object.entries(cart || {}).forEach(([skuId, qty]) => {
       const p = products.find(x => x.id === skuId);
       if (!p) return;
       const unitPrice = purchaseType === 'case' ? (p.retailCaseZAR / p.unitsPerCase) : p.retailSingleZAR;
       const itemTotal = unitPrice * qty;
       subtotal += itemTotal;
-      const item = document.createElement('div');
-      item.className = 'order-review-item';
-      item.innerHTML = `
-        <span>${p.name} × ${qty}</span>
-        <span>R${itemTotal.toFixed(2)}</span>`;
-      review.appendChild(item);
+      if (COOLER_ELIGIBLE.has(p.category)) coolerSubtotal += itemTotal;
+      lines.push({ name: p.name, qty, itemTotal });
     });
 
-    const discount = subtotal * 0.05;
+    const coolerDiscount = coolerSubtotal * coolerDiscountPct(coolerSubtotal);
     const delivery = subtotal > 200 ? 0 : 50;
-    const total = subtotal - discount + delivery;
+    const total = subtotal - coolerDiscount + delivery;
+    return { lines, subtotal, coolerDiscount, delivery, total };
+  }
+
+  function renderOrderReview() {
+    const review = document.getElementById('orderReview');
+    const { lines, subtotal, coolerDiscount, delivery, total } = computeTotals();
+
+    review.innerHTML = lines.map(l => `
+      <div class="order-review-item">
+        <span>${l.name} × ${l.qty}</span>
+        <span>R${l.itemTotal.toFixed(2)}</span>
+      </div>`).join('');
 
     const totals = document.createElement('div');
     totals.innerHTML = `
       <div class="order-review-item"><span>Subtotal</span><span>R${subtotal.toFixed(2)}</span></div>
-      <div class="order-review-item"><span>Discount (5%)</span><span>-R${discount.toFixed(2)}</span></div>
+      ${coolerDiscount > 0 ? `<div class="order-review-item"><span>Cooler Box discount</span><span>-R${coolerDiscount.toFixed(2)}</span></div>` : ''}
       <div class="order-review-item"><span>Delivery</span><span>R${delivery.toFixed(2)}</span></div>
       <div class="order-review-total"><span>Total</span><span>R${total.toFixed(2)}</span></div>`;
     review.appendChild(totals);
-
-    localStorage.setItem('ekoyini_order_total', total.toFixed(2));
   }
 
   function selectPayment(method) {
     selectedPayment = method;
     document.querySelectorAll('.payment-option').forEach(p => p.classList.remove('selected'));
-    document.querySelector(`[onclick="selectPayment('${method}')"]`).classList.add('selected');
+    document.querySelector(`[data-method="${method}"]`).classList.add('selected');
   }
 
   async function submitOrder() {
-    // Validation
     if (!document.getElementById('ageConfirm').checked) {
       showToast('❌ Please confirm you are 18+');
       return;
@@ -215,63 +252,44 @@
     }
 
     const { cart, purchaseType, address } = checkoutData;
-    const items = [];
-    let total = 0;
+    const items = Object.entries(cart || {}).map(([skuId, qty]) => ({ skuId, quantity: qty, purchaseType }));
 
-    Object.entries(cart || {}).forEach(([skuId, qty]) => {
-      const p = products.find(x => x.id === skuId);
-      if (!p) return;
-      const unitPrice = purchaseType === 'case' ? (p.retailCaseZAR / p.unitsPerCase) : p.retailSingleZAR;
-      const itemTotal = unitPrice * qty;
-      items.push({
-        skuId: p.id,
-        name: p.name,
-        price: unitPrice,
-        quantity: qty,
-      });
-      total += itemTotal;
-    });
-
-    const discount = total * 0.05;
-    const delivery = total > 200 ? 0 : 50;
-    const finalTotal = total - discount + delivery;
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.textContent = 'Placing order…';
 
     try {
-      const res = await fetch('/order', {
+      const res = await authedFetch('/order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           address,
           items,
-          total: finalTotal,
-          customerName: document.getElementById('customerName').value,
-          customerPhone: document.getElementById('phoneNumber').value,
+          customerName: document.getElementById('customerName').value.trim(),
+          customerPhone: document.getElementById('phoneNumber').value.trim(),
           paymentMethod: selectedPayment,
         }),
       });
 
-      if (!res.ok) throw new Error('Order submission failed');
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Order submission failed');
+      }
       const data = await res.json();
       const orderCode = data.order?.code;
 
-      // Clear cart and show success
-      localStorage.removeItem('ekoyini_cart');
+      EkoyiniCart.clear();
       localStorage.removeItem('ekoyini_checkout_data');
       showToast('✅ Order placed! Code: ' + orderCode);
       setTimeout(() => {
         window.location.href = `order-confirmation.html?code=${orderCode}`;
-      }, 1500);
+      }, 1200);
     } catch (err) {
       console.error('Order submission error:', err);
-      showToast('❌ Failed to submit order');
+      showToast('❌ ' + (err.message || 'Failed to submit order'));
+      btn.disabled = false;
+      btn.textContent = '🚀 Place Order';
     }
-  }
-
-  function showToast(msg) {
-    const t = document.getElementById('toastEl');
-    t.textContent = msg;
-    t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 2000);
   }
 
   // Init
