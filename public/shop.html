@@ -215,7 +215,7 @@
         card.className = 'product-card';
         card.id = 'card-' + p.id;
         card.innerHTML = `
-          <div class="product-img" style="background-image: url('${p.imageUrl || ''}'); background-size: cover; background-position: center;"></div>
+          <div class="product-img" style="background-image: url('${p.imageUrl || ''}'); background-size: contain; background-repeat: no-repeat; background-position: center;"></div>
           <div class="product-info">
             <h3>${p.name}</h3>
             <div class="product-size">${p.bottleFormat}</div>
