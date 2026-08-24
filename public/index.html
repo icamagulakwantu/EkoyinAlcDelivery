@@ -57,9 +57,64 @@
     .ridealong-banner .rb-tag { margin-bottom: 6px; }
     .ridealong-banner h3 { font-family: var(--font-display); font-size: 16px; color: var(--white); margin-bottom: 4px; }
     .ridealong-banner p { font-size: 11px; color: var(--muted); line-height: 1.5; }
+
+    /* NEIGHBOURHOOD FILTER (Nearby Stores) */
+    .hood-filter { display: flex; gap: 8px; overflow-x: auto; padding: 0 16px 12px; scrollbar-width: none; }
+    .hood-filter::-webkit-scrollbar { display: none; }
+
+    /* ── AGE VERIFICATION GATE ──
+       First-visit full-screen gate, shown before anything else. Deliberately
+       max-contrast (pure black / pure white / terracotta) rather than the
+       site's usual --card/--surface tones — this is the one screen where
+       "readable in harsh sunlight on a cheap screen" outweighs "on-brand". */
+    .age-gate {
+      position: fixed; inset: 0; z-index: 9999;
+      background: #000;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 32px 24px; text-align: center;
+    }
+    .age-gate.hidden { display: none; }
+    .age-gate .ag-numeral {
+      font-family: var(--font-display); font-weight: 900;
+      font-size: 96px; line-height: 1; color: var(--terra-light);
+      margin-bottom: 8px; letter-spacing: -2px;
+    }
+    .age-gate h1 {
+      font-family: var(--font-display); font-size: 22px; color: #fff;
+      margin-bottom: 12px; max-width: 320px;
+    }
+    .age-gate p { font-size: 14px; color: #d8d8d8; max-width: 320px; line-height: 1.6; margin-bottom: 32px; }
+    .age-gate .ag-actions { width: 100%; max-width: 320px; display: flex; flex-direction: column; gap: 12px; }
+    .age-gate .ag-yes {
+      background: var(--terra); color: #fff; border: none;
+      min-height: 56px; border-radius: var(--r-sm);
+      font-size: 16px; font-weight: 700; letter-spacing: 0.2px;
+    }
+    .age-gate .ag-yes:active { background: var(--terra-light); }
+    .age-gate .ag-no {
+      background: transparent; color: #9a9a9a; border: 1.5px solid #333;
+      min-height: 48px; border-radius: var(--r-sm); font-size: 13px; font-weight: 600;
+    }
+    .age-gate .ag-legal { margin-top: 20px; font-size: 10px; color: #666; max-width: 300px; line-height: 1.5; }
+    .age-gate .ag-blocked { display: none; }
+    .age-gate.blocked .ag-numeral, .age-gate.blocked h1, .age-gate.blocked p, .age-gate.blocked .ag-actions, .age-gate.blocked .ag-legal { display: none; }
+    .age-gate.blocked .ag-blocked { display: block; font-size: 15px; color: #fff; max-width: 300px; line-height: 1.6; }
   </style>
 </head>
 <body>
+  <!-- AGE VERIFICATION GATE -->
+  <div class="age-gate hidden" id="ageGate">
+    <div class="ag-numeral">18+</div>
+    <h1>You must be 18 or older to enter Ekoyini</h1>
+    <p>We deliver alcohol responsibly. Please confirm your age before browsing.</p>
+    <div class="ag-actions">
+      <button class="ag-yes" onclick="ageGateConfirm(true)">I am 18 or older</button>
+      <button class="ag-no" onclick="ageGateConfirm(false)">I am under 18</button>
+    </div>
+    <p class="ag-legal">By continuing you confirm you are of legal drinking age in South Africa. Ekoyini does not sell or deliver alcohol to minors.</p>
+    <div class="ag-blocked">Sorry — you must be 18 or older to use Ekoyini. Please come back when you're of legal drinking age.</div>
+  </div>
+
   <!-- NAVBAR -->
   <nav class="navbar">
     <div class="logo">
@@ -205,6 +260,7 @@
       <h2>Nearby Stores</h2>
       <a href="shop.html">View all →</a>
     </div>
+    <div class="hood-filter fade-up-4" id="hoodFilter"></div>
     <div class="store-scroll fade-up-4" id="storeScroll">
       <div class="skel-store-card"></div>
       <div class="skel-store-card"></div>
@@ -249,6 +305,27 @@
   <script>
   renderNavAuth();
 
+  // ── AGE VERIFICATION GATE ──
+  // Shown once per browser (localStorage), before anything else on the
+  // page is meaningfully interactive. "No" leaves the block message up
+  // rather than redirecting off-site — no dependency on an external URL.
+  (function initAgeGate() {
+    const KEY = 'ekoyini_age_verified';
+    if (localStorage.getItem(KEY) === 'true') return;
+    document.getElementById('ageGate').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  })();
+  function ageGateConfirm(isAdult) {
+    const gate = document.getElementById('ageGate');
+    if (isAdult) {
+      localStorage.setItem('ekoyini_age_verified', 'true');
+      gate.classList.add('hidden');
+      document.body.style.overflow = '';
+    } else {
+      gate.classList.add('blocked');
+    }
+  }
+
   // Load saved address
   const saved = EkoyiniAddress.get();
   if (saved) document.getElementById('addressInput').value = saved;
@@ -273,30 +350,63 @@
   const greet = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
   document.querySelector('.hero-greeting').textContent = greet + ' 👋';
 
-  // Nearby Stores — live fetch, with skeleton loading and graceful fallback.
+  // Nearby Stores — live fetch, with skeleton loading, graceful fallback,
+  // and neighbourhood filtering built from each tavern's own area field
+  // (no separate geo data needed — township addressing is landmark/area
+  // based, not street-address based, so "area" already is the landmark).
   const storeEmojis = ['🏪', '🍾', '🛒', '🥃', '🍺'];
+  let allTaverns = [];
+  let activeHood = 'All';
+
   async function loadStores() {
     const scroll = document.getElementById('storeScroll');
     try {
       const res = await fetch('/api/taverns');
       if (!res.ok) throw new Error('Bad response');
-      const taverns = await res.json();
-      if (taverns.length === 0) {
+      allTaverns = await res.json();
+      if (allTaverns.length === 0) {
+        document.getElementById('hoodFilter').innerHTML = '';
         scroll.innerHTML = '<div class="store-empty">No stores nearby yet — check back soon.</div>';
         return;
       }
-      scroll.innerHTML = taverns.map((t, i) => `
-        <div class="store-card" onclick="window.location='shop.html'">
-          <div class="store-img">${storeEmojis[i % storeEmojis.length]}</div>
-          <div class="store-body">
-            <div class="store-name">${t.name}</div>
-            <div class="store-meta">📍 ${t.area}</div>
-          </div>
-        </div>`).join('');
+      renderHoodFilter();
+      renderStores();
     } catch (err) {
       console.error('Failed to load stores:', err);
       scroll.innerHTML = '<div class="store-empty">❌ Couldn\'t load nearby stores.</div>';
     }
+  }
+
+  function renderHoodFilter() {
+    const hoods = ['All', ...new Set(allTaverns.map(t => t.area))];
+    const filter = document.getElementById('hoodFilter');
+    filter.innerHTML = hoods.map(h => `
+      <div class="pill-tag ${h === activeHood ? 'active' : ''}" onclick="setHood('${h.replace(/'/g, "\\'")}')">${h === 'All' ? '📍 All Areas' : h}</div>
+    `).join('');
+  }
+
+  function setHood(hood) {
+    activeHood = hood;
+    renderHoodFilter();
+    renderStores();
+  }
+  window.setHood = setHood;
+
+  function renderStores() {
+    const scroll = document.getElementById('storeScroll');
+    const filtered = activeHood === 'All' ? allTaverns : allTaverns.filter(t => t.area === activeHood);
+    if (filtered.length === 0) {
+      scroll.innerHTML = `<div class="store-empty">No stores in ${activeHood} yet — try another area.</div>`;
+      return;
+    }
+    scroll.innerHTML = filtered.map((t, i) => `
+      <div class="store-card" onclick="window.location='shop.html'">
+        <div class="store-img">${storeEmojis[i % storeEmojis.length]}</div>
+        <div class="store-body">
+          <div class="store-name">${t.name}</div>
+          <div class="store-meta">📍 ${t.area}</div>
+        </div>
+      </div>`).join('');
   }
   loadStores();
   </script>
