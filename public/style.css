@@ -1,38 +1,52 @@
 /* ═══════════════════════════════════════════════
    EKOYINI MOBILE BAR — GLOBAL DESIGN SYSTEM
-      Dark Green / Black / White / Terracotta
-         ═══════════════════════════════════════════════ */
+      Warm Cream / Forest Green / Terracotta
 
-         @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600;700&display=swap");
+      Retheme note: this was originally a dark theme (near-black base).
+      Flipped to light/high-contrast for real-world legibility in direct
+      township sunlight on low-cost Android screens — dark UIs read
+      worse than light ones under glare, regardless of how premium they
+      look on a lab monitor. Token *names* are unchanged on purpose so
+      every page that already references var(--white)/var(--muted)/etc.
+      picks up the new values with no per-page edits. --white now holds
+      a dark value (it's the primary text-color token, not literally
+      "white") and --green-light now holds a *deep* green — its role was
+      always "the accent color that pops," which on a light base means
+      dark, not light. The age gate and onboarding intro stay
+      deliberately dark/black — see their own comments — that's an
+      intentional exception, not a leftover.
+   ═══════════════════════════════════════════════ */
 
-         :root {
-               --black: #080c0a;
-                 --deep: #0d1410;
-                   --surface: #111a14;
-                     --card: #162019;
-                       --border: #1f3027;
-                         --green: #1a6b3a;
-                           --green-mid: #22874a;
-                             --green-light: #2eab5e;
-                               --green-glow: rgba(46, 171, 94, 0.15);
-                                 --terra: #c96a2e;
-                                   --terra-light: #e07c3a;
-                                     --white: #f4f7f5;
-                                       --muted: #7a9485;
-                                         --faint: #3a4f44;
-                                           --danger: #e05252;
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600;700&display=swap");
 
-                                             --font-display: "Playfair Display", serif;
-                                               --font-body: "DM Sans", sans-serif;
+:root {
+  --black: #f7f4ec;
+  --deep: #efe8d8;
+  --surface: #ffffff;
+  --card: #ffffff;
+  --border: #e2dac4;
+  --green: #1a6b3a;
+  --green-mid: #146030;
+  --green-light: #14532d;
+  --green-glow: rgba(26, 107, 58, 0.1);
+  --terra: #c96a2e;
+  --terra-light: #a8551f;
+  --white: #1c2b20;
+  --muted: #5c6b60;
+  --faint: #a39b87;
+  --danger: #c23f3f;
 
-                                                 --r-sm: 10px;
-                                                   --r-md: 16px;
-                                                     --r-lg: 24px;
-                                                       --r-xl: 32px;
+  --font-display: "Playfair Display", serif;
+  --font-body: "DM Sans", sans-serif;
 
-                                                         --nav-h: 60px;
-                                                           --bottom-h: 64px;
-         }
+  --r-sm: 10px;
+  --r-md: 16px;
+  --r-lg: 24px;
+  --r-xl: 32px;
+
+  --nav-h: 60px;
+  --bottom-h: 64px;
+}
 
          *,
          *::before,
@@ -95,7 +109,7 @@
                          align-items: center;
                            justify-content: space-between;
                              padding: 0 16px;
-                               background: rgba(8, 12, 10, 0.95);
+                               background: rgba(247, 244, 236, 0.92);
                                  backdrop-filter: blur(12px);
                                    border-bottom: 1px solid var(--border);
          }
@@ -183,7 +197,7 @@
                      right: 0;
                        z-index: 100;
                          height: var(--bottom-h);
-                           background: rgba(8, 12, 10, 0.97);
+                           background: rgba(247, 244, 236, 0.95);
                              backdrop-filter: blur(16px);
                                border-top: 1px solid var(--border);
                                  display: flex;
@@ -370,16 +384,6 @@
                          font-size: 40px;
                            position: relative;
                              overflow: hidden;
-         }
-         .product-img::after {
-               content: "";
-                 position: absolute;
-                   inset: 0;
-                     background: linear-gradient(
-                             to bottom,
-                                 transparent 60%,
-                                     rgba(22, 32, 25, 0.6)
-                     );
          }
          .product-badge {
                position: absolute;
@@ -934,7 +938,7 @@
                    gap: 4px;
                      background: rgba(46, 171, 94, 0.12);
                        border: 1px solid rgba(46, 171, 94, 0.3);
-                         color: var(--green-light);
+                         color: #2eab5e; /* only ever used on the dark ridealong-banner — not a themed token */
                            font-size: 10px;
                              font-weight: 700;
                                padding: 3px 8px;
@@ -1081,12 +1085,12 @@
 .cooler-bar-title {
   font-family: var(--font-display);
   font-size: 15px;
-  color: var(--white);
+  color: #f4f7f5; /* .cooler-bar keeps its own dark gradient bg — not a themed token */
   display: flex;
   align-items: center;
   gap: 6px;
 }
-.cooler-bar-total { font-size: 13px; font-weight: 700; color: var(--green-light); }
+.cooler-bar-total { font-size: 13px; font-weight: 700; color: #2eab5e; }
 .cooler-progress-track {
   height: 8px;
   background: rgba(255, 255, 255, 0.08);
@@ -1097,7 +1101,7 @@
 }
 .cooler-progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--green) 0%, var(--green-light) 100%);
+  background: linear-gradient(90deg, var(--green) 0%, #2eab5e 100%);
   border-radius: 4px;
   transition: width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   position: relative;
@@ -1118,10 +1122,10 @@
   display: flex;
   justify-content: space-between;
   font-size: 10px;
-  color: var(--muted);
+  color: #7a9485;
   margin-bottom: 12px;
 }
-.cooler-tier-labels span.hit { color: var(--green-light); font-weight: 700; }
+.cooler-tier-labels span.hit { color: #2eab5e; font-weight: 700; }
 .cooler-slots {
   display: grid;
   grid-template-columns: repeat(4, 1fr);

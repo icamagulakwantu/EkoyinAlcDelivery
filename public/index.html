@@ -55,8 +55,8 @@
     .ridealong-banner { margin: 4px 12px 16px; background: linear-gradient(135deg, #0d3020 0%, #0d1a14 100%); border: 1px solid var(--green); border-radius: var(--r-md); padding: 16px; position: relative; overflow: hidden; }
     .ridealong-banner::before { content: '🚗'; position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 48px; opacity: 0.15; }
     .ridealong-banner .rb-tag { margin-bottom: 6px; }
-    .ridealong-banner h3 { font-family: var(--font-display); font-size: 16px; color: var(--white); margin-bottom: 4px; }
-    .ridealong-banner p { font-size: 11px; color: var(--muted); line-height: 1.5; }
+    .ridealong-banner h3 { font-family: var(--font-display); font-size: 16px; color: #f4f7f5; margin-bottom: 4px; }
+    .ridealong-banner p { font-size: 11px; color: #7a9485; line-height: 1.5; }
 
     /* NEIGHBOURHOOD FILTER (Nearby Stores) */
     .hood-filter { display: flex; gap: 8px; overflow-x: auto; padding: 0 16px 12px; scrollbar-width: none; }
@@ -76,7 +76,7 @@
     .age-gate.hidden { display: none; }
     .age-gate .ag-numeral {
       font-family: var(--font-display); font-weight: 900;
-      font-size: 96px; line-height: 1; color: var(--terra-light);
+      font-size: 96px; line-height: 1; color: #e07c3a;
       margin-bottom: 8px; letter-spacing: -2px;
     }
     .age-gate h1 {
@@ -109,9 +109,13 @@
       display: flex; flex-direction: column;
     }
     .onboarding.hidden { display: none; }
+    /* This overlay keeps its own dark gradient background regardless of
+       the site theme (see the retheme note in style.css), so its text
+       is hardcoded to what reads on dark — not the themed tokens, which
+       now point at dark-on-light values. */
     .ob-skip {
       align-self: flex-end; margin: 20px 20px 0; font-size: 12px;
-      color: var(--muted); font-weight: 600; padding: 8px;
+      color: #8a9a8f; font-weight: 600; padding: 8px;
     }
     .ob-slides { flex: 1; position: relative; overflow: hidden; }
     .ob-slide {
@@ -123,15 +127,15 @@
     @keyframes ob-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
     .ob-icon {
       width: 96px; height: 96px; border-radius: 50%;
-      background: var(--green-glow); border: 1.5px solid var(--green-mid);
+      background: rgba(46, 171, 94, 0.15); border: 1.5px solid #22874a;
       display: flex; align-items: center; justify-content: center;
       font-size: 44px; margin-bottom: 28px;
     }
-    .ob-slide h2 { font-family: var(--font-display); font-size: 24px; color: var(--white); margin-bottom: 12px; max-width: 280px; }
-    .ob-slide p { font-size: 14px; color: var(--muted); line-height: 1.6; max-width: 280px; }
+    .ob-slide h2 { font-family: var(--font-display); font-size: 24px; color: #f4f7f5; margin-bottom: 12px; max-width: 280px; }
+    .ob-slide p { font-size: 14px; color: #8a9a8f; line-height: 1.6; max-width: 280px; }
     .ob-footer { padding: 24px 24px 36px; }
     .ob-dots { display: flex; justify-content: center; gap: 6px; margin-bottom: 20px; }
-    .ob-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border); transition: background 0.2s, width 0.2s; }
+    .ob-dot { width: 7px; height: 7px; border-radius: 50%; background: #2a3a30; transition: background 0.2s, width 0.2s; }
     .ob-dot.active { background: var(--terra); width: 20px; border-radius: 4px; }
   </style>
 </head>
