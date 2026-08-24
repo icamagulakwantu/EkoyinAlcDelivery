@@ -15,7 +15,20 @@
     .checkbox-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; }
     .checkbox-row input[type="checkbox"] { width: 18px; height: 18px; margin-top: 2px; cursor: pointer; }
     .checkbox-row label { font-size: 12px; color: var(--muted); line-height: 1.5; cursor: pointer; flex: 1; }
-    .age-gate-warning { background: rgba(224, 82, 82, 0.1); border: 1px solid rgba(224, 82, 82, 0.3); border-radius: 8px; padding: 12px; margin-bottom: 12px; font-size: 12px; color: var(--danger); }
+    /* Matches the max-contrast age gate on the home screen — same black
+       surface + terracotta accent, so the compliance moment reads as one
+       consistent system rather than a generic red warning box. */
+    .age-gate-warning {
+      background: #000; border: 1.5px solid var(--terra);
+      border-left: 4px solid var(--terra);
+      border-radius: 8px; padding: 14px; margin-bottom: 14px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .age-gate-warning .agw-badge {
+      font-family: var(--font-display); font-weight: 900; font-size: 22px;
+      color: var(--terra-light); flex-shrink: 0; line-height: 1;
+    }
+    .age-gate-warning .agw-text { font-size: 12px; color: #ddd; line-height: 1.5; }
     .payment-option { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 10px; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: all 0.2s; }
     .payment-option.selected { background: var(--green-glow); border-color: var(--green-mid); }
     .payment-option input[type="radio"] { width: 16px; height: 16px; cursor: pointer; }
@@ -67,7 +80,10 @@
     <!-- AGE VERIFICATION (COMPLIANCE) -->
     <div class="checkout-section">
       <h2>⚠️ Age Verification</h2>
-      <div class="age-gate-warning">🔞 Alcohol & Tobacco: You must be 18+ to purchase. Sales to minors are illegal.</div>
+      <div class="age-gate-warning">
+        <div class="agw-badge">18+</div>
+        <div class="agw-text"><strong style="color:#fff;">Alcohol &amp; Tobacco.</strong> You must be 18 or older to purchase. Sales to minors are illegal.</div>
+      </div>
       <div class="checkbox-row">
         <input type="checkbox" id="ageConfirm">
         <label for="ageConfirm">I confirm I am 18 years of age or older</label>

@@ -99,9 +99,69 @@
     .age-gate .ag-blocked { display: none; }
     .age-gate.blocked .ag-numeral, .age-gate.blocked h1, .age-gate.blocked p, .age-gate.blocked .ag-actions, .age-gate.blocked .ag-legal { display: none; }
     .age-gate.blocked .ag-blocked { display: block; font-size: 15px; color: #fff; max-width: 300px; line-height: 1.6; }
+
+    /* ── ONBOARDING (first-run only, shown before the age gate) ──
+       Brand-colored (unlike the age gate) — this is a welcome moment,
+       not a compliance moment, so it gets the warm palette. */
+    .onboarding {
+      position: fixed; inset: 0; z-index: 10000;
+      background: linear-gradient(160deg, #0d1a14 0%, #080c0a 60%);
+      display: flex; flex-direction: column;
+    }
+    .onboarding.hidden { display: none; }
+    .ob-skip {
+      align-self: flex-end; margin: 20px 20px 0; font-size: 12px;
+      color: var(--muted); font-weight: 600; padding: 8px;
+    }
+    .ob-slides { flex: 1; position: relative; overflow: hidden; }
+    .ob-slide {
+      position: absolute; inset: 0; display: none;
+      flex-direction: column; align-items: center; justify-content: center;
+      text-align: center; padding: 20px 32px 0;
+    }
+    .ob-slide.active { display: flex; animation: ob-in 0.35s ease; }
+    @keyframes ob-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+    .ob-icon {
+      width: 96px; height: 96px; border-radius: 50%;
+      background: var(--green-glow); border: 1.5px solid var(--green-mid);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 44px; margin-bottom: 28px;
+    }
+    .ob-slide h2 { font-family: var(--font-display); font-size: 24px; color: var(--white); margin-bottom: 12px; max-width: 280px; }
+    .ob-slide p { font-size: 14px; color: var(--muted); line-height: 1.6; max-width: 280px; }
+    .ob-footer { padding: 24px 24px 36px; }
+    .ob-dots { display: flex; justify-content: center; gap: 6px; margin-bottom: 20px; }
+    .ob-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border); transition: background 0.2s, width 0.2s; }
+    .ob-dot.active { background: var(--terra); width: 20px; border-radius: 4px; }
   </style>
 </head>
 <body>
+  <!-- ONBOARDING (first-run) -->
+  <div class="onboarding hidden" id="onboarding">
+    <div class="ob-skip" onclick="onboardingFinish()">Skip →</div>
+    <div class="ob-slides">
+      <div class="ob-slide active" data-slide="0">
+        <div class="ob-icon">🚗</div>
+        <h2>Ride-Along Delivery</h2>
+        <p>No dedicated fleet, no long wait. We match your order to e-hailing drivers already heading your way.</p>
+      </div>
+      <div class="ob-slide" data-slide="1">
+        <div class="ob-icon">🧊</div>
+        <h2>Build Your Cooler Box</h2>
+        <p>Beer, spirits, mixers, ice — bundle them up in Shop and unlock up to 15% off automatically.</p>
+      </div>
+      <div class="ob-slide" data-slide="2">
+        <div class="ob-icon">📍</div>
+        <h2>Delivered To Your Kasi</h2>
+        <p>Order from liquor stores in your own area, and track your driver live, right to your door.</p>
+      </div>
+    </div>
+    <div class="ob-footer">
+      <div class="ob-dots" id="obDots"></div>
+      <button class="cta-btn" id="obNextBtn" onclick="onboardingNext()">Next</button>
+    </div>
+  </div>
+
   <!-- AGE VERIFICATION GATE -->
   <div class="age-gate hidden" id="ageGate">
     <div class="ag-numeral">18+</div>
@@ -305,16 +365,38 @@
   <script>
   renderNavAuth();
 
-  // ── AGE VERIFICATION GATE ──
-  // Shown once per browser (localStorage), before anything else on the
-  // page is meaningfully interactive. "No" leaves the block message up
-  // rather than redirecting off-site — no dependency on an external URL.
-  (function initAgeGate() {
+  // ── FIRST-RUN FLOW: onboarding, then age gate ──
+  // Onboarding is a welcome moment (skippable, brand-colored); the age
+  // gate is a compliance moment (not skippable, max-contrast). Each
+  // shown once per browser via localStorage, onboarding always first.
+  let obSlide = 0;
+  const OB_SLIDE_COUNT = 3;
+
+  function renderObDots() {
+    document.getElementById('obDots').innerHTML = Array.from({ length: OB_SLIDE_COUNT })
+      .map((_, i) => `<div class="ob-dot ${i === obSlide ? 'active' : ''}"></div>`).join('');
+  }
+
+  function onboardingNext() {
+    obSlide++;
+    if (obSlide >= OB_SLIDE_COUNT) { onboardingFinish(); return; }
+    document.querySelectorAll('.ob-slide').forEach(s => s.classList.toggle('active', +s.dataset.slide === obSlide));
+    renderObDots();
+    document.getElementById('obNextBtn').textContent = obSlide === OB_SLIDE_COUNT - 1 ? 'Get Started' : 'Next';
+  }
+
+  function onboardingFinish() {
+    localStorage.setItem('ekoyini_onboarded', 'true');
+    document.getElementById('onboarding').classList.add('hidden');
+    initAgeGate();
+  }
+
+  function initAgeGate() {
     const KEY = 'ekoyini_age_verified';
-    if (localStorage.getItem(KEY) === 'true') return;
+    if (localStorage.getItem(KEY) === 'true') { document.body.style.overflow = ''; return; }
     document.getElementById('ageGate').classList.remove('hidden');
     document.body.style.overflow = 'hidden';
-  })();
+  }
   function ageGateConfirm(isAdult) {
     const gate = document.getElementById('ageGate');
     if (isAdult) {
@@ -325,6 +407,16 @@
       gate.classList.add('blocked');
     }
   }
+
+  (function initFirstRun() {
+    document.body.style.overflow = 'hidden';
+    renderObDots();
+    if (localStorage.getItem('ekoyini_onboarded') !== 'true') {
+      document.getElementById('onboarding').classList.remove('hidden');
+    } else {
+      initAgeGate();
+    }
+  })();
 
   // Load saved address
   const saved = EkoyiniAddress.get();

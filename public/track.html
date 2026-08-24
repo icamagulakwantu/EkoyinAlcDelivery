@@ -115,7 +115,7 @@
         <div class="track-result-card">
           <div class="track-result-code">${order.code}</div>
           <div class="track-result-meta">${order.items.length} item${order.items.length !== 1 ? 's' : ''} · placed ${new Date(order.createdAt).toLocaleString('en-ZA')}</div>
-          ${order.tavern ? `<div class="track-driver"><strong>🏪 ${order.tavern.name}</strong> (${order.tavern.area})${order.driverName ? `<br>🛵 Driver: <strong>${order.driverName}</strong>${order.driverVehicle ? ` · ${order.driverVehicle}` : ''}` : ''}</div>` : ''}
+          ${order.tavern ? `<div class="track-driver"><strong>🏪 ${order.tavern.name}</strong> — picking up in ${order.tavern.area}${order.driverName ? `<br>🛵 <strong>${order.driverName}</strong>${order.driverVehicle ? ` (${order.driverVehicle})` : ''} is heading your way from ${order.tavern.area}` : ''}</div>` : ''}
         </div>
         <div class="track-timeline">${renderTimeline(order.status)}</div>
       `;
