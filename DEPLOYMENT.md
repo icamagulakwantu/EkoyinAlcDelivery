@@ -8,6 +8,36 @@ git commit -m "Deploy"
 git push origin main
 ```
 
+## ⚠️ Important: use Supabase's connection pooler, not the direct connection
+
+Supabase's **direct** database connection (`db.<project-ref>.supabase.co:5432`,
+the one shown by default under Project Settings → Database) is **IPv6-only**.
+Render's network does **not** support outbound IPv6, so a `DATABASE_URL`
+pointing at the direct host fails with:
+
+```
+PrismaClientInitializationError: Can't reach database server at
+`db.<project-ref>.supabase.co:5432`
+```
+
+Use the **Session pooler** connection string instead — same dashboard page,
+under "Connection pooling" — which is IPv4-compatible:
+
+```
+postgresql://postgres.<project-ref>:<password>@aws-0-<region>.pooler.supabase.com:5432/postgres
+```
+
+Note the username changes to `postgres.<project-ref>` (not just `postgres`)
+and the host becomes the regional pooler, e.g. `aws-0-eu-central-1.pooler.supabase.com`
+for a project in Frankfurt. Session pooler mode (port 5432) behaves like a
+normal Postgres connection — no extra Prisma flags needed. (Supabase's
+*transaction* pooler on port 6543 also works but requires `?pgbouncer=true`
+on the connection string since PgBouncer's transaction mode doesn't support
+prepared statements, which Prisma uses by default.)
+
+This only affects egress from hosts without IPv6 support (Render is one);
+it isn't a Supabase-specific quirk of this app.
+
 ## 2. Create the Render services
 
 `render.yaml` already describes both services (web service + Postgres) —

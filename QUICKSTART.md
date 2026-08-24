@@ -27,7 +27,7 @@ Fill in `.env`:
 
 | Variable | Where to find it |
 |---|---|
-| `DATABASE_URL` | Supabase dashboard → Project Settings → Database → Connection string (URI) |
+| `DATABASE_URL` | Supabase dashboard → Project Settings → Database → Connection string (URI). Locally this can be the direct connection; if you deploy to a host without outbound IPv6 (e.g. Render), use the **Session pooler** string instead — see `DEPLOYMENT.md`. |
 | `SUPABASE_URL` | Supabase dashboard → Project Settings → API → Project URL |
 | `SUPABASE_ANON_KEY` | Supabase dashboard → Project Settings → API → `anon` `public` key |
 | `ADMIN_API_TOKEN` | Make up a long random string yourself |
