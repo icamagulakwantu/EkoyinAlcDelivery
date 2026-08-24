@@ -114,6 +114,58 @@ app.get("/admin/taverns", requireAdmin, async (req, res) => {
   res.json(taverns);
 });
 
+// 🖼️ ADMIN: one-off image enrichment job (real product photos via Open
+// Food Facts, free, no API key). Render has real outbound internet access
+// unlike some sandboxed dev environments, so this runs server-side here
+// rather than as a local script. Long-running (~300ms/product, polite to
+// the free API) — responds immediately and processes in the background.
+// Products with no confident match keep their category placeholder image.
+// Trigger once with: curl -X POST -H "x-admin-token: $ADMIN_API_TOKEN" https://<host>/admin/enrich-images
+// Progress logs to the Render console; check /admin/enrich-images/status for a live count.
+let enrichStatus = { running: false, checked: 0, updated: 0, total: 0 };
+
+app.post("/admin/enrich-images", requireAdmin, async (req, res) => {
+  if (enrichStatus.running) {
+    return res.status(409).json({ error: "Enrichment already running", status: enrichStatus });
+  }
+
+  const skus = await prisma.skuItem.findMany();
+  const names = [...new Set(skus.map((s) => s.name))];
+  enrichStatus = { running: true, checked: 0, updated: 0, total: names.length };
+  res.json({ message: `Started — enriching ${names.length} distinct product names.`, status: enrichStatus });
+
+  (async () => {
+    for (const name of names) {
+      try {
+        const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(
+          name
+        )}&search_simple=1&action=process&json=1&page_size=1`;
+        const r = await fetch(url);
+        const data = await r.json();
+        const product = data.products?.[0];
+        const image = product?.image_front_url || product?.image_url;
+        if (image) {
+          await prisma.skuItem.updateMany({ where: { name }, data: { imageUrl: image } });
+          enrichStatus.updated++;
+          console.log(`[enrich] ✓ ${name}`);
+        } else {
+          console.log(`[enrich] — no match for ${name}`);
+        }
+      } catch (err) {
+        console.error(`[enrich] error for ${name}:`, err.message);
+      }
+      enrichStatus.checked++;
+      await new Promise((r) => setTimeout(r, 300));
+    }
+    enrichStatus.running = false;
+    console.log(`[enrich] Done — updated ${enrichStatus.updated}/${names.length} distinct product names.`);
+  })();
+});
+
+app.get("/admin/enrich-images/status", requireAdmin, (req, res) => {
+  res.json(enrichStatus);
+});
+
 // 📦 CREATE ORDER (customer, auth-gated)
 // Only skuId + quantity + purchaseType come from the client — every price
 // is recomputed here from the current DB values. This closes the exploit
