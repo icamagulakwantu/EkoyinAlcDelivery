@@ -172,7 +172,7 @@ this feature is built for).
 
 ## 🎨 Design System
 
-**Color Palette:** deep forest green (`#1a6b3a` → `#2eab5e`) on black (`#080c0a` → `#162019`), terracotta accent (`#c96a2e`).
+**Color Palette:** warm cream/white surfaces (`#f7f4ec` → `#ffffff`) with deep forest green (`#1a6b3a`) and terracotta (`#c96a2e`) accents — retheme'd from an original dark palette to a high-contrast, sunlight-legible light theme for outdoor/mobile-data use. A handful of components (the age gate, onboarding carousel, ridealong banner, Cooler Box bar) intentionally keep a dark surface for emphasis, with their own hardcoded text colors rather than the shared tokens.
 **Typography:** Playfair Display (display, 700/900) + DM Sans (body, 300–700).
 
 See `public/style.css` for the full token set — nav auth chip, top toast,
