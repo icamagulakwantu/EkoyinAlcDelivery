@@ -7,18 +7,8 @@ const app = express();
 const prisma = new PrismaClient();
 
 app.use(express.static("public"));
+app.use("/admin", express.static("admin"));
 app.use(express.json());
-
-// ── Simple admin auth stopgap ──────────────────────────────
-// TODO Track B step 3: replace with real Supabase Auth session checks.
-// Until then, admin routes require a shared token set in ADMIN_API_TOKEN.
-function requireAdmin(req, res, next) {
-  const token = req.headers["x-admin-token"];
-  if (!process.env.ADMIN_API_TOKEN || token !== process.env.ADMIN_API_TOKEN) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
-  next();
-}
 
 // ── Supabase Auth (customer login) ─────────────────────────
 // Verifies the bearer token against Supabase's own /auth/v1/user endpoint —
@@ -49,6 +39,36 @@ async function requireUser(req, res, next) {
   if (!user) return res.status(401).json({ error: "Please log in to continue" });
   req.user = user;
   next();
+}
+
+// ── Admin auth ──────────────────────────────────────────────
+// Real per-user auth: a logged-in Supabase user whose email is in the
+// ADMIN_EMAILS allowlist (comma-separated, case-insensitive) is an admin.
+// The shared ADMIN_API_TOKEN header still works too — kept for scripts/
+// curl (e.g. the /admin/enrich-images trigger) and as a bootstrap path
+// before any admin account is set up. Once every admin has a real
+// account, drop ADMIN_API_TOKEN from the environment to retire it.
+function isAdminEmail(email) {
+  const allowlist = (process.env.ADMIN_EMAILS || "")
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+  return !!email && allowlist.includes(email.toLowerCase());
+}
+
+async function requireAdmin(req, res, next) {
+  const token = req.headers["x-admin-token"];
+  if (process.env.ADMIN_API_TOKEN && token === process.env.ADMIN_API_TOKEN) {
+    return next();
+  }
+
+  const user = await verifySupabaseToken(req);
+  if (user && isAdminEmail(user.email)) {
+    req.user = user;
+    return next();
+  }
+
+  return res.status(401).json({ error: "Unauthorized" });
 }
 
 // ── Cooler Box pricing (server-authoritative mirror of shop.html) ──────

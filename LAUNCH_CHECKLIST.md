@@ -24,11 +24,12 @@ or real orders until the Track B items are checked off.
 - [ ] **Real age verification.** The age gate is a self-attestation
       checkbox. Add ID capture at delivery before relying on it for
       compliance.
-- [ ] **Admin auth.** `/admin/admin.html` is gated by a client-side PIN+OTP
-      UI and a shared `ADMIN_API_TOKEN` header — neither is per-admin-user
-      auth. Move this to real Supabase Auth sessions with an `is_admin`
-      claim/role before handing dashboard access to more than one trusted
-      person.
+- [x] **Admin auth.** `/admin/admin.html` now logs admins in with real
+      Supabase Auth accounts; the server checks the logged-in user's email
+      against the `ADMIN_EMAILS` allowlist on every admin route. Sign each
+      admin up as a customer account, then add their email to
+      `ADMIN_EMAILS`. `ADMIN_API_TOKEN` still works as a scripts/curl
+      fallback — unset it once every admin has a real account.
 - [ ] **Resend email.** `.env.example` has a `RESEND_API_KEY` slot but
       nothing sends order confirmation or admin-alert emails yet.
 - [ ] **WhatsApp Business API.** Driver/tavern dispatch messages currently
@@ -46,8 +47,8 @@ or real orders until the Track B items are checked off.
 
 ## Before flipping "live"
 
-- [ ] Replace the PIN (`admin/admin-api.js` → `ADMIN_PIN`) and
-      `FOUNDER_WHATSAPP` number from their placeholder values
+- [ ] Sign up real admin accounts (`public/signup.html`) and set
+      `ADMIN_EMAILS` in production to their emails
 - [ ] Replace `SUPABASE_URL` / `SUPABASE_ANON_KEY` in `public/auth.js` with
       your real project's values
 - [ ] Set a strong, unique `ADMIN_API_TOKEN` in production — never reuse the

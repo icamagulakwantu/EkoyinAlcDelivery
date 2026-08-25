@@ -58,7 +58,8 @@ and it will provision both automatically. Otherwise, by hand:
 | `DATABASE_URL` | From your Supabase project (or Render Postgres, if you provisioned one instead) |
 | `SUPABASE_URL` | Your Supabase project URL |
 | `SUPABASE_ANON_KEY` | Your Supabase anon/public key |
-| `ADMIN_API_TOKEN` | A long random string — this is the real security boundary for `/orders` and other admin routes |
+| `ADMIN_EMAILS` | Comma-separated Supabase Auth emails allowed to use `/admin/admin.html` — the real, per-person admin boundary |
+| `ADMIN_API_TOKEN` | A long random string — fallback for scripts/curl and for bootstrapping before any admin account exists |
 | `PORT` | Set automatically by Render, no action needed |
 | `RESEND_API_KEY` | Optional, Phase 2 |
 
@@ -93,6 +94,7 @@ need to be edited directly in the file.
 - `GET https://your-app.onrender.com/api/health` → `{"ok":true}`
 - `GET https://your-app.onrender.com/api/products` → 264 SKUs
 - Full customer flow: sign up → shop → checkout → track
-- Admin dashboard reachable at `/admin/admin.html` with your `ADMIN_API_TOKEN`
+- Admin dashboard reachable at `/admin/admin.html` — log in with a Supabase
+  account whose email is in `ADMIN_EMAILS`
 
 See `LAUNCH_CHECKLIST.md` before sending this URL to real customers.

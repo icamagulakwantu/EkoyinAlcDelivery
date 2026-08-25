@@ -3,252 +3,85 @@
 // ============================================
 //
 // The old admin.js (kept for reference) stored orders in localStorage.
-// This version calls the real backend (server.js) via the x-admin-token
-// header, so the dashboard reflects real DB state and works across
-// devices/browsers.
-//
-// ⚠️ KNOWN ISSUE (flagged, not yet fixed here):
-// The PIN + OTP check below still runs entirely in the browser — it's
-// UI-only. The actual security boundary is the x-admin-token header the
-// server checks on every admin route. This needs to move to real
-// server-side auth (Supabase Auth) before this dashboard is exposed on a
-// public URL with real order data behind it.
+// This version calls the real backend (server.js) with the logged-in
+// admin's Supabase session token, so the dashboard reflects real DB state,
+// works across devices/browsers, and ties every admin action to a real
+// person instead of a shared PIN.
 // ============================================
 
 // ============================================
-// 🔐 TWO-FACTOR AUTHENTICATION (UI GATE — see note above)
+// 🔐 ADMIN LOGIN — real Supabase Auth (per-person, server-verified)
 // ============================================
+// Login itself uses the same Supabase project as customer accounts
+// (ekoyiniAuth from /auth.js). What makes an account an *admin* account is
+// the server: server.js checks the logged-in user's email against the
+// ADMIN_EMAILS allowlist on every /orders, /admin/* etc. request — a
+// non-admin account can log in here but every API call will 401.
 
-const ADMIN_PIN = "2025";  // Change this to your 4-digit PIN
-const FOUNDER_WHATSAPP = "27640045465";  // CHANGE TO YOUR PRIVATE NUMBER
-
-let pinEntry = "";
-let currentOtp = null;
-let otpExpiryTime = null;
-let otpTimerInterval = null;
-let resendTimerInterval = null;
-let resendCountdown = 30;
-
-// ============================================
-// STEP 1: PIN ENTRY
-// ============================================
-function addPinDigit(digit) {
-    if (pinEntry.length >= 4) return;
-    pinEntry += digit;
-    updatePinDots();
-    if (pinEntry.length === 4) setTimeout(verifyPin, 300);
-}
-
-function clearPin() {
-    pinEntry = pinEntry.slice(0, -1);
-    updatePinDots();
-    document.getElementById('pinError').style.display = 'none';
-}
-
-function updatePinDots() {
-    const dots = document.querySelectorAll('#pinDots .dot');
-    dots.forEach((dot, index) => dot.classList.toggle('filled', index < pinEntry.length));
-}
-
-function verifyPin() {
-    if (pinEntry === ADMIN_PIN) {
-        document.getElementById('pinError').style.display = 'none';
-        document.getElementById('stepPin').style.display = 'none';
-        document.getElementById('stepOtp').style.display = 'block';
-        pinEntry = "";
-        updatePinDots();
-        generateAndSendOtp();
-    } else {
-        document.getElementById('pinError').style.display = 'block';
-        pinEntry = "";
-        updatePinDots();
-        const pinCard = document.getElementById('pinCard');
-        if (pinCard) { pinCard.classList.add('shake'); setTimeout(() => pinCard.classList.remove('shake'), 500); }
+document.getElementById('adminLoginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const errEl = document.getElementById('adminLoginError');
+    errEl.style.display = 'none';
+    const btn = document.getElementById('adminLoginBtn');
+    btn.disabled = true;
+    btn.textContent = 'Logging in…';
+    try {
+        await signIn(document.getElementById('adminEmail').value.trim(), document.getElementById('adminPassword').value);
+        await tryEnterDashboard();
+    } catch (err) {
+        errEl.textContent = err.message || 'Login failed. Check your email and password.';
+        errEl.style.display = 'block';
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Log In';
     }
-}
+});
 
-// ============================================
-// STEP 2: OTP
-// ============================================
-function generateAndSendOtp() {
-    currentOtp = Math.floor(100000 + Math.random() * 900000).toString();
-    otpExpiryTime = Date.now() + (5 * 60 * 1000);
-    sendOtpToWhatsApp(currentOtp);
-    startOtpTimer();
-    startResendTimer();
-    clearOtpInputs();
-    const otp1 = document.getElementById('otp1');
-    if (otp1) otp1.focus();
-    document.getElementById('otpError').style.display = 'none';
-}
-
-function sendOtpToWhatsApp(otp) {
-    const message = `🔐 *Ekoyini Admin OTP*\n\nYour one-time access code is: *${otp}*\n\n⏰ Expires in 5 minutes.`;
-    window.open(`https://wa.me/${FOUNDER_WHATSAPP}?text=${encodeURIComponent(message)}`, '_blank');
-}
-
-function startOtpTimer() {
-    clearInterval(otpTimerInterval);
-    otpTimerInterval = setInterval(() => {
-        const remaining = Math.max(0, Math.floor((otpExpiryTime - Date.now()) / 1000));
-        const minutes = Math.floor(remaining / 60);
-        const seconds = remaining % 60;
-        const timerEl = document.getElementById('otpTimer');
-        if (timerEl) timerEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-        if (remaining <= 0) {
-            clearInterval(otpTimerInterval);
-            currentOtp = null;
-            const errorEl = document.getElementById('otpError');
-            if (errorEl) { errorEl.textContent = 'OTP expired. Request a new one.'; errorEl.style.display = 'block'; }
-        }
-    }, 1000);
-}
-
-function startResendTimer() {
-    resendCountdown = 30;
-    const resendBtn = document.getElementById('resendBtn');
-    const resendCountdownEl = document.getElementById('resendCountdown');
-    if (resendBtn) resendBtn.disabled = true;
-    clearInterval(resendTimerInterval);
-    resendTimerInterval = setInterval(() => {
-        resendCountdown--;
-        if (resendCountdownEl) resendCountdownEl.textContent = resendCountdown;
-        if (resendCountdown <= 0) {
-            clearInterval(resendTimerInterval);
-            if (resendBtn) { resendBtn.disabled = false; resendBtn.innerHTML = '🔄 Resend OTP'; }
-        }
-    }, 1000);
-}
-
-function resendOtp() {
-    generateAndSendOtp();
-}
-
-// ============================================
-// OTP INPUT HANDLING
-// ============================================
-function otpAutoFocus(input) {
-    input.value = input.value.replace(/[^0-9]/g, '');
-    if (input.value.length === 1) {
-        const next = input.nextElementSibling;
-        if (next && next.classList.contains('otp-box')) next.focus();
-    }
-    const allInputs = document.querySelectorAll('.otp-box');
-    const allFilled = Array.from(allInputs).every(inp => inp.value.length === 1);
-    if (allFilled) setTimeout(verifyOtp, 300);
-}
-
-function clearOtpInputs() {
-    document.querySelectorAll('.otp-box').forEach(input => input.value = '');
-}
-
-function getOtpValue() {
-    return Array.from(document.querySelectorAll('.otp-box')).map(input => input.value).join('');
-}
-
-function verifyOtp() {
-    const enteredOtp = getOtpValue();
-    if (!currentOtp) {
-        document.getElementById('otpError').textContent = 'OTP expired. Request a new one.';
-        document.getElementById('otpError').style.display = 'block';
+// After a successful Supabase login, confirm the account is actually on
+// the ADMIN_EMAILS allowlist by hitting a real admin route — a customer
+// account can authenticate with Supabase but isn't an admin.
+async function tryEnterDashboard() {
+    const errEl = document.getElementById('adminLoginError');
+    const res = await adminFetch('/orders');
+    if (res.status === 401) {
+        errEl.textContent = 'Logged in, but this account is not on the admin list. Ask an existing admin to add your email to ADMIN_EMAILS.';
+        errEl.style.display = 'block';
+        await signOut();
         return;
     }
-    if (Date.now() > otpExpiryTime) {
-        document.getElementById('otpError').textContent = 'OTP expired. Request a new one.';
-        document.getElementById('otpError').style.display = 'block';
-        currentOtp = null;
-        return;
-    }
-    if (enteredOtp === currentOtp) {
-        clearInterval(otpTimerInterval);
-        clearInterval(resendTimerInterval);
-        currentOtp = null;
-        grantAccess();
-    } else {
-        document.getElementById('otpError').textContent = 'Incorrect OTP. Check WhatsApp and try again.';
-        document.getElementById('otpError').style.display = 'block';
-        clearOtpInputs();
-        const otp1 = document.getElementById('otp1');
-        if (otp1) otp1.focus();
-        const pinCard = document.getElementById('pinCard');
-        if (pinCard) { pinCard.classList.add('shake'); setTimeout(() => pinCard.classList.remove('shake'), 500); }
-    }
+    grantAccess();
+    loadOrders();
+    setInterval(loadOrders, 30000);
 }
 
-// ============================================
-// GRANT / REVOKE ACCESS (OVERLAY SYSTEM)
-// ============================================
 function grantAccess() {
-    sessionStorage.setItem('admin_2fa_authenticated', 'true');
-
     const overlay = document.getElementById('authOverlay');
     if (overlay) overlay.style.display = 'none';
-
     document.body.classList.remove('admin-locked');
     document.body.classList.add('admin-unlocked');
-
-    ensureAdminToken();
-    loadOrders();
 }
 
-function logout() {
-    sessionStorage.removeItem('admin_2fa_authenticated');
-    clearInterval(otpTimerInterval);
-    clearInterval(resendTimerInterval);
-    currentOtp = null;
-
+async function logout() {
+    await signOut();
     const overlay = document.getElementById('authOverlay');
     if (overlay) overlay.style.display = 'flex';
-
     document.body.classList.add('admin-locked');
     document.body.classList.remove('admin-unlocked');
-
-    document.getElementById('stepPin').style.display = 'block';
-    document.getElementById('stepOtp').style.display = 'none';
-    pinEntry = "";
-    updatePinDots();
-    clearOtpInputs();
+    document.getElementById('adminEmail').value = '';
+    document.getElementById('adminPassword').value = '';
 }
 
 // ============================================
-// CHECK AUTH ON PAGE LOAD
+// CHECK AUTH ON PAGE LOAD — resume an existing Supabase session
 // ============================================
-(function() {
-    document.body.classList.add('admin-locked');
-    if (sessionStorage.getItem('admin_2fa_authenticated') === 'true') {
-        const overlay = document.getElementById('authOverlay');
-        if (overlay) overlay.style.display = 'none';
-        document.body.classList.remove('admin-locked');
-        document.body.classList.add('admin-unlocked');
-        // loadOrders() runs from DOMContentLoaded below
-    }
+document.body.classList.add('admin-locked');
+(async function() {
+    const session = await getSession();
+    if (session) await tryEnterDashboard();
 })();
 
-// ============================================
-// ADMIN API TOKEN — the real security boundary.
-// Not hardcoded here on purpose (it's a server secret, ADMIN_API_TOKEN in
-// .env) — prompted for once per session and cached in sessionStorage.
-// ============================================
-function ensureAdminToken() {
-    let token = sessionStorage.getItem('ekoyini_admin_token');
-    if (!token) {
-        token = prompt('Enter the admin API token (ADMIN_API_TOKEN from .env):') || '';
-        sessionStorage.setItem('ekoyini_admin_token', token);
-    }
-    return token;
-}
-
 async function adminFetch(url, options = {}) {
-    const token = ensureAdminToken();
-    const res = await fetch(url, {
-        ...options,
-        headers: { ...(options.headers || {}), 'x-admin-token': token, 'Content-Type': 'application/json' },
-    });
-    if (res.status === 401) {
-        sessionStorage.removeItem('ekoyini_admin_token');
-        alert('Admin token rejected. Please re-enter it.');
-    }
-    return res;
+    return authedFetch(url, { ...options, headers: { ...(options.headers || {}), 'Content-Type': 'application/json' } });
 }
 
 // ============================================
@@ -485,12 +318,3 @@ async function deleteOrder(orderCode) {
     }
 }
 
-// ============================================
-// INITIALIZATION
-// ============================================
-document.addEventListener('DOMContentLoaded', () => {
-    if (sessionStorage.getItem('admin_2fa_authenticated') === 'true') {
-        loadOrders();
-        setInterval(loadOrders, 30000);
-    }
-});

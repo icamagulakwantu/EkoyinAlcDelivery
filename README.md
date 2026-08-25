@@ -60,7 +60,7 @@ ekoyini-webapp/
 │   └── auth.js                      Supabase client wrapper, session helpers, nav login-state renderer
 │
 ├── admin/
-│   ├── admin.html                   Dispatch dashboard UI (PIN+OTP UI gate — Track B stopgap)
+│   ├── admin.html                   Dispatch dashboard UI — real Supabase Auth login, gated by ADMIN_EMAILS
 │   ├── admin-api.js                 CURRENT version — calls the real backend API
 │   ├── admin.js                     OLD localStorage-based version (kept for reference only)
 │   └── admin.css                    Admin UI styles
@@ -141,9 +141,9 @@ this feature is built for).
 - **Client-side price editing exploit** — the old editable price field on `shop.html` is gone, replaced with a read-only price-details sheet. `POST /order` only accepts `skuId` + `quantity` + `purchaseType` from the client; every price is recomputed server-side from the current DB values.
 - **`/api/taverns` narrowed** — public response is `id`/`name`/`area` only; tavern phone numbers are only ever returned to `requireAdmin`-gated `/admin/taverns`.
 - **Orders are auth-gated** — `POST /order` and `GET /api/my-orders` require a valid Supabase session (`requireUser` middleware, verified against Supabase's `/auth/v1/user`).
+- **Admin auth is per-person.** `/admin/admin.html` logs admins in with real Supabase Auth accounts; `requireAdmin` on the server checks the logged-in user's email against the `ADMIN_EMAILS` allowlist on every admin route. `ADMIN_API_TOKEN` still works as a fallback for scripts/curl and as a bootstrap path — unset it once every admin has a real account.
 
 ### Still Track A / known limitations
-- **Admin auth is a stopgap.** `/admin/admin.html` gates access with a client-side PIN + OTP UI, but the real security boundary is the `ADMIN_API_TOKEN` shared secret the server checks on every admin route — not per-user auth. See `LAUNCH_CHECKLIST.md`.
 - **No real age verification** — UI checkbox only; needs ID capture at delivery.
 - **No real payment** — COD, manual EFT; Yoco/PayFast integration is Phase 2.
 

@@ -8,71 +8,34 @@
 </head>
 <body>
 
-  <!-- AUTH OVERLAY — full-screen, locks the dashboard until PIN + OTP pass -->
+  <!-- AUTH OVERLAY — full-screen, locks the dashboard until a real,
+       allowlisted Supabase admin account signs in. -->
   <div id="authOverlay" class="auth-overlay">
     <div class="pin-screen" style="min-height:auto;background:none;padding:0;">
       <div class="pin-card" id="pinCard">
+        <div class="pin-logo">🔐</div>
+        <h2>Admin Access</h2>
+        <p>Log in with your admin account</p>
 
-        <!-- STEP 1: PIN -->
-        <div id="stepPin">
-          <div class="pin-logo">🔐</div>
-          <h2>Admin Access</h2>
-          <p>Step 1: Enter your PIN</p>
-
-          <div class="pin-dots" id="pinDots">
-            <span class="dot"></span>
-            <span class="dot"></span>
-            <span class="dot"></span>
-            <span class="dot"></span>
+        <form id="adminLoginForm" style="text-align:left;margin-top:16px;">
+          <div style="margin-bottom:14px;">
+            <label style="display:block;font-size:12px;color:#888;margin-bottom:6px;">Email</label>
+            <input type="email" id="adminEmail" required autocomplete="username"
+              style="width:100%;background:#f5f5f5;border:1px solid #ddd;padding:12px;border-radius:8px;font-size:14px;">
           </div>
-
-          <p id="pinError" style="color: #ff4444; font-size: 13px; display: none; margin-top: 10px;">
-            Incorrect PIN. Try again.
-          </p>
-
-          <div class="pin-keypad">
-            <button onclick="addPinDigit('1')">1</button>
-            <button onclick="addPinDigit('2')">2</button>
-            <button onclick="addPinDigit('3')">3</button>
-            <button onclick="addPinDigit('4')">4</button>
-            <button onclick="addPinDigit('5')">5</button>
-            <button onclick="addPinDigit('6')">6</button>
-            <button onclick="addPinDigit('7')">7</button>
-            <button onclick="addPinDigit('8')">8</button>
-            <button onclick="addPinDigit('9')">9</button>
-            <button class="key-empty"></button>
-            <button onclick="addPinDigit('0')">0</button>
-            <button onclick="clearPin()" class="key-delete">⌫</button>
+          <div style="margin-bottom:14px;">
+            <label style="display:block;font-size:12px;color:#888;margin-bottom:6px;">Password</label>
+            <input type="password" id="adminPassword" required autocomplete="current-password"
+              style="width:100%;background:#f5f5f5;border:1px solid #ddd;padding:12px;border-radius:8px;font-size:14px;">
           </div>
-        </div>
+          <button type="submit" class="dispatch-btn" id="adminLoginBtn" style="width:100%;">Log In</button>
+        </form>
 
-        <!-- STEP 2: OTP (hidden initially) -->
-        <div id="stepOtp" style="display:none;">
-          <div class="pin-logo">📱</div>
-          <h2>Verification Required</h2>
-          <p>Step 2: Enter the OTP sent to the founder's WhatsApp</p>
-
-          <div class="otp-inputs" id="otpInputs">
-            <input type="text" maxlength="1" class="otp-box" oninput="otpAutoFocus(this)" id="otp1">
-            <input type="text" maxlength="1" class="otp-box" oninput="otpAutoFocus(this)" id="otp2">
-            <input type="text" maxlength="1" class="otp-box" oninput="otpAutoFocus(this)" id="otp3">
-            <input type="text" maxlength="1" class="otp-box" oninput="otpAutoFocus(this)" id="otp4">
-            <input type="text" maxlength="1" class="otp-box" oninput="otpAutoFocus(this)" id="otp5">
-            <input type="text" maxlength="1" class="otp-box" oninput="otpAutoFocus(this)" id="otp6">
-          </div>
-
-          <p id="otpError" style="color: #ff4444; font-size: 13px; display: none; margin-top: 10px;">
-            Incorrect OTP. Try again.
-          </p>
-
-          <p id="otpExpiry" style="color: #666; font-size: 12px; margin-top: 8px;">
-            OTP expires in: <span id="otpTimer">5:00</span>
-          </p>
-
-          <button class="resend-btn" id="resendBtn" onclick="resendOtp()" disabled>
-            Resend OTP in <span id="resendCountdown">30</span>s
-          </button>
-        </div>
+        <p id="adminLoginError" style="color: #ff4444; font-size: 13px; display: none; margin-top: 14px;"></p>
+        <p style="color:#999;font-size:11px;margin-top:16px;">
+          Not an admin account yet? Sign up as a customer, then have an
+          existing admin add your email to ADMIN_EMAILS.
+        </p>
       </div>
     </div>
   </div>
@@ -136,6 +99,8 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/auth.js"></script>
   <script src="admin-api.js"></script>
 </body>
 </html>
