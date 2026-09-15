@@ -8,8 +8,8 @@
 // ═══════════════════════════════════════════════
 
 // Safe to expose client-side — this is the public anon key, not a secret.
-const SUPABASE_URL = 'https://tvuyimcgspxyiuxwymjr.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2dXlpbWNnc3B4eWl1eHd5bWpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4NjAzNjAsImV4cCI6MjEwMTQzNjM2MH0.AYTW46FXVqSpZya4jW1rlLgB3QQXwCqpisFy9TCY8OA';
+const SUPABASE_URL = 'https://ahntznqdxmgjasckcknj.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFobnR6bnFkeG1namFzY2tja25qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1MDA2MTUsImV4cCI6MjEwNTA3NjYxNX0.8S-wEJATUmU90WxlhIDwnGsB-UwcDspo3wgQMlqos6E';
 
 const ekoyiniAuth = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
