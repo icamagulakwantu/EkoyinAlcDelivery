@@ -16,7 +16,7 @@
     .search-bar svg { color: var(--muted); flex-shrink: 0; }
     .search-bar input { flex: 1; background: transparent; border: none; color: var(--white); font-size: 13px; outline: none; }
     .search-bar input::placeholder { color: var(--faint); }
-    .search-bar .filter-btn { background: var(--green); border: none; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; flex-shrink: 0; }
+    .search-bar .filter-btn { background: var(--terra-light); border: none; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; flex-shrink: 0; }
 
     /* USP STRIP */
     .usp-strip { display: flex; gap: 8px; overflow-x: auto; padding: 12px 16px; scrollbar-width: none; }
@@ -33,7 +33,7 @@
     .hiw-steps { display: flex; flex-direction: column; gap: 0; }
     .hiw-step { display: flex; gap: 14px; align-items: flex-start; padding-bottom: 20px; position: relative; }
     .hiw-step:not(:last-child)::after { content: ''; position: absolute; left: 17px; top: 36px; width: 2px; height: calc(100% - 36px); background: var(--border); }
-    .hiw-num { width: 36px; height: 36px; flex-shrink: 0; background: var(--green); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #fff; position: relative; z-index: 1; }
+    .hiw-num { width: 36px; height: 36px; flex-shrink: 0; background: var(--gold-deep); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #fff; position: relative; z-index: 1; }
     .hiw-num.terra { background: var(--terra); }
     .hiw-num.dark { background: var(--surface); border: 1px solid var(--border); }
     .hiw-info h4 { font-size: 13px; font-weight: 700; color: var(--white); margin-bottom: 3px; }
@@ -52,7 +52,7 @@
     .store-empty { padding: 20px 16px; color: var(--muted); font-size: 12px; }
 
     /* RIDE-ALONG BANNER */
-    .ridealong-banner { margin: 4px 12px 16px; background: linear-gradient(135deg, #0d3020 0%, #0d1a14 100%); border: 1px solid var(--green); border-radius: var(--r-md); padding: 16px; position: relative; overflow: hidden; }
+    .ridealong-banner { margin: 4px 12px 16px; background: linear-gradient(135deg, #0d3020 0%, #0d1a14 100%); border: 1px solid var(--terra); border-radius: var(--r-md); padding: 16px; position: relative; overflow: hidden; }
     .ridealong-banner::before { content: '🚗'; position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 48px; opacity: 0.15; }
     .ridealong-banner .rb-tag { margin-bottom: 6px; }
     .ridealong-banner h3 { font-family: var(--font-display); font-size: 16px; color: #f4f7f5; margin-bottom: 4px; }
@@ -127,10 +127,11 @@
     @keyframes ob-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
     .ob-icon {
       width: 96px; height: 96px; border-radius: 50%;
-      background: rgba(46, 171, 94, 0.15); border: 1.5px solid #22874a;
+      background: rgba(255, 199, 0, 0.15); border: 1.5px solid #cc9900;
       display: flex; align-items: center; justify-content: center;
-      font-size: 44px; margin-bottom: 28px;
+      margin-bottom: 28px;
     }
+    .ob-icon svg { width: 40px; height: 40px; }
     .ob-slide h2 { font-family: var(--font-display); font-size: 24px; color: #f4f7f5; margin-bottom: 12px; max-width: 280px; }
     .ob-slide p { font-size: 14px; color: #8a9a8f; line-height: 1.6; max-width: 280px; }
     .ob-footer { padding: 24px 24px 36px; }
@@ -145,17 +146,17 @@
     <div class="ob-skip" onclick="onboardingFinish()">Skip →</div>
     <div class="ob-slides">
       <div class="ob-slide active" data-slide="0">
-        <div class="ob-icon">🚗</div>
+        <div class="ob-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#cc9900" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14M5 17a2 2 0 1 0 4 0 2 2 0 0 0-4 0zM15 17a2 2 0 1 0 4 0 2 2 0 0 0-4 0zM5 17V9l2-4h10l2 4v8"/></svg></div>
         <h2>Ride-Along Delivery</h2>
         <p>No dedicated fleet, no long wait. We match your order to e-hailing drivers already heading your way.</p>
       </div>
       <div class="ob-slide" data-slide="1">
-        <div class="ob-icon">🧊</div>
+        <div class="ob-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#cc9900" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M4.5 4.5l15 15M19.5 4.5l-15 15"/></svg></div>
         <h2>Build Your Cooler Box</h2>
         <p>Beer, spirits, mixers, ice — bundle them up in Shop and unlock up to 15% off automatically.</p>
       </div>
       <div class="ob-slide" data-slide="2">
-        <div class="ob-icon">📍</div>
+        <div class="ob-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#cc9900" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
         <h2>Delivered To Your Kasi</h2>
         <p>Order from liquor stores in your own area, and track your driver live, right to your door.</p>
       </div>
@@ -223,19 +224,19 @@
     <!-- USP CHIPS -->
     <div class="usp-strip fade-up-1">
       <div class="usp-chip" onclick="window.location='track.html'">
-        <span class="u-icon">🚗</span>
+        <svg class="u-icon" viewBox="0 0 24 24" fill="none" stroke="var(--terra-light)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M5 17h14M5 17a2 2 0 1 0 4 0 2 2 0 0 0-4 0zM15 17a2 2 0 1 0 4 0 2 2 0 0 0-4 0zM5 17V9l2-4h10l2 4v8"/></svg>
         <div class="u-text"><strong>Ride-Along</strong>Live driver tracking</div>
       </div>
       <div class="usp-chip" onclick="window.location='shop.html'">
-        <span class="u-icon">⚡</span>
+        <svg class="u-icon" viewBox="0 0 24 24" fill="var(--terra-light)" stroke="none" width="16" height="16"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z"/></svg>
         <div class="u-text"><strong>Fast Delivery</strong>On-route drivers</div>
       </div>
       <div class="usp-chip" onclick="document.getElementById('storesSection').scrollIntoView({behavior:'smooth'})">
-        <span class="u-icon">🏪</span>
+        <svg class="u-icon" viewBox="0 0 24 24" fill="none" stroke="var(--terra-light)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M3 9l1-5h16l1 5M3 9a2 2 0 0 0 4 0M7 9a2 2 0 0 0 4 0M11 9a2 2 0 0 0 4 0M15 9a2 2 0 0 0 4 0M4 9v10h16V9"/></svg>
         <div class="u-text"><strong>Local Stores</strong>Township outlets</div>
       </div>
-      <div class="usp-chip" onclick="showToast('🧊 Build a Cooler Box in Shop — unlock up to 15% off')">
-        <span class="u-icon">🧊</span>
+      <div class="usp-chip" onclick="showToast('Build a Cooler Box in Shop — unlock up to 15% off')">
+        <svg class="u-icon" viewBox="0 0 24 24" fill="none" stroke="var(--terra-light)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M12 2v20M2 12h20M4.5 4.5l15 15M19.5 4.5l-15 15"/></svg>
         <div class="u-text"><strong>Cooler Box</strong>Kasi entrance ready</div>
       </div>
     </div>
@@ -279,7 +280,7 @@
 
     <!-- RIDE-ALONG BANNER -->
     <div class="ridealong-banner fade-up-3">
-      <div class="rb-tag"><span class="tag-green">🚗 Ekoyini USP</span></div>
+      <div class="rb-tag"><span class="tag-green">Ekoyini USP</span></div>
       <h3>Ride-Along Delivery</h3>
       <p>We match your order to e-hailing drivers already heading your way — no dedicated delivery fleet, no extra wait. Live location sharing so you track every step.</p>
     </div>

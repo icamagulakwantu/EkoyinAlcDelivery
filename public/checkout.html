@@ -56,13 +56,13 @@
   <div class="page">
     <!-- ORDER REVIEW -->
     <div class="checkout-section">
-      <h2>📋 Order Review</h2>
+      <h2>Order Review</h2>
       <div class="order-review" id="orderReview"></div>
     </div>
 
     <!-- DELIVERY DETAILS -->
     <div class="checkout-section">
-      <h2>📍 Delivery Details</h2>
+      <h2>Delivery Details</h2>
       <div class="field-group">
         <label>Address</label>
         <input type="text" id="deliveryAddress" readonly placeholder="Loading...">
@@ -79,7 +79,7 @@
 
     <!-- AGE VERIFICATION (COMPLIANCE) -->
     <div class="checkout-section">
-      <h2>⚠️ Age Verification</h2>
+      <h2>Age Verification</h2>
       <div class="age-gate-warning">
         <div class="agw-badge">18+</div>
         <div class="agw-text"><strong style="color:#fff;">Alcohol &amp; Tobacco.</strong> You must be 18 or older to purchase. Sales to minors are illegal.</div>
@@ -96,32 +96,32 @@
 
     <!-- PAYMENT METHOD -->
     <div class="checkout-section">
-      <h2>💳 Payment Method</h2>
+      <h2>Payment Method</h2>
       <div class="payment-option selected" data-method="cod" onclick="selectPayment('cod')">
         <input type="radio" name="payment" value="cod" checked>
         <div>
-          <div class="p-label">💵 Pay on Delivery (COD)</div>
+          <div class="p-label">Pay on Delivery (COD)</div>
           <div class="p-desc">Pay the driver when they arrive</div>
         </div>
       </div>
       <div class="payment-option" data-method="card" onclick="selectPayment('card')">
         <input type="radio" name="payment" value="card">
         <div>
-          <div class="p-label">💳 Debit/Credit Card</div>
+          <div class="p-label">Debit/Credit Card</div>
           <div class="p-desc">Secure payment via Yoco (coming soon)</div>
         </div>
       </div>
       <div class="payment-option" data-method="eft" onclick="selectPayment('eft')">
         <input type="radio" name="payment" value="eft">
         <div>
-          <div class="p-label">🏦 EFT Transfer</div>
+          <div class="p-label">EFT Transfer</div>
           <div class="p-desc">Bank transfer (manual confirmation)</div>
         </div>
       </div>
     </div>
 
     <!-- SUBMIT BUTTON -->
-    <button class="cta-btn" onclick="submitOrder()" id="submitBtn" style="margin-bottom: 20px;">🚀 Place Order</button>
+    <button class="cta-btn" onclick="submitOrder()" id="submitBtn" style="margin-bottom: 20px;">Place Order</button>
   </div>
 
   <!-- BOTTOM NAV -->
@@ -304,7 +304,7 @@
       console.error('Order submission error:', err);
       showToast('❌ ' + (err.message || 'Failed to submit order'));
       btn.disabled = false;
-      btn.textContent = '🚀 Place Order';
+      btn.textContent = 'Place Order';
     }
   }
 

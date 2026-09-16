@@ -1,43 +1,59 @@
 /* ═══════════════════════════════════════════════
    EKOYINI MOBILE BAR — GLOBAL DESIGN SYSTEM
-      Warm Cream / Forest Green / Terracotta
+      "Golden Hour" — Ivory / Gold / Fiery Red-Orange
 
-      Retheme note: this was originally a dark theme (near-black base).
-      Flipped to light/high-contrast for real-world legibility in direct
-      township sunlight on low-cost Android screens — dark UIs read
-      worse than light ones under glare, regardless of how premium they
-      look on a lab monitor. Token *names* are unchanged on purpose so
-      every page that already references var(--white)/var(--muted)/etc.
-      picks up the new values with no per-page edits. --white now holds
-      a dark value (it's the primary text-color token, not literally
-      "white") and --green-light now holds a *deep* green — its role was
-      always "the accent color that pops," which on a light base means
-      dark, not light. The age gate and onboarding intro stay
-      deliberately dark/black — see their own comments — that's an
-      intentional exception, not a leftover.
+      Retheme note: originally dark, then flipped to a light/high-contrast
+      cream-and-forest-green theme for sunlight legibility. This is a
+      second palette pass on top of that light base — same reasoning
+      (daylight legibility on cheap Android screens) plus a deliberate
+      brand repositioning: warm ivory + electric gold + fiery red-orange,
+      built to read as premium ("worth the delivery fee vs. a club
+      markup") rather than budget, while staying legible at noon.
+
+      Color ROLES, not just names, changed here:
+        --green*  → now reserved ONLY for savings/success signals (the
+                    Cooler Box builder, "done" states) — never brand
+                    chrome or CTAs. Its hex is untouched.
+        --terra   → now the fiery red-orange action/price color (was
+                    terracotta). --terra-light is the deepened,
+                    AA-contrast-safe shade used for actual button fills
+                    and text; plain --terra (very vivid) is reserved for
+                    borders/accents where it isn't sitting under white
+                    text, since white-on-#FF4500 fails AA at button
+                    text sizes.
+        --gold*   → new. Brand-identity color (wordmark, avatars) — kept
+                    separate from the action color on purpose, so "this
+                    is Ekoyini" and "tap this" stay visually distinct.
+                    --gold-deep is the text-safe shade; --gold itself is
+                    the vivid brand swatch for non-text use.
+      Token *names* mostly unchanged so every page picks up the new
+      values with no per-page edits. The age gate and onboarding intro
+      stay deliberately dark/black — see their own comments.
    ═══════════════════════════════════════════════ */
 
-@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700;900&family=Space+Grotesk:wght@400;500;600;700&display=swap");
 
 :root {
-  --black: #f7f4ec;
-  --deep: #efe8d8;
+  --black: #faf6ee;
+  --deep: #f1e9d5;
   --surface: #ffffff;
   --card: #ffffff;
-  --border: #e2dac4;
+  --border: #e8dcc0;
   --green: #1a6b3a;
-  --green-mid: #146030;
-  --green-light: #14532d;
-  --green-glow: rgba(26, 107, 58, 0.1);
-  --terra: #c96a2e;
-  --terra-light: #a8551f;
-  --white: #1c2b20;
-  --muted: #5c6b60;
-  --faint: #a39b87;
-  --danger: #c23f3f;
+  --green-mid: #cc3700;
+  --green-light: #cc3700;
+  --green-glow: rgba(255, 69, 0, 0.12);
+  --gold: #ffc700;
+  --gold-deep: #7a5c00;
+  --terra: #ff4500;
+  --terra-light: #cc3700;
+  --white: #17140e;
+  --muted: #6b6152;
+  --faint: #b5aa8f;
+  --danger: #d6362a;
 
-  --font-display: "Playfair Display", serif;
-  --font-body: "DM Sans", sans-serif;
+  --font-display: "Fraunces", serif;
+  --font-body: "Space Grotesk", sans-serif;
 
   --r-sm: 10px;
   --r-md: 16px;
@@ -127,7 +143,7 @@
          .navbar .logo-text {
                font-family: var(--font-display);
                  font-size: 17px;
-                   color: var(--green);
+                   color: var(--gold-deep);
                      letter-spacing: 0.3px;
          }
          .navbar .nav-right {
@@ -285,7 +301,7 @@
                color: var(--muted);
          }
          .address-bar .addr-save {
-               background: var(--green);
+               background: var(--terra-light);
                  color: #fff;
                    border: none;
                      padding: 5px 12px;
@@ -345,7 +361,7 @@
          }
          .pill-tag.active,
          .pill-tag:hover {
-               background: var(--green);
+               background: var(--terra-light);
                  border-color: var(--green-mid);
                    color: #fff;
          }
@@ -434,7 +450,7 @@
          .add-btn {
                width: 30px;
                  height: 30px;
-                   background: var(--green);
+                   background: var(--terra-light);
                      border: none;
                        border-radius: 8px;
                          color: #fff;
@@ -482,7 +498,7 @@
          .promo-card .promo-bg {
                position: absolute;
                  inset: 0;
-                   background: linear-gradient(135deg, var(--green) 0%, #0d3020 100%);
+                   background: linear-gradient(135deg, #b8860b 0%, #3d2b00 100%);
          }
          .promo-card .promo-bg.terra {
                background: linear-gradient(135deg, #8b3a10 0%, #4a1a04 100%);
@@ -644,7 +660,7 @@
                      gap: 8px;
                        width: calc(100% - 24px);
                          margin: 0 12px 12px;
-                           background: var(--green);
+                           background: var(--terra-light);
                              color: #fff;
                                border: none;
                                  padding: 16px;
@@ -902,7 +918,7 @@
                          font-weight: 700;
          }
          .btn-save {
-               background: var(--green);
+               background: var(--terra-light);
                  color: #fff;
          }
          .btn-cancel {
@@ -968,17 +984,17 @@
   color: var(--white);
 }
 .nav-auth-pill {
-  background: var(--green);
+  background: var(--terra-light);
   padding: 7px 14px;
   border-radius: 20px;
   color: #fff;
 }
-.nav-auth-pill:hover { background: var(--green-mid); }
+.nav-auth-pill:hover { background: var(--terra); }
 .nav-auth-avatar {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: var(--green);
+  background: var(--gold-deep);
   color: #fff;
   display: flex;
   align-items: center;
@@ -1020,7 +1036,7 @@
   font-size: 26px;
   text-align: center;
   margin-bottom: 6px;
-  color: var(--green);
+  color: var(--gold-deep);
 }
 .auth-page .auth-sub {
   text-align: center;
@@ -1183,7 +1199,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  background: var(--green);
+  background: var(--terra-light);
   border-radius: 8px;
   padding: 3px 6px;
   animation: cooler-pop 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);

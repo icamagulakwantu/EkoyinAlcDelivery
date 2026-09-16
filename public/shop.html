@@ -22,7 +22,7 @@
       padding: 2px 8px; border-radius: 10px;
     }
     .retry-state { text-align: center; padding: 60px 20px; color: var(--muted); }
-    .retry-state button { margin-top: 12px; background: var(--green); color: #fff; border: none; padding: 10px 18px; border-radius: 8px; font-size: 12px; font-weight: 700; }
+    .retry-state button { margin-top: 12px; background: var(--terra-light); color: #fff; border: none; padding: 10px 18px; border-radius: 8px; font-size: 12px; font-weight: 700; }
   </style>
 </head>
 <body>
@@ -204,7 +204,7 @@
       sec.className = 'cat-section';
       sec.id = 'sec-' + cat;
       sec.innerHTML = `<div class="cat-section-header">
-        <h2>${categoryEmojis[cat] || '📦'} ${cat.replace(/_/g, ' ')}${COOLER_ELIGIBLE.has(cat) ? ' <span class="tag-terra" style="margin-left:6px;">🧊 Cooler Box</span>' : ''}</h2>
+        <h2>${categoryEmojis[cat] || '📦'} ${cat.replace(/_/g, ' ')}${COOLER_ELIGIBLE.has(cat) ? ' <span class="tag-terra" style="margin-left:6px;">Cooler Box</span>' : ''}</h2>
         <span class="cat-count">${items.length} items</span>
       </div>`;
       const grid = document.createElement('div');

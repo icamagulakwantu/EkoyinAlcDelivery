@@ -62,7 +62,6 @@ ekoyini-webapp/
 ├── admin/
 │   ├── admin.html                   Dispatch dashboard UI — real Supabase Auth login, gated by ADMIN_EMAILS
 │   ├── admin-api.js                 CURRENT version — calls the real backend API
-│   ├── admin.js                     OLD localStorage-based version (kept for reference only)
 │   └── admin.css                    Admin UI styles
 │
 ├── prisma/
