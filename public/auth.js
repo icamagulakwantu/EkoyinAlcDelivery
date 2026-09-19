@@ -52,6 +52,23 @@ async function signOut() {
   await ekoyiniAuth.auth.signOut();
 }
 
+// Sends a password-reset email with a link back to update-password.html.
+// The link carries a Supabase recovery token in the URL fragment — the JS
+// SDK picks it up automatically and fires a PASSWORD_RECOVERY auth event,
+// which update-password.html listens for before letting the user set a
+// new password.
+async function resetPassword(email) {
+  const { error } = await ekoyiniAuth.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + '/update-password.html',
+  });
+  if (error) throw error;
+}
+
+async function updatePassword(newPassword) {
+  const { error } = await ekoyiniAuth.auth.updateUser({ password: newPassword });
+  if (error) throw error;
+}
+
 // fetch() wrapper that auto-attaches the current session's bearer token.
 async function authedFetch(url, options = {}) {
   const session = await getSession();
