@@ -26,6 +26,7 @@
     .rating-submit { background: var(--terra-light); color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 700; }
     .rating-submit:disabled { opacity: 0.4; }
     .rating-comment-display { font-size: 12px; color: var(--muted); font-style: italic; margin-top: 4px; }
+    .track-autorefresh { text-align: center; font-size: 10px; color: var(--muted); margin: -8px 12px 12px; }
   </style>
 </head>
 <body>
@@ -105,12 +106,26 @@
     }).join('');
   }
 
+  let pollTimer = null;
+  let activeCode = null;
+
+  function stopPolling() {
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+  }
+
   async function lookup() {
     const code = document.getElementById('codeInput').value.trim().toUpperCase();
-    const result = document.getElementById('trackResult');
     if (!code) { showToast('Enter an order code'); return; }
+    stopPolling();
+    activeCode = code;
+    document.getElementById('trackResult').innerHTML = '<div class="track-empty">Looking up your order…</div>';
+    await fetchAndRender(code);
+  }
 
-    result.innerHTML = '<div class="track-empty">Looking up your order…</div>';
+  // Shared by the initial lookup and the auto-refresh tick — no loading
+  // flash on refresh, so it doesn't interrupt someone mid-scroll.
+  async function fetchAndRender(code) {
+    const result = document.getElementById('trackResult');
     try {
       const res = await fetch(`/api/order/${encodeURIComponent(code)}/track`);
       if (res.status === 404) {
@@ -127,10 +142,17 @@
           ${order.tavern ? `<div class="track-driver"><strong>${order.tavern.name}</strong> — picking up in ${order.tavern.area}${order.driverName ? `<br><strong>${order.driverName}</strong>${order.driverVehicle ? ` (${order.driverVehicle})` : ''} is heading your way from ${order.tavern.area}` : ''}</div>` : ''}
         </div>
         <div class="track-timeline">${renderTimeline(order.status)}</div>
+        ${order.status !== 'DELIVERED' ? '<div class="track-autorefresh">Refreshing automatically every 30s</div>' : ''}
         <div id="ratingSlot"></div>
       `;
 
-      if (order.status === 'DELIVERED') await renderRating(order);
+      if (order.status === 'DELIVERED') {
+        await renderRating(order);
+      } else if (!pollTimer) {
+        // Real re-fetch on a timer — not GPS, just an honest "this page
+        // checks for you" instead of making someone mash the button.
+        pollTimer = setInterval(() => { if (activeCode === code) fetchAndRender(code); }, 30000);
+      }
     } catch (err) {
       console.error(err);
       result.innerHTML = '<div class="track-error">Something went wrong looking up your order.</div>';
