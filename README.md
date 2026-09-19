@@ -154,11 +154,13 @@ this feature is built for).
 - `GET /api/health` — DB connectivity check
 - `GET /api/products?category=` — full catalog, filterable
 - `GET /api/taverns` — store list, `id`/`name`/`area` only
-- `GET /api/order/:code/track` — public order status lookup
+- `GET /api/order/:code/track` — public order status lookup (also returns `rating`/`ratingComment` if set)
+- `GET /api/stats` — live counts for the homepage trust strip: product count, verified tavern count, distinct townships served
 
 ### Customer (`Authorization: Bearer <supabase_access_token>`)
 - `POST /order` — create order; server recomputes every price and the Cooler Box discount
 - `GET /api/my-orders` — the logged-in user's order history
+- `POST /order/:code/rate` — rate a delivered order (`{ rating: 1-5, comment? }`); only the order's own owner, only once DELIVERED, once per order
 
 ### Admin (`x-admin-token: <ADMIN_API_TOKEN>`)
 - `GET /orders` — all orders, newest first
@@ -190,7 +192,8 @@ Business API, live GPS tracking, promo codes, RLS).
 - 🎯 Tavern inventory sync (real-time SKU availability)
 - 🎯 Multi-region expansion (duplicate app for different metro areas)
 - 🎯 Analytics dashboard (order trends, driver performance)
-- 🎯 Driver & customer ratings
+- 🎯 Driver ratings (driver-of-customer — the reverse direction; customers
+      can already rate their delivery from `track.html` once DELIVERED)
 - 🎯 Loyalty program (rewards for repeat orders)
 
 ---

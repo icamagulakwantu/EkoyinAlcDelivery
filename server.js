@@ -290,6 +290,8 @@ app.get("/api/order/:code/track", async (req, res) => {
         updatedAt: true,
         driverName: true,
         driverVehicle: true,
+        rating: true,
+        ratingComment: true,
         tavern: { select: { name: true, area: true } },
         items: { select: { name: true, quantity: true } },
       },
@@ -299,6 +301,37 @@ app.get("/api/order/:code/track", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to look up order" });
+  }
+});
+
+// ⭐ CUSTOMER: RATE A DELIVERED ORDER — auth-gated so only the order's own
+// owner can rate it, one rating per order, only once it's actually DELIVERED.
+app.post("/order/:code/rate", requireUser, async (req, res) => {
+  try {
+    const { rating, comment } = req.body;
+    const parsedRating = parseInt(rating, 10);
+    if (!Number.isInteger(parsedRating) || parsedRating < 1 || parsedRating > 5) {
+      return res.status(400).json({ error: "Rating must be a whole number from 1 to 5" });
+    }
+
+    const order = await prisma.order.findUnique({ where: { code: req.params.code } });
+    if (!order) return res.status(404).json({ error: "Order not found" });
+    if (order.userId !== req.user.id) return res.status(403).json({ error: "This isn't your order" });
+    if (order.status !== "DELIVERED") return res.status(400).json({ error: "You can only rate a delivered order" });
+    if (order.rating != null) return res.status(400).json({ error: "You've already rated this order" });
+
+    const updated = await prisma.order.update({
+      where: { code: req.params.code },
+      data: {
+        rating: parsedRating,
+        ratingComment: typeof comment === "string" ? comment.trim().slice(0, 500) || null : null,
+      },
+      select: { code: true, rating: true, ratingComment: true },
+    });
+    res.json(updated);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to save rating" });
   }
 });
 

@@ -17,6 +17,15 @@
     .track-driver { background: var(--surface); border-radius: 8px; padding: 12px; margin-top: 12px; font-size: 12px; color: var(--muted); }
     .track-driver strong { color: var(--white); }
     .track-empty, .track-error { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 13px; }
+    .rating-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r-md); padding: 18px; margin: 0 12px 16px; text-align: center; }
+    .rating-label { font-size: 13px; font-weight: 700; color: var(--white); margin-bottom: 10px; }
+    .rating-stars, .rating-stars-display { display: flex; justify-content: center; gap: 6px; margin-bottom: 10px; }
+    .rating-star { background: none; border: none; padding: 2px; cursor: pointer; transition: transform 0.1s; }
+    .rating-star:hover { transform: scale(1.15); }
+    #ratingComment { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px; color: var(--white); font-size: 12px; resize: vertical; min-height: 50px; margin-bottom: 10px; font-family: inherit; }
+    .rating-submit { background: var(--terra-light); color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 700; }
+    .rating-submit:disabled { opacity: 0.4; }
+    .rating-comment-display { font-size: 12px; color: var(--muted); font-style: italic; margin-top: 4px; }
   </style>
 </head>
 <body>
@@ -118,12 +127,101 @@
           ${order.tavern ? `<div class="track-driver"><strong>${order.tavern.name}</strong> — picking up in ${order.tavern.area}${order.driverName ? `<br><strong>${order.driverName}</strong>${order.driverVehicle ? ` (${order.driverVehicle})` : ''} is heading your way from ${order.tavern.area}` : ''}</div>` : ''}
         </div>
         <div class="track-timeline">${renderTimeline(order.status)}</div>
+        <div id="ratingSlot"></div>
       `;
+
+      if (order.status === 'DELIVERED') await renderRating(order);
     } catch (err) {
       console.error(err);
       result.innerHTML = '<div class="track-error">Something went wrong looking up your order.</div>';
     }
   }
+
+  async function renderRating(order) {
+    const slot = document.getElementById('ratingSlot');
+    if (!slot) return;
+
+    if (order.rating != null) {
+      slot.innerHTML = `
+        <div class="rating-card">
+          <div class="rating-label">You rated this delivery</div>
+          <div class="rating-stars-display">${starIcons(order.rating)}</div>
+          ${order.ratingComment ? `<div class="rating-comment-display">"${order.ratingComment}"</div>` : ''}
+        </div>`;
+      return;
+    }
+
+    const session = await getSession();
+    if (!session) {
+      slot.innerHTML = `
+        <div class="rating-card">
+          <div class="rating-label">How was your delivery?</div>
+          <a href="login.html?redirect=${encodeURIComponent('track.html?code=' + order.code)}" style="color:var(--terra-light);font-size:12px;">Log in to rate this delivery</a>
+        </div>`;
+      return;
+    }
+
+    let selectedRating = 0;
+    slot.innerHTML = `
+      <div class="rating-card">
+        <div class="rating-label">How was your delivery?</div>
+        <div class="rating-stars" id="ratingStars"></div>
+        <textarea id="ratingComment" placeholder="Anything else? (optional)" maxlength="500"></textarea>
+        <button class="rating-submit" id="ratingSubmitBtn" onclick="submitRating('${order.code}')" disabled>Submit Rating</button>
+      </div>`;
+
+    const starsEl = document.getElementById('ratingStars');
+    const paintStars = () => {
+      starsEl.innerHTML = starIcons(selectedRating, true);
+      starsEl.querySelectorAll('.rating-star').forEach((btn, i) => {
+        btn.onclick = () => {
+          selectedRating = i + 1;
+          window._ekoyiniSelectedRating = selectedRating;
+          paintStars();
+          document.getElementById('ratingSubmitBtn').disabled = false;
+        };
+      });
+    };
+    paintStars();
+  }
+
+  function starIcons(count, interactive) {
+    let html = '';
+    for (let i = 1; i <= 5; i++) {
+      const filled = i <= count;
+      const svg = `<svg viewBox="0 0 24 24" fill="${filled ? 'var(--gold-deep)' : 'none'}" stroke="var(--gold-deep)" stroke-width="1.5" width="24" height="24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`;
+      html += interactive
+        ? `<button type="button" class="rating-star">${svg}</button>`
+        : `<span class="rating-star-display">${svg}</span>`;
+    }
+    return html;
+  }
+
+  async function submitRating(code) {
+    const rating = window._ekoyiniSelectedRating;
+    if (!rating) return;
+    const btn = document.getElementById('ratingSubmitBtn');
+    btn.disabled = true;
+    btn.textContent = 'Submitting…';
+    try {
+      const res = await authedFetch(`/order/${encodeURIComponent(code)}/rate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rating, comment: document.getElementById('ratingComment').value }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to submit rating');
+      }
+      showToast('Thanks for your feedback!');
+      lookup();
+    } catch (err) {
+      showToast(err.message || 'Failed to submit rating');
+      btn.disabled = false;
+      btn.textContent = 'Submit Rating';
+    }
+  }
+  window.submitRating = submitRating;
 
   // Init — support ?code= from order-confirmation.html / profile.html links
   const params = new URLSearchParams(window.location.search);
