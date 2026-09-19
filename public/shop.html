@@ -212,8 +212,7 @@
     if (showFavoritesOnly && !justAdded) buildCatalog();
   }
 
-  // Debounced — rebuilding the whole grid on every keystroke is noticeable
-  // jank on the low-end Android devices this app targets.
+  // Debounced — avoids rebuilding the whole grid on every keystroke.
   let searchDebounce;
   function applySearch() {
     clearTimeout(searchDebounce);
