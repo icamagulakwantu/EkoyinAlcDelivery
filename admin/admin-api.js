@@ -122,6 +122,7 @@ async function loadOrders() {
                 <span class="order-status status-${order.status}">${formatStatus(order.status)}</span>
             </div>
             <div class="order-details">
+                <p>${formatPaymentBadge(order)}</p>
                 <p><strong>Delivery:</strong> ${order.address}</p>
                 <p><strong>Customer:</strong> ${order.customerName || 'N/A'} · ${order.customerPhone || 'N/A'}</p>
                 <p><strong>Date:</strong> ${new Date(order.createdAt).toLocaleString()}</p>
@@ -165,6 +166,21 @@ function getActionButtons(order) {
     }
     buttons += `<button class="btn btn-delete" onclick="deleteOrder('${order.code}')">Delete</button>`;
     return buttons;
+}
+
+// Payment method is captured at checkout but was never surfaced here —
+// the admin had no way to tell a COD order (cash collected at the door,
+// nothing to verify) from an EFT order (needs the bank statement checked
+// before dispatch) without opening the DB directly.
+function formatPaymentBadge(order) {
+    const method = (order.paymentMethod || 'cod').toLowerCase();
+    if (method === 'eft') {
+        return '<span class="payment-badge eft">EFT — verify bank statement before dispatching</span>';
+    }
+    if (method === 'card') {
+        return '<span class="payment-badge">Card</span>';
+    }
+    return '<span class="payment-badge cod">Pay on Delivery</span>';
 }
 
 function formatStatus(status) {
