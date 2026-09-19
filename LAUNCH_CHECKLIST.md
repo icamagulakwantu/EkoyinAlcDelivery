@@ -39,11 +39,16 @@ or real orders until the Track B items are checked off.
       no live map location.
 - [ ] **Promo codes.** The cart's promo code field is UI-only — there's no
       `Promo`/`Deal` data model behind it yet.
-- [ ] **HTTPS enforcement + RLS.** Confirm Render is serving HTTPS-only and
-      add Supabase Row-Level Security policies so a user can only read
-      their own orders (today, `/api/my-orders` is correctly scoped in the
-      API layer, but RLS is a second line of defense worth adding once you
-      query Supabase directly from anywhere).
+- [x] **RLS enabled.** `Order`, `OrderItem`, `SkuItem`, and `Tavern` all
+      have Row-Level Security turned on in the `ekoyini-2` project, with
+      no policies for `anon`/`authenticated` — so the Supabase REST API
+      now default-denies direct access to all of them (including
+      `Order`'s customer PII) unless a policy is explicitly added later.
+      The Express app is unaffected: `server.js` connects as its own
+      `ekoyini_app` role, which has `BYPASSRLS` set, so `/api/my-orders`
+      keeps working exactly as before — the API layer's own scoping was
+      already correct, this just closes the second line of defense.
+- [ ] **HTTPS enforcement.** Confirm Render is serving HTTPS-only.
 
 ## Before flipping "live"
 
