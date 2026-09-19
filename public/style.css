@@ -496,6 +496,9 @@
          .promo-card .promo-bg.dark {
                background: linear-gradient(135deg, #1a1a2e 0%, #0d0d1a 100%);
          }
+         .promo-card .promo-bg.festive {
+               background: linear-gradient(135deg, #0d3020 0%, #8b1a1a 100%);
+         }
          .promo-card .promo-content {
                position: relative;
                  z-index: 1;

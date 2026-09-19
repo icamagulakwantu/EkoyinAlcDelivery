@@ -168,6 +168,7 @@
   // homepage's "Today's Deals" cards can deep-link to a pre-filtered view
   // instead of dumping everyone on the full 18-category catalog.
   const COLLECTIONS = {
+    festive: { label: 'Festive Season Crate', cats: ['BEER', 'SPARKLING', 'CHAMPAGNE', 'WHISKY', 'MIXER', 'ICE'] },
     braai: { label: 'Weekend Braai Pack', cats: ['BEER', 'CIDER_RTD', 'MIXER', 'ICE'] },
     stokvel: { label: 'Stokvel & Party Case', cats: ['BRANDY', 'WHISKY', 'BEER', 'MIXER'] },
     chill: { label: 'Chill Session', cats: ['CIDER_RTD', 'WINE', 'SPARKLING'] },
@@ -448,7 +449,7 @@
     document.getElementById('searchClear').style.display = 'block';
   }
   document.getElementById('shopSearch').addEventListener('input', applySearch);
-  loadCatalog();
+  if (requireAgeGate()) loadCatalog();
   </script>
 </body>
 </html>

@@ -244,7 +244,7 @@
 
   // Init
   document.getElementById('cartAddress').value = EkoyiniAddress.get();
-  loadCart();
+  if (requireAgeGate()) loadCart();
   </script>
 </body>
 </html>

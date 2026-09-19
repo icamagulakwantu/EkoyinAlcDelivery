@@ -13,6 +13,10 @@
     .hero-title span { color: var(--green-light); }
     .hero-sub { font-size: 13px; color: var(--muted); margin-bottom: 16px; line-height: 1.5; }
     .eta-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--green-glow); color: var(--green-light); font-size: 11px; font-weight: 700; padding: 5px 10px; border-radius: 20px; margin-bottom: 12px; }
+    .trust-strip { display: flex; justify-content: space-around; padding: 14px 16px; margin: 4px 16px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .trust-stat { text-align: center; }
+    .trust-num { display: block; font-family: var(--font-display); font-size: 20px; font-weight: 700; color: var(--gold-deep); }
+    .trust-label { display: block; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; margin-top: 2px; }
     .search-bar { display: flex; align-items: center; gap: 10px; background: var(--card); border: 1px solid var(--border); border-radius: var(--r-md); padding: 12px 14px; margin-bottom: 4px; }
     .search-bar svg { color: var(--muted); flex-shrink: 0; }
     .search-bar input { flex: 1; background: transparent; border: none; color: var(--white); font-size: 13px; outline: none; }
@@ -247,12 +251,27 @@
       </div>
     </div>
 
+    <!-- TRUST STRIP — real, computed numbers only, never hardcoded -->
+    <div class="trust-strip fade-up-1" id="trustStrip" style="display:none;">
+      <div class="trust-stat"><span class="trust-num" id="statProducts">—</span><span class="trust-label">Products</span></div>
+      <div class="trust-stat"><span class="trust-num" id="statTaverns">—</span><span class="trust-label">Verified Taverns</span></div>
+      <div class="trust-stat"><span class="trust-num" id="statAreas">—</span><span class="trust-label">Townships Served</span></div>
+    </div>
+
     <!-- SHOP BY OCCASION -->
     <div class="section-header fade-up-2">
       <h2>Shop By Occasion</h2>
       <a href="shop.html">See all →</a>
     </div>
     <div class="promo-scroll fade-up-2">
+      <div class="promo-card" onclick="window.location='shop.html?collection=festive'">
+        <div class="promo-bg festive"></div>
+        <div class="promo-content">
+          <div class="promo-tag">Festive Season</div>
+          <div class="promo-title">Festive Season<br>Crate</div>
+          <div class="promo-cta">Shop the crate →</div>
+        </div>
+      </div>
       <div class="promo-card" onclick="window.location='shop.html?collection=braai'">
         <div class="promo-bg"></div>
         <div class="promo-content">
@@ -285,7 +304,7 @@
     <div class="ridealong-banner fade-up-3">
       <div class="rb-tag"><span class="tag-green">Ekoyini USP</span></div>
       <h3>Ride-Along Delivery</h3>
-      <p>We match your order to e-hailing drivers already heading your way — no dedicated delivery fleet, no extra wait. Live location sharing so you track every step.</p>
+      <p>We match your order to a vetted, already-rated e-hailing driver already on the road near you — not a stranger, a professional who's driving anyway. No dedicated fleet to wait on means your order moves the moment one's free.</p>
     </div>
 
     <!-- HOW IT WORKS -->
@@ -409,6 +428,8 @@
     const gate = document.getElementById('ageGate');
     if (isAdult) {
       localStorage.setItem('ekoyini_age_verified', 'true');
+      const ret = new URLSearchParams(window.location.search).get('return');
+      if (ret) { window.location.href = decodeURIComponent(ret); return; }
       gate.classList.add('hidden');
       document.body.style.overflow = '';
     } else {
@@ -439,6 +460,23 @@
     const q = document.getElementById('searchInput').value.trim();
     window.location.href = q ? `shop.html?q=${encodeURIComponent(q)}` : 'shop.html';
   }
+
+  // Trust strip — real counts only. Hidden by default; only shown once the
+  // numbers actually load, so a slow/failed fetch never shows a fake "—".
+  async function loadTrustStrip() {
+    try {
+      const res = await fetch('/api/stats');
+      if (!res.ok) throw new Error('Bad response');
+      const stats = await res.json();
+      document.getElementById('statProducts').textContent = stats.products;
+      document.getElementById('statTaverns').textContent = stats.taverns;
+      document.getElementById('statAreas').textContent = stats.areas;
+      document.getElementById('trustStrip').style.display = 'flex';
+    } catch (err) {
+      console.error('Failed to load trust stats:', err);
+    }
+  }
+  loadTrustStrip();
 
   function updateBadges() {
     const count = EkoyiniCart.count();

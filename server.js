@@ -127,6 +127,24 @@ app.get("/api/taverns", async (req, res) => {
   }
 });
 
+// 📊 STATS — real, computed trust-signal numbers for the homepage (product
+// count, verified tavern count, distinct townships served). Never hardcode
+// these in the frontend — they drift the moment the catalog or tavern list
+// changes, and a stale trust number is worse than no trust number.
+app.get("/api/stats", async (req, res) => {
+  try {
+    const [products, taverns, areas] = await Promise.all([
+      prisma.skuItem.count(),
+      prisma.tavern.count(),
+      prisma.tavern.findMany({ distinct: ["area"], select: { area: true } }),
+    ]);
+    res.json({ products, taverns, areas: areas.length });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to load stats" });
+  }
+});
+
 // 🏪 ADMIN: full tavern records (includes phone) for the assign-order
 // dropdown + WhatsApp dispatch messages.
 app.get("/admin/taverns", requireAdmin, async (req, res) => {

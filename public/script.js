@@ -23,6 +23,19 @@ const EkoyiniAddress = {
   save(v) { localStorage.setItem('ekoyini_address', v); }
 };
 
+// ── Age gate (shared across pages) ────────────────
+// index.html owns the actual gate UI (full-screen overlay, shown on
+// first run). Any other page that shows alcohol — shop, cart — calls
+// this first so a shared/bookmarked deep link can't skip verification.
+// Redirects to index.html with a return path; ageGateConfirm() there
+// sends the user back once they've confirmed.
+function requireAgeGate() {
+  if (localStorage.getItem('ekoyini_age_verified') === 'true') return true;
+  const ret = encodeURIComponent(window.location.pathname + window.location.search);
+  window.location.href = `index.html?return=${ret}`;
+  return false;
+}
+
 // ── Favorites (per-device, like the cart) ─────────
 const EkoyiniFavorites = {
   get() { return JSON.parse(localStorage.getItem('ekoyini_favorites') || '[]'); },
