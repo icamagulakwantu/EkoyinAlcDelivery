@@ -23,6 +23,19 @@ const EkoyiniAddress = {
   save(v) { localStorage.setItem('ekoyini_address', v); }
 };
 
+// ── Favorites (per-device, like the cart) ─────────
+const EkoyiniFavorites = {
+  get() { return JSON.parse(localStorage.getItem('ekoyini_favorites') || '[]'); },
+  has(skuId) { return this.get().includes(skuId); },
+  toggle(skuId) {
+    const favs = this.get();
+    const idx = favs.indexOf(skuId);
+    if (idx === -1) favs.push(skuId); else favs.splice(idx, 1);
+    localStorage.setItem('ekoyini_favorites', JSON.stringify(favs));
+    return idx === -1; // true if just added
+  }
+};
+
 // ── Cross-tab live sync ──────────────────────────
 // Any page that mutates the cart calls broadcastCartChange(). Pages
 // listening for 'ekoyini:cart-updated' re-render without a refresh. The

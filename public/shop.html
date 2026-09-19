@@ -31,6 +31,10 @@
     .collection-banner { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 10px 12px 0; padding: 10px 14px; background: var(--green-glow); border-radius: var(--r-md); font-size: 12px; color: var(--green-light); font-weight: 600; }
     .collection-banner a { color: inherit; text-decoration: underline; font-weight: 700; white-space: nowrap; }
     .no-results { text-align: center; padding: 50px 20px; color: var(--muted); font-size: 13px; }
+    .fav-btn { position: absolute; top: 8px; right: 8px; z-index: 1; background: rgba(255,255,255,0.85); border: none; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--muted); }
+    .fav-btn.active { color: var(--terra); }
+    #favToggle { cursor: pointer; }
+    #favToggle.active { background: var(--terra-light); color: #fff; border-color: var(--terra-light); }
   </style>
 </head>
 <body>
@@ -70,6 +74,11 @@
     </svg>
     <input type="text" id="shopSearch" placeholder="Search by name, e.g. Savanna, Klipdrift…">
     <span class="search-clear" id="searchClear" onclick="clearSearch()">&times;</span>
+  </div>
+  <div class="pill-scroll" style="padding-top:8px;">
+    <div class="pill-tag" id="favToggle" onclick="toggleFavoritesOnly()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" style="vertical-align:-1px;margin-right:4px;"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>My Favorites
+    </div>
   </div>
   <div class="collection-banner" id="collectionBanner" style="display:none;">
     <span id="collectionLabel"></span>
@@ -178,13 +187,29 @@
 
   function fmtPrice(v) { return v == null ? 'POA' : 'R' + v.toFixed(2); }
 
+  let showFavoritesOnly = false;
+
   function getFilteredProducts() {
     const q = searchQuery.toLowerCase();
     return products.filter((p) => {
+      if (showFavoritesOnly && !EkoyiniFavorites.has(p.id)) return false;
       if (categoryFilter && !categoryFilter.has(p.category)) return false;
       if (q && !p.name.toLowerCase().includes(q) && !p.productType.toLowerCase().includes(q)) return false;
       return true;
     });
+  }
+
+  function toggleFavoritesOnly() {
+    showFavoritesOnly = !showFavoritesOnly;
+    document.getElementById('favToggle').classList.toggle('active', showFavoritesOnly);
+    buildCatalog();
+  }
+
+  function toggleFavorite(id, btn) {
+    const justAdded = EkoyiniFavorites.toggle(id);
+    btn.classList.toggle('active', justAdded);
+    btn.querySelector('svg').setAttribute('fill', justAdded ? 'currentColor' : 'none');
+    if (showFavoritesOnly && !justAdded) buildCatalog();
   }
 
   // Debounced — rebuilding the whole grid on every keystroke is noticeable
@@ -260,7 +285,10 @@
     });
 
     if (filtered.length === 0) {
-      page.innerHTML = `<div class="no-results">No products match${searchQuery ? ` "${searchQuery}"` : ' this filter'}. <a href="shop.html" style="color:var(--terra-light);">Show everything</a></div>`;
+      const noResultsMsg = showFavoritesOnly
+        ? 'No favorites yet — tap the heart on a product to save it here.'
+        : `No products match${searchQuery ? ` "${searchQuery}"` : ' this filter'}.`;
+      page.innerHTML = `<div class="no-results">${noResultsMsg} <a href="shop.html" style="color:var(--terra-light);">Show everything</a></div>`;
       return;
     }
 
@@ -290,7 +318,11 @@
         const card = document.createElement('div');
         card.className = 'product-card';
         card.id = 'card-' + p.id;
+        const isFav = EkoyiniFavorites.has(p.id);
         card.innerHTML = `
+          <button class="fav-btn${isFav ? ' active' : ''}" onclick="toggleFavorite('${p.id}', this)">
+            <svg viewBox="0 0 24 24" fill="${isFav ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+          </button>
           <div class="product-info">
             <h3>${p.name}</h3>
             <div class="product-size">${p.bottleFormat}</div>
