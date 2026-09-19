@@ -40,6 +40,9 @@
     .order-review-item:last-child { border-bottom: none; }
     .order-review-total { padding: 8px 0; margin-top: 8px; display: flex; justify-content: space-between; font-weight: 700; font-size: 14px; color: var(--green-light); }
     .eta-note { display: flex; align-items: center; gap: 8px; background: var(--green-glow); color: var(--green-light); font-size: 12px; font-weight: 600; padding: 10px 12px; border-radius: 8px; margin-bottom: 14px; }
+    .trust-point { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; font-size: 12px; color: var(--muted); line-height: 1.5; }
+    .trust-point:last-child { margin-bottom: 0; }
+    .trust-point svg { flex-shrink: 0; margin-top: 2px; }
   </style>
 </head>
 <body>
@@ -97,6 +100,23 @@
       <div class="checkbox-row">
         <input type="checkbox" id="termsConfirm">
         <label for="termsConfirm">I agree to Ekoyini's Terms & Conditions and Privacy Policy</label>
+      </div>
+    </div>
+
+    <!-- WHO'S BRINGING YOUR ORDER (trust) -->
+    <div class="checkout-section">
+      <h2>Who's Bringing Your Order</h2>
+      <div class="trust-point">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--gold-deep)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M20 6L9 17l-5-5"/></svg>
+        <span>Your driver is an e-hailing partner (Uber, Bolt, or similar) already active near you — vetted and rated by their own platform, not a random stranger.</span>
+      </div>
+      <div class="trust-point">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--gold-deep)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M20 6L9 17l-5-5"/></svg>
+        <span>You've confirmed you're 18+ above — keep your ID handy in case your driver needs to check it at the door.</span>
+      </div>
+      <div class="trust-point">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--gold-deep)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M20 6L9 17l-5-5"/></svg>
+        <span>Your order code (on the next screen) is yours to keep — it's how you and our team identify exactly which order is which.</span>
       </div>
     </div>
 

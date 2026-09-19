@@ -31,6 +31,7 @@
     .collection-banner { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 10px 12px 0; padding: 10px 14px; background: var(--green-glow); border-radius: var(--r-md); font-size: 12px; color: var(--green-light); font-weight: 600; }
     .collection-banner a { color: inherit; text-decoration: underline; font-weight: 700; white-space: nowrap; }
     .no-results { text-align: center; padding: 50px 20px; color: var(--muted); font-size: 13px; }
+    .sourcing-note { display: flex; align-items: center; gap: 6px; margin: 8px 12px 0; font-size: 11px; color: var(--muted); }
     .fav-btn { position: absolute; top: 8px; right: 8px; z-index: 1; background: rgba(255,255,255,0.85); border: none; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--muted); }
     .fav-btn.active { color: var(--terra); }
     #favToggle { cursor: pointer; }
@@ -74,6 +75,10 @@
     </svg>
     <input type="text" id="shopSearch" placeholder="Search by name, e.g. Savanna, Klipdrift…">
     <span class="search-clear" id="searchClear" onclick="clearSearch()">&times;</span>
+  </div>
+  <div class="sourcing-note">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M3 9l1-5h16l1 5M3 9a2 2 0 0 0 4 0M7 9a2 2 0 0 0 4 0M11 9a2 2 0 0 0 4 0M15 9a2 2 0 0 0 4 0M4 9v10h16V9"/></svg>
+    Sourced from verified local taverns in your township
   </div>
   <div class="pill-scroll" style="padding-top:8px;">
     <div class="pill-tag" id="favToggle" onclick="toggleFavoritesOnly()">
