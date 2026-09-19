@@ -56,6 +56,24 @@ or real orders until the Track B items are checked off.
       keeps working exactly as before — the API layer's own scoping was
       already correct, this just closes the second line of defense.
 - [ ] **HTTPS enforcement.** Confirm Render is serving HTTPS-only.
+- [ ] **No inventory/stock model.** Every SKU is always "in stock" —
+      there's no field for it in the schema, so an order can be placed
+      for something a tavern has actually run out of. Fine for a
+      founder-run MVP where you're checking stock by phone/WhatsApp
+      anyway; needs a real `stock` field + decrement-on-fulfillment
+      flow before that stops being true.
+- [ ] **Admin access is a flat allowlist, not role-based.** Every email
+      in `ADMIN_EMAILS` gets full admin rights — assign, dispatch,
+      delete, everything. Fine while it's one or two trusted people;
+      add real roles (dispatcher vs. full admin) before handing access
+      to a larger ops team.
+- [x] **Order input validation hardened.** `POST /order` now rejects a
+      missing/too-short address, a phone number that isn't 9-12 digits
+      once non-digit characters are stripped, and any `paymentMethod`
+      outside `cod`/`eft` (card gets rejected server-side too, not
+      just disabled in the UI) — closes a gap where a client could
+      previously submit an order with no real phone number or an
+      arbitrary payment method string.
 
 ## Before flipping "live"
 

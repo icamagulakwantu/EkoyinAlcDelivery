@@ -65,6 +65,19 @@
   <!-- TOAST -->
   <div class="toast" id="toastEl"></div>
 
+  <!-- ADDRESS EDIT MODAL -->
+  <div class="modal-overlay" id="addressModal">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <h3>Delivery Address</h3>
+      <input type="text" id="addressModalInput" placeholder="Enter your delivery address">
+      <div class="modal-btns">
+        <button class="btn-cancel" onclick="closeAddressModal()">Cancel</button>
+        <button class="btn-save" onclick="saveAddressModal()">Save</button>
+      </div>
+    </div>
+  </div>
+
   <!-- BOTTOM NAV -->
   <nav class="bottom-nav">
     <a href="index.html" class="bnav-item">
@@ -280,12 +293,23 @@
   window.removePromo = removePromo;
 
   function editAddress() {
-    const addr = prompt('Enter your delivery address:', EkoyiniAddress.get());
-    if (addr) {
-      EkoyiniAddress.save(addr);
-      document.getElementById('cartAddress').value = addr;
-    }
+    document.getElementById('addressModalInput').value = EkoyiniAddress.get();
+    document.getElementById('addressModal').classList.add('open');
   }
+
+  function closeAddressModal() {
+    document.getElementById('addressModal').classList.remove('open');
+  }
+
+  function saveAddressModal() {
+    const addr = document.getElementById('addressModalInput').value.trim();
+    if (!addr) { showToast('Please enter an address'); return; }
+    EkoyiniAddress.save(addr);
+    document.getElementById('cartAddress').value = addr;
+    closeAddressModal();
+  }
+  window.closeAddressModal = closeAddressModal;
+  window.saveAddressModal = saveAddressModal;
 
   function goToCheckout() {
     const addr = EkoyiniAddress.get();

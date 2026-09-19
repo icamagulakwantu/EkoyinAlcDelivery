@@ -226,7 +226,13 @@
       products = await res.json();
       renderOrderReview();
       document.getElementById('deliveryAddress').value = checkoutData.address || '';
-      if (session.user.email) document.getElementById('customerName').value = document.getElementById('customerName').value || '';
+      // Best-effort prefill from the account email's local part (e.g.
+      // "thandeka" from thandeka@gmail.com) — better than an empty field,
+      // and the customer can still edit it before placing the order.
+      const nameField = document.getElementById('customerName');
+      if (!nameField.value && session.user.email) {
+        nameField.value = session.user.email.split('@')[0];
+      }
 
       const savedCode = localStorage.getItem('ekoyini_promo_code');
       if (savedCode) {

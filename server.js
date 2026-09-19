@@ -245,8 +245,22 @@ app.post("/api/promo/validate", async (req, res) => {
 app.post("/order", requireUser, async (req, res) => {
   try {
     const { address, items, customerName, customerPhone, paymentMethod, promoCode } = req.body;
-    if (!address || !Array.isArray(items) || items.length === 0) {
-      return res.status(400).json({ error: "address and items are required" });
+    if (!address || typeof address !== "string" || address.trim().length < 5) {
+      return res.status(400).json({ error: "Please enter a valid delivery address" });
+    }
+    if (!Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ error: "items are required" });
+    }
+    const digitsOnly = (customerPhone || "").replace(/\D/g, "");
+    if (digitsOnly.length < 9 || digitsOnly.length > 12) {
+      return res.status(400).json({ error: "Please enter a valid phone number" });
+    }
+    // Card isn't real yet (no gateway wired up) — reject it server-side too,
+    // not just disable the radio client-side, so nothing but cod/eft can
+    // ever land in the DB regardless of what a client sends.
+    const ALLOWED_PAYMENT_METHODS = new Set(["cod", "eft"]);
+    if (paymentMethod && !ALLOWED_PAYMENT_METHODS.has(paymentMethod)) {
+      return res.status(400).json({ error: "Invalid payment method" });
     }
 
     const skuIds = items.map((i) => i.skuId).filter(Boolean);
