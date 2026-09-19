@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="style.css">
   <style>
     .cart-empty { text-align: center; padding: 60px 20px; }
-    .cart-empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.3; }
+    .cart-empty-icon { display: flex; justify-content: center; margin-bottom: 16px; opacity: 0.3; color: var(--muted); }
     .promo-code-row { display: flex; gap: 8px; padding: 0 12px 12px; }
     .promo-code-row input { flex: 1; background: var(--card); border: 1px solid var(--border); padding: 10px; border-radius: 8px; color: var(--white); font-size: 13px; }
     .promo-code-row button { background: var(--surface); border: 1px solid var(--border); color: var(--muted); padding: 10px 14px; border-radius: 8px; font-size: 12px; cursor: pointer; }
@@ -40,8 +40,8 @@
   <!-- PURCHASE TYPE SELECTOR -->
   <div class="purchase-options">
     <div style="font-size: 12px; color: var(--muted); padding: 0 4px;">Order as:</div>
-    <button class="purchase-type-btn selected" data-type="single" onclick="setPurchaseType('single')">🍾 Individual Bottles</button>
-    <button class="purchase-type-btn" data-type="case" onclick="setPurchaseType('case')">📦 Cases (Get Discount)</button>
+    <button class="purchase-type-btn selected" data-type="single" onclick="setPurchaseType('single')">Individual Bottles</button>
+    <button class="purchase-type-btn" data-type="case" onclick="setPurchaseType('case')">Cases (Get Discount)</button>
   </div>
 
   <!-- CART ITEMS -->
@@ -104,7 +104,7 @@
       renderSummary();
     } catch (err) {
       console.error('Failed to load products:', err);
-      showToast('❌ Failed to load products');
+      showToast('Failed to load products');
     }
   }
 
@@ -115,7 +115,12 @@
     if (items.length === 0) {
       page.innerHTML = `
         <div class="cart-empty">
-          <div class="cart-empty-icon">🛒</div>
+          <div class="cart-empty-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="48" height="48">
+              <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+            </svg>
+          </div>
           <h3 style="color: var(--white); margin-bottom: 8px;">Your cart is empty</h3>
           <p style="color: var(--muted); margin-bottom: 20px;">Start adding drinks to your cart</p>
           <a href="shop.html" class="cta-btn">Browse Products</a>
@@ -135,7 +140,7 @@
       const card = document.createElement('div');
       card.className = 'cart-item';
       card.innerHTML = `
-        <div class="cart-item-img">${p.category.includes('BEER') || p.category.includes('CIDER') ? '🍾' : '🥃'}</div>
+        <div class="cart-item-img">${p.name[0].toUpperCase()}</div>
         <div class="cart-item-info">
           <h3>${p.name}</h3>
           <div class="ci-size">${p.bottleFormat}</div>
@@ -208,7 +213,7 @@
     const code = document.getElementById('promoInput').value.trim().toUpperCase();
     if (!code) return;
     // No real promo-code data model yet — see README "Known Gaps".
-    showToast('ℹ️ Promo codes are coming soon');
+    showToast('Promo codes are coming soon');
   }
 
   function editAddress() {
@@ -222,12 +227,12 @@
   function goToCheckout() {
     const addr = EkoyiniAddress.get();
     if (!addr) {
-      showToast('❌ Please enter a delivery address');
+      showToast('Please enter a delivery address');
       editAddress();
       return;
     }
     if (Object.keys(cart).length === 0) {
-      showToast('❌ Your cart is empty');
+      showToast('Your cart is empty');
       return;
     }
     localStorage.setItem('ekoyini_checkout_data', JSON.stringify({ cart, purchaseType, address: addr }));

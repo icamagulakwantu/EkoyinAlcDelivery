@@ -44,7 +44,7 @@
     .store-scroll::-webkit-scrollbar { display: none; }
     .store-card { flex-shrink: 0; width: 160px; background: var(--card); border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; transition: border-color 0.2s; cursor: pointer; }
     .store-card:hover { border-color: var(--green-mid); }
-    .store-img { height: 80px; background: var(--surface); display: flex; align-items: center; justify-content: center; font-size: 34px; }
+    .store-img { height: 80px; background: var(--surface); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 26px; font-weight: 700; color: var(--gold-deep); }
     .store-body { padding: 10px; }
     .store-name { font-size: 12px; font-weight: 700; color: var(--white); margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .store-meta { font-size: 10px; color: var(--muted); display: flex; align-items: center; gap: 4px; }
@@ -53,7 +53,6 @@
 
     /* RIDE-ALONG BANNER */
     .ridealong-banner { margin: 4px 12px 16px; background: linear-gradient(135deg, #0d3020 0%, #0d1a14 100%); border: 1px solid var(--terra); border-radius: var(--r-md); padding: 16px; position: relative; overflow: hidden; }
-    .ridealong-banner::before { content: '🚗'; position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 48px; opacity: 0.15; }
     .ridealong-banner .rb-tag { margin-bottom: 6px; }
     .ridealong-banner h3 { font-family: var(--font-display); font-size: 16px; color: #f4f7f5; margin-bottom: 4px; }
     .ridealong-banner p { font-size: 11px; color: #7a9485; line-height: 1.5; }
@@ -209,7 +208,7 @@
   <div class="page">
     <!-- HERO -->
     <div class="hero fade-up">
-      <div class="hero-greeting">Good evening 👋</div>
+      <div class="hero-greeting">Good evening</div>
       <h1 class="hero-title">Your order,<br><span>delivered fast.</span></h1>
       <p class="hero-sub">Cold drinks from your nearest liquor store — riders already heading your way.</p>
       <div class="search-bar">
@@ -249,7 +248,6 @@
     <div class="promo-scroll fade-up-2">
       <div class="promo-card" onclick="window.location='shop.html'">
         <div class="promo-bg"></div>
-        <div class="promo-emoji">🍺</div>
         <div class="promo-content">
           <div class="promo-tag">Weekend Special</div>
           <div class="promo-title">Black Label<br>Case Deal</div>
@@ -258,7 +256,6 @@
       </div>
       <div class="promo-card" onclick="window.location='shop.html'">
         <div class="promo-bg terra"></div>
-        <div class="promo-emoji">🥃</div>
         <div class="promo-content">
           <div class="promo-tag">Best Seller</div>
           <div class="promo-title">Klipdrift<br>Brandy Bundle</div>
@@ -267,7 +264,6 @@
       </div>
       <div class="promo-card" onclick="window.location='shop.html'">
         <div class="promo-bg dark"></div>
-        <div class="promo-emoji">🍏</div>
         <div class="promo-content">
           <div class="promo-tag">Cider Lovers</div>
           <div class="promo-title">Savanna Dry<br>6-Pack</div>
@@ -334,7 +330,7 @@
 
     <!-- SHOP CTA -->
     <div class="spacer-md"></div>
-    <button class="cta-btn fade-up-5" onclick="window.location='shop.html'">🛒 Browse Full Menu</button>
+    <button class="cta-btn fade-up-5" onclick="window.location='shop.html'">Browse Full Menu</button>
   </div><!-- /page -->
 
   <!-- BOTTOM NAV -->
@@ -429,7 +425,7 @@
 
   function saveAddress() {
     const val = document.getElementById('addressInput').value.trim();
-    if (val) { EkoyiniAddress.save(val); showToast('📍 Address saved'); }
+    if (val) { EkoyiniAddress.save(val); showToast('Address saved'); }
   }
 
   function updateBadges() {
@@ -445,13 +441,12 @@
   // Greet by time
   const h = new Date().getHours();
   const greet = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
-  document.querySelector('.hero-greeting').textContent = greet + ' 👋';
+  document.querySelector('.hero-greeting').textContent = greet;
 
   // Nearby Stores — live fetch, with skeleton loading, graceful fallback,
   // and neighbourhood filtering built from each tavern's own area field
   // (no separate geo data needed — township addressing is landmark/area
   // based, not street-address based, so "area" already is the landmark).
-  const storeEmojis = ['🏪', '🍾', '🛒', '🥃', '🍺'];
   let allTaverns = [];
   let activeHood = 'All';
 
@@ -470,7 +465,7 @@
       renderStores();
     } catch (err) {
       console.error('Failed to load stores:', err);
-      scroll.innerHTML = '<div class="store-empty">❌ Couldn\'t load nearby stores.</div>';
+      scroll.innerHTML = '<div class="store-empty">Couldn\'t load nearby stores.</div>';
     }
   }
 
@@ -478,7 +473,7 @@
     const hoods = ['All', ...new Set(allTaverns.map(t => t.area))];
     const filter = document.getElementById('hoodFilter');
     filter.innerHTML = hoods.map(h => `
-      <div class="pill-tag ${h === activeHood ? 'active' : ''}" onclick="setHood('${h.replace(/'/g, "\\'")}')">${h === 'All' ? '📍 All Areas' : h}</div>
+      <div class="pill-tag ${h === activeHood ? 'active' : ''}" onclick="setHood('${h.replace(/'/g, "\\'")}')">${h === 'All' ? 'All Areas' : h}</div>
     `).join('');
   }
 
@@ -498,10 +493,10 @@
     }
     scroll.innerHTML = filtered.map((t, i) => `
       <div class="store-card" onclick="window.location='shop.html'">
-        <div class="store-img">${storeEmojis[i % storeEmojis.length]}</div>
+        <div class="store-img">${t.name[0].toUpperCase()}</div>
         <div class="store-body">
           <div class="store-name">${t.name}</div>
-          <div class="store-meta">📍 ${t.area}</div>
+          <div class="store-meta">${t.area}</div>
         </div>
       </div>`).join('');
   }

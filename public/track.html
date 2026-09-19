@@ -38,7 +38,7 @@
       <button onclick="lookup()">Track</button>
     </div>
     <div class="track-result" id="trackResult">
-      <div class="track-empty">🔍 Enter your order code to see live status — no login required.</div>
+      <div class="track-empty">Enter your order code to see live status — no login required.</div>
     </div>
   </div>
 
@@ -99,13 +99,13 @@
   async function lookup() {
     const code = document.getElementById('codeInput').value.trim().toUpperCase();
     const result = document.getElementById('trackResult');
-    if (!code) { showToast('❌ Enter an order code'); return; }
+    if (!code) { showToast('Enter an order code'); return; }
 
     result.innerHTML = '<div class="track-empty">Looking up your order…</div>';
     try {
       const res = await fetch(`/api/order/${encodeURIComponent(code)}/track`);
       if (res.status === 404) {
-        result.innerHTML = '<div class="track-error">❌ No order found with that code. Double-check and try again.</div>';
+        result.innerHTML = '<div class="track-error">No order found with that code. Double-check and try again.</div>';
         return;
       }
       if (!res.ok) throw new Error('Lookup failed');
@@ -115,13 +115,13 @@
         <div class="track-result-card">
           <div class="track-result-code">${order.code}</div>
           <div class="track-result-meta">${order.items.length} item${order.items.length !== 1 ? 's' : ''} · placed ${new Date(order.createdAt).toLocaleString('en-ZA')}</div>
-          ${order.tavern ? `<div class="track-driver"><strong>🏪 ${order.tavern.name}</strong> — picking up in ${order.tavern.area}${order.driverName ? `<br>🛵 <strong>${order.driverName}</strong>${order.driverVehicle ? ` (${order.driverVehicle})` : ''} is heading your way from ${order.tavern.area}` : ''}</div>` : ''}
+          ${order.tavern ? `<div class="track-driver"><strong>${order.tavern.name}</strong> — picking up in ${order.tavern.area}${order.driverName ? `<br><strong>${order.driverName}</strong>${order.driverVehicle ? ` (${order.driverVehicle})` : ''} is heading your way from ${order.tavern.area}` : ''}</div>` : ''}
         </div>
         <div class="track-timeline">${renderTimeline(order.status)}</div>
       `;
     } catch (err) {
       console.error(err);
-      result.innerHTML = '<div class="track-error">❌ Something went wrong looking up your order.</div>';
+      result.innerHTML = '<div class="track-error">Something went wrong looking up your order.</div>';
     }
   }
 

@@ -13,7 +13,6 @@
   <div id="authOverlay" class="auth-overlay">
     <div class="pin-screen" style="min-height:auto;background:none;padding:0;">
       <div class="pin-card" id="pinCard">
-        <div class="pin-logo">🔐</div>
         <h2>Admin Access</h2>
         <p>Log in with your admin account</p>
 
@@ -42,7 +41,7 @@
 
   <!-- DASHBOARD (hidden behind authOverlay until PIN + OTP pass) -->
   <header class="admin-header">
-    <h1>🍺 Ekoyini Dispatch</h1>
+    <h1>Ekoyini Dispatch</h1>
     <div class="header-stats">
       <div class="stat-box">
         <span class="stat-number" id="pendingCount">0</span>
@@ -63,10 +62,10 @@
   <!-- FILTER TABS -->
   <div class="tabs">
     <button class="tab active" onclick="filterOrders('all', this)">All</button>
-    <button class="tab" onclick="filterOrders('PAYMENT_PENDING', this)">💰 Payment Pending</button>
-    <button class="tab" onclick="filterOrders('PENDING', this)">📦 Ready to Dispatch</button>
-    <button class="tab" onclick="filterOrders('DISPATCHED', this)">🛵 Dispatched</button>
-    <button class="tab" onclick="filterOrders('DELIVERED', this)">✅ Delivered</button>
+    <button class="tab" onclick="filterOrders('PAYMENT_PENDING', this)">Payment Pending</button>
+    <button class="tab" onclick="filterOrders('PENDING', this)">Ready to Dispatch</button>
+    <button class="tab" onclick="filterOrders('DISPATCHED', this)">Dispatched</button>
+    <button class="tab" onclick="filterOrders('DELIVERED', this)">Delivered</button>
   </div>
 
   <!-- ORDERS LIST -->
@@ -75,25 +74,25 @@
   <!-- ASSIGN MODAL -->
   <div id="assignModal" class="modal" style="display:none;">
     <div class="modal-content assign-modal-content">
-      <h2>📋 Assign Order</h2>
+      <h2>Assign Order</h2>
       <p>Order Code: <strong id="assignOrderCode"></strong></p>
 
       <div class="assign-section">
-        <h3>🏪 Select Tavern</h3>
+        <h3>Select Tavern</h3>
         <select id="tavernSelect">
           <option value="">-- Choose Tavern --</option>
         </select>
       </div>
 
       <div class="assign-section">
-        <h3>🛵 Driver Details</h3>
+        <h3>Driver Details</h3>
         <input type="text" id="driverName" placeholder="Driver name" />
         <input type="text" id="driverPhone" placeholder="Driver WhatsApp (278...)" />
         <input type="text" id="driverVehicle" placeholder="Vehicle (e.g., Uber, Bolt, I-Drive)" />
       </div>
 
       <div class="assign-actions">
-        <button class="dispatch-btn" onclick="dispatchOrder()">🚀 Assign</button>
+        <button class="dispatch-btn" onclick="dispatchOrder()">Assign</button>
         <button class="secondary-btn" onclick="closeAssignModal()">Cancel</button>
       </div>
     </div>

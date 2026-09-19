@@ -179,7 +179,7 @@
     if (!session) return;
 
     if (!checkoutData.cart || Object.keys(checkoutData.cart).length === 0) {
-      showToast('❌ Your cart is empty');
+      showToast('Your cart is empty');
       setTimeout(() => { window.location.href = 'cart.html'; }, 1200);
       return;
     }
@@ -192,7 +192,7 @@
       if (session.user.email) document.getElementById('customerName').value = document.getElementById('customerName').value || '';
     } catch (err) {
       console.error('Failed to load products:', err);
-      showToast('❌ Failed to load order');
+      showToast('Failed to load order');
     }
   }
 
@@ -251,19 +251,19 @@
 
   async function submitOrder() {
     if (!document.getElementById('ageConfirm').checked) {
-      showToast('❌ Please confirm you are 18+');
+      showToast('Please confirm you are 18+');
       return;
     }
     if (!document.getElementById('termsConfirm').checked) {
-      showToast('❌ Please accept Terms & Conditions');
+      showToast('Please accept Terms & Conditions');
       return;
     }
     if (!document.getElementById('phoneNumber').value.trim()) {
-      showToast('❌ Please enter your phone number');
+      showToast('Please enter your phone number');
       return;
     }
     if (!document.getElementById('customerName').value.trim()) {
-      showToast('❌ Please enter your name');
+      showToast('Please enter your name');
       return;
     }
 
@@ -296,13 +296,13 @@
 
       EkoyiniCart.clear();
       localStorage.removeItem('ekoyini_checkout_data');
-      showToast('✅ Order placed! Code: ' + orderCode);
+      showToast('Order placed! Code: ' + orderCode);
       setTimeout(() => {
         window.location.href = `order-confirmation.html?code=${orderCode}`;
       }, 1200);
     } catch (err) {
       console.error('Order submission error:', err);
-      showToast('❌ ' + (err.message || 'Failed to submit order'));
+      showToast(err.message || 'Failed to submit order');
       btn.disabled = false;
       btn.textContent = 'Place Order';
     }

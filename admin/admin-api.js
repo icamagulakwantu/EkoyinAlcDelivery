@@ -10,7 +10,7 @@
 // ============================================
 
 // ============================================
-// 🔐 ADMIN LOGIN — real Supabase Auth (per-person, server-verified)
+// ADMIN LOGIN — real Supabase Auth (per-person, server-verified)
 // ============================================
 // Login itself uses the same Supabase project as customer accounts
 // (ekoyiniAuth from /auth.js). What makes an account an *admin* account is
@@ -99,7 +99,7 @@ async function loadOrders() {
         allOrders = await res.json();
     } catch (err) {
         console.error(err);
-        if (container) container.innerHTML = '<div class="no-orders">❌ Failed to load orders</div>';
+        if (container) container.innerHTML = '<div class="no-orders">Failed to load orders</div>';
         return;
     }
 
@@ -111,7 +111,7 @@ async function loadOrders() {
     }
 
     if (filteredOrders.length === 0) {
-        container.innerHTML = '<div class="no-orders">📭 No orders found</div>';
+        container.innerHTML = '<div class="no-orders">No orders found</div>';
         return;
     }
 
@@ -122,9 +122,9 @@ async function loadOrders() {
                 <span class="order-status status-${order.status}">${formatStatus(order.status)}</span>
             </div>
             <div class="order-details">
-                <p>📍 <strong>Delivery:</strong> ${order.address}</p>
-                <p>👤 <strong>Customer:</strong> ${order.customerName || 'N/A'} · ${order.customerPhone || 'N/A'}</p>
-                <p>🕐 <strong>Date:</strong> ${new Date(order.createdAt).toLocaleString()}</p>
+                <p><strong>Delivery:</strong> ${order.address}</p>
+                <p><strong>Customer:</strong> ${order.customerName || 'N/A'} · ${order.customerPhone || 'N/A'}</p>
+                <p><strong>Date:</strong> ${new Date(order.createdAt).toLocaleString()}</p>
             </div>
             <div class="order-items">
                 ${order.items.map(item => `
@@ -140,9 +140,9 @@ async function loadOrders() {
             </div>
             ${order.tavern ? `
                 <div class="assigned-info">
-                    <p>🏪 <strong>Tavern:</strong> ${order.tavern.name} (${order.tavern.area})</p>
-                    <p>🛵 <strong>Driver:</strong> ${order.driverName || 'N/A'}</p>
-                    ${order.driverPhone ? `<p>📱 <strong>Driver WhatsApp:</strong> ${order.driverPhone}</p>` : ''}
+                    <p><strong>Tavern:</strong> ${order.tavern.name} (${order.tavern.area})</p>
+                    <p><strong>Driver:</strong> ${order.driverName || 'N/A'}</p>
+                    ${order.driverPhone ? `<p><strong>Driver WhatsApp:</strong> ${order.driverPhone}</p>` : ''}
                 </div>
             ` : ''}
             <div class="order-actions">
@@ -155,24 +155,24 @@ async function loadOrders() {
 function getActionButtons(order) {
     let buttons = '';
     if (order.status === 'PAYMENT_PENDING' || order.status === 'PENDING') {
-        buttons += `<button class="btn btn-assign" onclick="openAssignModal('${order.code}')">🏪 Assign</button>`;
+        buttons += `<button class="btn btn-assign" onclick="openAssignModal('${order.code}')">Assign</button>`;
     }
     if (order.status === 'PENDING' && order.tavern) {
-        buttons += `<button class="btn btn-dispatch" onclick="sendDispatchWhatsApp('${order.code}')">📲 Send WhatsApp & Dispatch</button>`;
+        buttons += `<button class="btn btn-dispatch" onclick="sendDispatchWhatsApp('${order.code}')">Send WhatsApp & Dispatch</button>`;
     }
     if (order.status === 'DISPATCHED') {
-        buttons += `<button class="btn btn-deliver" onclick="markDelivered('${order.code}')">✅ Deliver</button>`;
+        buttons += `<button class="btn btn-deliver" onclick="markDelivered('${order.code}')">Deliver</button>`;
     }
-    buttons += `<button class="btn btn-delete" onclick="deleteOrder('${order.code}')">🗑</button>`;
+    buttons += `<button class="btn btn-delete" onclick="deleteOrder('${order.code}')">Delete</button>`;
     return buttons;
 }
 
 function formatStatus(status) {
     const map = {
-        PAYMENT_PENDING: '💰 Payment Pending',
-        PENDING: '📦 Ready',
-        DISPATCHED: '🛵 Dispatched',
-        DELIVERED: '✅ Delivered',
+        PAYMENT_PENDING: 'Payment Pending',
+        PENDING: 'Ready',
+        DISPATCHED: 'Dispatched',
+        DELIVERED: 'Delivered',
     };
     return map[status] || status;
 }
@@ -242,7 +242,7 @@ async function dispatchOrder() {
         if (!res.ok) throw new Error('Assign failed');
         closeAssignModal();
         loadOrders();
-        alert('Order assigned! Use "📲 Send WhatsApp & Dispatch" on the order card to notify the tavern and driver.');
+        alert('Order assigned! Use "Send WhatsApp & Dispatch" on the order card to notify the tavern and driver.');
     } catch (err) {
         console.error(err);
         alert('Failed to assign order');
@@ -254,13 +254,13 @@ async function dispatchOrder() {
 // ============================================
 function sendTavernWhatsApp(orderCode, tavern, order) {
     const itemList = order.items.map(item => `${item.name} (x${item.quantity})`).join('\n');
-    const message = `🍺 *Ekoyini Order - ${orderCode}*\n\n🏪 *Tavern:* ${tavern.name}\n🛒 *Items:*\n${itemList}\n\n💰 *Total:* R${order.total}\n📍 *Delivery:* ${order.address}\n\n⚠️ *Please prepare this order.*\nDriver will collect and deliver.\nCode: *${orderCode}*`;
+    const message = `*Ekoyini Order - ${orderCode}*\n\n*Tavern:* ${tavern.name}\n*Items:*\n${itemList}\n\n*Total:* R${order.total}\n*Delivery:* ${order.address}\n\n*Please prepare this order.*\nDriver will collect and deliver.\nCode: *${orderCode}*`;
     window.open(`https://wa.me/${tavern.phone}?text=${encodeURIComponent(message)}`, '_blank');
 }
 
 function sendDriverWhatsApp(orderCode, driverName, driverPhone, order) {
     const tavern = order.tavern;
-    const message = `🛵 *Ekoyini Delivery - ${orderCode}*\n\n👋 Hi ${driverName}!\n\n🏪 *Pickup:* ${tavern.name} (${tavern.area})\n📍 *Deliver to:* ${order.address}\n\n🛒 *Order:*\n${order.items.map(item => `${item.name} x${item.quantity}`).join('\n')}\n\n💰 *Total:* R${order.total}\n🔑 *Order Code:* ${orderCode}\n\n⚠️ *Customer will give you this code.*\nConfirm delivery by replying to this message.`;
+    const message = `*Ekoyini Delivery - ${orderCode}*\n\nHi ${driverName}!\n\n*Pickup:* ${tavern.name} (${tavern.area})\n*Deliver to:* ${order.address}\n\n*Order:*\n${order.items.map(item => `${item.name} x${item.quantity}`).join('\n')}\n\n*Total:* R${order.total}\n*Order Code:* ${orderCode}\n\n*Customer will give you this code.*\nConfirm delivery by replying to this message.`;
     window.open(`https://wa.me/${driverPhone}?text=${encodeURIComponent(message)}`, '_blank');
 }
 

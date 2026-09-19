@@ -51,7 +51,7 @@
       if (data.session) {
         window.location.href = redirect;
       } else {
-        showToast('✅ Check your email to confirm your account');
+        showToast('Check your email to confirm your account');
         setTimeout(() => { window.location.href = 'login.html'; }, 2000);
       }
     } catch (err) {

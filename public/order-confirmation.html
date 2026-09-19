@@ -14,7 +14,7 @@
       padding: 40px 20px;
       text-align: center;
     }
-    .confirmation-icon { font-size: 64px; margin-bottom: 20px; }
+    .confirmation-icon { display: flex; justify-content: center; margin-bottom: 20px; }
     .confirmation-container h1 {
       font-family: var(--font-display);
       font-size: 28px;
@@ -128,7 +128,11 @@
   <!-- PAGE -->
   <div class="page">
     <div class="confirmation-container">
-      <div class="confirmation-icon">✅</div>
+      <div class="confirmation-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--gold-deep)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="64" height="64">
+          <circle cx="12" cy="12" r="10"/><path d="M8 12.5l2.5 2.5L16 9.5"/>
+        </svg>
+      </div>
       <h1>Order Confirmed!</h1>
       <p>Your order has been placed successfully.<br>A driver will be matched within 5–10 minutes.</p>
 
@@ -136,7 +140,7 @@
       <div class="order-code-box">
         <div class="order-code-label">Your Order Code</div>
         <div class="order-code" id="orderCode">EKO-XXXXX</div>
-        <button class="copy-btn" onclick="copyCode()">📋 Copy Code</button>
+        <button class="copy-btn" onclick="copyCode()">Copy Code</button>
       </div>
 
       <!-- NEXT STEPS -->
@@ -162,8 +166,8 @@
 
       <!-- ACTION BUTTONS -->
       <div class="action-buttons">
-        <button class="action-btn primary" onclick="goToTrack()">📍 Track This Order</button>
-        <button class="action-btn secondary" onclick="goToShop()">🛒 Continue Shopping</button>
+        <button class="action-btn primary" onclick="goToTrack()">Track This Order</button>
+        <button class="action-btn secondary" onclick="goToShop()">Continue Shopping</button>
       </div>
     </div>
   </div>
@@ -202,7 +206,7 @@
 
   function copyCode() {
     navigator.clipboard.writeText(orderCode).then(() => {
-      showToast('📋 Order code copied!');
+      showToast('Order code copied!');
     });
   }
 

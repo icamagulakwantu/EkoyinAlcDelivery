@@ -61,7 +61,7 @@
   <!-- COOLER BOX BUILDER -->
   <div class="cooler-bar" id="coolerBar" style="display:none;">
     <div class="cooler-bar-top">
-      <div class="cooler-bar-title">🧊 Cooler Box</div>
+      <div class="cooler-bar-title">Cooler Box</div>
       <div class="cooler-bar-total" id="coolerTotal">R0.00</div>
     </div>
     <div class="cooler-progress-track"><div class="cooler-progress-fill" id="coolerFill" style="width:0%"></div></div>
@@ -162,7 +162,7 @@
       console.error('Failed to load catalog:', err);
       document.getElementById('shopPage').innerHTML = `
         <div class="retry-state">
-          ❌ Failed to load products.
+          Failed to load products.
           <div><button onclick="loadCatalog()">Retry</button></div>
         </div>`;
     }
@@ -180,19 +180,11 @@
       byCategory[p.category].push(p);
     });
 
-    const categoryEmojis = {
-      BEER: '🍺', CIDER_RTD: '🍏', BRANDY: '🥃', WHISKY: '🥃',
-      COGNAC: '🍷', GIN: '🍸', VODKA: '🧊', VODKA_PREMIUM: '🧊',
-      TEQUILA: '🌵', TEQUILA_PREMIUM: '🌵', LIQUEUR: '🍹', MIXER: '🫙',
-      WINE: '🍷', WINE_BOX: '🍷', SPARKLING: '🥂', CHAMPAGNE: '🥂',
-      WATER: '💧', ICE: '🧊',
-    };
-
     let first = true;
     Object.entries(byCategory).forEach(([cat, items]) => {
       const pill = document.createElement('div');
       pill.className = 'pill-tag' + (first ? ' active' : '');
-      pill.textContent = (categoryEmojis[cat] || '📦') + ' ' + cat.replace(/_/g, ' ');
+      pill.textContent = cat.replace(/_/g, ' ');
       pill.onclick = () => {
         document.querySelectorAll('.pill-tag').forEach(p => p.classList.remove('active'));
         pill.classList.add('active');
@@ -204,7 +196,7 @@
       sec.className = 'cat-section';
       sec.id = 'sec-' + cat;
       sec.innerHTML = `<div class="cat-section-header">
-        <h2>${categoryEmojis[cat] || '📦'} ${cat.replace(/_/g, ' ')}${COOLER_ELIGIBLE.has(cat) ? ' <span class="tag-terra" style="margin-left:6px;">Cooler Box</span>' : ''}</h2>
+        <h2>${cat.replace(/_/g, ' ')}${COOLER_ELIGIBLE.has(cat) ? ' <span class="tag-terra" style="margin-left:6px;">Cooler Box</span>' : ''}</h2>
         <span class="cat-count">${items.length} items</span>
       </div>`;
       const grid = document.createElement('div');
@@ -215,7 +207,6 @@
         card.className = 'product-card';
         card.id = 'card-' + p.id;
         card.innerHTML = `
-          <div class="product-img" style="background-image: url('${p.imageUrl || ''}'); background-size: contain; background-repeat: no-repeat; background-position: center;"></div>
           <div class="product-info">
             <h3>${p.name}</h3>
             <div class="product-size">${p.bottleFormat}</div>
@@ -258,7 +249,7 @@
     renderQtyControl(id);
     updateBadges();
     updateCoolerBox();
-    if (delta > 0) showToastTop('✅ Added to cart');
+    if (delta > 0) showToastTop('Added to cart');
   }
 
   function updateBadges() {
@@ -300,7 +291,6 @@
       slot.className = 'cooler-slot' + (entry ? ' filled' : '');
       if (entry) {
         const p = products.find(x => x.id === entry[0]);
-        slot.style.backgroundImage = `url('${p.imageUrl || ''}')`;
         slot.title = `${p.name} × ${entry[1]}`;
       }
       slots.appendChild(slot);
