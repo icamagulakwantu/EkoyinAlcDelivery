@@ -37,8 +37,15 @@ or real orders until the Track B items are checked off.
       for a founder-run MVP, not for scale.
 - [ ] **Live driver GPS.** `/track.html`'s timeline is status-based only,
       no live map location.
-- [ ] **Promo codes.** The cart's promo code field is UI-only — there's no
-      `Promo`/`Deal` data model behind it yet.
+- [x] **Promo codes.** Real `PromoCode` model, `POST /api/promo/validate`
+      (preview, no side effects) and server-side redemption inside the
+      same transaction as order creation (atomic usage-count increment,
+      so a `maxUses` cap can't be raced). Wired into both cart.html and
+      checkout.html, with checkout as the authoritative recompute — same
+      pattern as the Cooler Box discount. Seeded with one live code,
+      `FESTIVE10` (10% off, no minimum, no cap, expires end of Jan 2027).
+      No admin UI to create new codes yet — do that via SQL/Supabase
+      directly until one exists.
 - [x] **RLS enabled.** `Order`, `OrderItem`, `SkuItem`, and `Tavern` all
       have Row-Level Security turned on in the `ekoyini-2` project, with
       no policies for `anon`/`authenticated` — so the Supabase REST API

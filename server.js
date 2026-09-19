@@ -204,13 +204,47 @@ app.get("/admin/enrich-images/status", requireAdmin, (req, res) => {
   res.json(enrichStatus);
 });
 
+// 🏷️ PROMO CODES — shared validation, used by both the preview endpoint
+// (cart/checkout, no side effects) and order creation (the only place a
+// code is actually redeemed). subtotal here is pre-delivery, pre-discount.
+async function checkPromoCode(code, subtotal) {
+  if (!code) return { promo: null };
+  const promo = await prisma.promoCode.findUnique({ where: { code: code.trim().toUpperCase() } });
+  if (!promo || !promo.active) return { error: "Promo code not found" };
+  if (promo.expiresAt && promo.expiresAt < new Date()) return { error: "This promo code has expired" };
+  if (promo.maxUses != null && promo.usedCount >= promo.maxUses) {
+    return { error: "This promo code has reached its usage limit" };
+  }
+  if (promo.minSubtotal != null && subtotal < promo.minSubtotal) {
+    return { error: `Add R${(promo.minSubtotal - subtotal).toFixed(2)} more to use this code` };
+  }
+  return { promo };
+}
+
+// Public preview — validates a code against a subtotal without redeeming it.
+app.post("/api/promo/validate", async (req, res) => {
+  try {
+    const { code, subtotal } = req.body;
+    const parsedSubtotal = parseFloat(subtotal);
+    if (!code || !Number.isFinite(parsedSubtotal)) {
+      return res.status(400).json({ valid: false, error: "code and subtotal are required" });
+    }
+    const { promo, error } = await checkPromoCode(code, parsedSubtotal);
+    if (error) return res.json({ valid: false, error });
+    res.json({ valid: true, code: promo.code, discountPct: promo.discountPct });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ valid: false, error: "Failed to validate promo code" });
+  }
+});
+
 // 📦 CREATE ORDER (customer, auth-gated)
 // Only skuId + quantity + purchaseType come from the client — every price
 // is recomputed here from the current DB values. This closes the exploit
 // where an editable price field on the client could set its own total.
 app.post("/order", requireUser, async (req, res) => {
   try {
-    const { address, items, customerName, customerPhone, paymentMethod } = req.body;
+    const { address, items, customerName, customerPhone, paymentMethod, promoCode } = req.body;
     if (!address || !Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ error: "address and items are required" });
     }
@@ -238,26 +272,61 @@ app.post("/order", requireUser, async (req, res) => {
     }
 
     const coolerDiscount = coolerSubtotal * coolerDiscountPct(coolerSubtotal);
+
+    // Promo discount applies to whatever's left after the Cooler Box
+    // discount, same "stack on the discounted subtotal" order most retail
+    // checkouts use. Re-validated here regardless of what the client
+    // showed — the only place a code actually gets redeemed.
+    let promo = null;
+    let promoDiscount = 0;
+    if (promoCode) {
+      const result = await checkPromoCode(promoCode, subtotal - coolerDiscount);
+      if (result.error) return res.status(400).json({ error: result.error });
+      promo = result.promo;
+      if (promo) promoDiscount = Math.round((subtotal - coolerDiscount) * (promo.discountPct / 100) * 100) / 100;
+    }
+
     const delivery = subtotal > 200 ? 0 : 50;
-    const total = Math.round((subtotal - coolerDiscount + delivery) * 100) / 100;
+    const total = Math.round((subtotal - coolerDiscount - promoDiscount + delivery) * 100) / 100;
 
     const code = "EKO-" + Math.random().toString(36).slice(2, 8).toUpperCase();
-    const order = await prisma.order.create({
-      data: {
-        code,
-        userId: req.user.id,
-        address,
-        customerName,
-        customerPhone,
-        paymentMethod: paymentMethod || "cod",
-        total,
-        items: { create: orderItems },
-      },
-      include: { items: true },
+
+    // Increment the promo's usage count in the same transaction as the
+    // order — avoids a race where two customers both slip in under a
+    // maxUses cap between the earlier check and the write.
+    const order = await prisma.$transaction(async (tx) => {
+      if (promo) {
+        const { count } = await tx.promoCode.updateMany({
+          where: {
+            id: promo.id,
+            OR: [{ maxUses: null }, { usedCount: { lt: promo.maxUses } }],
+          },
+          data: { usedCount: { increment: 1 } },
+        });
+        if (count === 0) throw new Error("PROMO_RACE_LOST");
+      }
+      return tx.order.create({
+        data: {
+          code,
+          userId: req.user.id,
+          address,
+          customerName,
+          customerPhone,
+          paymentMethod: paymentMethod || "cod",
+          promoCode: promo ? promo.code : null,
+          promoDiscount: promo ? promoDiscount : null,
+          total,
+          items: { create: orderItems },
+        },
+        include: { items: true },
+      });
     });
     console.log("New order:", order.code);
     res.json({ message: "Order received", order });
   } catch (err) {
+    if (err.message === "PROMO_RACE_LOST") {
+      return res.status(400).json({ error: "That promo code just reached its usage limit — remove it and try again" });
+    }
     console.error(err);
     res.status(500).json({ error: "Failed to create order" });
   }

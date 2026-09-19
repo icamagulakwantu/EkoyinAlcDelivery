@@ -80,6 +80,19 @@ model Tavern {
   orders Order[]
 }
 
+// ── Promo Codes ──────────────────────────────────────────
+model PromoCode {
+  id          String    @id @default(cuid())
+  code        String    @unique
+  discountPct Float
+  minSubtotal Float?
+  maxUses     Int?
+  usedCount   Int       @default(0)
+  active      Boolean   @default(true)
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+}
+
 // ── Orders ───────────────────────────────────────────────
 // userId links back to the Supabase Auth user (auth.users.id) who placed
 // the order. It's a plain string, not a Prisma relation, because the
@@ -93,6 +106,8 @@ model Order {
   customerPhone String?
   paymentMethod String      @default("cod")
   status        OrderStatus @default(PAYMENT_PENDING)
+  promoCode     String?
+  promoDiscount Float?
   total         Float
   items         OrderItem[]
   tavern        Tavern?     @relation(fields: [tavernId], references: [id])

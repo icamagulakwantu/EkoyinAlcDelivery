@@ -156,6 +156,7 @@ this feature is built for).
 - `GET /api/taverns` — store list, `id`/`name`/`area` only
 - `GET /api/order/:code/track` — public order status lookup (also returns `rating`/`ratingComment` if set)
 - `GET /api/stats` — live counts for the homepage trust strip: product count, verified tavern count, distinct townships served
+- `POST /api/promo/validate` — preview a promo code against a subtotal (`{ code, subtotal }`); no side effects, doesn't redeem it
 
 ### Customer (`Authorization: Bearer <supabase_access_token>`)
 - `POST /order` — create order; server recomputes every price and the Cooler Box discount
@@ -185,8 +186,8 @@ defined there alongside the original component library.
 ## 📈 Roadmap
 
 See `LAUNCH_CHECKLIST.md` for the concrete Track A → Track B punch list
-(payments, real age verification, admin auth, Resend email, WhatsApp
-Business API, live GPS tracking, promo codes, RLS).
+(payments, real age verification, Resend email, WhatsApp Business API,
+live GPS tracking) — admin auth, RLS, and promo codes are done.
 
 ### Phase 3 (Scale)
 - 🎯 Tavern inventory sync (real-time SKU availability)

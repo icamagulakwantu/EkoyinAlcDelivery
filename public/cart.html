@@ -11,6 +11,8 @@
     .promo-code-row { display: flex; gap: 8px; padding: 0 12px 12px; }
     .promo-code-row input { flex: 1; background: var(--card); border: 1px solid var(--border); padding: 10px; border-radius: 8px; color: var(--white); font-size: 13px; }
     .promo-code-row button { background: var(--surface); border: 1px solid var(--border); color: var(--muted); padding: 10px 14px; border-radius: 8px; font-size: 12px; cursor: pointer; }
+    .promo-applied { display: flex; align-items: center; justify-content: space-between; margin: -4px 12px 12px; padding: 8px 12px; background: var(--green-glow); color: var(--green-light); border-radius: 8px; font-size: 12px; font-weight: 600; }
+    .promo-applied button { background: none; border: none; color: inherit; font-size: 16px; line-height: 1; cursor: pointer; padding: 0 2px; }
     .purchase-options { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
     .purchase-type-btn { background: var(--card); border: 1px solid var(--border); color: var(--white); padding: 12px; border-radius: 8px; font-size: 13px; cursor: pointer; transition: all 0.2s; }
     .purchase-type-btn.selected { background: var(--terra-light); border-color: var(--terra); }
@@ -48,10 +50,11 @@
   <div class="page" id="cartPage"></div>
 
   <!-- PROMO CODE -->
-  <div class="promo-code-row">
+  <div class="promo-code-row" id="promoRow">
     <input type="text" id="promoInput" placeholder="Promo code">
-    <button onclick="applyPromo()">Apply</button>
+    <button onclick="applyPromo()" id="promoApplyBtn">Apply</button>
   </div>
+  <div class="promo-applied" id="promoApplied" style="display:none;"></div>
 
   <!-- SUMMARY -->
   <div class="order-summary" id="summary"></div>
@@ -95,12 +98,43 @@
   let cart = EkoyiniCart.get();
   let products = [];
   let purchaseType = 'single'; // 'single' or 'case'
+  let appliedPromo = null; // { code, discountPct } once validated
+
+  function computeSubtotal() {
+    let subtotal = 0;
+    Object.entries(cart).forEach(([skuId, qty]) => {
+      const p = products.find(x => x.id === skuId);
+      if (!p) return;
+      const unitPrice = purchaseType === 'case' ? (p.retailCaseZAR / p.unitsPerCase) : p.retailSingleZAR;
+      subtotal += unitPrice * qty;
+    });
+    return subtotal;
+  }
 
   async function loadCart() {
     try {
       const res = await fetch('/api/products');
       products = await res.json();
       renderCart();
+
+      const savedCode = localStorage.getItem('ekoyini_promo_code');
+      if (savedCode) {
+        const r = await fetch('/api/promo/validate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: savedCode, subtotal: computeSubtotal() }),
+        });
+        const data = await r.json();
+        if (data.valid) {
+          appliedPromo = { code: data.code, discountPct: data.discountPct };
+          document.getElementById('promoRow').style.display = 'none';
+          document.getElementById('promoApplied').style.display = 'flex';
+          document.getElementById('promoApplied').innerHTML = `<span>${data.code} applied — ${data.discountPct}% off</span><button onclick="removePromo()">&times;</button>`;
+        } else {
+          localStorage.removeItem('ekoyini_promo_code');
+        }
+      }
+
       renderSummary();
     } catch (err) {
       console.error('Failed to load products:', err);
@@ -160,24 +194,17 @@
 
   function renderSummary() {
     const summary = document.getElementById('summary');
-    const items = Object.entries(cart);
-    let subtotal = 0;
-
-    items.forEach(([skuId, qty]) => {
-      const p = products.find(x => x.id === skuId);
-      if (!p) return;
-      const unitPrice = purchaseType === 'case' ? (p.retailCaseZAR / p.unitsPerCase) : p.retailSingleZAR;
-      subtotal += unitPrice * qty;
-    });
-
+    const subtotal = computeSubtotal();
+    const promoDiscount = appliedPromo ? subtotal * (appliedPromo.discountPct / 100) : 0;
     const delivery = subtotal > 200 ? 0 : 50;
-    const total = subtotal + delivery;
+    const total = subtotal - promoDiscount + delivery;
 
     summary.innerHTML = `
       <div class="summary-row">
         <span>Subtotal</span>
         <span>R${subtotal.toFixed(2)}</span>
       </div>
+      ${appliedPromo ? `<div class="summary-row"><span>Promo (${appliedPromo.code})</span><span>-R${promoDiscount.toFixed(2)}</span></div>` : ''}
       <div class="summary-row">
         <span>Delivery <span style="font-size: 10px; color: var(--muted);">(free over R200)</span></span>
         <span>R${delivery.toFixed(2)}</span>
@@ -186,7 +213,7 @@
         <span>Total</span>
         <span class="amount">R${total.toFixed(2)}</span>
       </div>
-      <div style="font-size:10px;color:var(--muted);padding-top:6px;">Cooler Box tier discounts (if eligible) are applied at checkout.</div>`;
+      <div style="font-size:10px;color:var(--muted);padding-top:6px;">Estimated — Cooler Box and promo discounts are finalized at checkout.</div>`;
   }
 
   function setPurchaseType(type) {
@@ -209,12 +236,48 @@
     renderSummary();
   }
 
-  function applyPromo() {
+  async function applyPromo() {
     const code = document.getElementById('promoInput').value.trim().toUpperCase();
     if (!code) return;
-    // No real promo-code data model yet — see README "Known Gaps".
-    showToast('Promo codes are coming soon');
+    const btn = document.getElementById('promoApplyBtn');
+    btn.disabled = true;
+    btn.textContent = 'Checking…';
+    try {
+      const res = await fetch('/api/promo/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, subtotal: computeSubtotal() }),
+      });
+      const data = await res.json();
+      if (!data.valid) {
+        showToast(data.error || 'Invalid promo code');
+        return;
+      }
+      appliedPromo = { code: data.code, discountPct: data.discountPct };
+      localStorage.setItem('ekoyini_promo_code', data.code);
+      document.getElementById('promoRow').style.display = 'none';
+      document.getElementById('promoApplied').style.display = 'flex';
+      document.getElementById('promoApplied').innerHTML = `<span>${data.code} applied — ${data.discountPct}% off</span><button onclick="removePromo()">&times;</button>`;
+      renderSummary();
+      showToast(`${data.discountPct}% off applied`);
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to check promo code');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Apply';
+    }
   }
+
+  function removePromo() {
+    appliedPromo = null;
+    localStorage.removeItem('ekoyini_promo_code');
+    document.getElementById('promoInput').value = '';
+    document.getElementById('promoRow').style.display = 'flex';
+    document.getElementById('promoApplied').style.display = 'none';
+    renderSummary();
+  }
+  window.removePromo = removePromo;
 
   function editAddress() {
     const addr = prompt('Enter your delivery address:', EkoyiniAddress.get());
