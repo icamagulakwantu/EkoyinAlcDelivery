@@ -35,6 +35,20 @@
       margin-bottom: 24px;
       width: 100%;
     }
+    .eta-note {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: var(--green-glow);
+      color: var(--green-light);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 10px 12px;
+      border-radius: 8px;
+      margin: -12px 0 24px;
+      width: 100%;
+    }
     .order-code-label {
       font-size: 11px;
       color: var(--muted);
@@ -141,6 +155,10 @@
         <div class="order-code-label">Your Order Code</div>
         <div class="order-code" id="orderCode">EKO-XXXXX</div>
         <button class="copy-btn" onclick="copyCode()">Copy Code</button>
+      </div>
+      <div class="eta-note">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Estimated delivery: 30–45 min
       </div>
 
       <!-- NEXT STEPS -->

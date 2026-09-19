@@ -38,6 +38,7 @@
     .order-review-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
     .order-review-item:last-child { border-bottom: none; }
     .order-review-total { padding: 8px 0; margin-top: 8px; display: flex; justify-content: space-between; font-weight: 700; font-size: 14px; color: var(--green-light); }
+    .eta-note { display: flex; align-items: center; gap: 8px; background: var(--green-glow); color: var(--green-light); font-size: 12px; font-weight: 600; padding: 10px 12px; border-radius: 8px; margin-bottom: 14px; }
   </style>
 </head>
 <body>
@@ -63,6 +64,10 @@
     <!-- DELIVERY DETAILS -->
     <div class="checkout-section">
       <h2>Delivery Details</h2>
+      <div class="eta-note">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Estimated delivery: 30–45 min after payment
+      </div>
       <div class="field-group">
         <label>Address</label>
         <input type="text" id="deliveryAddress" readonly placeholder="Loading...">

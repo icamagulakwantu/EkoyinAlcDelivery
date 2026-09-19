@@ -20,6 +20,8 @@
     .order-card-status.DISPATCHED { background: rgba(201,106,46,0.15); color: var(--terra-light); }
     .order-card-meta { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
     .order-card-total { font-size: 13px; font-weight: 700; color: var(--white); margin-top: 6px; }
+    .order-card-bottom { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; }
+    .reorder-btn { background: var(--terra-light); color: #fff; border: none; padding: 7px 14px; border-radius: 8px; font-size: 11px; font-weight: 700; }
     .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 13px; }
     .logged-out { text-align: center; padding: 60px 20px; }
   </style>
@@ -108,32 +110,63 @@
     loadOrders();
   }
 
+  let myOrders = [];
+
   async function loadOrders() {
     const list = document.getElementById('orderList');
     if (!list) return;
     try {
       const res = await authedFetch('/api/my-orders');
       if (!res.ok) throw new Error('Failed to load orders');
-      const orders = await res.json();
-      if (orders.length === 0) {
+      myOrders = await res.json();
+      if (myOrders.length === 0) {
         list.innerHTML = '<div class="empty-state">No orders yet — your first Ekoyini order will show up here.</div>';
         return;
       }
-      list.innerHTML = orders.map((o) => `
-        <a href="track.html?code=${o.code}" class="order-card" style="display:block;">
-          <div class="order-card-top">
-            <span class="order-card-code">${o.code}</span>
-            <span class="order-card-status ${o.status}">${o.status.replace(/_/g, ' ')}</span>
+      list.innerHTML = myOrders.map((o) => `
+        <div class="order-card">
+          <a href="track.html?code=${o.code}" style="display:block;color:inherit;text-decoration:none;">
+            <div class="order-card-top">
+              <span class="order-card-code">${o.code}</span>
+              <span class="order-card-status ${o.status}">${o.status.replace(/_/g, ' ')}</span>
+            </div>
+            <div class="order-card-meta">${fmtDate(o.createdAt)} · ${o.items.length} item${o.items.length !== 1 ? 's' : ''}</div>
+          </a>
+          <div class="order-card-bottom">
+            <div class="order-card-total">R${o.total.toFixed(2)}</div>
+            <button class="reorder-btn" onclick="reorder('${o.code}')">Reorder</button>
           </div>
-          <div class="order-card-meta">${fmtDate(o.createdAt)} · ${o.items.length} item${o.items.length !== 1 ? 's' : ''}</div>
-          <div class="order-card-total">R${o.total.toFixed(2)}</div>
-        </a>
+        </div>
       `).join('');
     } catch (err) {
       console.error(err);
       list.innerHTML = '<div class="empty-state">Failed to load orders.</div>';
     }
   }
+
+  // "Buy Again" — adds every item from a past order back into the current
+  // cart (merging quantities, not replacing). Items whose SKU was later
+  // discontinued (skuId null) are silently skipped — cart.html already
+  // drops unknown SKU ids gracefully when rendering.
+  function reorder(code) {
+    const order = myOrders.find((o) => o.code === code);
+    if (!order) return;
+    const cart = EkoyiniCart.get();
+    let added = 0;
+    order.items.forEach((item) => {
+      if (!item.skuId) return;
+      cart[item.skuId] = (cart[item.skuId] || 0) + item.quantity;
+      added += item.quantity;
+    });
+    if (added === 0) {
+      showToast('Those items are no longer available');
+      return;
+    }
+    EkoyiniCart.save(cart);
+    showToast('Added to cart');
+    setTimeout(() => { window.location.href = 'cart.html'; }, 800);
+  }
+  window.reorder = reorder;
 
   window.addEventListener('ekoyini:auth-changed', init);
   init();

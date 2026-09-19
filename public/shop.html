@@ -23,6 +23,14 @@
     }
     .retry-state { text-align: center; padding: 60px 20px; color: var(--muted); }
     .retry-state button { margin-top: 12px; background: var(--terra-light); color: #fff; border: none; padding: 10px 18px; border-radius: 8px; font-size: 12px; font-weight: 700; }
+    .shop-search { display: flex; align-items: center; gap: 8px; background: var(--card); border: 1px solid var(--border); border-radius: var(--r-md); padding: 10px 14px; margin: 10px 12px 4px; }
+    .shop-search svg { color: var(--muted); flex-shrink: 0; }
+    .shop-search input { flex: 1; background: transparent; border: none; color: var(--white); font-size: 13px; outline: none; }
+    .shop-search input::placeholder { color: var(--faint); }
+    .shop-search .search-clear { color: var(--muted); font-size: 16px; line-height: 1; padding: 4px; display: none; }
+    .collection-banner { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 10px 12px 0; padding: 10px 14px; background: var(--green-glow); border-radius: var(--r-md); font-size: 12px; color: var(--green-light); font-weight: 600; }
+    .collection-banner a { color: inherit; text-decoration: underline; font-weight: 700; white-space: nowrap; }
+    .no-results { text-align: center; padding: 50px 20px; color: var(--muted); font-size: 13px; }
   </style>
 </head>
 <body>
@@ -53,6 +61,19 @@
     </svg>
     <input type="text" id="shopAddress" placeholder="Enter delivery address">
     <button class="addr-save" onclick="saveAddress()">Save</button>
+  </div>
+
+  <!-- SEARCH -->
+  <div class="shop-search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+    <input type="text" id="shopSearch" placeholder="Search by name, e.g. Savanna, Klipdrift…">
+    <span class="search-clear" id="searchClear" onclick="clearSearch()">&times;</span>
+  </div>
+  <div class="collection-banner" id="collectionBanner" style="display:none;">
+    <span id="collectionLabel"></span>
+    <a href="shop.html">Show everything</a>
   </div>
 
   <!-- CATEGORY PILLS -->
@@ -134,7 +155,56 @@
   let cart = EkoyiniCart.get();
   let products = [];
 
+  // Occasion collections — each links here as shop.html?cats=A,B,C so the
+  // homepage's "Today's Deals" cards can deep-link to a pre-filtered view
+  // instead of dumping everyone on the full 18-category catalog.
+  const COLLECTIONS = {
+    braai: { label: 'Weekend Braai Pack', cats: ['BEER', 'CIDER_RTD', 'MIXER', 'ICE'] },
+    stokvel: { label: 'Stokvel & Party Case', cats: ['BRANDY', 'WHISKY', 'BEER', 'MIXER'] },
+    chill: { label: 'Chill Session', cats: ['CIDER_RTD', 'WINE', 'SPARKLING'] },
+  };
+
+  const params = new URLSearchParams(window.location.search);
+  let searchQuery = (params.get('q') || '').trim();
+  let categoryFilter = null; // null = show every category
+  let collectionLabel = null;
+  if (params.get('cats')) {
+    categoryFilter = new Set(params.get('cats').split(',').map((c) => c.trim()).filter(Boolean));
+  } else if (params.get('collection') && COLLECTIONS[params.get('collection')]) {
+    const c = COLLECTIONS[params.get('collection')];
+    categoryFilter = new Set(c.cats);
+    collectionLabel = c.label;
+  }
+
   function fmtPrice(v) { return v == null ? 'POA' : 'R' + v.toFixed(2); }
+
+  function getFilteredProducts() {
+    const q = searchQuery.toLowerCase();
+    return products.filter((p) => {
+      if (categoryFilter && !categoryFilter.has(p.category)) return false;
+      if (q && !p.name.toLowerCase().includes(q) && !p.productType.toLowerCase().includes(q)) return false;
+      return true;
+    });
+  }
+
+  // Debounced — rebuilding the whole grid on every keystroke is noticeable
+  // jank on the low-end Android devices this app targets.
+  let searchDebounce;
+  function applySearch() {
+    clearTimeout(searchDebounce);
+    searchDebounce = setTimeout(() => {
+      searchQuery = document.getElementById('shopSearch').value.trim();
+      document.getElementById('searchClear').style.display = searchQuery ? 'block' : 'none';
+      buildCatalog();
+    }, 200);
+  }
+
+  function clearSearch() {
+    document.getElementById('shopSearch').value = '';
+    searchQuery = '';
+    document.getElementById('searchClear').style.display = 'none';
+    buildCatalog();
+  }
 
   function renderSkeleton() {
     const page = document.getElementById('shopPage');
@@ -174,11 +244,25 @@
     page.innerHTML = '';
     pills.innerHTML = '';
 
+    const banner = document.getElementById('collectionBanner');
+    if (collectionLabel) {
+      document.getElementById('collectionLabel').textContent = `Showing: ${collectionLabel}`;
+      banner.style.display = 'flex';
+    } else {
+      banner.style.display = 'none';
+    }
+
+    const filtered = getFilteredProducts();
     const byCategory = {};
-    products.forEach(p => {
+    filtered.forEach(p => {
       if (!byCategory[p.category]) byCategory[p.category] = [];
       byCategory[p.category].push(p);
     });
+
+    if (filtered.length === 0) {
+      page.innerHTML = `<div class="no-results">No products match${searchQuery ? ` "${searchQuery}"` : ' this filter'}. <a href="shop.html" style="color:var(--terra-light);">Show everything</a></div>`;
+      return;
+    }
 
     let first = true;
     Object.entries(byCategory).forEach(([cat, items]) => {
@@ -328,6 +412,11 @@
   // Init
   const addr = EkoyiniAddress.get();
   if (addr) document.getElementById('shopAddress').value = addr;
+  if (searchQuery) {
+    document.getElementById('shopSearch').value = searchQuery;
+    document.getElementById('searchClear').style.display = 'block';
+  }
+  document.getElementById('shopSearch').addEventListener('input', applySearch);
   loadCatalog();
   </script>
 </body>

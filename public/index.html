@@ -12,6 +12,7 @@
     .hero-title { font-family: var(--font-display); font-size: 26px; line-height: 1.2; color: var(--white); margin-bottom: 6px; }
     .hero-title span { color: var(--green-light); }
     .hero-sub { font-size: 13px; color: var(--muted); margin-bottom: 16px; line-height: 1.5; }
+    .eta-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--green-glow); color: var(--green-light); font-size: 11px; font-weight: 700; padding: 5px 10px; border-radius: 20px; margin-bottom: 12px; }
     .search-bar { display: flex; align-items: center; gap: 10px; background: var(--card); border: 1px solid var(--border); border-radius: var(--r-md); padding: 12px 14px; margin-bottom: 4px; }
     .search-bar svg { color: var(--muted); flex-shrink: 0; }
     .search-bar input { flex: 1; background: transparent; border: none; color: var(--white); font-size: 13px; outline: none; }
@@ -211,20 +212,26 @@
       <div class="hero-greeting">Good evening</div>
       <h1 class="hero-title">Your order,<br><span>delivered fast.</span></h1>
       <p class="hero-sub">Cold drinks from your nearest liquor store — riders already heading your way.</p>
-      <div class="search-bar">
+      <div class="eta-badge">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Avg delivery in your area: 30–45 min
+      </div>
+      <form class="search-bar" onsubmit="event.preventDefault(); runSearch();">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
           <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
         </svg>
         <input type="text" placeholder="Search Black Label, Savanna, Hennessy…" id="searchInput">
-        <button class="filter-btn" onclick="window.location='shop.html'">→</button>
-      </div>
+        <button type="submit" class="filter-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </button>
+      </form>
     </div>
 
     <!-- USP CHIPS -->
     <div class="usp-strip fade-up-1">
       <div class="usp-chip" onclick="window.location='track.html'">
         <svg class="u-icon" viewBox="0 0 24 24" fill="none" stroke="var(--terra-light)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M5 17h14M5 17a2 2 0 1 0 4 0 2 2 0 0 0-4 0zM15 17a2 2 0 1 0 4 0 2 2 0 0 0-4 0zM5 17V9l2-4h10l2 4v8"/></svg>
-        <div class="u-text"><strong>Ride-Along</strong>Live driver tracking</div>
+        <div class="u-text"><strong>Ride-Along</strong>Track your order</div>
       </div>
       <div class="usp-chip" onclick="window.location='shop.html'">
         <svg class="u-icon" viewBox="0 0 24 24" fill="var(--terra-light)" stroke="none" width="16" height="16"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z"/></svg>
@@ -240,34 +247,34 @@
       </div>
     </div>
 
-    <!-- PROMOS -->
+    <!-- SHOP BY OCCASION -->
     <div class="section-header fade-up-2">
-      <h2>Today's Deals</h2>
+      <h2>Shop By Occasion</h2>
       <a href="shop.html">See all →</a>
     </div>
     <div class="promo-scroll fade-up-2">
-      <div class="promo-card" onclick="window.location='shop.html'">
+      <div class="promo-card" onclick="window.location='shop.html?collection=braai'">
         <div class="promo-bg"></div>
         <div class="promo-content">
           <div class="promo-tag">Weekend Special</div>
-          <div class="promo-title">Black Label<br>Case Deal</div>
-          <div class="promo-cta">Order now →</div>
+          <div class="promo-title">Weekend Braai<br>Pack</div>
+          <div class="promo-cta">Shop the pack →</div>
         </div>
       </div>
-      <div class="promo-card" onclick="window.location='shop.html'">
+      <div class="promo-card" onclick="window.location='shop.html?collection=stokvel'">
         <div class="promo-bg terra"></div>
         <div class="promo-content">
           <div class="promo-tag">Best Seller</div>
-          <div class="promo-title">Klipdrift<br>Brandy Bundle</div>
-          <div class="promo-cta">Order now →</div>
+          <div class="promo-title">Stokvel &amp; Party<br>Case</div>
+          <div class="promo-cta">Shop the case →</div>
         </div>
       </div>
-      <div class="promo-card" onclick="window.location='shop.html'">
+      <div class="promo-card" onclick="window.location='shop.html?collection=chill'">
         <div class="promo-bg dark"></div>
         <div class="promo-content">
           <div class="promo-tag">Cider Lovers</div>
-          <div class="promo-title">Savanna Dry<br>6-Pack</div>
-          <div class="promo-cta">Order now →</div>
+          <div class="promo-title">Chill Session<br>Six-Pack</div>
+          <div class="promo-cta">Shop the session →</div>
         </div>
       </div>
     </div>
@@ -426,6 +433,11 @@
   function saveAddress() {
     const val = document.getElementById('addressInput').value.trim();
     if (val) { EkoyiniAddress.save(val); showToast('Address saved'); }
+  }
+
+  function runSearch() {
+    const q = document.getElementById('searchInput').value.trim();
+    window.location.href = q ? `shop.html?q=${encodeURIComponent(q)}` : 'shop.html';
   }
 
   function updateBadges() {
