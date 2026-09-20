@@ -50,21 +50,23 @@
     <button class="purchase-type-btn" data-type="case" onclick="setPurchaseType('case')">Cases (Get Discount)</button>
   </div>
 
-  <!-- CART ITEMS -->
-  <div class="page" id="cartPage"></div>
+  <div class="page">
+    <!-- CART ITEMS -->
+    <div id="cartPage"></div>
 
-  <!-- PROMO CODE -->
-  <div class="promo-code-row" id="promoRow">
-    <input type="text" id="promoInput" placeholder="Promo code">
-    <button onclick="applyPromo()" id="promoApplyBtn">Apply</button>
-  </div>
-  <div class="promo-applied" id="promoApplied" style="display:none;"></div>
+    <!-- PROMO CODE -->
+    <div class="promo-code-row" id="promoRow">
+      <input type="text" id="promoInput" placeholder="Promo code">
+      <button onclick="applyPromo()" id="promoApplyBtn">Apply</button>
+    </div>
+    <div class="promo-applied" id="promoApplied" style="display:none;"></div>
 
-  <!-- SUMMARY -->
-  <div class="order-summary" id="summary"></div>
+    <!-- SUMMARY -->
+    <div class="order-summary" id="summary"></div>
 
-  <!-- CHECKOUT BUTTON -->
-  <button class="cta-btn" onclick="goToCheckout()" style="margin-bottom: 20px;">Proceed to Checkout</button>
+    <!-- CHECKOUT BUTTON -->
+    <button class="cta-btn" onclick="goToCheckout()" style="margin-bottom: 20px;">Proceed to Checkout</button>
+  </div><!-- /page -->
 
   <!-- TOAST -->
   <div class="toast" id="toastEl"></div>
