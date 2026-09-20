@@ -25,10 +25,13 @@
     'WINE', 'WINE_BOX', 'SPARKLING', 'CHAMPAGNE', 'WATER', 'ICE',
   ]);
 
+  // Tiers start at R600 — below that, no discount at all (previously R300
+  // was the entry tier; raised per a deliberate call to make the top
+  // reward take more spend to reach).
   function coolerDiscountPct(coolerSubtotal) {
-    if (coolerSubtotal >= 1000) return 0.15;
-    if (coolerSubtotal >= 600) return 0.10;
-    if (coolerSubtotal >= 300) return 0.05;
+    if (coolerSubtotal >= 1500) return 0.15;
+    if (coolerSubtotal >= 1000) return 0.10;
+    if (coolerSubtotal >= 600) return 0.05;
     return 0;
   }
 

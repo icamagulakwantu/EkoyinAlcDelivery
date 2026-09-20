@@ -129,7 +129,7 @@
 
   <div class="sourcing-note">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M3 9l1-5h16l1 5M3 9a2 2 0 0 0 4 0M7 9a2 2 0 0 0 4 0M11 9a2 2 0 0 0 4 0M15 9a2 2 0 0 0 4 0M4 9v10h16V9"/></svg>
-    Sourced from verified local taverns in your township
+    Sourced from taverns, bottle stores &amp; liquor outlets — in your township and beyond, wherever the best price is
   </div>
   <div class="pill-scroll" style="padding-top:8px;">
     <div class="pill-tag" id="favToggle" onclick="toggleFavoritesOnly()">
@@ -155,9 +155,9 @@
     </div>
     <div class="cooler-progress-track"><div class="cooler-progress-fill" id="coolerFill" style="width:0%"></div></div>
     <div class="cooler-tier-labels">
-      <span id="tier300">R300 · 5%</span>
-      <span id="tier600">R600 · 10%</span>
-      <span id="tier1000">R1000 · 15%</span>
+      <span id="tier600">R600 · 5%</span>
+      <span id="tier1000">R1000 · 10%</span>
+      <span id="tier1500">R1500 · 15%</span>
     </div>
     <div class="cooler-slots" id="coolerSlots"></div>
   </div>
@@ -309,6 +309,31 @@
       hero.insertBefore(slide, dotsHolder);
     });
     dotsHolder.innerHTML = AISLES.map((a, i) => `<div class="shop-hero-dot${i === 0 ? ' active' : ''}" onclick="setAisle(${i})"></div>`).join('');
+    attachHeroSwipe(hero);
+  }
+
+  // Swipe left/right on the banner itself to move between aisles — the
+  // dots imply swipeability, so tapping a category pill shouldn't be the
+  // only way to move the carousel.
+  function attachHeroSwipe(hero) {
+    let startX = 0;
+    let startY = 0;
+    let tracking = false;
+    hero.addEventListener('touchstart', (e) => {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      tracking = true;
+    }, { passive: true });
+    hero.addEventListener('touchend', (e) => {
+      if (!tracking) return;
+      tracking = false;
+      const dx = e.changedTouches[0].clientX - startX;
+      const dy = e.changedTouches[0].clientY - startY;
+      // Ignore mostly-vertical swipes (the page itself needs to scroll).
+      if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) return;
+      const next = activeAisleIndex + (dx < 0 ? 1 : -1);
+      setAisle(Math.max(0, Math.min(AISLES.length - 1, next)));
+    }, { passive: true });
   }
 
   let activeAisleIndex = 0;
@@ -439,7 +464,7 @@
       sec.className = 'cat-section';
       sec.id = 'sec-' + cat;
       sec.innerHTML = `<div class="cat-section-header">
-        <h2>${cat.replace(/_/g, ' ')}${COOLER_ELIGIBLE.has(cat) ? ' <span class="tag-terra" style="margin-left:6px;">Cooler Box</span>' : ''}</h2>
+        <h2>${cat.replace(/_/g, ' ')}${COOLER_ELIGIBLE.has(cat) ? ' <span class="tag-terra" style="margin-left:6px;cursor:pointer;" onclick="scrollToCoolerBox()">Cooler Box</span>' : ''}</h2>
         <span class="cat-count">${items.length} items</span>
       </div>`;
       const grid = document.createElement('div');
@@ -521,6 +546,21 @@
     bn.style.display = count > 0 ? 'flex' : 'none';
   }
 
+  // Tapping the "Cooler Box" badge on any category header jumps to the
+  // actual builder widget so a shopper can see their fill progress. The
+  // widget only renders once something eligible is in the cart (it's
+  // display:none otherwise, so scrollIntoView would silently do nothing) —
+  // nudge them to add something first instead of scrolling to a blank spot.
+  function scrollToCoolerBox() {
+    const bar = document.getElementById('coolerBar');
+    if (bar.style.display === 'none' || !bar.offsetParent) {
+      showToast('Add any drink to start filling your Cooler Box — discounts unlock from R600');
+      return;
+    }
+    bar.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  window.scrollToCoolerBox = scrollToCoolerBox;
+
   function updateCoolerBox() {
     const bar = document.getElementById('coolerBar');
     const eligibleEntries = Object.entries(cart).filter(([id]) => {
@@ -538,11 +578,11 @@
     });
 
     document.getElementById('coolerTotal').textContent = fmtPrice(subtotal);
-    const pct = Math.min(100, (subtotal / 1000) * 100);
+    const pct = Math.min(100, (subtotal / 1500) * 100);
     document.getElementById('coolerFill').style.width = pct + '%';
-    document.getElementById('tier300').classList.toggle('hit', subtotal >= 300);
     document.getElementById('tier600').classList.toggle('hit', subtotal >= 600);
     document.getElementById('tier1000').classList.toggle('hit', subtotal >= 1000);
+    document.getElementById('tier1500').classList.toggle('hit', subtotal >= 1500);
 
     const slots = document.getElementById('coolerSlots');
     slots.innerHTML = '';

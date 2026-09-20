@@ -113,9 +113,9 @@ the full catalog:
 
 | Cooler Box subtotal | Discount |
 |---|---|
-| R300+ | 5% |
-| R600+ | 10% |
-| R1000+ | 15% |
+| R600+ | 5% |
+| R1000+ | 10% |
+| R1500+ | 15% |
 
 Shown live in `shop.html` via a shimmer progress bar and an 8-slot grid, and
 **applied server-side** on the eligible-items subtotal when the order is
