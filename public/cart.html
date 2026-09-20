@@ -16,6 +16,10 @@
     .purchase-options { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
     .purchase-type-btn { background: var(--card); border: 1px solid var(--border); color: var(--white); padding: 12px; border-radius: 8px; font-size: 13px; cursor: pointer; transition: all 0.2s; }
     .purchase-type-btn.selected { background: var(--terra-light); border-color: var(--terra); }
+    /* Explicit remove — set apart from the qty stepper (margin, muted
+       color) so it doesn't read as a third step of the same control. */
+    .remove-btn { margin-left: 4px; color: var(--muted); border-color: transparent; background: transparent; }
+    .remove-btn:hover { color: var(--danger); border-color: var(--danger); background: rgba(214, 54, 42, 0.08); }
   </style>
 </head>
 <body>
@@ -198,6 +202,9 @@
             <button class="qty-btn" onclick="updateQty('${skuId}', -1)">−</button>
             <span class="qty-val">${qty}</span>
             <button class="qty-btn" onclick="updateQty('${skuId}', 1)">+</button>
+            <button class="qty-btn remove-btn" onclick="removeItem('${skuId}')" aria-label="Remove ${p.name.replace(/"/g, '&quot;')} from cart">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            </button>
           </div>
         </div>
       `;
@@ -248,6 +255,16 @@
     renderCart();
     renderSummary();
   }
+
+  // Explicit remove, regardless of quantity — distinct from "−" to 0,
+  // since that requires as many taps as the quantity itself.
+  function removeItem(skuId) {
+    delete cart[skuId];
+    EkoyiniCart.save(cart);
+    renderCart();
+    renderSummary();
+  }
+  window.removeItem = removeItem;
 
   async function applyPromo() {
     const code = document.getElementById('promoInput').value.trim().toUpperCase();

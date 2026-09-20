@@ -319,7 +319,6 @@
       const grid = document.createElement('div');
       grid.className = 'product-grid';
       items.forEach(p => {
-        const qty = cart[p.id] || 0;
         const outOfStock = p.stock <= 0;
         const card = document.createElement('div');
         card.className = 'product-card' + (outOfStock ? ' out-of-stock' : '');
@@ -337,11 +336,10 @@
               <div class="product-price" onclick="showPriceDetails('${p.id}')">
                 ${fmtPrice(p.retailSingleZAR)}
               </div>
-              <div id="ctrl-${p.id}"></div>
+              <div id="ctrl-${p.id}">${qtyControlHTML(p)}</div>
             </div>
           </div>`;
         grid.appendChild(card);
-        renderQtyControl(p.id);
       });
       sec.appendChild(grid);
       page.appendChild(sec);
@@ -349,25 +347,28 @@
     });
   }
 
+  // Shared by the initial card render (inline, so the button paints on
+  // first load — see the buildCatalog() comment on why it can't go
+  // through renderQtyControl there) and every re-render after a click.
+  function qtyControlHTML(p) {
+    if (p.stock <= 0) return `<span class="add-btn-disabled">Unavailable</span>`;
+    const qty = cart[p.id] || 0;
+    if (qty > 0) {
+      return `
+        <div class="stepper-inline">
+          <button onclick="changeQty('${p.id}', -1)">−</button>
+          <span>${qty}</span>
+          <button onclick="changeQty('${p.id}', 1)">+</button>
+        </div>`;
+    }
+    return `<button class="add-btn" onclick="changeQty('${p.id}', 1)">+</button>`;
+  }
+
   function renderQtyControl(id) {
     const holder = document.getElementById('ctrl-' + id);
-    if (!holder) return;
     const p = products.find(x => x.id === id);
-    if (p && p.stock <= 0) {
-      holder.innerHTML = `<span class="add-btn-disabled">Unavailable</span>`;
-      return;
-    }
-    const qty = cart[id] || 0;
-    if (qty > 0) {
-      holder.innerHTML = `
-        <div class="stepper-inline">
-          <button onclick="changeQty('${id}', -1)">−</button>
-          <span>${qty}</span>
-          <button onclick="changeQty('${id}', 1)">+</button>
-        </div>`;
-    } else {
-      holder.innerHTML = `<button class="add-btn" onclick="changeQty('${id}', 1)">+</button>`;
-    }
+    if (!holder || !p) return;
+    holder.innerHTML = qtyControlHTML(p);
   }
 
   function changeQty(id, delta) {
