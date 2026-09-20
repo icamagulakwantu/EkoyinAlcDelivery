@@ -174,11 +174,19 @@ model Order {
   items         OrderItem[]
   tavern        Tavern?     @relation(fields: [tavernId], references: [id])
   tavernId      String?
-  driverName    String?
-  driverPhone   String?
-  driverVehicle String?
-  rating        Int?
-  ratingComment String?
+  driverName       String?
+  driverPhone      String?
+  driverVehicle    String?
+  // Real live location — driver-track.html posts to POST /order/:code/location
+  // using driverShareToken as the auth (no driver account exists, so this is
+  // the same "secret in the URL" pattern the order tracking code itself
+  // uses). track.html shows a live map once these are set and recent.
+  driverShareToken String?
+  driverLat        Float?
+  driverLng        Float?
+  driverLocationAt DateTime?
+  rating           Int?
+  ratingComment    String?
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 

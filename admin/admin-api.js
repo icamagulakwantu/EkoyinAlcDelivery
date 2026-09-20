@@ -295,7 +295,14 @@ function sendTavernWhatsApp(orderCode, tavern, order) {
 
 function sendDriverWhatsApp(orderCode, driverName, driverPhone, order) {
     const tavern = order.tavern;
-    const message = `*Ekoyini Delivery - ${orderCode}*\n\nHi ${driverName}!\n\n*Pickup:* ${tavern.name} (${tavern.area})\n*Deliver to:* ${order.address}\n\n*Order:*\n${order.items.map(item => `${item.name} x${item.quantity}`).join('\n')}\n\n*Total:* R${order.total}\n*Order Code:* ${orderCode}\n\n*Customer will give you this code.*\nConfirm delivery by replying to this message.`;
+    // driverShareToken is generated at assign time (see PATCH /order/:code/assign)
+    // and is the only thing authorizing driver-track.html to post live location
+    // updates for this order — no driver account exists, so the link itself is
+    // the credential. Only include it if it's actually there.
+    const shareLink = order.driverShareToken
+        ? `${window.location.origin}/driver-track.html?code=${encodeURIComponent(orderCode)}&token=${encodeURIComponent(order.driverShareToken)}`
+        : null;
+    const message = `*Ekoyini Delivery - ${orderCode}*\n\nHi ${driverName}!\n\n*Pickup:* ${tavern.name} (${tavern.area})\n*Deliver to:* ${order.address}\n\n*Order:*\n${order.items.map(item => `${item.name} x${item.quantity}`).join('\n')}\n\n*Total:* R${order.total}\n*Order Code:* ${orderCode}\n${shareLink ? `\n*Share your live location so the customer can track you:*\n${shareLink}\n` : ''}\n*Customer will give you this code.*\nConfirm delivery by replying to this message.`;
     window.open(`https://wa.me/${driverPhone}?text=${encodeURIComponent(message)}`, '_blank');
 }
 

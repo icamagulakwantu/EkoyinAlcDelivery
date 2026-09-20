@@ -1,6 +1,7 @@
 require("dotenv").config();
 
 const express = require("express");
+const crypto = require("crypto");
 const { PrismaClient } = require("@prisma/client");
 
 const app = express();
@@ -636,6 +637,8 @@ app.get("/api/my-orders", requireUser, async (req, res) => {
 });
 
 // 📍 PUBLIC ORDER TRACKING — no login required, just the order code
+const LOCATION_STALE_AFTER_MS = 3 * 60 * 1000; // a driver ping older than this isn't "live" anymore
+
 app.get("/api/order/:code/track", async (req, res) => {
   try {
     const order = await prisma.order.findUnique({
@@ -647,6 +650,9 @@ app.get("/api/order/:code/track", async (req, res) => {
         updatedAt: true,
         driverName: true,
         driverVehicle: true,
+        driverLat: true,
+        driverLng: true,
+        driverLocationAt: true,
         rating: true,
         ratingComment: true,
         tavern: { select: { name: true, area: true } },
@@ -654,6 +660,16 @@ app.get("/api/order/:code/track", async (req, res) => {
       },
     });
     if (!order) return res.status(404).json({ error: "Order not found" });
+
+    // Don't show a stale dot as if it were live — if the driver's phone
+    // lost signal or they closed the tab, say so isn't shown at all rather
+    // than silently misleading the customer about where the driver is.
+    const isFresh = order.driverLocationAt && Date.now() - new Date(order.driverLocationAt).getTime() < LOCATION_STALE_AFTER_MS;
+    if (!isFresh) {
+      order.driverLat = null;
+      order.driverLng = null;
+      order.driverLocationAt = null;
+    }
     res.json(order);
   } catch (err) {
     console.error(err);
@@ -705,9 +721,14 @@ app.get("/orders", requireAdmin, async (req, res) => {
 app.patch("/order/:code/assign", requireAdmin, async (req, res) => {
   try {
     const { tavernId, driverName, driverPhone, driverVehicle } = req.body;
+    // A fresh share token per assignment — no driver account exists, so
+    // this random token in a URL is what authorizes driver-track.html to
+    // post location updates for this specific order (same trust model the
+    // order tracking code itself already uses).
+    const driverShareToken = crypto.randomBytes(16).toString("hex");
     const order = await prisma.order.update({
       where: { code: req.params.code },
-      data: { tavernId, driverName, driverPhone, driverVehicle, status: "PENDING" },
+      data: { tavernId, driverName, driverPhone, driverVehicle, driverShareToken, status: "PENDING" },
       include: { tavern: true },
     });
     await logAdminAction(req, "ASSIGN_ORDER", order.code, `tavern=${order.tavern?.name || tavernId}, driver=${driverName}`);
@@ -715,6 +736,36 @@ app.patch("/order/:code/assign", requireAdmin, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(404).json({ error: "Order not found" });
+  }
+});
+
+// 📍 DRIVER: SHARE LIVE LOCATION — public (no login; drivers aren't real
+// accounts here), authorized only by the per-order driverShareToken.
+// Only accepted while the order is actually DISPATCHED — no reason for a
+// stale token to keep updating a delivered/undispatched order.
+app.post("/order/:code/location", async (req, res) => {
+  try {
+    const { token, lat, lng } = req.body;
+    const parsedLat = parseFloat(lat);
+    const parsedLng = parseFloat(lng);
+    if (!Number.isFinite(parsedLat) || !Number.isFinite(parsedLng)) {
+      return res.status(400).json({ error: "lat and lng are required" });
+    }
+    const order = await prisma.order.findUnique({ where: { code: req.params.code } });
+    if (!order || !order.driverShareToken || order.driverShareToken !== token) {
+      return res.status(403).json({ error: "Invalid or expired share link" });
+    }
+    if (order.status !== "DISPATCHED") {
+      return res.status(400).json({ error: "This order isn't out for delivery" });
+    }
+    await prisma.order.update({
+      where: { code: req.params.code },
+      data: { driverLat: parsedLat, driverLng: parsedLng, driverLocationAt: new Date() },
+    });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to update location" });
   }
 });
 

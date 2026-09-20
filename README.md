@@ -54,7 +54,8 @@ ekoyini-webapp/
 │   ├── login.html                   Supabase Auth sign-in
 │   ├── signup.html                  Supabase Auth registration
 │   ├── profile.html                 Account view — order history, logout, live auth-state switching
-│   ├── track.html                   Public order tracking by code (no login required)
+│   ├── track.html                   Public order tracking by code (no login required); live Leaflet map once a driver is sharing location
+│   ├── driver-track.html            Driver-facing, no-login page — shares live GPS via a per-order token link sent over WhatsApp
 │   ├── style.css                    Full design system — all shared CSS
 │   ├── script.js                    Shared utilities: cart, address, toast, cross-tab sync, dead-end auditor
 │   └── auth.js                      Supabase client wrapper, session helpers, nav login-state renderer
@@ -143,6 +144,7 @@ this feature is built for).
 - **`/api/taverns` narrowed** — public response is `id`/`name`/`area` only; tavern phone numbers are only ever returned to `requireAdmin`-gated `/admin/taverns`.
 - **Orders are auth-gated** — `POST /order` and `GET /api/my-orders` require a valid Supabase session (`requireUser` middleware, verified against Supabase's `/auth/v1/user`).
 - **Admin auth is per-person and role-based.** `/admin/admin.html` logs admins in with real Supabase Auth accounts; `requireAdmin` checks the logged-in user's email against `ADMIN_EMAILS` (always `SUPER_ADMIN`, the root bootstrap) or the `AdminUser` table (delegated admins with an actual `SUPER_ADMIN`/`DISPATCHER` role). Sensitive routes — delete order, edit inventory, manage other admins — are additionally gated by `requireSuperAdmin`, enforced server-side, not just hidden in the UI. `ADMIN_API_TOKEN` still works as a fallback for scripts/curl and as a bootstrap path — unset it once every admin has a real account.
+- **Driver location updates are token-authorized, not open.** `POST /order/:code/location` has no login (drivers have no accounts) but requires the per-order `driverShareToken` generated at assign time; it also only accepts updates while the order is `DISPATCHED`, so a leaked or guessed token on a delivered/undispatched order can't do anything. `/track.html` and the `/api/order/:code/track` response drop any location ping older than 3 minutes, so a driver who stopped sharing never leaves a stale dot on the customer's map.
 
 ### Still Track A / known limitations
 - **Age verification stays self-attestation by design** — not a gap. Real ID scanning needs a paid vendor and isn't the industry norm (Uber Eats and most alcohol delivery apps do the same "take their word for it, use judgment on an obvious minor" approach). Revisit only for a specific compliance need, not by default.
@@ -156,11 +158,12 @@ this feature is built for).
 - `GET /api/health` — DB connectivity check
 - `GET /api/products?category=` — full catalog, filterable
 - `GET /api/taverns` — store list, `id`/`name`/`area` only
-- `GET /api/order/:code/track` — public order status lookup (also returns `rating`/`ratingComment` if set)
+- `GET /api/order/:code/track` — public order status lookup (also returns `rating`/`ratingComment`, and `driverLat`/`driverLng`/`driverLocationAt` if the driver has shared a location in the last 3 minutes — stale pings are dropped server-side, never surfaced as if live)
 - `GET /api/stats` — live counts for the homepage trust strip: product count, verified tavern count, distinct townships served
 - `POST /api/promo/validate` — preview a promo code against a subtotal (`{ code, subtotal }`); no side effects, doesn't redeem it
 - `GET /api/payment-config` — `{ cardEnabled }`, tells checkout.html whether to enable the card radio (true only once `YOCO_SECRET_KEY` is set)
 - `POST /webhooks/yoco` — Yoco's own webhook target, not for browser use; signature-verified, see `payments.js`
+- `POST /order/:code/location` — driver-track.html posts `{ token, lat, lng }` here roughly every 10s while sharing; `token` must match the order's `driverShareToken` (set at assign time) and the order must be `DISPATCHED`, or it's rejected. No login — the token in the link is the only credential, since drivers have no accounts.
 
 ### Customer (`Authorization: Bearer <supabase_access_token>`)
 - `POST /order` — create order for COD/EFT; server recomputes every price and the Cooler Box discount. Rejects `paymentMethod: "card"` — that goes through the two routes below instead.
@@ -173,7 +176,7 @@ this feature is built for).
 - `GET /admin/me` — the logged-in admin's own role, for the dashboard to show/hide UI
 - `GET /orders` — all orders, newest first
 - `GET /admin/taverns` — full tavern records, including phone
-- `PATCH /order/:code/assign` — assign tavern + driver, sets status `PENDING`
+- `PATCH /order/:code/assign` — assign tavern + driver, sets status `PENDING`, generates a fresh `driverShareToken` (the admin dashboard's WhatsApp dispatch message includes the resulting `driver-track.html?code=...&token=...` live-location link)
 - `PATCH /order/:code/status` — update status
 - `GET /admin/products` — full product list with current stock
 
@@ -200,9 +203,10 @@ defined there alongside the original component library.
 
 ## 📈 Roadmap
 
-See `LAUNCH_CHECKLIST.md` for the concrete Track A → Track B punch list
-(payments, real age verification, Resend email, WhatsApp Business API,
-live GPS tracking) — admin auth, RLS, and promo codes are done.
+See `LAUNCH_CHECKLIST.md` for the concrete Track A → Track B punch list —
+WhatsApp Business API automation is the one item left; admin auth, RLS,
+promo codes, payments, Resend email, and live GPS tracking are all done
+(age verification stays self-attestation by design, see above).
 
 ### Phase 3 (Scale)
 - 🎯 Tavern inventory sync (real-time SKU availability)

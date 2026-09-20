@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Ekoyini — Share Delivery Location</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .dt-page { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; text-align: center; }
+    .dt-logo { font-family: var(--font-display); font-size: 22px; font-weight: 700; color: var(--gold-deep); margin-bottom: 24px; }
+    .dt-code { font-family: monospace; font-size: 18px; font-weight: 700; color: var(--terra-light); margin-bottom: 8px; }
+    .dt-status { font-size: 13px; color: var(--muted); margin-bottom: 24px; max-width: 320px; line-height: 1.5; }
+    .dt-btn { background: var(--terra-light); color: #fff; border: none; padding: 16px 32px; border-radius: var(--r-sm); font-size: 15px; font-weight: 700; }
+    .dt-btn:disabled { opacity: 0.5; }
+    .dt-sharing { display: none; align-items: center; gap: 8px; background: var(--green-glow); color: var(--green-light); padding: 10px 18px; border-radius: 20px; font-size: 13px; font-weight: 700; }
+    .dt-sharing.active { display: flex; }
+    .dt-pulse { width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: dtpulse 1.4s ease-in-out infinite; }
+    @keyframes dtpulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+    .dt-error { color: var(--terra); font-size: 12px; margin-top: 12px; max-width: 300px; }
+  </style>
+</head>
+<body>
+  <div class="dt-page">
+    <div class="dt-logo">Ekoyini</div>
+    <div id="dtBody">
+      <div class="dt-code" id="dtCode">—</div>
+      <p class="dt-status">Tap below to share your live location with the customer while you're on your way. You can stop any time — just close this tab.</p>
+      <button class="dt-btn" id="dtStartBtn" onclick="startSharing()">Start Sharing My Location</button>
+      <div class="dt-sharing" id="dtSharing"><span class="dt-pulse"></span> Sharing live location</div>
+      <div class="dt-error" id="dtError"></div>
+    </div>
+  </div>
+
+  <script>
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  const token = params.get('token');
+  document.getElementById('dtCode').textContent = code || 'No order code';
+
+  let watchId = null;
+
+  function startSharing() {
+    if (!code || !token) {
+      showError('This link is missing its order code or token — ask dispatch to resend it.');
+      return;
+    }
+    if (!navigator.geolocation) {
+      showError('Your browser doesn\'t support location sharing.');
+      return;
+    }
+    document.getElementById('dtStartBtn').disabled = true;
+    document.getElementById('dtStartBtn').textContent = 'Requesting location access…';
+
+    watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        document.getElementById('dtStartBtn').style.display = 'none';
+        document.getElementById('dtSharing').classList.add('active');
+        document.getElementById('dtError').textContent = '';
+        postLocation(pos.coords.latitude, pos.coords.longitude);
+      },
+      (err) => {
+        console.error(err);
+        document.getElementById('dtStartBtn').disabled = false;
+        document.getElementById('dtStartBtn').textContent = 'Start Sharing My Location';
+        showError(err.code === 1 ? 'Location access was denied — enable it in your browser settings and try again.' : 'Couldn\'t get your location. Try again.');
+      },
+      { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 }
+    );
+  }
+
+  let lastSent = 0;
+  async function postLocation(lat, lng) {
+    // Throttle to roughly once every 10s — watchPosition can fire much
+    // more often than that, and the server/customer don't need it to.
+    const now = Date.now();
+    if (now - lastSent < 10000) return;
+    lastSent = now;
+    try {
+      await fetch(`/order/${encodeURIComponent(code)}/location`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, lat, lng }),
+      });
+    } catch (err) {
+      console.error('Failed to post location:', err);
+    }
+  }
+
+  function showError(msg) {
+    document.getElementById('dtError').textContent = msg;
+  }
+
+  window.addEventListener('beforeunload', () => {
+    if (watchId != null) navigator.geolocation.clearWatch(watchId);
+  });
+  </script>
+</body>
+</html>

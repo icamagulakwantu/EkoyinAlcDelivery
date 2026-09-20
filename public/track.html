@@ -5,7 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Ekoyini — Track Order</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
   <style>
+    .track-map { height: 220px; border-radius: var(--r-md); overflow: hidden; margin: 0 12px 16px; border: 1px solid var(--border); display: none; }
+    .track-map.active { display: block; }
     .track-search { display: flex; gap: 8px; padding: 12px; }
     .track-search input { flex: 1; background: var(--card); border: 1px solid var(--border); padding: 12px 14px; border-radius: var(--r-sm); color: var(--white); font-size: 14px; text-transform: uppercase; }
     .track-search input:focus { outline: none; border-color: var(--green-mid); }
@@ -79,6 +82,7 @@
   <div class="toast" id="toastEl"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="auth.js"></script>
   <script src="script.js"></script>
   <script>
@@ -104,6 +108,37 @@
           </div>
         </div>`;
     }).join('');
+  }
+
+  // Real live map — only rendered when driver-track.html has actually
+  // posted a recent location for this order (server already drops stale
+  // pings, see LOCATION_STALE_AFTER_MS in server.js). No map at all if the
+  // driver hasn't started sharing, rather than showing an empty/fake one.
+  //
+  // Every fetchAndRender() call replaces #trackResult's whole innerHTML
+  // (see above), which destroys and recreates #trackMap as a fresh DOM
+  // node each time — so any previous Leaflet instance is left bound to a
+  // detached element. Simplest correct approach: tear down and recreate
+  // the map on every call rather than trying to reuse one across polls.
+  let leafletMap = null;
+
+  function updateDriverMap(order) {
+    if (leafletMap) {
+      leafletMap.remove();
+      leafletMap = null;
+    }
+
+    const mapEl = document.getElementById('trackMap');
+    if (!mapEl || order.driverLat == null || order.driverLng == null) {
+      if (mapEl) mapEl.classList.remove('active');
+      return;
+    }
+
+    mapEl.classList.add('active');
+    const pos = [order.driverLat, order.driverLng];
+    leafletMap = L.map('trackMap', { zoomControl: false, attributionControl: false }).setView(pos, 14);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(leafletMap);
+    L.circleMarker(pos, { radius: 8, color: '#cc3700', fillColor: '#cc3700', fillOpacity: 0.9 }).addTo(leafletMap);
   }
 
   let pollTimer = null;
@@ -141,16 +176,20 @@
           <div class="track-result-meta">${order.items.length} item${order.items.length !== 1 ? 's' : ''} · placed ${new Date(order.createdAt).toLocaleString('en-ZA')}</div>
           ${order.tavern ? `<div class="track-driver"><strong>${order.tavern.name}</strong> — picking up in ${order.tavern.area}${order.driverName ? `<br><strong>${order.driverName}</strong>${order.driverVehicle ? ` (${order.driverVehicle})` : ''} is heading your way from ${order.tavern.area}` : ''}</div>` : ''}
         </div>
+        <div class="track-map" id="trackMap"></div>
         <div class="track-timeline">${renderTimeline(order.status)}</div>
         ${order.status !== 'DELIVERED' ? '<div class="track-autorefresh">Refreshing automatically every 30s</div>' : ''}
         <div id="ratingSlot"></div>
       `;
 
+      updateDriverMap(order);
+
       if (order.status === 'DELIVERED') {
         await renderRating(order);
       } else if (!pollTimer) {
-        // Real re-fetch on a timer — not GPS, just an honest "this page
-        // checks for you" instead of making someone mash the button.
+        // Real re-fetch on a timer. Status always updates this way; the
+        // driver's position on the map does too, live, whenever they're
+        // actively sharing from driver-track.html — see updateDriverMap.
         pollTimer = setInterval(() => { if (activeCode === code) fetchAndRender(code); }, 30000);
       }
     } catch (err) {

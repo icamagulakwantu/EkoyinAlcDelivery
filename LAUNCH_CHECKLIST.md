@@ -58,8 +58,23 @@ or real orders until the Track B items are checked off.
 - [ ] **WhatsApp Business API.** Driver/tavern dispatch messages currently
       open `wa.me` deep links that the admin has to manually send — fine
       for a founder-run MVP, not for scale.
-- [ ] **Live driver GPS.** `/track.html`'s timeline is status-based only,
-      no live map location.
+- [x] **Live driver GPS.** No paid mapping account needed — the driver's own
+      phone browser is the GPS source, and the map is Leaflet.js + OpenStreetMap
+      tiles (free, no API key). At assign time (`PATCH /order/:code/assign`) the
+      server generates a random `driverShareToken` and stores it on the order;
+      the WhatsApp dispatch message to the driver now includes a
+      `driver-track.html?code=...&token=...` link built from it. That page needs
+      no login — the driver taps "Start Sharing," which calls the browser
+      Geolocation API (`watchPosition`) and posts `{ token, lat, lng }` to
+      `POST /order/:code/location` roughly every 10s (throttled client-side).
+      The endpoint checks the token against the order and only accepts updates
+      while the order is `DISPATCHED` — a stale or wrong token, or an
+      undispatched/delivered order, gets rejected. `/track.html` polls
+      `GET /api/order/:code/track` every 30s and renders a live Leaflet map
+      once a location is present; the server itself drops any ping older than
+      3 minutes (`LOCATION_STALE_AFTER_MS`) so a driver who closed the tab
+      never leaves a stale dot showing. No env vars or credentials required —
+      this is on by default for every dispatched order.
 - [x] **Promo codes.** Real `PromoCode` model, `POST /api/promo/validate`
       (preview, no side effects) and server-side redemption inside the
       same transaction as order creation (atomic usage-count increment,
