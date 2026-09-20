@@ -20,6 +20,16 @@
        color) so it doesn't read as a third step of the same control. */
     .remove-btn { margin-left: 4px; color: var(--muted); border-color: transparent; background: transparent; }
     .remove-btn:hover { color: var(--danger); border-color: var(--danger); background: rgba(214, 54, 42, 0.08); }
+    /* Case-mode price: the case-discounted line total is the big number
+       (cip-total, reuses .cart-item-price's size/weight); the "was / now"
+       per-unit comparison sits underneath it as subtext — original single
+       price struck through and faded, discounted case price vivid in the
+       savings-signal green (see style.css's palette note on --green-light
+       being reserved for exactly this: a savings/success signal). */
+    .cip-total { margin-bottom: 2px; }
+    .cip-compare { display: flex; align-items: baseline; gap: 6px; justify-content: flex-end; }
+    .cip-was { font-size: 10px; color: var(--faint); text-decoration: line-through; filter: blur(0.25px); opacity: 0.8; }
+    .cip-now { font-size: 11px; font-weight: 700; color: var(--green-light); }
   </style>
 </head>
 <body>
@@ -187,8 +197,21 @@
       const p = products.find(x => x.id === skuId);
       if (!p) return;
 
-      const unitPrice = purchaseType === 'case' ? (p.retailCaseZAR / p.unitsPerCase) : p.retailSingleZAR;
+      const caseUnitPrice = p.retailCaseZAR / p.unitsPerCase;
+      const unitPrice = purchaseType === 'case' ? caseUnitPrice : p.retailSingleZAR;
       const itemTotal = unitPrice * qty;
+
+      // Case mode: the case-discounted total is the big number; the
+      // original single-bottle price (struck through) and the discounted
+      // per-unit case price (vivid) appear as subtext underneath it —
+      // same "was / now" pattern as a retail markdown, not just a number.
+      const priceBlock = purchaseType === 'case'
+        ? `<div class="cart-item-price cip-total">R${itemTotal.toFixed(2)}</div>
+           <div class="cip-compare">
+             <span class="cip-was">R${p.retailSingleZAR.toFixed(2)} ea</span>
+             <span class="cip-now">R${caseUnitPrice.toFixed(2)} ea</span>
+           </div>`
+        : `<div class="cart-item-price">R${itemTotal.toFixed(2)}</div>`;
 
       const card = document.createElement('div');
       card.className = 'cart-item';
@@ -199,7 +222,7 @@
           <div class="ci-size">${p.bottleFormat}</div>
         </div>
         <div class="cart-item-right">
-          <div class="cart-item-price">R${itemTotal.toFixed(2)}</div>
+          ${priceBlock}
           <div class="qty-control">
             <button class="qty-btn" onclick="updateQty('${skuId}', -1)">−</button>
             <span class="qty-val">${qty}</span>

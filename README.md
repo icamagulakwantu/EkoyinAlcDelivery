@@ -93,7 +93,7 @@ ekoyini-webapp/
 **264 SKUs** across 18 categories (beer, spirits, wine, ciders, mixers, water, ice, etc.), sourced from supplier price sheets.
 
 ### Pricing Logic
-- **Single-bottle price** (`retailSingleZAR`): Uses supplier's list price directly — already realistic SA shelf prices.
+- **Single-bottle price** (`retailSingleZAR`): Uses the supplier list price directly as the shelf price, no separate markup layer. 27 flagship SKUs (Absolut, Jameson, Johnnie Walker, Bells, Gordons, Klipdrift, Savanna, JC Le Roux) have been corrected against real 2026 South African retail prices researched from Shoprite LiquorShop and Preston's Liquor Stores (Eastern Cape — Ekoyini's own operating region); beer and Amarula were checked and found already accurate. The remaining SKUs are still the original supplier-sheet estimate and haven't been individually verified — see `prisma/data/skus.csv`'s per-brand pricing history in git for exactly which rows were corrected and against what source.
 - **Case discount** (`retailCaseDiscountPct`): Ekoyini's own tiered carry-pack discount:
   - **8%** on beer, ciders, mixers, water, ice (high turnover, commonly bulk-bought)
   - **6%** on wine/sparkling (event buying)
@@ -101,9 +101,15 @@ ekoyini-webapp/
   - **3%** on premium/luxury (cognac, champagne, premium vodka/tequila) — margins matter more here
 
 ### 🧊 Cooler Box Package
-The flagship high-margin feature. Customers build a bundle from
-**dumpies, spirits, mixers, ice, and water** — the target market's actual
-buying pattern — and unlock tiered discounts as they add more:
+The flagship high-margin feature. Customers build a bundle — the real
+pattern being a bottle plus two or three carry packs plus ice and mixers —
+and unlock tiered discounts as they add more. **Every category counts**:
+beer, ciders, all spirits (including brandy/cognac/whisky/gin/vodka/
+tequila/liqueurs), wine, sparkling, champagne, mixers, water, and ice all
+feed the same Cooler Box subtotal — this was previously restricted to a
+"high-turnover" subset that excluded wine/champagne/cognac/brandy, which
+didn't match how customers actually build a cooler box, so it now covers
+the full catalog:
 
 | Cooler Box subtotal | Discount |
 |---|---|
@@ -114,9 +120,8 @@ buying pattern — and unlock tiered discounts as they add more:
 Shown live in `shop.html` via a shimmer progress bar and an 8-slot grid, and
 **applied server-side** on the eligible-items subtotal when the order is
 placed — `server.js` recomputes it independently of anything the client
-sends. Wine, sparkling, champagne, cognac, and brandy stay purchasable in
-the regular grid but don't feed the Cooler Box (slow-turnover, not what
-this feature is built for).
+sends. Eligibility lives in one place, `public/pricing.js`'s
+`COOLER_ELIGIBLE` set, shared by the server and every page that needs it.
 
 ### Images
 - **Phase 1** (current): Category fallback images (Unsplash) — every SKU renders cleanly from day one.

@@ -141,7 +141,12 @@ or real orders until the Track B items are checked off.
       your real project's values
 - [ ] Set a strong, unique `ADMIN_API_TOKEN` in production — never reuse the
       local dev value
-- [ ] Re-seed with real supplier pricing if `prisma/data/skus.csv` still has
-      placeholder numbers for any SKU
+- [ ] Verify pricing for the remaining SKUs against real SA retail prices.
+      27 flagship SKUs (Absolut, Jameson, Johnnie Walker, Bells, Gordons,
+      Klipdrift, Savanna, JC Le Roux) were corrected against researched
+      Shoprite LiquorShop / Preston's Liquor Stores prices; beer and Amarula
+      were checked and already accurate. The other ~230 rows in
+      `prisma/data/skus.csv` are still the original supplier-sheet estimate,
+      never individually verified against a real retailer.
 - [ ] Smoke-test the full customer journey end to end on the deployed URL,
       not just locally
