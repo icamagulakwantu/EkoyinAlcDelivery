@@ -270,6 +270,12 @@
     if (!session) window.location.href = 'login.html?redirect=checkout.html';
   });
 
+  // Same whole-case rounding as cart.html — the case-purchase amount is a
+  // discrete multiple of unitsPerCase, not a linear scale of raw qty.
+  function roundUpToCase(qty, unitsPerCase) {
+    return Math.ceil(qty / unitsPerCase) * unitsPerCase;
+  }
+
   function computeTotals() {
     const { cart, purchaseType } = checkoutData;
     let subtotal = 0;
@@ -279,11 +285,18 @@
     Object.entries(cart || {}).forEach(([skuId, qty]) => {
       const p = products.find(x => x.id === skuId);
       if (!p) return;
-      const unitPrice = purchaseType === 'case' ? (p.retailCaseZAR / p.unitsPerCase) : p.retailSingleZAR;
-      const itemTotal = unitPrice * qty;
+      let itemTotal, lineQty;
+      if (purchaseType === 'case') {
+        const numberOfCases = roundUpToCase(qty, p.unitsPerCase) / p.unitsPerCase;
+        itemTotal = p.retailCaseZAR * numberOfCases;
+        lineQty = `${numberOfCases} case${numberOfCases === 1 ? '' : 's'}`;
+      } else {
+        itemTotal = p.retailSingleZAR * qty;
+        lineQty = qty;
+      }
       subtotal += itemTotal;
       if (COOLER_ELIGIBLE.has(p.category)) coolerSubtotal += itemTotal;
-      lines.push({ name: p.name, qty, itemTotal });
+      lines.push({ name: p.name, qty: lineQty, itemTotal });
     });
 
     const coolerDiscount = coolerSubtotal * coolerDiscountPct(coolerSubtotal);
@@ -388,7 +401,11 @@
     }
 
     const { cart, purchaseType, address } = checkoutData;
-    const items = Object.entries(cart || {}).map(([skuId, qty]) => ({ skuId, quantity: qty, purchaseType }));
+    const items = Object.entries(cart || {}).map(([skuId, qty]) => {
+      const p = products.find(x => x.id === skuId);
+      const quantity = (purchaseType === 'case' && p) ? roundUpToCase(qty, p.unitsPerCase) : qty;
+      return { skuId, quantity, purchaseType };
+    });
 
     const btn = document.getElementById('submitBtn');
     btn.disabled = true;

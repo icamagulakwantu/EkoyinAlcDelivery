@@ -102,8 +102,10 @@ or real orders until the Track B items are checked off.
       transaction as the order write (race-safe against two customers
       buying the last few units at once, same pattern as the promo
       `maxUses` guard), rejects the order with a clear "just sold out"
-      error if there isn't enough, and a case purchase correctly
-      decrements by `quantity × unitsPerCase`, not just `quantity`.
+      error if there isn't enough. `quantity` is always a bottle count
+      (case mode rounds it up to a whole case client- and server-side, so
+      "1 case" of 24 sends `quantity: 24`), so stock decrements by
+      `quantity` directly in both purchase modes.
       shop.html shows an "Out of Stock" badge and disables the add
       button once a product hits zero. Manage real counts from the
       admin dashboard's new Inventory tab — search, edit, save, per

@@ -129,13 +129,25 @@
   let purchaseType = 'single'; // 'single' or 'case'
   let appliedPromo = null; // { code, discountPct } once validated
 
+  // Case mode is bought in whole cases, not a linear per-bottle scale — a
+  // cart qty of 1 bottle in case mode means "1 case, short 23 bottles,"
+  // not "1/24th of a case." Round up to the nearest full case rather than
+  // charge (and display) a fractional-case price.
+  function roundUpToCase(qty, unitsPerCase) {
+    return Math.ceil(qty / unitsPerCase) * unitsPerCase;
+  }
+
   function computeSubtotal() {
     let subtotal = 0;
     Object.entries(cart).forEach(([skuId, qty]) => {
       const p = products.find(x => x.id === skuId);
       if (!p) return;
-      const unitPrice = purchaseType === 'case' ? (p.retailCaseZAR / p.unitsPerCase) : p.retailSingleZAR;
-      subtotal += unitPrice * qty;
+      if (purchaseType === 'case') {
+        const numberOfCases = roundUpToCase(qty, p.unitsPerCase) / p.unitsPerCase;
+        subtotal += p.retailCaseZAR * numberOfCases;
+      } else {
+        subtotal += p.retailSingleZAR * qty;
+      }
     });
     return subtotal;
   }
@@ -198,20 +210,28 @@
       if (!p) return;
 
       const caseUnitPrice = p.retailCaseZAR / p.unitsPerCase;
-      const unitPrice = purchaseType === 'case' ? caseUnitPrice : p.retailSingleZAR;
-      const itemTotal = unitPrice * qty;
 
-      // Case mode: the case-discounted total is the big number; the
-      // original single-bottle price (struck through) and the discounted
-      // per-unit case price (vivid) appear as subtext underneath it —
-      // same "was / now" pattern as a retail markdown, not just a number.
-      const priceBlock = purchaseType === 'case'
-        ? `<div class="cart-item-price cip-total">R${itemTotal.toFixed(2)}</div>
+      // Case mode: the big number is the actual case-purchase amount
+      // (retailCaseZAR × number of cases) — not a linear per-bottle scale
+      // of the raw cart qty, which used to make the big price and the
+      // "now" subtext identical whenever qty was small. The original
+      // single-bottle price (struck through) and the discounted per-unit
+      // case price (vivid) stay as subtext underneath it, unchanged.
+      let itemTotal, priceBlock, qtyLabel;
+      if (purchaseType === 'case') {
+        const numberOfCases = roundUpToCase(qty, p.unitsPerCase) / p.unitsPerCase;
+        itemTotal = p.retailCaseZAR * numberOfCases;
+        priceBlock = `<div class="cart-item-price cip-total">R${itemTotal.toFixed(2)}</div>
            <div class="cip-compare">
              <span class="cip-was">R${p.retailSingleZAR.toFixed(2)} ea</span>
              <span class="cip-now">R${caseUnitPrice.toFixed(2)} ea</span>
-           </div>`
-        : `<div class="cart-item-price">R${itemTotal.toFixed(2)}</div>`;
+           </div>`;
+        qtyLabel = `${numberOfCases} case${numberOfCases === 1 ? '' : 's'}`;
+      } else {
+        itemTotal = p.retailSingleZAR * qty;
+        priceBlock = `<div class="cart-item-price">R${itemTotal.toFixed(2)}</div>`;
+        qtyLabel = qty;
+      }
 
       const card = document.createElement('div');
       card.className = 'cart-item';
@@ -225,7 +245,7 @@
           ${priceBlock}
           <div class="qty-control">
             <button class="qty-btn" onclick="updateQty('${skuId}', -1)">−</button>
-            <span class="qty-val">${qty}</span>
+            <span class="qty-val">${qtyLabel}</span>
             <button class="qty-btn" onclick="updateQty('${skuId}', 1)">+</button>
             <button class="qty-btn remove-btn" onclick="removeItem('${skuId}')" aria-label="Remove ${p.name.replace(/"/g, '&quot;')} from cart">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
@@ -265,12 +285,29 @@
     purchaseType = type;
     document.querySelectorAll('.purchase-type-btn').forEach(b => b.classList.remove('selected'));
     document.querySelector(`[data-type="${type}"]`).classList.add('selected');
+
+    // Switching to case mode: auto-complete every item to a whole case by
+    // topping up the singles already in the cart, instead of leaving a
+    // partial-case quantity that prices out strangely.
+    if (type === 'case') {
+      Object.keys(cart).forEach(skuId => {
+        const p = products.find(x => x.id === skuId);
+        if (!p) return;
+        cart[skuId] = roundUpToCase(cart[skuId], p.unitsPerCase);
+      });
+      EkoyiniCart.save(cart);
+    }
+
     renderCart();
     renderSummary();
   }
 
   function updateQty(skuId, delta) {
-    const newQty = (cart[skuId] || 0) + delta;
+    const p = products.find(x => x.id === skuId);
+    // Case mode moves a whole case at a time — the cart qty must stay a
+    // multiple of unitsPerCase so the case-purchase price stays exact.
+    const step = (purchaseType === 'case' && p) ? p.unitsPerCase * (delta > 0 ? 1 : -1) : delta;
+    const newQty = (cart[skuId] || 0) + step;
     if (newQty <= 0) {
       delete cart[skuId];
     } else {

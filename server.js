@@ -310,18 +310,26 @@ async function validateAndPriceOrder({ address, items, customerPhone, paymentMet
 
   for (const i of items) {
     const sku = skuMap.get(i.skuId);
-    const quantity = parseInt(i.quantity, 10);
-    if (!sku || !Number.isInteger(quantity) || quantity <= 0) {
+    const rawQuantity = parseInt(i.quantity, 10);
+    if (!sku || !Number.isInteger(rawQuantity) || rawQuantity <= 0) {
       return { error: `Invalid item: ${i.skuId}` };
     }
+    // Case mode is bought in whole cases — quantity is always a bottle
+    // count (same field as single mode), so round it up to the nearest
+    // full case server-side too, matching cart.html/checkout.html, rather
+    // than trusting the client sent an exact multiple.
+    const quantity = i.purchaseType === "case"
+      ? Math.ceil(rawQuantity / sku.unitsPerCase) * sku.unitsPerCase
+      : rawQuantity;
     const unitPrice = i.purchaseType === "case" ? sku.retailCaseZAR / sku.unitsPerCase : sku.retailSingleZAR;
     const itemTotal = unitPrice * quantity;
     subtotal += itemTotal;
     if (COOLER_ELIGIBLE.has(sku.category)) coolerSubtotal += itemTotal;
 
     orderItems.push({ skuId: sku.id, name: sku.name, price: unitPrice, quantity });
-    const units = i.purchaseType === "case" ? quantity * sku.unitsPerCase : quantity;
-    stockNeeded.push({ skuId: sku.id, name: sku.name, units });
+    // quantity is already a bottle count in both modes (case mode was
+    // just rounded up to a case multiple above) — no further scaling.
+    stockNeeded.push({ skuId: sku.id, name: sku.name, units: quantity });
   }
 
   const coolerDiscount = coolerSubtotal * coolerDiscountPct(coolerSubtotal);
