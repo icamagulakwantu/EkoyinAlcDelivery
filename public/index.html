@@ -18,15 +18,18 @@
     .home-top { padding: 14px 16px 2px; }
     .greet-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 8px; }
 
-    /* Location + search — one card, one visual unit, instead of two
-       separately-styled bars stacked with marketing copy between them. */
-    .locate-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; margin-bottom: 10px; }
+    /* Location and search — two clearly separate controls (own card each,
+       own label), not merged into one row where it's unclear which field
+       does what. Grouped together at the top as a unit, but visually
+       distinct: the address pill reads as "where", the search bar reads
+       as "what". */
+    .field-label { font-size: 10px; font-weight: 700; color: var(--faint); text-transform: uppercase; letter-spacing: 0.5px; margin: 0 2px 5px; }
+    .locate-card, .search-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; margin-bottom: 12px; }
     .locate-row, .search-row { display: flex; align-items: center; gap: 10px; padding: 12px 14px; }
     .locate-row svg { color: var(--terra-light); flex-shrink: 0; }
     .locate-row input { flex: 1; min-width: 0; background: transparent; border: none; color: var(--white); font-size: 13px; font-weight: 600; outline: none; }
     .locate-row input::placeholder { color: var(--faint); font-weight: 400; }
     .locate-save { font-size: 11px; font-weight: 700; color: var(--terra-light); background: none; border: none; padding: 6px; flex-shrink: 0; }
-    .locate-divider { height: 1px; background: var(--border); margin: 0 14px; }
     .search-row svg { color: var(--muted); flex-shrink: 0; }
     .search-row input { flex: 1; min-width: 0; background: transparent; border: none; color: var(--white); font-size: 13px; outline: none; }
     .search-row input::placeholder { color: var(--faint); }
@@ -202,10 +205,14 @@
   </nav>
 
   <div class="page">
-    <!-- LOCATION + SEARCH — one functional unit, top of screen, no
-         marketing copy between the navbar and what the user came to do. -->
+    <!-- LOCATION + SEARCH — two clearly separate controls, top of screen,
+         no marketing copy between the navbar and what the user came to
+         do. Own card and own label each, so it's unambiguous which does
+         what, instead of one merged row a user has to parse. -->
     <div class="home-top fade-up">
       <div class="greet-label" id="greetLabel">Good evening</div>
+
+      <div class="field-label">Deliver to</div>
       <div class="locate-card">
         <div class="locate-row">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
@@ -214,7 +221,10 @@
           <input type="text" id="addressInput" placeholder="Enter your delivery address" value="">
           <button class="locate-save" onclick="saveAddress()">Save</button>
         </div>
-        <div class="locate-divider"></div>
+      </div>
+
+      <div class="field-label">Search products</div>
+      <div class="search-card">
         <form class="search-row" onsubmit="event.preventDefault(); runSearch();">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
