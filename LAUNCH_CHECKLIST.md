@@ -56,17 +56,31 @@ or real orders until the Track B items are checked off.
       keeps working exactly as before — the API layer's own scoping was
       already correct, this just closes the second line of defense.
 - [ ] **HTTPS enforcement.** Confirm Render is serving HTTPS-only.
-- [ ] **No inventory/stock model.** Every SKU is always "in stock" —
-      there's no field for it in the schema, so an order can be placed
-      for something a tavern has actually run out of. Fine for a
-      founder-run MVP where you're checking stock by phone/WhatsApp
-      anyway; needs a real `stock` field + decrement-on-fulfillment
-      flow before that stops being true.
-- [ ] **Admin access is a flat allowlist, not role-based.** Every email
-      in `ADMIN_EMAILS` gets full admin rights — assign, dispatch,
-      delete, everything. Fine while it's one or two trusted people;
-      add real roles (dispatcher vs. full admin) before handing access
-      to a larger ops team.
+- [x] **Inventory/stock model.** `SkuItem.stock` is real now, defaulted
+      to 999 for every existing SKU since no actual per-SKU count exists
+      yet from any supplier feed (honest placeholder, not "unlimited" —
+      the enforcement is real even though the starting numbers are a
+      guess). `POST /order` decrements stock atomically in the same
+      transaction as the order write (race-safe against two customers
+      buying the last few units at once, same pattern as the promo
+      `maxUses` guard), rejects the order with a clear "just sold out"
+      error if there isn't enough, and a case purchase correctly
+      decrements by `quantity × unitsPerCase`, not just `quantity`.
+      shop.html shows an "Out of Stock" badge and disables the add
+      button once a product hits zero. Manage real counts from the
+      admin dashboard's new Inventory tab — search, edit, save, per
+      product. Re-seeding (`npm run seed`) never touches `stock`, so it
+      survives a catalog refresh.
+- [x] **Admin roles.** `ADMIN_EMAILS` accounts are still the root
+      bootstrap and are always `SUPER_ADMIN` — that's unavoidable, you
+      need at least one admin able to grant others access. Beyond that,
+      a real `AdminUser` table backs a new Admins tab (super-admin only)
+      to add/remove delegated admins with an actual role: `DISPATCHER`
+      (view/assign/dispatch/deliver orders — day-to-day ops) or
+      `SUPER_ADMIN` (also delete orders and edit inventory). Enforced
+      server-side via `requireSuperAdmin` on every sensitive route, not
+      just hidden in the UI — a dispatcher hitting `DELETE /order/:code`
+      or `PATCH /admin/products/:id/stock` directly gets a 403.
 - [x] **Order input validation hardened.** `POST /order` now rejects a
       missing/too-short address, a phone number that isn't 9-12 digits
       once non-digit characters are stripped, and any `paymentMethod`

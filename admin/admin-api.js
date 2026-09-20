@@ -40,6 +40,8 @@ document.getElementById('adminLoginForm').addEventListener('submit', async (e) =
 // After a successful Supabase login, confirm the account is actually on
 // the ADMIN_EMAILS allowlist by hitting a real admin route — a customer
 // account can authenticate with Supabase but isn't an admin.
+let currentAdminRole = null;
+
 async function tryEnterDashboard() {
     const errEl = document.getElementById('adminLoginError');
     const res = await adminFetch('/orders');
@@ -50,6 +52,18 @@ async function tryEnterDashboard() {
         return;
     }
     grantAccess();
+
+    try {
+        const meRes = await adminFetch('/admin/me');
+        const me = await meRes.json();
+        currentAdminRole = me.role;
+        if (currentAdminRole === 'SUPER_ADMIN') {
+            document.getElementById('sectionTabAdmins').style.display = 'block';
+        }
+    } catch (err) {
+        console.error('Failed to load admin role:', err);
+    }
+
     loadOrders();
     setInterval(loadOrders, 30000);
 }
@@ -164,7 +178,11 @@ function getActionButtons(order) {
     if (order.status === 'DISPATCHED') {
         buttons += `<button class="btn btn-deliver" onclick="markDelivered('${order.code}')">Deliver</button>`;
     }
-    buttons += `<button class="btn btn-delete" onclick="deleteOrder('${order.code}')">Delete</button>`;
+    // Deleting an order is a super-admin-only action (also enforced
+    // server-side) — a dispatcher shouldn't be able to erase order history.
+    if (currentAdminRole === 'SUPER_ADMIN') {
+        buttons += `<button class="btn btn-delete" onclick="deleteOrder('${order.code}')">Delete</button>`;
+    }
     return buttons;
 }
 
@@ -333,4 +351,162 @@ async function deleteOrder(orderCode) {
         alert('Failed to delete order');
     }
 }
+
+// ============================================
+// SECTION SWITCHING (Orders / Inventory / Admins)
+// ============================================
+let inventoryLoaded = false;
+let adminsLoaded = false;
+
+function showSection(name, tabEl) {
+    document.querySelectorAll('.section-tab').forEach(t => t.classList.remove('active'));
+    if (tabEl) tabEl.classList.add('active');
+    document.getElementById('ordersSection').style.display = name === 'orders' ? 'block' : 'none';
+    document.getElementById('inventorySection').style.display = name === 'inventory' ? 'block' : 'none';
+    document.getElementById('adminsSection').style.display = name === 'admins' ? 'block' : 'none';
+
+    if (name === 'inventory' && !inventoryLoaded) { inventoryLoaded = true; loadInventory(); }
+    if (name === 'admins' && !adminsLoaded) { adminsLoaded = true; loadAdmins(); }
+}
+window.showSection = showSection;
+
+// ============================================
+// INVENTORY (view: any admin; edit: super-admin only)
+// ============================================
+let inventoryProducts = [];
+
+async function loadInventory() {
+    const list = document.getElementById('inventoryList');
+    list.innerHTML = '<div class="no-orders">Loading…</div>';
+    try {
+        const res = await adminFetch('/admin/products');
+        if (!res.ok) throw new Error('Failed to load products');
+        inventoryProducts = await res.json();
+        renderInventory();
+    } catch (err) {
+        console.error(err);
+        list.innerHTML = '<div class="no-orders">Failed to load inventory</div>';
+    }
+}
+
+function renderInventory() {
+    const list = document.getElementById('inventoryList');
+    const q = (document.getElementById('invSearch').value || '').trim().toLowerCase();
+    const filtered = q
+        ? inventoryProducts.filter(p => p.name.toLowerCase().includes(q))
+        : inventoryProducts;
+
+    if (filtered.length === 0) {
+        list.innerHTML = '<div class="no-orders">No products match that search</div>';
+        return;
+    }
+
+    const canEdit = currentAdminRole === 'SUPER_ADMIN';
+    list.innerHTML = filtered.map(p => `
+        <div class="inv-row${p.stock <= 0 ? ' zero-stock' : ''}">
+            <div class="inv-row-info">
+                <div class="inv-row-name">${p.name}</div>
+                <div class="inv-row-meta">${p.category.replace(/_/g, ' ')} · ${p.bottleFormat}</div>
+            </div>
+            <div class="inv-row-stock">
+                <input type="number" min="0" id="stock-${p.id}" value="${p.stock}" ${canEdit ? '' : 'disabled'}>
+                ${canEdit ? `<button onclick="saveStock('${p.id}')">Save</button>` : ''}
+            </div>
+        </div>
+    `).join('');
+}
+window.renderInventory = renderInventory;
+
+async function saveStock(id) {
+    const input = document.getElementById(`stock-${id}`);
+    const stock = parseInt(input.value, 10);
+    if (!Number.isInteger(stock) || stock < 0) {
+        alert('Stock must be a non-negative whole number');
+        return;
+    }
+    try {
+        const res = await adminFetch(`/admin/products/${id}/stock`, {
+            method: 'PATCH',
+            body: JSON.stringify({ stock }),
+        });
+        if (!res.ok) throw new Error('Failed to save');
+        const product = inventoryProducts.find(p => p.id === id);
+        if (product) product.stock = stock;
+        renderInventory();
+    } catch (err) {
+        console.error(err);
+        alert('Failed to save stock');
+    }
+}
+window.saveStock = saveStock;
+
+// ============================================
+// MANAGE ADMINS (super-admin only — page already hides the tab, server
+// still enforces requireSuperAdmin on every /admin/admins route)
+// ============================================
+async function loadAdmins() {
+    const list = document.getElementById('adminsList');
+    list.innerHTML = '<div class="no-orders">Loading…</div>';
+    try {
+        const res = await adminFetch('/admin/admins');
+        if (!res.ok) throw new Error('Failed to load admins');
+        const data = await res.json();
+        renderAdmins(data.admins, data.bootstrapped);
+    } catch (err) {
+        console.error(err);
+        list.innerHTML = '<div class="no-orders">Failed to load admins</div>';
+    }
+}
+
+function renderAdmins(admins, bootstrapped) {
+    const list = document.getElementById('adminsList');
+    const bootstrappedRows = bootstrapped.map(email => `
+        <div class="admin-row">
+            <span class="admin-row-email">${email}<span class="admin-role-badge super">Super Admin</span></span>
+            <span style="font-size:10px;color:#999;">via ADMIN_EMAILS</span>
+        </div>
+    `).join('');
+    const dbRows = admins.map(a => `
+        <div class="admin-row">
+            <span class="admin-row-email">${a.email}<span class="admin-role-badge${a.role === 'SUPER_ADMIN' ? ' super' : ''}">${a.role === 'SUPER_ADMIN' ? 'Super Admin' : 'Dispatcher'}</span></span>
+            <button onclick="removeAdmin('${a.id}')">Remove</button>
+        </div>
+    `).join('');
+    list.innerHTML = bootstrappedRows + dbRows || '<div class="no-orders">No admins yet</div>';
+}
+
+async function addAdmin() {
+    const email = document.getElementById('newAdminEmail').value.trim();
+    const role = document.getElementById('newAdminRole').value;
+    if (!email) { alert('Please enter an email'); return; }
+    try {
+        const res = await adminFetch('/admin/admins', {
+            method: 'POST',
+            body: JSON.stringify({ email, role }),
+        });
+        if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(data.error || 'Failed to add admin');
+        }
+        document.getElementById('newAdminEmail').value = '';
+        loadAdmins();
+    } catch (err) {
+        console.error(err);
+        alert(err.message || 'Failed to add admin');
+    }
+}
+window.addAdmin = addAdmin;
+
+async function removeAdmin(id) {
+    if (!confirm('Remove this admin\'s access?')) return;
+    try {
+        const res = await adminFetch(`/admin/admins/${id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Failed to remove admin');
+        loadAdmins();
+    } catch (err) {
+        console.error(err);
+        alert('Failed to remove admin');
+    }
+}
+window.removeAdmin = removeAdmin;
 

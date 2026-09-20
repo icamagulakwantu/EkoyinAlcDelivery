@@ -140,7 +140,7 @@ this feature is built for).
 - **Client-side price editing exploit** — the old editable price field on `shop.html` is gone, replaced with a read-only price-details sheet. `POST /order` only accepts `skuId` + `quantity` + `purchaseType` from the client; every price is recomputed server-side from the current DB values.
 - **`/api/taverns` narrowed** — public response is `id`/`name`/`area` only; tavern phone numbers are only ever returned to `requireAdmin`-gated `/admin/taverns`.
 - **Orders are auth-gated** — `POST /order` and `GET /api/my-orders` require a valid Supabase session (`requireUser` middleware, verified against Supabase's `/auth/v1/user`).
-- **Admin auth is per-person.** `/admin/admin.html` logs admins in with real Supabase Auth accounts; `requireAdmin` on the server checks the logged-in user's email against the `ADMIN_EMAILS` allowlist on every admin route. `ADMIN_API_TOKEN` still works as a fallback for scripts/curl and as a bootstrap path — unset it once every admin has a real account.
+- **Admin auth is per-person and role-based.** `/admin/admin.html` logs admins in with real Supabase Auth accounts; `requireAdmin` checks the logged-in user's email against `ADMIN_EMAILS` (always `SUPER_ADMIN`, the root bootstrap) or the `AdminUser` table (delegated admins with an actual `SUPER_ADMIN`/`DISPATCHER` role). Sensitive routes — delete order, edit inventory, manage other admins — are additionally gated by `requireSuperAdmin`, enforced server-side, not just hidden in the UI. `ADMIN_API_TOKEN` still works as a fallback for scripts/curl and as a bootstrap path — unset it once every admin has a real account.
 
 ### Still Track A / known limitations
 - **No real age verification** — UI checkbox only; needs ID capture at delivery.
@@ -163,12 +163,20 @@ this feature is built for).
 - `GET /api/my-orders` — the logged-in user's order history
 - `POST /order/:code/rate` — rate a delivered order (`{ rating: 1-5, comment? }`); only the order's own owner, only once DELIVERED, once per order
 
-### Admin (`x-admin-token: <ADMIN_API_TOKEN>`)
+### Admin (`x-admin-token: <ADMIN_API_TOKEN>`, or a logged-in `SUPER_ADMIN`/`DISPATCHER` account)
+- `GET /admin/me` — the logged-in admin's own role, for the dashboard to show/hide UI
 - `GET /orders` — all orders, newest first
 - `GET /admin/taverns` — full tavern records, including phone
 - `PATCH /order/:code/assign` — assign tavern + driver, sets status `PENDING`
 - `PATCH /order/:code/status` — update status
+- `GET /admin/products` — full product list with current stock
+
+### Admin — super-admin only (`requireSuperAdmin`, 403 for a `DISPATCHER`)
 - `DELETE /order/:code` — delete an order
+- `PATCH /admin/products/:id/stock` — set a product's stock count
+- `GET /admin/admins` — list delegated admins (`AdminUser` rows) plus the `ADMIN_EMAILS` bootstrap list
+- `POST /admin/admins` — grant an email admin access (`{ email, role: "SUPER_ADMIN" | "DISPATCHER" }`)
+- `DELETE /admin/admins/:id` — revoke a delegated admin's access (doesn't touch `ADMIN_EMAILS` accounts — that's an env var change)
 
 ---
 

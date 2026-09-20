@@ -43,7 +43,11 @@ async function requireUser(req, res, next) {
 
 // ── Admin auth ──────────────────────────────────────────────
 // Real per-user auth: a logged-in Supabase user whose email is in the
-// ADMIN_EMAILS allowlist (comma-separated, case-insensitive) is an admin.
+// ADMIN_EMAILS allowlist (comma-separated, case-insensitive) is always a
+// SUPER_ADMIN — that's the root bootstrap path, since you need at least
+// one admin able to grant anyone else access before a role table means
+// anything. Beyond that, the AdminUser table holds delegated admins with
+// an actual role (SUPER_ADMIN or DISPATCHER), managed via /admin/admins.
 // The shared ADMIN_API_TOKEN header still works too — kept for scripts/
 // curl (e.g. the /admin/enrich-images trigger) and as a bootstrap path
 // before any admin account is set up. Once every admin has a real
@@ -56,35 +60,43 @@ function isAdminEmail(email) {
   return !!email && allowlist.includes(email.toLowerCase());
 }
 
+async function resolveAdminRole(email) {
+  if (isAdminEmail(email)) return "SUPER_ADMIN";
+  const record = await prisma.adminUser.findUnique({ where: { email: email.toLowerCase() } });
+  return record ? record.role : null;
+}
+
 async function requireAdmin(req, res, next) {
   const token = req.headers["x-admin-token"];
   if (process.env.ADMIN_API_TOKEN && token === process.env.ADMIN_API_TOKEN) {
+    req.adminRole = "SUPER_ADMIN";
     return next();
   }
 
   const user = await verifySupabaseToken(req);
-  if (user && isAdminEmail(user.email)) {
+  const role = user ? await resolveAdminRole(user.email) : null;
+  if (user && role) {
     req.user = user;
+    req.adminRole = role;
     return next();
   }
 
   return res.status(401).json({ error: "Unauthorized" });
 }
 
-// ── Cooler Box pricing (server-authoritative mirror of shop.html) ──────
-// Categories the Cooler Box builder accepts — the target market's actual
-// buying pattern (dumpies, spirits, mixers, ice, water) — see README.
-const COOLER_ELIGIBLE = new Set([
-  "BEER", "CIDER_RTD", "WHISKY", "GIN", "VODKA", "VODKA_PREMIUM",
-  "TEQUILA", "TEQUILA_PREMIUM", "LIQUEUR", "MIXER", "WATER", "ICE",
-]);
-
-function coolerDiscountPct(coolerSubtotal) {
-  if (coolerSubtotal >= 1000) return 0.15;
-  if (coolerSubtotal >= 600) return 0.10;
-  if (coolerSubtotal >= 300) return 0.05;
-  return 0;
+// Layer on top of requireAdmin (run after it) — gates the actions that
+// shouldn't be available to every dispatcher: deleting orders, managing
+// inventory, and managing other admins' access.
+function requireSuperAdmin(req, res, next) {
+  if (req.adminRole !== "SUPER_ADMIN") {
+    return res.status(403).json({ error: "This action requires a super-admin account" });
+  }
+  next();
 }
+
+// ── Cooler Box pricing — shared with the browser via public/pricing.js,
+// see that file for why. This used to be copy-pasted here separately.
+const { COOLER_ELIGIBLE, coolerDiscountPct } = require("./public/pricing.js");
 
 // 🩺 HEALTH — DB connectivity check, hit this first when debugging
 app.get("/api/health", async (req, res) => {
@@ -270,6 +282,7 @@ app.post("/order", requireUser, async (req, res) => {
     let subtotal = 0;
     let coolerSubtotal = 0;
     const orderItems = [];
+    const stockNeeded = []; // { skuId, name, units } — units are individual bottles, not cases
 
     for (const i of items) {
       const sku = skuMap.get(i.skuId);
@@ -283,6 +296,8 @@ app.post("/order", requireUser, async (req, res) => {
       if (COOLER_ELIGIBLE.has(sku.category)) coolerSubtotal += itemTotal;
 
       orderItems.push({ skuId: sku.id, name: sku.name, price: unitPrice, quantity });
+      const units = i.purchaseType === "case" ? quantity * sku.unitsPerCase : quantity;
+      stockNeeded.push({ skuId: sku.id, name: sku.name, units });
     }
 
     const coolerDiscount = coolerSubtotal * coolerDiscountPct(coolerSubtotal);
@@ -305,10 +320,22 @@ app.post("/order", requireUser, async (req, res) => {
 
     const code = "EKO-" + Math.random().toString(36).slice(2, 8).toUpperCase();
 
-    // Increment the promo's usage count in the same transaction as the
-    // order — avoids a race where two customers both slip in under a
-    // maxUses cap between the earlier check and the write.
+    // Decrement stock and increment the promo's usage count in the same
+    // transaction as the order write — avoids two races: two customers
+    // both slipping in under a promo's maxUses cap, or both buying the
+    // last few units of something between the check and the write.
     const order = await prisma.$transaction(async (tx) => {
+      for (const need of stockNeeded) {
+        const { count } = await tx.skuItem.updateMany({
+          where: { id: need.skuId, stock: { gte: need.units } },
+          data: { stock: { decrement: need.units } },
+        });
+        if (count === 0) {
+          const err = new Error("OUT_OF_STOCK");
+          err.productName = need.name;
+          throw err;
+        }
+      }
       if (promo) {
         const { count } = await tx.promoCode.updateMany({
           where: {
@@ -340,6 +367,9 @@ app.post("/order", requireUser, async (req, res) => {
   } catch (err) {
     if (err.message === "PROMO_RACE_LOST") {
       return res.status(400).json({ error: "That promo code just reached its usage limit — remove it and try again" });
+    }
+    if (err.message === "OUT_OF_STOCK") {
+      return res.status(400).json({ error: `${err.productName} just sold out — remove it from your cart and try again` });
     }
     console.error(err);
     res.status(500).json({ error: "Failed to create order" });
@@ -459,13 +489,102 @@ app.patch("/order/:code/status", requireAdmin, async (req, res) => {
 });
 
 // 🗑 ADMIN: DELETE ORDER
-app.delete("/order/:code", requireAdmin, async (req, res) => {
+app.delete("/order/:code", requireAdmin, requireSuperAdmin, async (req, res) => {
   try {
     await prisma.order.delete({ where: { code: req.params.code } });
     res.json({ message: "Deleted" });
   } catch (err) {
     console.error(err);
     res.status(404).json({ error: "Order not found" });
+  }
+});
+
+// 👤 ADMIN: WHO AM I — lets the dashboard know its own role so it can
+// show/hide super-admin-only UI (Inventory edits, Delete, Manage Admins)
+// without guessing or trying an action just to see if it 403s.
+app.get("/admin/me", requireAdmin, (req, res) => {
+  res.json({ email: req.user?.email || null, role: req.adminRole });
+});
+
+// 📦 ADMIN: INVENTORY — list every product with its current stock count.
+// Any admin can view; only super-admins can change it (see PATCH below).
+app.get("/admin/products", requireAdmin, async (req, res) => {
+  try {
+    const products = await prisma.skuItem.findMany({
+      select: { id: true, name: true, category: true, bottleFormat: true, stock: true },
+      orderBy: [{ category: "asc" }, { name: "asc" }],
+    });
+    res.json(products);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to load products" });
+  }
+});
+
+app.patch("/admin/products/:id/stock", requireAdmin, requireSuperAdmin, async (req, res) => {
+  try {
+    const stock = parseInt(req.body.stock, 10);
+    if (!Number.isInteger(stock) || stock < 0) {
+      return res.status(400).json({ error: "Stock must be a non-negative whole number" });
+    }
+    const product = await prisma.skuItem.update({
+      where: { id: req.params.id },
+      data: { stock },
+      select: { id: true, name: true, stock: true },
+    });
+    res.json(product);
+  } catch (err) {
+    console.error(err);
+    res.status(404).json({ error: "Product not found" });
+  }
+});
+
+// 👥 ADMIN: MANAGE ADMINS — super-admin only. ADMIN_EMAILS-bootstrapped
+// accounts don't live in this table and can't be removed from here (that's
+// an env var change on Render); this only manages delegated AdminUser rows.
+app.get("/admin/admins", requireAdmin, requireSuperAdmin, async (req, res) => {
+  try {
+    const admins = await prisma.adminUser.findMany({ orderBy: { createdAt: "asc" } });
+    const bootstrapped = (process.env.ADMIN_EMAILS || "")
+      .split(",")
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean);
+    res.json({ admins, bootstrapped });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to load admins" });
+  }
+});
+
+app.post("/admin/admins", requireAdmin, requireSuperAdmin, async (req, res) => {
+  try {
+    const email = (req.body.email || "").trim().toLowerCase();
+    const role = req.body.role === "SUPER_ADMIN" ? "SUPER_ADMIN" : "DISPATCHER";
+    if (!email || !email.includes("@")) {
+      return res.status(400).json({ error: "A valid email is required" });
+    }
+    if (isAdminEmail(email)) {
+      return res.status(400).json({ error: "This email is already a super-admin via ADMIN_EMAILS" });
+    }
+    const admin = await prisma.adminUser.upsert({
+      where: { email },
+      update: { role },
+      create: { email, role },
+    });
+    res.json(admin);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to add admin" });
+  }
+});
+
+app.delete("/admin/admins/:id", requireAdmin, requireSuperAdmin, async (req, res) => {
+  try {
+    await prisma.adminUser.delete({ where: { id: req.params.id } });
+    res.json({ message: "Removed" });
+  } catch (err) {
+    console.error(err);
+    res.status(404).json({ error: "Admin not found" });
   }
 });
 

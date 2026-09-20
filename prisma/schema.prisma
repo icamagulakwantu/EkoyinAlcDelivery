@@ -36,6 +36,25 @@ enum OrderStatus {
   DELIVERED
 }
 
+enum AdminRole {
+  SUPER_ADMIN // full access: dispatch, delete, inventory, manage other admins
+  DISPATCHER  // day-to-day ops: view/assign/dispatch/deliver orders only
+}
+
+// ── Admin roles ──────────────────────────────────────────
+// Delegated admins beyond the ADMIN_EMAILS env var bootstrap. Anyone in
+// ADMIN_EMAILS is implicitly SUPER_ADMIN (that's the root bootstrap — you
+// need at least one admin to be able to grant anyone else access at all).
+// This table is for adding more admins with an actual role, instead of
+// every allowlisted email getting full access by default. See
+// requireAdmin/requireSuperAdmin in server.js.
+model AdminUser {
+  id        String    @id @default(cuid())
+  email     String    @unique
+  role      AdminRole @default(DISPATCHER)
+  createdAt DateTime  @default(now())
+}
+
 // ── Catalog ──────────────────────────────────────────────
 // Supplier fields are preserved verbatim from the supplier price sheet
 // (skus.csv). Retail fields are Ekoyini's own customer-facing pricing,
@@ -64,6 +83,13 @@ model SkuItem {
 
   imageUrl   String?
   orderItems OrderItem[]
+
+  // Real inventory tracking. Defaults high (not "unlimited") because no
+  // actual per-SKU stock count exists yet from any supplier feed — 999 is
+  // an honest placeholder that keeps today's behavior (always orderable)
+  // while making the enforcement mechanism itself real from day one.
+  // Update actual counts via the admin Inventory tab as they become known.
+  stock Int @default(999)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

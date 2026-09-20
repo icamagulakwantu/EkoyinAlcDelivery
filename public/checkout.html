@@ -190,20 +190,12 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="auth.js"></script>
   <script src="script.js"></script>
+  <script src="pricing.js"></script>
   <script>
-  // Cooler Box eligibility + tier thresholds — mirrors server.js exactly.
-  // This is a *preview only*; the server recomputes the real total and
-  // ignores anything sent from the client.
-  const COOLER_ELIGIBLE = new Set([
-    'BEER', 'CIDER_RTD', 'WHISKY', 'GIN', 'VODKA', 'VODKA_PREMIUM',
-    'TEQUILA', 'TEQUILA_PREMIUM', 'LIQUEUR', 'MIXER', 'WATER', 'ICE',
-  ]);
-  function coolerDiscountPct(sub) {
-    if (sub >= 1000) return 0.15;
-    if (sub >= 600) return 0.10;
-    if (sub >= 300) return 0.05;
-    return 0;
-  }
+  // Cooler Box eligibility + tier thresholds — shared with server.js via
+  // pricing.js. This is a *preview only*; the server recomputes the real
+  // total and ignores anything sent from the client.
+  const { COOLER_ELIGIBLE, coolerDiscountPct } = EkoyiniPricing;
 
   const checkoutData = JSON.parse(localStorage.getItem('ekoyini_checkout_data') || '{}');
   let products = [];

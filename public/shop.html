@@ -33,6 +33,9 @@
     .no-results { text-align: center; padding: 50px 20px; color: var(--muted); font-size: 13px; }
     .sourcing-note { display: flex; align-items: center; gap: 6px; margin: 8px 12px 0; font-size: 11px; color: var(--muted); }
     .fav-btn { position: absolute; top: 8px; right: 8px; z-index: 1; background: rgba(255,255,255,0.85); border: none; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--muted); }
+    .product-card.out-of-stock { opacity: 0.55; }
+    .stock-badge { position: absolute; top: 8px; left: 8px; z-index: 1; background: var(--white); color: var(--surface); font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; padding: 3px 7px; border-radius: 4px; }
+    .add-btn-disabled { font-size: 10px; color: var(--muted); font-weight: 600; }
     .fav-btn.active { color: var(--terra); }
     #favToggle { cursor: pointer; }
     #favToggle.active { background: var(--terra-light); color: #fff; border-color: var(--terra-light); }
@@ -155,16 +158,13 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="auth.js"></script>
   <script src="script.js"></script>
+  <script src="pricing.js"></script>
   <script>
   renderNavAuth();
 
-  // Cooler Box eligibility — the target market's actual buying pattern
-  // (dumpies, spirits, mixers, ice, water). Wine/champagne/cognac/brandy
-  // stay purchasable in the regular grid but don't feed the Cooler Box.
-  const COOLER_ELIGIBLE = new Set([
-    'BEER', 'CIDER_RTD', 'WHISKY', 'GIN', 'VODKA', 'VODKA_PREMIUM',
-    'TEQUILA', 'TEQUILA_PREMIUM', 'LIQUEUR', 'MIXER', 'WATER', 'ICE',
-  ]);
+  // Cooler Box eligibility — shared with server.js via pricing.js, see
+  // that file for why (used to be copy-pasted separately in 3 places).
+  const { COOLER_ELIGIBLE } = EkoyiniPricing;
 
   let cart = EkoyiniCart.get();
   let products = [];
@@ -320,14 +320,16 @@
       grid.className = 'product-grid';
       items.forEach(p => {
         const qty = cart[p.id] || 0;
+        const outOfStock = p.stock <= 0;
         const card = document.createElement('div');
-        card.className = 'product-card';
+        card.className = 'product-card' + (outOfStock ? ' out-of-stock' : '');
         card.id = 'card-' + p.id;
         const isFav = EkoyiniFavorites.has(p.id);
         card.innerHTML = `
           <button class="fav-btn${isFav ? ' active' : ''}" onclick="toggleFavorite('${p.id}', this)">
             <svg viewBox="0 0 24 24" fill="${isFav ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
           </button>
+          ${outOfStock ? '<div class="stock-badge">Out of Stock</div>' : ''}
           <div class="product-info">
             <h3>${p.name}</h3>
             <div class="product-size">${p.bottleFormat}</div>
@@ -350,6 +352,11 @@
   function renderQtyControl(id) {
     const holder = document.getElementById('ctrl-' + id);
     if (!holder) return;
+    const p = products.find(x => x.id === id);
+    if (p && p.stock <= 0) {
+      holder.innerHTML = `<span class="add-btn-disabled">Unavailable</span>`;
+      return;
+    }
     const qty = cart[id] || 0;
     if (qty > 0) {
       holder.innerHTML = `
