@@ -94,6 +94,25 @@ function requireSuperAdmin(req, res, next) {
   next();
 }
 
+// Fire-and-forget-but-awaited record of who did what. Never blocks or
+// fails the actual admin action — a logging failure shouldn't stop an
+// order from being dispatched — so errors here are swallowed, just logged
+// to the console for visibility.
+async function logAdminAction(req, action, targetId, detail) {
+  try {
+    await prisma.adminAuditLog.create({
+      data: {
+        adminEmail: req.user?.email || "api-token",
+        action,
+        targetId: targetId || null,
+        detail: detail || null,
+      },
+    });
+  } catch (err) {
+    console.error("Failed to write admin audit log:", err);
+  }
+}
+
 // ── Cooler Box pricing — shared with the browser via public/pricing.js,
 // see that file for why. This used to be copy-pasted here separately.
 const { COOLER_ELIGIBLE, coolerDiscountPct } = require("./public/pricing.js");
@@ -466,6 +485,7 @@ app.patch("/order/:code/assign", requireAdmin, async (req, res) => {
       data: { tavernId, driverName, driverPhone, driverVehicle, status: "PENDING" },
       include: { tavern: true },
     });
+    await logAdminAction(req, "ASSIGN_ORDER", order.code, `tavern=${order.tavern?.name || tavernId}, driver=${driverName}`);
     res.json(order);
   } catch (err) {
     console.error(err);
@@ -481,6 +501,7 @@ app.patch("/order/:code/status", requireAdmin, async (req, res) => {
       where: { code: req.params.code },
       data: { status },
     });
+    await logAdminAction(req, "UPDATE_STATUS", order.code, `status=${status}`);
     res.json(order);
   } catch (err) {
     console.error(err);
@@ -492,6 +513,7 @@ app.patch("/order/:code/status", requireAdmin, async (req, res) => {
 app.delete("/order/:code", requireAdmin, requireSuperAdmin, async (req, res) => {
   try {
     await prisma.order.delete({ where: { code: req.params.code } });
+    await logAdminAction(req, "DELETE_ORDER", req.params.code);
     res.json({ message: "Deleted" });
   } catch (err) {
     console.error(err);
@@ -532,6 +554,7 @@ app.patch("/admin/products/:id/stock", requireAdmin, requireSuperAdmin, async (r
       data: { stock },
       select: { id: true, name: true, stock: true },
     });
+    await logAdminAction(req, "UPDATE_STOCK", product.name, `stock=${stock}`);
     res.json(product);
   } catch (err) {
     console.error(err);
@@ -571,6 +594,7 @@ app.post("/admin/admins", requireAdmin, requireSuperAdmin, async (req, res) => {
       update: { role },
       create: { email, role },
     });
+    await logAdminAction(req, "ADD_ADMIN", email, `role=${role}`);
     res.json(admin);
   } catch (err) {
     console.error(err);
@@ -580,11 +604,27 @@ app.post("/admin/admins", requireAdmin, requireSuperAdmin, async (req, res) => {
 
 app.delete("/admin/admins/:id", requireAdmin, requireSuperAdmin, async (req, res) => {
   try {
-    await prisma.adminUser.delete({ where: { id: req.params.id } });
+    const removed = await prisma.adminUser.delete({ where: { id: req.params.id } });
+    await logAdminAction(req, "REMOVE_ADMIN", removed.email);
     res.json({ message: "Removed" });
   } catch (err) {
     console.error(err);
     res.status(404).json({ error: "Admin not found" });
+  }
+});
+
+// 📜 ADMIN: AUDIT LOG — super-admin only. Read-only, newest first, capped
+// at 200 rows (this is a dashboard list, not a reporting tool).
+app.get("/admin/audit-log", requireAdmin, requireSuperAdmin, async (req, res) => {
+  try {
+    const logs = await prisma.adminAuditLog.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 200,
+    });
+    res.json(logs);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to load audit log" });
   }
 });
 

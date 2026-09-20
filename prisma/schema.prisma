@@ -55,6 +55,19 @@ model AdminUser {
   createdAt DateTime  @default(now())
 }
 
+// Every consequential admin action gets a row here — who, what, on what,
+// when. Nothing reads or enforces against this table; it exists purely as
+// a record, so "who deleted order EKO-XXXXX" or "who zeroed out this
+// SKU's stock" has an answer instead of a shrug.
+model AdminAuditLog {
+  id         String   @id @default(cuid())
+  adminEmail String
+  action     String // e.g. "ASSIGN_ORDER", "UPDATE_STATUS", "DELETE_ORDER", "UPDATE_STOCK", "ADD_ADMIN", "REMOVE_ADMIN"
+  targetId   String? // order code, product id, admin email — whatever the action's subject was
+  detail     String? // short freeform description of what changed
+  createdAt  DateTime @default(now())
+}
+
 // ── Catalog ──────────────────────────────────────────────
 // Supplier fields are preserved verbatim from the supplier price sheet
 // (skus.csv). Retail fields are Ekoyini's own customer-facing pricing,

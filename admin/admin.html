@@ -64,6 +64,7 @@
     <button class="section-tab active" id="sectionTabOrders" onclick="showSection('orders', this)">Orders</button>
     <button class="section-tab" id="sectionTabInventory" onclick="showSection('inventory', this)">Inventory</button>
     <button class="section-tab" id="sectionTabAdmins" onclick="showSection('admins', this)" style="display:none;">Admins</button>
+    <button class="section-tab" id="sectionTabActivity" onclick="showSection('activity', this)" style="display:none;">Activity</button>
   </div>
 
   <!-- ORDERS SECTION -->
@@ -100,6 +101,11 @@
       <button class="dispatch-btn" onclick="addAdmin()">Add</button>
     </div>
     <div id="adminsList"></div>
+  </div>
+
+  <!-- ACTIVITY SECTION (super-admin only) -->
+  <div id="activitySection" style="display:none;">
+    <div id="activityList"></div>
   </div>
 
   <!-- ASSIGN MODAL -->

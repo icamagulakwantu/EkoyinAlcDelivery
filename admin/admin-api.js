@@ -59,6 +59,7 @@ async function tryEnterDashboard() {
         currentAdminRole = me.role;
         if (currentAdminRole === 'SUPER_ADMIN') {
             document.getElementById('sectionTabAdmins').style.display = 'block';
+            document.getElementById('sectionTabActivity').style.display = 'block';
         }
     } catch (err) {
         console.error('Failed to load admin role:', err);
@@ -357,6 +358,7 @@ async function deleteOrder(orderCode) {
 // ============================================
 let inventoryLoaded = false;
 let adminsLoaded = false;
+let activityLoaded = false;
 
 function showSection(name, tabEl) {
     document.querySelectorAll('.section-tab').forEach(t => t.classList.remove('active'));
@@ -364,11 +366,43 @@ function showSection(name, tabEl) {
     document.getElementById('ordersSection').style.display = name === 'orders' ? 'block' : 'none';
     document.getElementById('inventorySection').style.display = name === 'inventory' ? 'block' : 'none';
     document.getElementById('adminsSection').style.display = name === 'admins' ? 'block' : 'none';
+    document.getElementById('activitySection').style.display = name === 'activity' ? 'block' : 'none';
 
     if (name === 'inventory' && !inventoryLoaded) { inventoryLoaded = true; loadInventory(); }
     if (name === 'admins' && !adminsLoaded) { adminsLoaded = true; loadAdmins(); }
+    if (name === 'activity' && !activityLoaded) { activityLoaded = true; loadActivity(); }
 }
 window.showSection = showSection;
+
+// ============================================
+// ACTIVITY LOG (super-admin only — who did what, when)
+// ============================================
+async function loadActivity() {
+    const list = document.getElementById('activityList');
+    list.innerHTML = '<div class="no-orders">Loading…</div>';
+    try {
+        const res = await adminFetch('/admin/audit-log');
+        if (!res.ok) throw new Error('Failed to load activity');
+        const logs = await res.json();
+        if (logs.length === 0) {
+            list.innerHTML = '<div class="no-orders">No admin activity yet</div>';
+            return;
+        }
+        list.innerHTML = logs.map(l => `
+            <div class="activity-row">
+                <div class="activity-row-top">
+                    <span class="activity-action">${l.action.replace(/_/g, ' ')}</span>
+                    <span class="activity-time">${new Date(l.createdAt).toLocaleString()}</span>
+                </div>
+                ${l.targetId ? `<div class="activity-detail">${l.targetId}${l.detail ? ` — ${l.detail}` : ''}</div>` : ''}
+                <div class="activity-admin">by ${l.adminEmail}</div>
+            </div>
+        `).join('');
+    } catch (err) {
+        console.error(err);
+        list.innerHTML = '<div class="no-orders">Failed to load activity</div>';
+    }
+}
 
 // ============================================
 // INVENTORY (view: any admin; edit: super-admin only)

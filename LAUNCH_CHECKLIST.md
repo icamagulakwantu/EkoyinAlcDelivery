@@ -81,6 +81,12 @@ or real orders until the Track B items are checked off.
       server-side via `requireSuperAdmin` on every sensitive route, not
       just hidden in the UI — a dispatcher hitting `DELETE /order/:code`
       or `PATCH /admin/products/:id/stock` directly gets a 403.
+- [x] **Admin audit log.** Every consequential admin action — assign,
+      status change, delete order, stock edit, add/remove admin — writes
+      a row to `AdminAuditLog` (who, what, on what, when). Visible in a
+      new super-admin-only Activity tab. Doesn't block or fail the
+      underlying action if logging itself errors — an audit trail is a
+      record, not a gate.
 - [x] **Order input validation hardened.** `POST /order` now rejects a
       missing/too-short address, a phone number that isn't 9-12 digits
       once non-digit characters are stripped, and any `paymentMethod`

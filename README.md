@@ -177,6 +177,7 @@ this feature is built for).
 - `GET /admin/admins` — list delegated admins (`AdminUser` rows) plus the `ADMIN_EMAILS` bootstrap list
 - `POST /admin/admins` — grant an email admin access (`{ email, role: "SUPER_ADMIN" | "DISPATCHER" }`)
 - `DELETE /admin/admins/:id` — revoke a delegated admin's access (doesn't touch `ADMIN_EMAILS` accounts — that's an env var change)
+- `GET /admin/audit-log` — last 200 admin actions (assign/status/delete/stock/admin changes), newest first
 
 ---
 
