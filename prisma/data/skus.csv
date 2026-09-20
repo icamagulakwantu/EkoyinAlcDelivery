@@ -56,8 +56,8 @@ Redd's MXD Pine/Guarana,CIDER_RTD,Dumpy (340ml),16.00,24,3.0,372.48,84,7.0,29998
 Redd's MXD Pine/Guarana,CIDER_RTD,Can (330ml),18.00,24,3.0,419.04,84,7.0,33747.84,SAB,ALCOHOL,
 Extreme Energy,CIDER_RTD,Dumpy (500ml),15.00,24,3.0,349.20,84,7.0,28123.20,Heineken SA,ALCOHOL,
 Extreme Energy,CIDER_RTD,Can (500ml),17.00,24,3.0,395.76,84,7.0,31872.96,Heineken SA,ALCOHOL,
-Chillers Punch,CIDER_RTD,Dumpy (500ml),14.00,24,3.0,325.92,84,7.0,26248.32,Local Value Portfolio,ALCOHOL,
-Chillers Punch,CIDER_RTD,Can (500ml),16.00,24,3.0,372.48,84,7.0,29998.08,Local Value Portfolio,ALCOHOL,
+Chillers Punch,CIDER_RTD,Dumpy (500ml),14.00,24,3.0,325.92,84,7.0,26248.32,Local Value Portfolio,ALCOHOL,BLACK_OWNED|CELEBRITY_BACKED
+Chillers Punch,CIDER_RTD,Can (500ml),16.00,24,3.0,372.48,84,7.0,29998.08,Local Value Portfolio,ALCOHOL,BLACK_OWNED|CELEBRITY_BACKED
 Hunter's Dry/Gold,CIDER_RTD,Quart (750ml),36.00,12,3.0,419.04,60,7.0,24105.60,Heineken SA,ALCOHOL,
 Hunter's Dry/Gold,CIDER_RTD,Dumpy (340ml),16.00,24,3.0,372.48,84,7.0,29998.08,Heineken SA,ALCOHOL,
 Hunter's Dry/Gold,CIDER_RTD,Can (330ml),18.00,24,3.0,419.04,84,7.0,33747.84,Heineken SA,ALCOHOL,
@@ -263,3 +263,8 @@ Ekoyini Ice Bag,ICE,1kg,20.00,10,2.0,196.00,40,5.0,7600.00,Ekoyini Essentials,NO
 Ekoyini Ice Bag,ICE,2kg,35.00,10,2.0,343.00,40,5.0,13300.00,Ekoyini Essentials,NON_ALCOHOL,
 Ekoyini Crushed Ice,ICE,1kg,22.00,10,2.0,215.60,40,5.0,8360.00,Ekoyini Essentials,NON_ALCOHOL,
 Ekoyini Crushed Ice,ICE,2kg,38.00,10,2.0,372.40,40,5.0,14440.00,Ekoyini Essentials,NON_ALCOHOL,
+Seven Sisters Pinotage/Cabernet,WINE,750ml Bottle,90.00,6,5.0,513.00,100,10.0,48600.00,Seven Sisters Vineyards,ALCOHOL,BLACK_OWNED|WOMEN_OWNED
+M'hudi Pinotage,WINE,750ml Bottle,209.00,6,5.0,1191.30,100,10.0,112860.00,M'hudi Wines,ALCOHOL,BLACK_OWNED
+M'hudi Chenin Blanc,WINE,750ml Bottle,219.00,6,5.0,1248.30,100,10.0,118260.00,M'hudi Wines,ALCOHOL,BLACK_OWNED
+Mofaya Original,MIXER,Can (500ml),9.99,24,2.0,234.96,60,5.0,13666.32,Coca-Cola Beverages SA,NON_ALCOHOL,BLACK_OWNED
+Mofaya Orange Ting,MIXER,Can (500ml),9.99,24,2.0,234.96,60,5.0,13666.32,Coca-Cola Beverages SA,NON_ALCOHOL,BLACK_OWNED

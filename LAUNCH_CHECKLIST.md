@@ -5,7 +5,7 @@ or real orders until the Track B items are checked off.
 
 ## ✅ Done (Track A — MVP)
 
-- [x] 264-SKU catalog (257 alcohol + water/ice) with retail pricing
+- [x] 269-SKU catalog (260 alcohol + water/ice/non-alcohol) with retail pricing
 - [x] Single + case pricing toggle
 - [x] Cooler Box builder with tiered discount (5% / 10% / 15%), applied
       server-side on order total — not just a display-only progress bar

@@ -9,7 +9,7 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 ```
 Frontend (Mobile Web)              Backend (Node.js + Prisma)         Data (Supabase Postgres + Auth)
 ──────────────────────             ──────────────────────             ───────────────────────────────
-index.html, shop.html              server.js                          SkuItem (264 SKUs)
+index.html, shop.html              server.js                          SkuItem (269 SKUs)
 cart.html, checkout.html           ├─ /api/products, /api/taverns     Order, OrderItem
 order-confirmation.html            ├─ /api/health                     Tavern
 login.html, signup.html            ├─ /order (POST, auth-gated)       Supabase Auth (auth.users)
@@ -35,7 +35,7 @@ See **`QUICKSTART.md`** for local setup and **`DEPLOYMENT.md`** for deploying to
 npm install                # also runs `prisma generate`
 cp .env.example .env       # fill in Supabase + admin token
 npx prisma db push
-npm run seed                # loads 264 SKUs + 5 taverns
+npm run seed                # loads 269 SKUs + 5 taverns
 npm start                   # http://localhost:3000
 ```
 
@@ -69,7 +69,7 @@ ekoyini-webapp/
 │   ├── schema.prisma                Full DB schema
 │   ├── seed.js                      Parses skus.csv → computes retail pricing → seeds DB
 │   └── data/
-│       └── skus.csv                 264 SKU rows (257 alcohol + 7 water/ice)
+│       └── skus.csv                 269 SKU rows (260 alcohol + 9 water/ice/non-alcohol)
 │
 ├── scripts/
 │   └── enrich-images.js             Optional Phase 2: real product photos via Open Food Facts API
@@ -90,7 +90,7 @@ ekoyini-webapp/
 
 ## 💳 SKU Catalog & Pricing Strategy
 
-**264 SKUs** across 18 categories (beer, spirits, wine, ciders, mixers, water, ice, etc.), sourced from supplier price sheets.
+**269 SKUs** across 18 categories (beer, spirits, wine, ciders, mixers, water, ice, etc.), sourced from supplier price sheets.
 
 ### Pricing Logic
 - **Single-bottle price** (`retailSingleZAR`): Uses the supplier list price directly as the shelf price, no separate markup layer. 27 flagship SKUs (Absolut, Jameson, Johnnie Walker, Bells, Gordons, Klipdrift, Savanna, JC Le Roux) have been corrected against real 2026 South African retail prices researched from Shoprite LiquorShop and Preston's Liquor Stores (Eastern Cape — Ekoyini's own operating region); beer and Amarula were checked and found already accurate. The remaining SKUs are still the original supplier-sheet estimate and haven't been individually verified — see `prisma/data/skus.csv`'s per-brand pricing history in git for exactly which rows were corrected and against what source.
@@ -139,6 +139,20 @@ researched or confirmed:
 - **KEM Gin** — Black-owned and women-owned, founded by the Koloko Sisters
   (Matatiele, Eastern Cape).
 - **Kwande Gin** — Black-owned.
+- **Chillers Punch** — Black-owned and celebrity-backed; founded by South
+  African podcaster MacG (Macgyver Mukwevho) in 2023.
+- **Seven Sisters Pinotage/Cabernet** *(new SKU)* — Black-owned and
+  women-owned; 100% Black-women-owned Stellenbosch wine farm founded by
+  Vivian Kleynhans and her sisters in 2005.
+- **M'hudi Pinotage** and **M'hudi Chenin Blanc** *(new SKUs)* — Black-owned;
+  the first Black-owned wine farm in South Africa, run by the Rangaka family
+  in Stellenbosch since 2005.
+- **Mofaya Original** and **Mofaya Orange Ting** *(new SKUs)* — Black-owned
+  energy drinks; MoFaya Beverage Company describes itself as the first
+  100% Black-owned beverage company in South Africa, founded by DJ Sbu
+  (Sibusiso Leope), who sold a 26% stake to Coca-Cola in 2017 and remains
+  the majority owner. Filed under Mixer since the catalog has no dedicated
+  energy-drink category yet.
 - **Casamigos** (Blanco, Reposado) — celebrity-backed; co-founded by George
   Clooney, Rande Gerber, and Mike Meldman, now Diageo-owned but the
   founder-celebrity story is still an accurate current fact.
@@ -152,7 +166,14 @@ Spirits Company) with no ongoing founder equity, so "Women Owned" would no
 longer be accurate today. Cîroc lost its Sean "Diddy" Combs partnership in a
 2024 settlement — no longer celebrity-backed. KWV's ~25% BEE shareholding is
 real but a minority stake, not the same claim as "Black-owned," so KWV-brand
-SKUs (Cruxland Gin, Wild Africa Cream) aren't tagged either.
+SKUs (Cruxland Gin, Wild Africa Cream) aren't tagged either. Aslina Wines
+(Ntsiki Biyela, South Africa's first Black woman winemaker) is genuinely
+Black- and women-owned, but no reliable South African rand retail price
+could be found this pass (only USD export listings, which run well above
+SA domestic pricing) — flagged as a candidate to add once real ZAR pricing
+is sourced. Lilula Beverages is also Black-owned per direct confirmation,
+but isn't in the catalog and needs real product/pricing details before it
+can be added.
 
 ---
 
