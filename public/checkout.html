@@ -133,11 +133,11 @@
     <!-- PAYMENT METHOD -->
     <div class="checkout-section">
       <h2>Payment Method</h2>
-      <div class="payment-option selected" data-method="cod" onclick="selectPayment('cod')">
-        <input type="radio" name="payment" value="cod" checked>
+      <div class="payment-option selected" id="codPaymentOption" data-method="cod" onclick="selectPayment('cod')">
+        <input type="radio" name="payment" value="cod" id="codPaymentRadio" checked>
         <div>
           <div class="p-label">Pay on Delivery (COD)</div>
-          <div class="p-desc">Pay the driver when they arrive</div>
+          <div class="p-desc" id="codPaymentDesc">Pay the driver when they arrive</div>
         </div>
       </div>
       <div class="payment-option disabled" id="cardPaymentOption" data-method="card">
@@ -232,6 +232,15 @@
       const res = await fetch('/api/products');
       products = await res.json();
       renderOrderReview();
+
+      // Needs `products` loaded first — computeTotals() (called from
+      // renderOrderReview, below, via updateCodAvailability) can't price
+      // the cart without it.
+      authedFetch('/api/cod-eligibility').then(r => r.json()).then(data => {
+        if (data.error) return;
+        codEligibility = data;
+        updateCodAvailability(computeTotals().total);
+      }).catch(() => {});
       document.getElementById('deliveryAddress').value = checkoutData.address || '';
       // Best-effort prefill from the account email's local part (e.g.
       // "thandeka" from thandeka@gmail.com) — better than an empty field,
@@ -324,6 +333,44 @@
       <div class="order-review-item"><span>Delivery</span><span>R${delivery.toFixed(2)}</span></div>
       <div class="order-review-total"><span>Total</span><span>R${total.toFixed(2)}</span></div>`;
     review.appendChild(totals);
+    updateCodAvailability(total);
+  }
+
+  // COD availability depends on both this order's amount (checked live,
+  // client-side, against the same thresholds server.js enforces) and the
+  // account's track record (fetched once from /api/cod-eligibility, since
+  // that needs a DB lookup). Re-run any time the total changes — a promo
+  // code could drop an order from "eligible" to under the R300 floor.
+  let codEligibility = null;
+  function updateCodAvailability(total) {
+    const opt = document.getElementById('codPaymentOption');
+    const radio = document.getElementById('codPaymentRadio');
+    const desc = document.getElementById('codPaymentDesc');
+    if (!codEligibility) return;
+
+    const { trackRecordOk, accountAgeMonths, priorOrderCount, minAccountAgeMonths, minPriorOrders, minOrderTotal, maxOrderTotal } = codEligibility;
+
+    let reason = null;
+    if (total > maxOrderTotal) {
+      reason = `Not available over R${maxOrderTotal} — for our drivers' safety. Pay by card or EFT instead.`;
+    } else if (total <= minOrderTotal) {
+      reason = `Needs an order over R${minOrderTotal}.`;
+    } else if (!trackRecordOk) {
+      reason = `Unlocks once your account is ${minAccountAgeMonths}+ months old and you've placed ${minPriorOrders}+ orders (you're at ${accountAgeMonths} month${accountAgeMonths === 1 ? '' : 's'}, ${priorOrderCount} order${priorOrderCount === 1 ? '' : 's'}).`;
+    }
+
+    if (reason) {
+      opt.classList.add('disabled');
+      opt.onclick = null;
+      radio.disabled = true;
+      desc.textContent = reason;
+      if (selectedPayment === 'cod') selectPayment('eft');
+    } else {
+      opt.classList.remove('disabled');
+      opt.onclick = () => selectPayment('cod');
+      radio.disabled = false;
+      desc.textContent = 'Pay the driver when they arrive';
+    }
   }
 
   async function applyPromo() {

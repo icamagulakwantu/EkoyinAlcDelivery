@@ -137,7 +137,7 @@ async function loadOrders() {
                 <span class="order-status status-${order.status}">${formatStatus(order.status)}</span>
             </div>
             <div class="order-details">
-                <p>${formatPaymentBadge(order)}</p>
+                <p>${formatPaymentBadge(order)}${order.codFlagged ? formatCodFlagBadge(order) : ''}</p>
                 <p><strong>Delivery:</strong> ${order.address}</p>
                 <p><strong>Customer:</strong> ${order.customerName || 'N/A'} · ${order.customerPhone || 'N/A'}</p>
                 <p><strong>Date:</strong> ${new Date(order.createdAt).toLocaleString()}</p>
@@ -200,6 +200,14 @@ function formatPaymentBadge(order) {
         return '<span class="payment-badge">Card</span>';
     }
     return '<span class="payment-badge cod">Pay on Delivery</span>';
+}
+
+// COD orders that deviate sharply from the customer's own purchase history
+// (see assessCodEligibility in server.js) get flagged, not blocked — this
+// is the "worth a second look before dispatch" signal for that.
+function formatCodFlagBadge(order) {
+    const reason = (order.codFlagReason || 'Unusual order for this customer').replace(/"/g, '&quot;');
+    return ` <span class="payment-badge cod-flag" title="${reason}">⚠ Review before dispatch</span>`;
 }
 
 function formatStatus(status) {

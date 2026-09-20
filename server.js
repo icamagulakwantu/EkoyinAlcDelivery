@@ -280,6 +280,111 @@ app.post("/api/promo/validate", async (req, res) => {
   }
 });
 
+// ── Cash-on-delivery eligibility ─────────────────────────────
+// Real cash changing hands at the door is the riskiest payment path we
+// offer — both a fraud surface (no chargeback-style recourse) and, at
+// the high end, a driver-safety issue. Enforced here, server-side, not
+// just hinted at in the checkout UI:
+//   1. Track record — account older than 3 months AND at least 30 prior
+//      orders placed, both required. Either alone isn't enough: a brand
+//      new account with 30 orders in a week has no real track record,
+//      and a 3-year-old account that's only ordered twice doesn't either.
+//   2. This order's amount — needs to clear R300 (stricter than the
+//      R200 free-delivery threshold elsewhere in the app) and is always
+//      capped at R1500, regardless of how established the account is —
+//      purely so a driver is never holding more cash than that.
+//   3. Pattern deviation — flagged, not blocked, when an order swings
+//      far outside what this customer has actually bought before (e.g.
+//      someone who's only ever bought Hennessy VS suddenly ordering
+//      several brands/categories they've never touched, for several
+//      times their usual spend). Surfaces on the admin dashboard for a
+//      human to glance at before dispatch — a deviation isn't proof of
+//      fraud on its own, so it never auto-rejects.
+const COD_MIN_ACCOUNT_AGE_MONTHS = 3;
+const COD_MIN_PRIOR_ORDERS = 30;
+const COD_MIN_ORDER_TOTAL = 300;
+const COD_MAX_ORDER_TOTAL = 1500;
+
+function monthsSince(dateStr) {
+  const then = new Date(dateStr);
+  if (isNaN(then.getTime())) return 0;
+  const now = new Date();
+  let months = (now.getFullYear() - then.getFullYear()) * 12 + (now.getMonth() - then.getMonth());
+  if (now.getDate() < then.getDate()) months -= 1;
+  return Math.max(0, months);
+}
+
+// Orders placed but never actually confirmed (abandoned card checkouts
+// stuck at PAYMENT_PENDING) don't count as "using the account."
+async function countConfirmedOrders(userId) {
+  return prisma.order.count({ where: { userId, status: { not: "PAYMENT_PENDING" } } });
+}
+
+async function assessCodEligibility({ userId, userCreatedAt, orderTotal, skuIds }) {
+  if (orderTotal > COD_MAX_ORDER_TOTAL) {
+    return {
+      eligible: false,
+      error: `Cash on delivery isn't available for orders over R${COD_MAX_ORDER_TOTAL} — for our drivers' safety. Please pay by card or EFT, or reduce your order.`,
+    };
+  }
+  if (orderTotal <= COD_MIN_ORDER_TOTAL) {
+    return { eligible: false, error: `Cash on delivery requires an order over R${COD_MIN_ORDER_TOTAL}.` };
+  }
+
+  const accountAgeMonths = monthsSince(userCreatedAt);
+  const priorOrderCount = await countConfirmedOrders(userId);
+
+  if (accountAgeMonths < COD_MIN_ACCOUNT_AGE_MONTHS || priorOrderCount < COD_MIN_PRIOR_ORDERS) {
+    return {
+      eligible: false,
+      error: `Cash on delivery unlocks once your account is ${COD_MIN_ACCOUNT_AGE_MONTHS}+ months old and you've placed ${COD_MIN_PRIOR_ORDERS}+ orders (you're at ${accountAgeMonths} month${accountAgeMonths === 1 ? "" : "s"}, ${priorOrderCount} order${priorOrderCount === 1 ? "" : "s"}). Please pay by card or EFT for now.`,
+      accountAgeMonths,
+      priorOrderCount,
+    };
+  }
+
+  // Pattern check — only meaningful once there's real history to compare
+  // against; skip it for accounts that just barely cleared the 30-order
+  // gate with too little signal to call anything "unusual" yet.
+  let flagged = false;
+  let flagReason = null;
+  if (priorOrderCount >= 5 && skuIds.length > 0) {
+    const [priorOrders, priorLineItems] = await Promise.all([
+      prisma.order.findMany({ where: { userId, status: { not: "PAYMENT_PENDING" } }, select: { total: true } }),
+      prisma.orderItem.findMany({
+        where: { order: { userId, status: { not: "PAYMENT_PENDING" } } },
+        select: { skuId: true },
+        distinct: ["skuId"],
+      }),
+    ]);
+    const avgTotal = priorOrders.reduce((sum, o) => sum + o.total, 0) / priorOrders.length;
+    const familiarSkuIds = new Set(priorLineItems.map((i) => i.skuId).filter(Boolean));
+    const newSkuCount = skuIds.filter((id) => !familiarSkuIds.has(id)).length;
+    const mostlyUnfamiliar = newSkuCount / skuIds.length >= 0.5;
+    const isSpike = orderTotal > Math.max(avgTotal * 3, 800);
+    if (isSpike && mostlyUnfamiliar) {
+      flagged = true;
+      flagReason = `R${orderTotal.toFixed(0)} order is a sharp jump from this customer's usual ~R${avgTotal.toFixed(0)} average, mostly in products they haven't bought before — worth a quick check before dispatch.`;
+    }
+  }
+
+  return { eligible: true, flagged, flagReason, accountAgeMonths, priorOrderCount };
+}
+
+// Mirrors the total calc inside createOrderTransaction (subtotal minus
+// Cooler Box and promo discounts, plus delivery) without writing
+// anything — needed to check a COD order's amount before the order (and
+// the real promo redemption) is actually created.
+async function estimateOrderTotal({ subtotal, coolerDiscount }, promoCode) {
+  let promoDiscount = 0;
+  if (promoCode) {
+    const { promo } = await checkPromoCode(promoCode, subtotal - coolerDiscount);
+    if (promo) promoDiscount = Math.round((subtotal - coolerDiscount) * (promo.discountPct / 100) * 100) / 100;
+  }
+  const delivery = subtotal > 200 ? 0 : 50;
+  return Math.round((subtotal - coolerDiscount - promoDiscount + delivery) * 100) / 100;
+}
+
 // ── Order pricing + validation — shared by the immediate COD/EFT path
 // (POST /order below) and the card path, where the same logic runs again
 // inside the webhook handler once Yoco confirms payment, not at checkout-
@@ -340,7 +445,7 @@ async function validateAndPriceOrder({ address, items, customerPhone, paymentMet
 // Order row itself, all in one transaction. Called directly for COD/EFT
 // (payment happens at the door / independently), and from the Yoco
 // webhook handler for card (only after Yoco confirms payment succeeded).
-async function createOrderTransaction({ userId, address, customerName, customerPhone, paymentMethod, promoCode, status, priced }) {
+async function createOrderTransaction({ userId, address, customerName, customerPhone, paymentMethod, promoCode, status, priced, codFlagged, codFlagReason }) {
   const { orderItems, stockNeeded, subtotal, coolerDiscount } = priced;
 
   let promo = null;
@@ -398,6 +503,8 @@ async function createOrderTransaction({ userId, address, customerName, customerP
         promoDiscount: promo ? promoDiscount : null,
         total,
         status: status || undefined, // undefined = schema default (PAYMENT_PENDING)
+        codFlagged: !!codFlagged,
+        codFlagReason: codFlagReason || null,
         items: { create: orderItems },
       },
       include: { items: true },
@@ -419,6 +526,21 @@ app.post("/order", requireUser, async (req, res) => {
     const priced = await validateAndPriceOrder({ address, items, customerPhone, paymentMethod, allowedPaymentMethods: DIRECT_PAYMENT_METHODS });
     if (priced.error) return res.status(400).json({ error: priced.error });
 
+    let codFlagged = false;
+    let codFlagReason = null;
+    if (paymentMethod === "cod") {
+      const estimatedTotal = await estimateOrderTotal(priced, promoCode);
+      const cod = await assessCodEligibility({
+        userId: req.user.id,
+        userCreatedAt: req.user.created_at,
+        orderTotal: estimatedTotal,
+        skuIds: priced.orderItems.map((i) => i.skuId).filter(Boolean),
+      });
+      if (!cod.eligible) return res.status(400).json({ error: cod.error });
+      codFlagged = cod.flagged;
+      codFlagReason = cod.flagReason;
+    }
+
     const order = await createOrderTransaction({
       userId: req.user.id,
       address,
@@ -427,6 +549,8 @@ app.post("/order", requireUser, async (req, res) => {
       paymentMethod,
       promoCode,
       priced,
+      codFlagged,
+      codFlagReason,
     });
     console.log("New order:", order.code);
     sendOrderConfirmationEmail(order, req.user.email).catch((e) => console.error("[email] confirmation failed:", e));
@@ -450,6 +574,33 @@ app.post("/order", requireUser, async (req, res) => {
 // YOCO_SECRET_KEY is actually set in the environment.
 app.get("/api/payment-config", (req, res) => {
   res.json({ cardEnabled: isYocoConfigured() });
+});
+
+// 🚚 COD ELIGIBILITY (track record only) — lets checkout.html show/hide the
+// Pay on Delivery option with a real reason before the customer even tries
+// to submit. Doesn't know the current order's amount (checkout.html already
+// has the cart total client-side to check that half against
+// COD_MIN_ORDER_TOTAL/COD_MAX_ORDER_TOTAL) — this only covers the part that
+// needs a DB lookup: account age and order-count history. The actual gate
+// is still POST /order's own server-side check; this is a preview.
+app.get("/api/cod-eligibility", requireUser, async (req, res) => {
+  try {
+    const accountAgeMonths = monthsSince(req.user.created_at);
+    const priorOrderCount = await countConfirmedOrders(req.user.id);
+    const trackRecordOk = accountAgeMonths >= COD_MIN_ACCOUNT_AGE_MONTHS && priorOrderCount >= COD_MIN_PRIOR_ORDERS;
+    res.json({
+      trackRecordOk,
+      accountAgeMonths,
+      priorOrderCount,
+      minAccountAgeMonths: COD_MIN_ACCOUNT_AGE_MONTHS,
+      minPriorOrders: COD_MIN_PRIOR_ORDERS,
+      minOrderTotal: COD_MIN_ORDER_TOTAL,
+      maxOrderTotal: COD_MAX_ORDER_TOTAL,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to check COD eligibility" });
+  }
 });
 
 function appBaseUrl(req) {

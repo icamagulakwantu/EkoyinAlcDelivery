@@ -134,6 +134,20 @@ or real orders until the Track B items are checked off.
       just disabled in the UI) — closes a gap where a client could
       previously submit an order with no real phone number or an
       arbitrary payment method string.
+- [x] **Cash-on-delivery eligibility.** COD is no longer available to
+      every account — `assessCodEligibility()` in `server.js` requires
+      the account to be 3+ months old AND have 30+ prior confirmed
+      orders (both required), the order itself to exceed R300, and caps
+      every COD order at R1500 regardless of eligibility, purely for
+      driver safety. Enforced server-side in `POST /order` (the real
+      gate — rejects with a clear reason), previewed via
+      `GET /api/cod-eligibility` so checkout.html can gray out the COD
+      option with the same reason before the customer even tries.
+      Orders that clear eligibility but deviate sharply from the
+      customer's own purchase history (a big spend spike on mostly
+      never-before-bought products) get `codFlagged: true` + a reason —
+      never auto-rejected, just surfaced on the admin dashboard as
+      "Review before dispatch" for a human to glance at first.
 
 ## Before flipping "live"
 

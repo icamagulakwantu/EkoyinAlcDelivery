@@ -198,6 +198,15 @@ model Order {
   driverLocationAt DateTime?
   rating           Int?
   ratingComment    String?
+
+  // Cash-on-delivery risk flag — set when a COD order's amount and/or
+  // contents deviate sharply from this customer's own purchase history
+  // (see assessCodEligibility in server.js). Never blocks the order by
+  // itself; it just surfaces a "worth a second look before dispatch" on
+  // the admin dashboard. Always false/null for non-COD orders.
+  codFlagged   Boolean @default(false)
+  codFlagReason String?
+
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 

@@ -404,6 +404,12 @@ body {
             color: #856404;
 }
 
+.payment-badge.cod-flag {
+        background: #f8d7da;
+            color: #721c24;
+                cursor: help;
+}
+
 .order-details p {
         margin: 4px 0;
 }
