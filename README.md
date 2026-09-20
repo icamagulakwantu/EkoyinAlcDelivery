@@ -127,6 +127,33 @@ sends. Eligibility lives in one place, `public/pricing.js`'s
 - **Phase 1** (current): Category fallback images (Unsplash) — every SKU renders cleanly from day one.
 - **Phase 2**: Real product photos via Open Food Facts API (`npm run enrich-images`), Supabase Storage, or SerpApi.
 
+### 🏷️ Brand Story Tags
+`SkuItem.brandTags` (`BLACK_OWNED` / `WOMEN_OWNED` / `CELEBRITY_BACKED`) power
+filter pills and badges on `shop.html`, the same pattern apps like Minibar
+Delivery use. The bar for adding a tag is deliberately strict — a specific,
+checked fact about that brand (a named founder still holding real equity, a
+documented current partnership), never inferred from category or portfolio
+name, and never kept once the fact goes stale (see `schema.prisma`'s comment
+on `brandTags` for the full rule). Currently tagged, each individually
+researched or confirmed:
+- **KEM Gin** — Black-owned and women-owned, founded by the Koloko Sisters
+  (Matatiele, Eastern Cape).
+- **Kwande Gin** — Black-owned.
+- **Casamigos** (Blanco, Reposado) — celebrity-backed; co-founded by George
+  Clooney, Rande Gerber, and Mike Meldman, now Diageo-owned but the
+  founder-celebrity story is still an accurate current fact.
+- **D'USSÉ VSOP** — celebrity-backed; Jay-Z co-founded it with Bacardi and
+  retains a real ownership stake through SCLiquor LLC.
+
+Checked and deliberately **not** tagged, so the filter stays honest: Inverroche
+and Musgrave were both women-founded SA craft gins, but each has since been
+fully acquired (Inverroche by Pernod Ricard, Musgrave by International
+Spirits Company) with no ongoing founder equity, so "Women Owned" would no
+longer be accurate today. Cîroc lost its Sean "Diddy" Combs partnership in a
+2024 settlement — no longer celebrity-backed. KWV's ~25% BEE shareholding is
+real but a minority stake, not the same claim as "Black-owned," so KWV-brand
+SKUs (Cruxland Gin, Wild Africa Cream) aren't tagged either.
+
 ---
 
 ## 🛒 Customer Journey
@@ -161,7 +188,7 @@ sends. Eligibility lives in one place, `public/pricing.js`'s
 
 ### Public
 - `GET /api/health` — DB connectivity check
-- `GET /api/products?category=` — full catalog, filterable
+- `GET /api/products?category=` — full catalog, filterable (each SKU includes `brandTags`, see the Brand Story Tags section above)
 - `GET /api/taverns` — store list, `id`/`name`/`area` only
 - `GET /api/order/:code/track` — public order status lookup (also returns `rating`/`ratingComment`, and `driverLat`/`driverLng`/`driverLocationAt` if the driver has shared a location in the last 3 minutes — stale pings are dropped server-side, never surfaced as if live)
 - `GET /api/stats` — live counts for the homepage trust strip: product count, verified tavern count, distinct townships served

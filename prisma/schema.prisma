@@ -97,6 +97,17 @@ model SkuItem {
   imageUrl   String?
   orderItems OrderItem[]
 
+  // Brand story tags — "BLACK_OWNED" | "WOMEN_OWNED" | "CELEBRITY_BACKED".
+  // Only ever set from a specific, checked fact about that brand (a named
+  // founder still holding real equity, a documented current partnership) —
+  // never inferred from category, portfolio name, or "sounds independent".
+  // A brand that was founder-owned but has since been fully acquired (no
+  // ongoing founder equity or active partnership) does NOT get a tag, even
+  // if its origin story is still told in marketing — see the seed data's
+  // sourcing notes for exactly what was checked and why. Empty by default,
+  // which is the honest state until a claim is actually verified.
+  brandTags String[] @default([])
+
   // Real inventory tracking. Defaults high (not "unlimited") because no
   // actual per-SKU stock count exists yet from any supplier feed — 999 is
   // an honest placeholder that keeps today's behavior (always orderable)

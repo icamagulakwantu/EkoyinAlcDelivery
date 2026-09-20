@@ -39,6 +39,48 @@
     .fav-btn.active { color: var(--terra); }
     #favToggle { cursor: pointer; }
     #favToggle.active { background: var(--terra-light); color: #fff; border-color: var(--terra-light); }
+    .brand-filter-pill { cursor: pointer; }
+    .brand-filter-pill.active { background: var(--gold); border-color: var(--gold); color: #1a1400; }
+
+    /* HERO AISLE BANNER — crossfade + slide between aisles as you tap a
+       category pill, the same motion language as the onboarding carousel
+       (see index.html's .ob-slide) so it feels like one consistent app,
+       not a new pattern. Every slide sits stacked (position: absolute);
+       switching aisle slides the new one in from the right while the old
+       one exits left, instead of an abrupt swap. */
+    .shop-hero { position: relative; height: 148px; margin: 10px 12px 4px; border-radius: var(--r-md); overflow: hidden; background: var(--surface); }
+    .shop-hero-slide {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column; justify-content: flex-end;
+      padding: 16px; background-size: cover; background-position: center;
+      opacity: 0; transform: translateX(28px);
+      transition: opacity 0.4s ease, transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+      pointer-events: none;
+    }
+    .shop-hero-slide::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(180deg, rgba(0,0,0,0) 35%, rgba(0,0,0,0.75) 100%);
+    }
+    .shop-hero-slide.active { opacity: 1; transform: translateX(0); pointer-events: auto; }
+    .shop-hero-slide.prev { transform: translateX(-28px); }
+    .shop-hero-slide .sh-title { position: relative; font-family: var(--font-display); font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 3px; }
+    .shop-hero-slide .sh-sub { position: relative; font-size: 11px; color: rgba(255,255,255,0.88); line-height: 1.4; max-width: 78%; }
+    .shop-hero-dots { position: absolute; bottom: 10px; right: 14px; display: flex; gap: 5px; z-index: 1; }
+    .shop-hero-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.4); transition: background 0.2s, width 0.2s; cursor: pointer; }
+    .shop-hero-dot.active { background: #fff; width: 16px; border-radius: 3px; }
+
+    /* Brand story badges — small chips in the card's text flow (product
+       cards have no photo area to float a corner badge over), only ever
+       rendered for a SKU whose brandTags array actually has something in
+       it (see schema.prisma's note on how strict that bar is). */
+    .brand-badges { display: flex; flex-wrap: wrap; gap: 4px; margin: 2px 0 4px; }
+    .tag-gold {
+      display: inline-flex; align-items: center;
+      background: rgba(255, 199, 0, 0.15); border: 1px solid rgba(122, 92, 0, 0.35);
+      color: var(--gold-deep); font-size: 8px; font-weight: 700;
+      padding: 2px 5px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.3px;
+      white-space: nowrap;
+    }
   </style>
 </head>
 <body>
@@ -79,6 +121,12 @@
     <input type="text" id="shopSearch" placeholder="Search by name, e.g. Savanna, Klipdrift…">
     <span class="search-clear" id="searchClear" onclick="clearSearch()">&times;</span>
   </div>
+
+  <!-- HERO AISLE BANNER -->
+  <div class="shop-hero" id="shopHero">
+    <div class="shop-hero-dots" id="shopHeroDots"></div>
+  </div>
+
   <div class="sourcing-note">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M3 9l1-5h16l1 5M3 9a2 2 0 0 0 4 0M7 9a2 2 0 0 0 4 0M11 9a2 2 0 0 0 4 0M15 9a2 2 0 0 0 4 0M4 9v10h16V9"/></svg>
     Sourced from verified local taverns in your township
@@ -87,6 +135,9 @@
     <div class="pill-tag" id="favToggle" onclick="toggleFavoritesOnly()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" style="vertical-align:-1px;margin-right:4px;"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>My Favorites
     </div>
+    <div class="pill-tag brand-filter-pill" data-tag="BLACK_OWNED" onclick="toggleBrandFilter('BLACK_OWNED')">Black Owned</div>
+    <div class="pill-tag brand-filter-pill" data-tag="WOMEN_OWNED" onclick="toggleBrandFilter('WOMEN_OWNED')">Women Owned</div>
+    <div class="pill-tag brand-filter-pill" data-tag="CELEBRITY_BACKED" onclick="toggleBrandFilter('CELEBRITY_BACKED')">Celebrity Backed</div>
   </div>
   <div class="collection-banner" id="collectionBanner" style="display:none;">
     <span id="collectionLabel"></span>
@@ -195,15 +246,87 @@
 
   let showFavoritesOnly = false;
 
+  // Brand story filters — a product must carry EVERY active tag (so
+  // "Black Owned" + "Women Owned" together means both, not either).
+  const BRAND_TAG_LABELS = { BLACK_OWNED: 'Black Owned', WOMEN_OWNED: 'Women Owned', CELEBRITY_BACKED: 'Celebrity Backed' };
+  let activeBrandFilters = new Set();
+
+  function toggleBrandFilter(tag) {
+    if (activeBrandFilters.has(tag)) activeBrandFilters.delete(tag); else activeBrandFilters.add(tag);
+    document.querySelector(`.brand-filter-pill[data-tag="${tag}"]`).classList.toggle('active', activeBrandFilters.has(tag));
+    buildCatalog();
+  }
+  window.toggleBrandFilter = toggleBrandFilter;
+
   function getFilteredProducts() {
     const q = searchQuery.toLowerCase();
     return products.filter((p) => {
       if (showFavoritesOnly && !EkoyiniFavorites.has(p.id)) return false;
       if (categoryFilter && !categoryFilter.has(p.category)) return false;
+      if (activeBrandFilters.size > 0) {
+        const tags = p.brandTags || [];
+        for (const t of activeBrandFilters) { if (!tags.includes(t)) return false; }
+      }
       if (q && !p.name.toLowerCase().includes(q) && !p.productType.toLowerCase().includes(q)) return false;
       return true;
     });
   }
+
+  function brandBadgesHTML(p) {
+    if (!p.brandTags || p.brandTags.length === 0) return '';
+    return `<div class="brand-badges">${p.brandTags.map(t => `<span class="tag-gold">${BRAND_TAG_LABELS[t] || t}</span>`).join('')}</div>`;
+  }
+
+  // ── HERO AISLE BANNER ──
+  // Grouped into 4 aisles (not 18 individual categories — that's too many
+  // hand-picked images to maintain) using the same Unsplash photos
+  // prisma/seed.js already uses for category thumbnails, so nothing new
+  // to vet. Tapping a category pill crossfades to that pill's aisle.
+  const AISLES = [
+    { key: 'beer', label: 'Beer & Cider', sub: 'Cold ones for the stoep — dumpies, quarts, and RTDs.', cats: ['BEER', 'CIDER_RTD'],
+      img: 'https://images.unsplash.com/photo-1608270586620-248524c67de9?auto=format&fit=crop&w=800&q=80' },
+    { key: 'liquor', label: 'Spirits', sub: 'Whisky, gin, vodka, brandy, tequila, and more.', cats: ['BRANDY', 'WHISKY', 'COGNAC', 'GIN', 'VODKA', 'VODKA_PREMIUM', 'TEQUILA', 'TEQUILA_PREMIUM', 'LIQUEUR'],
+      img: 'https://images.unsplash.com/photo-1527281400683-1aae777175f8?auto=format&fit=crop&w=800&q=80' },
+    { key: 'wine', label: 'Wine & Bubbly', sub: 'Reds, whites, and something to pop for the occasion.', cats: ['WINE', 'WINE_BOX', 'SPARKLING', 'CHAMPAGNE'],
+      img: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=800&q=80' },
+    { key: 'mixers', label: 'Mixers & Essentials', sub: 'Everything else your cooler box needs.', cats: ['MIXER', 'WATER', 'ICE'],
+      img: 'https://images.unsplash.com/photo-1621263764928-df1444c5e859?auto=format&fit=crop&w=800&q=80' },
+  ];
+
+  function aisleIndexForCategory(cat) {
+    return AISLES.findIndex(a => a.cats.includes(cat));
+  }
+
+  function buildHero() {
+    const hero = document.getElementById('shopHero');
+    const dotsHolder = document.getElementById('shopHeroDots');
+    AISLES.forEach((a, i) => {
+      const slide = document.createElement('div');
+      slide.className = 'shop-hero-slide' + (i === 0 ? ' active' : '');
+      slide.style.backgroundImage = `url('${a.img}')`;
+      slide.dataset.aisle = a.key;
+      slide.innerHTML = `<div class="sh-title">${a.label}</div><div class="sh-sub">${a.sub}</div>`;
+      hero.insertBefore(slide, dotsHolder);
+    });
+    dotsHolder.innerHTML = AISLES.map((a, i) => `<div class="shop-hero-dot${i === 0 ? ' active' : ''}" onclick="setAisle(${i})"></div>`).join('');
+  }
+
+  let activeAisleIndex = 0;
+  function setAisle(index) {
+    if (index === -1 || index === activeAisleIndex) return;
+    const slides = Array.from(document.querySelectorAll('.shop-hero-slide'));
+    const dots = Array.from(document.querySelectorAll('.shop-hero-dot'));
+    const prevSlide = slides[activeAisleIndex];
+    if (prevSlide) {
+      prevSlide.classList.remove('active');
+      prevSlide.classList.add('prev');
+      setTimeout(() => prevSlide.classList.remove('prev'), 450);
+    }
+    if (slides[index]) slides[index].classList.add('active');
+    dots.forEach((d, i) => d.classList.toggle('active', i === index));
+    activeAisleIndex = index;
+  }
+  window.setAisle = setAisle;
 
   function toggleFavoritesOnly() {
     showFavoritesOnly = !showFavoritesOnly;
@@ -292,7 +415,9 @@
     if (filtered.length === 0) {
       const noResultsMsg = showFavoritesOnly
         ? 'No favorites yet — tap the heart on a product to save it here.'
-        : `No products match${searchQuery ? ` "${searchQuery}"` : ' this filter'}.`;
+        : activeBrandFilters.size > 0
+          ? `No products currently match ${[...activeBrandFilters].map(t => BRAND_TAG_LABELS[t]).join(' + ')} — we only tag a brand once its story is actually verified, so this list grows as we source more.`
+          : `No products match${searchQuery ? ` "${searchQuery}"` : ' this filter'}.`;
       page.innerHTML = `<div class="no-results">${noResultsMsg} <a href="shop.html" style="color:var(--terra-light);">Show everything</a></div>`;
       return;
     }
@@ -303,9 +428,10 @@
       pill.className = 'pill-tag' + (first ? ' active' : '');
       pill.textContent = cat.replace(/_/g, ' ');
       pill.onclick = () => {
-        document.querySelectorAll('.pill-tag').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('#catPills .pill-tag').forEach(p => p.classList.remove('active'));
         pill.classList.add('active');
         document.getElementById('sec-' + cat)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        setAisle(aisleIndexForCategory(cat));
       };
       pills.appendChild(pill);
 
@@ -331,6 +457,7 @@
           ${outOfStock ? '<div class="stock-badge">Out of Stock</div>' : ''}
           <div class="product-info">
             <h3>${p.name}</h3>
+            ${brandBadgesHTML(p)}
             <div class="product-size">${p.bottleFormat}</div>
             <div class="product-footer">
               <div class="product-price" onclick="showPriceDetails('${p.id}')">
@@ -345,6 +472,11 @@
       page.appendChild(sec);
       first = false;
     });
+
+    // Keep the hero banner honest even when a deep link (collection,
+    // search, or a brand filter) means the first section isn't BEER.
+    const firstCat = Object.keys(byCategory)[0];
+    if (firstCat) setAisle(aisleIndexForCategory(firstCat));
   }
 
   // Shared by the initial card render (inline, so the button paints on
@@ -462,6 +594,7 @@
     document.getElementById('searchClear').style.display = 'block';
   }
   document.getElementById('shopSearch').addEventListener('input', applySearch);
+  buildHero();
   if (requireAgeGate()) loadCatalog();
   </script>
 </body>

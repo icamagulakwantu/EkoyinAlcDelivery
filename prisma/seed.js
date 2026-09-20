@@ -114,6 +114,12 @@ async function main() {
       retailCaseZAR,
 
       imageUrl: CATEGORY_IMAGE_MAP[category] || CATEGORY_IMAGE_MAP.BEER,
+
+      // Brand story tags — see the comment on SkuItem.brandTags in
+      // schema.prisma for what these mean and how strict the bar is.
+      // Pipe-separated in the CSV since a cell can't hold a real array;
+      // empty for the overwhelming majority of SKUs, on purpose.
+      brandTags: row.brandTags ? row.brandTags.split('|').filter(Boolean) : [],
     };
 
     const result = await prisma.skuItem.upsert({
