@@ -5,10 +5,20 @@ const { PrismaClient } = require("@prisma/client");
 
 const app = express();
 const prisma = new PrismaClient();
+// Render terminates TLS in front of this app and forwards X-Forwarded-Proto
+// — without trusting the proxy, req.protocol always reports "http", which
+// would build broken (non-https) Yoco redirect URLs.
+app.set("trust proxy", true);
+
+const { createYocoCheckout, getYocoCheckout, checkoutLooksPaid, verifyYocoWebhookSignature, extractCheckoutId, isYocoConfigured } = require("./payments.js");
+const { sendOrderConfirmationEmail, sendAdminOrderAlertEmail, sendPaymentFailureAlertEmail } = require("./emails.js");
 
 app.use(express.static("public"));
 app.use("/admin", express.static("admin"));
-app.use(express.json());
+// The verify callback stashes the raw bytes alongside normal JSON parsing —
+// needed for the Yoco webhook route, which must HMAC-verify against the
+// exact raw body, not a re-serialized version of the parsed object.
+app.use(express.json({ verify: (req, res, buf) => { req.rawBody = buf; } }));
 
 // ── Supabase Auth (customer login) ─────────────────────────
 // Verifies the bearer token against Supabase's own /auth/v1/user endpoint —
@@ -269,121 +279,152 @@ app.post("/api/promo/validate", async (req, res) => {
   }
 });
 
-// 📦 CREATE ORDER (customer, auth-gated)
+// ── Order pricing + validation — shared by the immediate COD/EFT path
+// (POST /order below) and the card path, where the same logic runs again
+// inside the webhook handler once Yoco confirms payment, not at checkout-
+// session creation time. Pure computation only; no DB writes.
+async function validateAndPriceOrder({ address, items, customerPhone, paymentMethod, allowedPaymentMethods }) {
+  if (!address || typeof address !== "string" || address.trim().length < 5) {
+    return { error: "Please enter a valid delivery address" };
+  }
+  if (!Array.isArray(items) || items.length === 0) {
+    return { error: "items are required" };
+  }
+  const digitsOnly = (customerPhone || "").replace(/\D/g, "");
+  if (digitsOnly.length < 9 || digitsOnly.length > 12) {
+    return { error: "Please enter a valid phone number" };
+  }
+  if (paymentMethod && !allowedPaymentMethods.has(paymentMethod)) {
+    return { error: "Invalid payment method" };
+  }
+
+  const skuIds = items.map((i) => i.skuId).filter(Boolean);
+  const skus = await prisma.skuItem.findMany({ where: { id: { in: skuIds } } });
+  const skuMap = new Map(skus.map((s) => [s.id, s]));
+
+  let subtotal = 0;
+  let coolerSubtotal = 0;
+  const orderItems = [];
+  const stockNeeded = []; // { skuId, name, units } — units are individual bottles, not cases
+
+  for (const i of items) {
+    const sku = skuMap.get(i.skuId);
+    const quantity = parseInt(i.quantity, 10);
+    if (!sku || !Number.isInteger(quantity) || quantity <= 0) {
+      return { error: `Invalid item: ${i.skuId}` };
+    }
+    const unitPrice = i.purchaseType === "case" ? sku.retailCaseZAR / sku.unitsPerCase : sku.retailSingleZAR;
+    const itemTotal = unitPrice * quantity;
+    subtotal += itemTotal;
+    if (COOLER_ELIGIBLE.has(sku.category)) coolerSubtotal += itemTotal;
+
+    orderItems.push({ skuId: sku.id, name: sku.name, price: unitPrice, quantity });
+    const units = i.purchaseType === "case" ? quantity * sku.unitsPerCase : quantity;
+    stockNeeded.push({ skuId: sku.id, name: sku.name, units });
+  }
+
+  const coolerDiscount = coolerSubtotal * coolerDiscountPct(coolerSubtotal);
+  return { orderItems, stockNeeded, subtotal, coolerDiscount };
+}
+
+// Runs the actual atomic write: stock decrement, promo redemption, and the
+// Order row itself, all in one transaction. Called directly for COD/EFT
+// (payment happens at the door / independently), and from the Yoco
+// webhook handler for card (only after Yoco confirms payment succeeded).
+async function createOrderTransaction({ userId, address, customerName, customerPhone, paymentMethod, promoCode, status, priced }) {
+  const { orderItems, stockNeeded, subtotal, coolerDiscount } = priced;
+
+  let promo = null;
+  let promoDiscount = 0;
+  if (promoCode) {
+    const result = await checkPromoCode(promoCode, subtotal - coolerDiscount);
+    if (result.error) {
+      const err = new Error("PROMO_INVALID");
+      err.detail = result.error;
+      throw err;
+    }
+    promo = result.promo;
+    if (promo) promoDiscount = Math.round((subtotal - coolerDiscount) * (promo.discountPct / 100) * 100) / 100;
+  }
+
+  const delivery = subtotal > 200 ? 0 : 50;
+  const total = Math.round((subtotal - coolerDiscount - promoDiscount + delivery) * 100) / 100;
+  const code = "EKO-" + Math.random().toString(36).slice(2, 8).toUpperCase();
+
+  // Decrement stock and increment the promo's usage count in the same
+  // transaction as the order write — avoids two races: two customers
+  // both slipping in under a promo's maxUses cap, or both buying the
+  // last few units of something between the check and the write.
+  return prisma.$transaction(async (tx) => {
+    for (const need of stockNeeded) {
+      const { count } = await tx.skuItem.updateMany({
+        where: { id: need.skuId, stock: { gte: need.units } },
+        data: { stock: { decrement: need.units } },
+      });
+      if (count === 0) {
+        const err = new Error("OUT_OF_STOCK");
+        err.productName = need.name;
+        throw err;
+      }
+    }
+    if (promo) {
+      const { count } = await tx.promoCode.updateMany({
+        where: {
+          id: promo.id,
+          OR: [{ maxUses: null }, { usedCount: { lt: promo.maxUses } }],
+        },
+        data: { usedCount: { increment: 1 } },
+      });
+      if (count === 0) throw new Error("PROMO_RACE_LOST");
+    }
+    return tx.order.create({
+      data: {
+        code,
+        userId,
+        address,
+        customerName,
+        customerPhone,
+        paymentMethod: paymentMethod || "cod",
+        promoCode: promo ? promo.code : null,
+        promoDiscount: promo ? promoDiscount : null,
+        total,
+        status: status || undefined, // undefined = schema default (PAYMENT_PENDING)
+        items: { create: orderItems },
+      },
+      include: { items: true },
+    });
+  });
+}
+
+const DIRECT_PAYMENT_METHODS = new Set(["cod", "eft"]);
+
+// 📦 CREATE ORDER (customer, auth-gated) — COD/EFT only. Card goes through
+// POST /order/checkout-session + the Yoco webhook instead, since payment
+// isn't confirmed yet at the moment this would otherwise be called.
 // Only skuId + quantity + purchaseType come from the client — every price
 // is recomputed here from the current DB values. This closes the exploit
 // where an editable price field on the client could set its own total.
 app.post("/order", requireUser, async (req, res) => {
   try {
     const { address, items, customerName, customerPhone, paymentMethod, promoCode } = req.body;
-    if (!address || typeof address !== "string" || address.trim().length < 5) {
-      return res.status(400).json({ error: "Please enter a valid delivery address" });
-    }
-    if (!Array.isArray(items) || items.length === 0) {
-      return res.status(400).json({ error: "items are required" });
-    }
-    const digitsOnly = (customerPhone || "").replace(/\D/g, "");
-    if (digitsOnly.length < 9 || digitsOnly.length > 12) {
-      return res.status(400).json({ error: "Please enter a valid phone number" });
-    }
-    // Card isn't real yet (no gateway wired up) — reject it server-side too,
-    // not just disable the radio client-side, so nothing but cod/eft can
-    // ever land in the DB regardless of what a client sends.
-    const ALLOWED_PAYMENT_METHODS = new Set(["cod", "eft"]);
-    if (paymentMethod && !ALLOWED_PAYMENT_METHODS.has(paymentMethod)) {
-      return res.status(400).json({ error: "Invalid payment method" });
-    }
+    const priced = await validateAndPriceOrder({ address, items, customerPhone, paymentMethod, allowedPaymentMethods: DIRECT_PAYMENT_METHODS });
+    if (priced.error) return res.status(400).json({ error: priced.error });
 
-    const skuIds = items.map((i) => i.skuId).filter(Boolean);
-    const skus = await prisma.skuItem.findMany({ where: { id: { in: skuIds } } });
-    const skuMap = new Map(skus.map((s) => [s.id, s]));
-
-    let subtotal = 0;
-    let coolerSubtotal = 0;
-    const orderItems = [];
-    const stockNeeded = []; // { skuId, name, units } — units are individual bottles, not cases
-
-    for (const i of items) {
-      const sku = skuMap.get(i.skuId);
-      const quantity = parseInt(i.quantity, 10);
-      if (!sku || !Number.isInteger(quantity) || quantity <= 0) {
-        return res.status(400).json({ error: `Invalid item: ${i.skuId}` });
-      }
-      const unitPrice = i.purchaseType === "case" ? sku.retailCaseZAR / sku.unitsPerCase : sku.retailSingleZAR;
-      const itemTotal = unitPrice * quantity;
-      subtotal += itemTotal;
-      if (COOLER_ELIGIBLE.has(sku.category)) coolerSubtotal += itemTotal;
-
-      orderItems.push({ skuId: sku.id, name: sku.name, price: unitPrice, quantity });
-      const units = i.purchaseType === "case" ? quantity * sku.unitsPerCase : quantity;
-      stockNeeded.push({ skuId: sku.id, name: sku.name, units });
-    }
-
-    const coolerDiscount = coolerSubtotal * coolerDiscountPct(coolerSubtotal);
-
-    // Promo discount applies to whatever's left after the Cooler Box
-    // discount, same "stack on the discounted subtotal" order most retail
-    // checkouts use. Re-validated here regardless of what the client
-    // showed — the only place a code actually gets redeemed.
-    let promo = null;
-    let promoDiscount = 0;
-    if (promoCode) {
-      const result = await checkPromoCode(promoCode, subtotal - coolerDiscount);
-      if (result.error) return res.status(400).json({ error: result.error });
-      promo = result.promo;
-      if (promo) promoDiscount = Math.round((subtotal - coolerDiscount) * (promo.discountPct / 100) * 100) / 100;
-    }
-
-    const delivery = subtotal > 200 ? 0 : 50;
-    const total = Math.round((subtotal - coolerDiscount - promoDiscount + delivery) * 100) / 100;
-
-    const code = "EKO-" + Math.random().toString(36).slice(2, 8).toUpperCase();
-
-    // Decrement stock and increment the promo's usage count in the same
-    // transaction as the order write — avoids two races: two customers
-    // both slipping in under a promo's maxUses cap, or both buying the
-    // last few units of something between the check and the write.
-    const order = await prisma.$transaction(async (tx) => {
-      for (const need of stockNeeded) {
-        const { count } = await tx.skuItem.updateMany({
-          where: { id: need.skuId, stock: { gte: need.units } },
-          data: { stock: { decrement: need.units } },
-        });
-        if (count === 0) {
-          const err = new Error("OUT_OF_STOCK");
-          err.productName = need.name;
-          throw err;
-        }
-      }
-      if (promo) {
-        const { count } = await tx.promoCode.updateMany({
-          where: {
-            id: promo.id,
-            OR: [{ maxUses: null }, { usedCount: { lt: promo.maxUses } }],
-          },
-          data: { usedCount: { increment: 1 } },
-        });
-        if (count === 0) throw new Error("PROMO_RACE_LOST");
-      }
-      return tx.order.create({
-        data: {
-          code,
-          userId: req.user.id,
-          address,
-          customerName,
-          customerPhone,
-          paymentMethod: paymentMethod || "cod",
-          promoCode: promo ? promo.code : null,
-          promoDiscount: promo ? promoDiscount : null,
-          total,
-          items: { create: orderItems },
-        },
-        include: { items: true },
-      });
+    const order = await createOrderTransaction({
+      userId: req.user.id,
+      address,
+      customerName,
+      customerPhone,
+      paymentMethod,
+      promoCode,
+      priced,
     });
     console.log("New order:", order.code);
+    sendOrderConfirmationEmail(order, req.user.email).catch((e) => console.error("[email] confirmation failed:", e));
+    sendAdminOrderAlertEmail(order).catch((e) => console.error("[email] admin alert failed:", e));
     res.json({ message: "Order received", order });
   } catch (err) {
+    if (err.message === "PROMO_INVALID") return res.status(400).json({ error: err.detail });
     if (err.message === "PROMO_RACE_LOST") {
       return res.status(400).json({ error: "That promo code just reached its usage limit — remove it and try again" });
     }
@@ -392,6 +433,190 @@ app.post("/order", requireUser, async (req, res) => {
     }
     console.error(err);
     res.status(500).json({ error: "Failed to create order" });
+  }
+});
+
+// 💳 PAYMENT CONFIG — lets checkout.html know whether to enable the card
+// radio at all. Stays off (disabled, as it's always been) until
+// YOCO_SECRET_KEY is actually set in the environment.
+app.get("/api/payment-config", (req, res) => {
+  res.json({ cardEnabled: isYocoConfigured() });
+});
+
+function appBaseUrl(req) {
+  return process.env.APP_BASE_URL || `${req.protocol}://${req.get("host")}`;
+}
+
+// 💳 CARD CHECKOUT — start a Yoco hosted checkout. Doesn't create an Order
+// or touch stock/promo yet; that only happens once POST /webhooks/yoco
+// confirms the payment actually succeeded. Stores the validated order
+// payload in PendingCheckout so the webhook has everything it needs to
+// finish the job without trusting anything the client sends at that point.
+app.post("/order/checkout-session", requireUser, async (req, res) => {
+  if (!isYocoConfigured()) return res.status(400).json({ error: "Card payment isn't available yet" });
+  try {
+    const { address, items, customerName, customerPhone, promoCode } = req.body;
+    const priced = await validateAndPriceOrder({
+      address,
+      items,
+      customerPhone,
+      paymentMethod: "card",
+      allowedPaymentMethods: new Set(["card"]),
+    });
+    if (priced.error) return res.status(400).json({ error: priced.error });
+
+    // Non-mutating promo preview — the real redemption (usedCount
+    // increment) only happens inside createOrderTransaction, after payment
+    // is confirmed. This is just to quote Yoco the correct final amount.
+    let promoDiscount = 0;
+    if (promoCode) {
+      const result = await checkPromoCode(promoCode, priced.subtotal - priced.coolerDiscount);
+      if (result.error) return res.status(400).json({ error: result.error });
+      if (result.promo) promoDiscount = Math.round((priced.subtotal - priced.coolerDiscount) * (result.promo.discountPct / 100) * 100) / 100;
+    }
+    const delivery = priced.subtotal > 200 ? 0 : 50;
+    const total = Math.round((priced.subtotal - priced.coolerDiscount - promoDiscount + delivery) * 100) / 100;
+    const amountCents = Math.round(total * 100);
+
+    const base = appBaseUrl(req);
+    // The PendingCheckout id isn't known until after we've created it, but
+    // Yoco needs redirect URLs up front — create the DB row first with a
+    // placeholder Yoco id, then update it once Yoco responds. (Two round
+    // trips, but this only runs once per checkout attempt, not per order.)
+    const pending = await prisma.pendingCheckout.create({
+      data: {
+        userId: req.user.id,
+        yocoCheckoutId: `pending-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        amountCents,
+        // customerEmail is captured here (from the verified session) rather
+        // than looked up later — the webhook handler has no user session to
+        // work from, and fetching it via Supabase's admin API would need a
+        // service-role key this app doesn't otherwise need or have.
+        payload: JSON.stringify({ address, items, customerName, customerPhone, promoCode: promoCode || null, customerEmail: req.user.email }),
+      },
+    });
+
+    let checkout;
+    try {
+      checkout = await createYocoCheckout({
+        amountCents,
+        currency: "ZAR",
+        successUrl: `${base}/order-confirmation.html?pending=${pending.id}`,
+        cancelUrl: `${base}/checkout.html`,
+        failureUrl: `${base}/checkout.html?paymentFailed=1`,
+        metadata: { pendingCheckoutId: pending.id, userId: req.user.id },
+      });
+    } catch (err) {
+      await prisma.pendingCheckout.delete({ where: { id: pending.id } }).catch(() => {});
+      throw err;
+    }
+
+    await prisma.pendingCheckout.update({ where: { id: pending.id }, data: { yocoCheckoutId: checkout.id } });
+    res.json({ redirectUrl: checkout.redirectUrl });
+  } catch (err) {
+    console.error("[yoco] Failed to start checkout:", err);
+    res.status(500).json({ error: "Failed to start card checkout" });
+  }
+});
+
+// Polled by order-confirmation.html while it's waiting for the webhook to
+// land — Yoco's redirect can beat the webhook there by a second or two.
+app.get("/api/checkout-session/:id/status", requireUser, async (req, res) => {
+  try {
+    const pending = await prisma.pendingCheckout.findUnique({ where: { id: req.params.id } });
+    if (!pending || pending.userId !== req.user.id) return res.status(404).json({ error: "Not found" });
+    res.json({ status: pending.status, orderCode: pending.orderCode || null });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to check status" });
+  }
+});
+
+// 🪝 YOCO WEBHOOK — the only thing this integration actually trusts for
+// "was this paid". Verifies the signature, re-fetches the checkout from
+// Yoco directly (never trusts the webhook payload's own claim of success),
+// then runs the same order-creation transaction COD/EFT uses.
+app.post("/webhooks/yoco", async (req, res) => {
+  const signatureValid = verifyYocoWebhookSignature(req.headers, req.rawBody);
+  if (!signatureValid) {
+    console.error("[yoco webhook] Invalid or unverifiable signature — rejecting");
+    return res.status(401).json({ error: "Invalid signature" });
+  }
+
+  const checkoutId = extractCheckoutId(req.body);
+  if (!checkoutId) {
+    console.error("[yoco webhook] Could not find a checkout id in payload:", JSON.stringify(req.body));
+    return res.status(400).json({ error: "No checkout id in payload" });
+  }
+
+  // Deliberately not filtering on req.body.type (e.g. "payment.succeeded")
+  // here — the real gate is checkoutLooksPaid() below, which is based on
+  // a fresh re-fetch from Yoco's own API, not on what this payload claims.
+  // A webhook for any other event type on a real checkout just resolves to
+  // "not paid yet" and returns harmlessly, so skipping the type check
+  // doesn't weaken anything and keeps this working even if the exact
+  // event-type string turns out to differ from what's assumed here.
+
+  // Always ack fast — Yoco retries on non-2xx, and the actual work below
+  // is idempotent (guarded by PendingCheckout.status), so double delivery
+  // is safe either way.
+  res.json({ received: true });
+
+  try {
+    const pending = await prisma.pendingCheckout.findUnique({ where: { yocoCheckoutId: checkoutId } });
+    if (!pending) {
+      console.error("[yoco webhook] No PendingCheckout for Yoco checkout:", checkoutId);
+      return;
+    }
+    if (pending.status !== "PENDING") return; // already handled — idempotent no-op
+
+    const checkout = await getYocoCheckout(checkoutId);
+    if (!checkoutLooksPaid(checkout)) {
+      console.log(`[yoco webhook] Checkout ${checkoutId} not in a paid state yet:`, checkout.status || checkout.state);
+      return;
+    }
+
+    const payload = JSON.parse(pending.payload);
+    const priced = await validateAndPriceOrder({
+      address: payload.address,
+      items: payload.items,
+      customerPhone: payload.customerPhone,
+      paymentMethod: "card",
+      allowedPaymentMethods: new Set(["card"]),
+    });
+    if (priced.error) throw new Error(priced.error);
+
+    const order = await createOrderTransaction({
+      userId: pending.userId,
+      address: payload.address,
+      customerName: payload.customerName,
+      customerPhone: payload.customerPhone,
+      paymentMethod: "card",
+      promoCode: payload.promoCode,
+      status: "PENDING", // card is pre-paid — skip PAYMENT_PENDING, ready to dispatch
+      priced,
+    });
+
+    await prisma.pendingCheckout.update({
+      where: { id: pending.id },
+      data: { status: "COMPLETED", orderCode: order.code, completedAt: new Date() },
+    });
+    console.log(`[yoco webhook] Order ${order.code} created from checkout ${checkoutId}`);
+
+    sendOrderConfirmationEmail(order, payload.customerEmail).catch((e) => console.error("[email] confirmation failed:", e));
+    sendAdminOrderAlertEmail(order).catch((e) => console.error("[email] admin alert failed:", e));
+  } catch (err) {
+    // The customer has already paid at this point — this is the one
+    // failure mode that needs a human, not just a log line.
+    console.error("[yoco webhook] Failed to create order after payment:", err);
+    const pending = await prisma.pendingCheckout.findUnique({ where: { yocoCheckoutId: checkoutId } }).catch(() => null);
+    if (pending) {
+      await prisma.pendingCheckout.update({
+        where: { id: pending.id },
+        data: { status: "FAILED_NEEDS_REFUND", failureReason: err.message },
+      }).catch(() => {});
+      sendPaymentFailureAlertEmail(pending, err.message).catch((e) => console.error("[email] failure alert failed:", e));
+    }
   }
 });
 

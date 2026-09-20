@@ -21,8 +21,8 @@ profile.html, track.html           ├─ /api/my-orders (auth-gated)
 **Key integrations:**
 - Supabase Auth (customer login + admin stopgap)
 - Supabase Postgres (via Prisma)
-- Resend (order confirmations, admin alerts) — Phase 2, not yet wired
-- Yoco / PayFast (payment gateway) — Phase 2, not yet wired
+- Resend (order confirmations, admin alerts) — wired, inactive until `RESEND_API_KEY` is set
+- Yoco (card payments) — code-complete, inactive until `YOCO_SECRET_KEY`/`YOCO_WEBHOOK_SECRET` are set and verified against a real Yoco account (see LAUNCH_CHECKLIST.md)
 - WhatsApp Business API (driver dispatch) — currently manual `wa.me` deep links from the admin dashboard
 
 ---
@@ -74,6 +74,8 @@ ekoyini-webapp/
 │   └── enrich-images.js             Optional Phase 2: real product photos via Open Food Facts API
 │
 ├── server.js                        Express API — all backend logic
+├── payments.js                      Yoco checkout + webhook signature verification
+├── emails.js                        Resend transactional email (order confirmation, admin alerts)
 ├── package.json                     Dependencies + npm scripts
 ├── render.yaml                      Render deploy config
 ├── .env.example                     Env var template
@@ -143,8 +145,8 @@ this feature is built for).
 - **Admin auth is per-person and role-based.** `/admin/admin.html` logs admins in with real Supabase Auth accounts; `requireAdmin` checks the logged-in user's email against `ADMIN_EMAILS` (always `SUPER_ADMIN`, the root bootstrap) or the `AdminUser` table (delegated admins with an actual `SUPER_ADMIN`/`DISPATCHER` role). Sensitive routes — delete order, edit inventory, manage other admins — are additionally gated by `requireSuperAdmin`, enforced server-side, not just hidden in the UI. `ADMIN_API_TOKEN` still works as a fallback for scripts/curl and as a bootstrap path — unset it once every admin has a real account.
 
 ### Still Track A / known limitations
-- **No real age verification** — UI checkbox only; needs ID capture at delivery.
-- **No real payment** — COD, manual EFT; Yoco/PayFast integration is Phase 2.
+- **Age verification stays self-attestation by design** — not a gap. Real ID scanning needs a paid vendor and isn't the industry norm (Uber Eats and most alcohol delivery apps do the same "take their word for it, use judgment on an obvious minor" approach). Revisit only for a specific compliance need, not by default.
+- **Card payment is code-complete but unverified against a live Yoco account** — see `payments.js` and the LAUNCH_CHECKLIST entry. Stays inactive until `YOCO_SECRET_KEY`/`YOCO_WEBHOOK_SECRET` are set and tested against a real sandbox checkout.
 
 ---
 
@@ -157,9 +159,13 @@ this feature is built for).
 - `GET /api/order/:code/track` — public order status lookup (also returns `rating`/`ratingComment` if set)
 - `GET /api/stats` — live counts for the homepage trust strip: product count, verified tavern count, distinct townships served
 - `POST /api/promo/validate` — preview a promo code against a subtotal (`{ code, subtotal }`); no side effects, doesn't redeem it
+- `GET /api/payment-config` — `{ cardEnabled }`, tells checkout.html whether to enable the card radio (true only once `YOCO_SECRET_KEY` is set)
+- `POST /webhooks/yoco` — Yoco's own webhook target, not for browser use; signature-verified, see `payments.js`
 
 ### Customer (`Authorization: Bearer <supabase_access_token>`)
-- `POST /order` — create order; server recomputes every price and the Cooler Box discount
+- `POST /order` — create order for COD/EFT; server recomputes every price and the Cooler Box discount. Rejects `paymentMethod: "card"` — that goes through the two routes below instead.
+- `POST /order/checkout-session` — start a Yoco card checkout (`{ address, items, customerName, customerPhone, promoCode? }`); returns `{ redirectUrl }`. Doesn't create an Order yet — that happens via the webhook once payment's confirmed.
+- `GET /api/checkout-session/:id/status` — poll while waiting on the webhook; `{ status: "PENDING"|"COMPLETED"|"FAILED_NEEDS_REFUND", orderCode? }`
 - `GET /api/my-orders` — the logged-in user's order history
 - `POST /order/:code/rate` — rate a delivered order (`{ rating: 1-5, comment? }`); only the order's own owner, only once DELIVERED, once per order
 

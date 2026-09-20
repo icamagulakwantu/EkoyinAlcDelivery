@@ -141,7 +141,18 @@
 
   <!-- PAGE -->
   <div class="page">
-    <div class="confirmation-container">
+    <!-- PENDING STATE (card payment — waiting on Yoco's webhook) -->
+    <div class="confirmation-container" id="pendingState" style="display:none;">
+      <div class="confirmation-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--gold-deep)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="64" height="64">
+          <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+        </svg>
+      </div>
+      <h1>Confirming your payment…</h1>
+      <p id="pendingMessage">Hang tight — this usually takes a few seconds.</p>
+    </div>
+
+    <div class="confirmation-container" id="confirmedState">
       <div class="confirmation-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="var(--gold-deep)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="64" height="64">
           <circle cx="12" cy="12" r="10"/><path d="M8 12.5l2.5 2.5L16 9.5"/>
@@ -217,10 +228,56 @@
   <!-- TOAST -->
   <div class="toast" id="toastEl"></div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="auth.js"></script>
+  <script src="script.js"></script>
   <script>
   const params = new URLSearchParams(window.location.search);
-  const orderCode = params.get('code') || 'EKO-?????';
-  document.getElementById('orderCode').textContent = orderCode;
+  let orderCode = params.get('code') || 'EKO-?????';
+  const pendingId = params.get('pending');
+
+  if (pendingId) {
+    document.getElementById('confirmedState').style.display = 'none';
+    document.getElementById('pendingState').style.display = 'block';
+    pollCheckoutStatus(pendingId);
+  } else {
+    document.getElementById('orderCode').textContent = orderCode;
+  }
+
+  async function pollCheckoutStatus(id, attempt = 0) {
+    try {
+      const res = await authedFetch(`/api/checkout-session/${id}/status`);
+      if (!res.ok) throw new Error('Lookup failed');
+      const data = await res.json();
+
+      if (data.status === 'COMPLETED') {
+        orderCode = data.orderCode;
+        EkoyiniCart.clear();
+        localStorage.removeItem('ekoyini_checkout_data');
+        localStorage.removeItem('ekoyini_promo_code');
+        document.getElementById('orderCode').textContent = orderCode;
+        document.getElementById('pendingState').style.display = 'none';
+        document.getElementById('confirmedState').style.display = 'block';
+        return;
+      }
+      if (data.status === 'FAILED_NEEDS_REFUND') {
+        document.getElementById('pendingMessage').textContent =
+          "Your payment went through but we hit a snag creating the order. We've been alerted and will sort this out — contact support with this reference: " + id;
+        return;
+      }
+      // Still PENDING — Yoco's webhook hasn't landed yet. Keep polling for
+      // up to ~40s (payment webhooks are usually near-instant).
+      if (attempt >= 20) {
+        document.getElementById('pendingMessage').textContent =
+          "This is taking longer than expected. If you completed payment, check Track in a minute — your order code will be waiting for you there once it's through.";
+        return;
+      }
+      setTimeout(() => pollCheckoutStatus(id, attempt + 1), 2000);
+    } catch (err) {
+      console.error(err);
+      document.getElementById('pendingMessage').textContent = 'Something went wrong checking your payment. Please check Track shortly, or contact support.';
+    }
+  }
 
   function copyCode() {
     navigator.clipboard.writeText(orderCode).then(() => {

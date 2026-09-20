@@ -18,20 +18,43 @@ or real orders until the Track B items are checked off.
 
 ## 🚧 Before taking real orders (Track B)
 
-- [ ] **Real payment gateway.** Checkout only offers COD / EFT / a disabled
-      "card" option. Wire up Yoco or PayFast before advertising card
-      payments.
-- [ ] **Real age verification.** The age gate is a self-attestation
-      checkbox. Add ID capture at delivery before relying on it for
-      compliance.
+- [x] **Real payment gateway (Yoco), code-complete but unverified.** Full
+      Checkout API integration: `POST /order/checkout-session` starts a
+      Yoco hosted checkout without creating an Order yet; `POST
+      /webhooks/yoco` verifies the webhook signature (HMAC-SHA256,
+      Standard Webhooks/Svix-style), independently re-fetches the checkout
+      from Yoco's own API (never trusts the webhook payload or the
+      success-redirect alone, per Yoco's own guidance), and only then runs
+      the same order-creation transaction COD/EFT already uses — so stock
+      and promo codes are enforced identically regardless of payment
+      method. Stays fully inactive (card option disabled in the UI, `POST
+      /order` still rejects `paymentMethod: "card"` outright) until
+      `YOCO_SECRET_KEY` and `YOCO_WEBHOOK_SECRET` are set.
+      **⚠ Built against Yoco's public docs, not yet tested against a real
+      Yoco account** — the webhook payload field names are best-effort;
+      see the warning at the top of `payments.js`. Test with a Yoco
+      sandbox checkout and watch the server logs on the first few real
+      webhook deliveries before trusting this for actual money.
+- [x] **Age verification — deliberately staying self-attestation.** Not a
+      gap: this was a considered decision, not an oversight. Real ID
+      scanning needs a paid vendor (BlinkID, Smile ID, Onfido, etc.) and
+      isn't how the rest of the industry handles it either — Uber Eats and
+      most alcohol delivery apps take the same "confirm you're 18+, use
+      judgment on an obvious minor" approach this app already has. Revisit
+      only if there's a specific compliance requirement forcing the issue,
+      not by default.
 - [x] **Admin auth.** `/admin/admin.html` now logs admins in with real
       Supabase Auth accounts; the server checks the logged-in user's email
       against the `ADMIN_EMAILS` allowlist on every admin route. Sign each
       admin up as a customer account, then add their email to
       `ADMIN_EMAILS`. `ADMIN_API_TOKEN` still works as a scripts/curl
       fallback — unset it once every admin has a real account.
-- [ ] **Resend email.** `.env.example` has a `RESEND_API_KEY` slot but
-      nothing sends order confirmation or admin-alert emails yet.
+- [x] **Resend email.** `POST /order` (COD/EFT) and the Yoco webhook
+      (card, once payment's confirmed) both send an order-confirmation
+      email to the customer and an alert to every `ADMIN_EMAILS` address,
+      via `emails.js`. Fully inactive — logs and returns, never throws —
+      until `RESEND_API_KEY` is set; defaults to Resend's zero-setup
+      `onboarding@resend.dev` sender until you verify your own domain.
 - [ ] **WhatsApp Business API.** Driver/tavern dispatch messages currently
       open `wa.me` deep links that the admin has to manually send — fine
       for a founder-run MVP, not for scale.

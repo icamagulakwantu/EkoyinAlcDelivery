@@ -140,11 +140,11 @@
           <div class="p-desc">Pay the driver when they arrive</div>
         </div>
       </div>
-      <div class="payment-option disabled">
-        <input type="radio" name="payment" value="card" disabled>
+      <div class="payment-option disabled" id="cardPaymentOption" data-method="card">
+        <input type="radio" name="payment" value="card" id="cardPaymentRadio" disabled>
         <div>
           <div class="p-label">Debit/Credit Card</div>
-          <div class="p-desc">Coming soon — not available yet</div>
+          <div class="p-desc" id="cardPaymentDesc">Coming soon — not available yet</div>
         </div>
       </div>
       <div class="payment-option" data-method="eft" onclick="selectPayment('eft')">
@@ -212,6 +212,21 @@
       setTimeout(() => { window.location.href = 'cart.html'; }, 1200);
       return;
     }
+
+    // If Yoco redirected back here after a failed/cancelled card payment.
+    if (new URLSearchParams(window.location.search).get('paymentFailed')) {
+      showToast('Card payment didn\'t go through — try again or choose another method');
+    }
+
+    fetch('/api/payment-config').then(r => r.json()).then(cfg => {
+      if (cfg.cardEnabled) {
+        const opt = document.getElementById('cardPaymentOption');
+        opt.classList.remove('disabled');
+        opt.onclick = () => selectPayment('card');
+        document.getElementById('cardPaymentRadio').disabled = false;
+        document.getElementById('cardPaymentDesc').textContent = 'Secure checkout via Yoco';
+      }
+    }).catch(() => {});
 
     try {
       const res = await fetch('/api/products');
@@ -379,18 +394,38 @@
     btn.disabled = true;
     btn.textContent = 'Placing order…';
 
+    const orderPayload = {
+      address,
+      items,
+      customerName: document.getElementById('customerName').value.trim(),
+      customerPhone: document.getElementById('phoneNumber').value.trim(),
+      promoCode: appliedPromo ? appliedPromo.code : null,
+    };
+
     try {
+      if (selectedPayment === 'card') {
+        // Card doesn't create an order yet — Yoco needs to confirm payment
+        // first (via webhook). Redirect to Yoco's hosted page; cart and
+        // checkout data stay put so an abandoned/failed payment doesn't
+        // lose the customer's cart.
+        const res = await authedFetch('/order/checkout-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(orderPayload),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error || 'Could not start card checkout');
+        }
+        const data = await res.json();
+        window.location.href = data.redirectUrl;
+        return;
+      }
+
       const res = await authedFetch('/order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          address,
-          items,
-          customerName: document.getElementById('customerName').value.trim(),
-          customerPhone: document.getElementById('phoneNumber').value.trim(),
-          paymentMethod: selectedPayment,
-          promoCode: appliedPromo ? appliedPromo.code : null,
-        }),
+        body: JSON.stringify({ ...orderPayload, paymentMethod: selectedPayment }),
       });
 
       if (!res.ok) {

@@ -119,6 +119,29 @@ model Tavern {
   orders Order[]
 }
 
+// ── Card checkout (Yoco) ─────────────────────────────────
+// Card payment can't create an Order the moment checkout starts — the
+// customer hasn't paid yet, and Yoco's own docs say never trust the
+// success-redirect for confirmation, only the webhook. So this table
+// holds the full order payload + the amount actually quoted to Yoco
+// while the customer is on Yoco's hosted page; POST /webhooks/yoco
+// verifies the payment actually succeeded, then (and only then) runs
+// the same order-creation path COD/EFT already uses, using the payload
+// stored here. Nothing here ever touches stock or a promo code's
+// usedCount — that still only happens inside the real order transaction.
+model PendingCheckout {
+  id              String    @id @default(cuid())
+  userId          String
+  yocoCheckoutId  String    @unique
+  amountCents     Int
+  payload         String // JSON-encoded: { address, items, customerName, customerPhone, promoCode }
+  status          String    @default("PENDING") // PENDING | COMPLETED | FAILED_NEEDS_REFUND
+  orderCode       String? // set once the real Order is created
+  failureReason   String?
+  createdAt       DateTime  @default(now())
+  completedAt     DateTime?
+}
+
 // ── Promo Codes ──────────────────────────────────────────
 model PromoCode {
   id          String    @id @default(cuid())
