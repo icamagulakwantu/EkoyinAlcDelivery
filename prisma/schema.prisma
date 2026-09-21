@@ -177,6 +177,11 @@ model Order {
   address       String
   customerName  String?
   customerPhone String?
+  // Captured at creation (same reason customerName/customerPhone are
+  // denormalized here rather than looked up live) — needed to email an
+  // EFT payment confirmation later, after the request that created the
+  // Supabase Auth session is long gone.
+  customerEmail String?
   paymentMethod String      @default("cod")
   status        OrderStatus @default(PAYMENT_PENDING)
   promoCode     String?

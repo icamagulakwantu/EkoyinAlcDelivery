@@ -466,6 +466,11 @@ body {
                                 font-weight: bold;
 }
 
+.btn-confirm-payment {
+        background: #7a5c00;
+            color: white;
+}
+
 .btn-assign {
         background: black;
             color: white;

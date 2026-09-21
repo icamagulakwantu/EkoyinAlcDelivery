@@ -59,6 +59,14 @@
     <button class="secondary-btn" style="margin-top:12px;max-width:120px;" onclick="logout()">Log out</button>
   </header>
 
+  <!-- WhatsApp dispatch messages go out from whichever device is logged
+       into WhatsApp on this page's browser — this reminder exists because
+       there's no way for the app itself to force that to be a specific
+       number; it depends on the admin's own device being linked. -->
+  <div style="background:#fff8e1;border-bottom:1px solid #e8dcc0;padding:10px 16px;font-size:12px;color:#7a5c00;text-align:center;">
+    📱 Dispatch WhatsApp messages send from <strong>this device's</strong> linked WhatsApp — make sure it's linked to the official Ekoyini number, <strong>064 004 5465</strong>, before dispatching.
+  </div>
+
   <!-- SECTION NAV — Inventory/Admins only shown once /admin/me confirms role -->
   <div class="section-nav">
     <button class="section-tab active" id="sectionTabOrders" onclick="showSection('orders', this)">Orders</button>
@@ -72,8 +80,8 @@
     <!-- FILTER TABS -->
     <div class="tabs">
       <button class="tab active" onclick="filterOrders('all', this)">All</button>
-      <button class="tab" onclick="filterOrders('PAYMENT_PENDING', this)">Payment Pending</button>
-      <button class="tab" onclick="filterOrders('PENDING', this)">Ready to Dispatch</button>
+      <button class="tab" onclick="filterOrders('PAYMENT_PENDING', this)">Awaiting EFT Payment</button>
+      <button class="tab" onclick="filterOrders('PENDING', this)">Packing</button>
       <button class="tab" onclick="filterOrders('DISPATCHED', this)">Dispatched</button>
       <button class="tab" onclick="filterOrders('DELIVERED', this)">Delivered</button>
     </div>

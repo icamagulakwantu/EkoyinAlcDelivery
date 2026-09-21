@@ -87,14 +87,23 @@
   <script src="script.js"></script>
   <script>
   renderNavAuth();
-  const STATUS_STEPS = [
-    { key: 'PAYMENT_PENDING', label: 'Order Placed', desc: 'We\'ve received your order.' },
-    { key: 'PENDING', label: 'Driver Assigned', desc: 'A tavern and driver have been matched to your order.' },
-    { key: 'DISPATCHED', label: 'On The Way', desc: 'Your driver has picked up your order and is heading your way.' },
-    { key: 'DELIVERED', label: 'Delivered', desc: 'Enjoy! Thanks for ordering with Ekoyini.' },
-  ];
+  // PAYMENT_PENDING only ever applies to EFT orders now (COD is paid at
+  // the door, card is confirmed automatically by the Yoco webhook) — the
+  // copy for both of the first two steps is payment-method-aware so an
+  // EFT customer actually sees "payment received," matching what happens
+  // server-side, rather than a generic label that doesn't mention payment.
+  function statusSteps(paymentMethod) {
+    const isEft = paymentMethod === 'eft';
+    return [
+      { key: 'PAYMENT_PENDING', label: isEft ? 'Awaiting Payment' : 'Order Placed', desc: isEft ? 'We\'ve received your order — awaiting your EFT payment.' : 'We\'ve received your order.' },
+      { key: 'PENDING', label: isEft ? 'Payment Received — Packing' : 'Confirmed — Packing', desc: isEft ? 'Payment received! Your order is being packed and a driver will collect it soon.' : 'Your order is confirmed and being packed — a driver will collect it soon.' },
+      { key: 'DISPATCHED', label: 'On The Way', desc: 'Your driver has picked up your order and is heading your way.' },
+      { key: 'DELIVERED', label: 'Delivered', desc: 'Enjoy! Thanks for ordering with Ekoyini.' },
+    ];
+  }
 
-  function renderTimeline(status) {
+  function renderTimeline(status, paymentMethod) {
+    const STATUS_STEPS = statusSteps(paymentMethod);
     const currentIdx = STATUS_STEPS.findIndex((s) => s.key === status);
     return STATUS_STEPS.map((s, i) => {
       const state = i < currentIdx ? 'done' : i === currentIdx ? 'done current' : '';
@@ -170,6 +179,18 @@
       if (!res.ok) throw new Error('Lookup failed');
       const order = await res.json();
 
+      // The actual "alert" the customer asked for: if this order's status
+      // moved on since the last time we checked (while this tab was open,
+      // or since they last visited), surface it as a toast — not just a
+      // passive timeline they have to notice changed on its own.
+      const seenKey = `ekoyini_track_seen_${order.code}`;
+      const lastSeen = localStorage.getItem(seenKey);
+      if (lastSeen && lastSeen !== order.status) {
+        const step = statusSteps(order.paymentMethod).find((s) => s.key === order.status);
+        if (step) showToast(step.desc, 5000);
+      }
+      localStorage.setItem(seenKey, order.status);
+
       result.innerHTML = `
         <div class="track-result-card">
           <div class="track-result-code">${order.code}</div>
@@ -177,7 +198,7 @@
           ${order.tavern ? `<div class="track-driver"><strong>${order.tavern.name}</strong> — picking up in ${order.tavern.area}${order.driverName ? `<br><strong>${order.driverName}</strong>${order.driverVehicle ? ` (${order.driverVehicle})` : ''} is heading your way from ${order.tavern.area}` : ''}</div>` : ''}
         </div>
         <div class="track-map" id="trackMap"></div>
-        <div class="track-timeline">${renderTimeline(order.status)}</div>
+        <div class="track-timeline">${renderTimeline(order.status, order.paymentMethod)}</div>
         ${order.status !== 'DELIVERED' ? '<div class="track-autorefresh">Refreshing automatically every 30s</div>' : ''}
         <div id="ratingSlot"></div>
       `;

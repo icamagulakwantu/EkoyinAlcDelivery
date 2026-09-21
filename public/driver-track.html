@@ -10,13 +10,15 @@
     .dt-logo { font-family: var(--font-display); font-size: 22px; font-weight: 700; color: var(--gold-deep); margin-bottom: 24px; }
     .dt-code { font-family: monospace; font-size: 18px; font-weight: 700; color: var(--terra-light); margin-bottom: 8px; }
     .dt-status { font-size: 13px; color: var(--muted); margin-bottom: 24px; max-width: 320px; line-height: 1.5; }
-    .dt-btn { background: var(--terra-light); color: #fff; border: none; padding: 16px 32px; border-radius: var(--r-sm); font-size: 15px; font-weight: 700; }
+    .dt-btn { background: var(--terra-light); color: #fff; border: none; padding: 16px 32px; border-radius: var(--r-sm); font-size: 15px; font-weight: 700; margin-bottom: 12px; }
     .dt-btn:disabled { opacity: 0.5; }
-    .dt-sharing { display: none; align-items: center; gap: 8px; background: var(--green-glow); color: var(--green-light); padding: 10px 18px; border-radius: 20px; font-size: 13px; font-weight: 700; }
+    .dt-btn-secondary { background: var(--green-light); }
+    .dt-sharing { display: none; align-items: center; gap: 8px; background: var(--green-glow); color: var(--green-light); padding: 10px 18px; border-radius: 20px; font-size: 13px; font-weight: 700; margin-bottom: 16px; }
     .dt-sharing.active { display: flex; }
     .dt-pulse { width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: dtpulse 1.4s ease-in-out infinite; }
     @keyframes dtpulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
     .dt-error { color: var(--terra); font-size: 12px; margin-top: 12px; max-width: 300px; }
+    .dt-done { color: var(--green-light); font-size: 16px; font-weight: 700; }
   </style>
 </head>
 <body>
@@ -24,10 +26,7 @@
     <div class="dt-logo">Ekoyini</div>
     <div id="dtBody">
       <div class="dt-code" id="dtCode">—</div>
-      <p class="dt-status">Tap below to share your live location with the customer while you're on your way. You can stop any time — just close this tab.</p>
-      <button class="dt-btn" id="dtStartBtn" onclick="startSharing()">Start Sharing My Location</button>
-      <div class="dt-sharing" id="dtSharing"><span class="dt-pulse"></span> Sharing live location</div>
-      <div class="dt-error" id="dtError"></div>
+      <p class="dt-status" id="dtLoadingMsg">Loading order…</p>
     </div>
   </div>
 
@@ -38,31 +37,122 @@
   document.getElementById('dtCode').textContent = code || 'No order code';
 
   let watchId = null;
+  let currentStatus = null;
+
+  async function init() {
+    if (!code || !token) {
+      renderError('This link is missing its order code or token — ask dispatch to resend it.');
+      return;
+    }
+    try {
+      const res = await fetch(`/api/order/${encodeURIComponent(code)}/track`);
+      if (!res.ok) { renderError('Order not found — check the link and try again.'); return; }
+      const order = await res.json();
+      currentStatus = order.status;
+      render();
+    } catch (err) {
+      console.error(err);
+      renderError('Couldn\'t load this order. Check your connection and try again.');
+    }
+  }
+
+  function render() {
+    const body = document.getElementById('dtBody');
+    if (currentStatus === 'PENDING') {
+      body.innerHTML = `
+        <div class="dt-code">${code}</div>
+        <p class="dt-status">This order is packed and ready. Tap below once you've collected it from the tavern.</p>
+        <button class="dt-btn" id="dtPickupBtn" onclick="confirmPickup()">Confirm Pickup</button>
+        <div class="dt-error" id="dtError"></div>`;
+    } else if (currentStatus === 'DISPATCHED') {
+      body.innerHTML = `
+        <div class="dt-code">${code}</div>
+        <p class="dt-status">Tap below to share your live location with the customer while you're on your way. You can stop any time — just close this tab.</p>
+        <button class="dt-btn" id="dtStartBtn" onclick="startSharing()">Start Sharing My Location</button>
+        <div class="dt-sharing" id="dtSharing"><span class="dt-pulse"></span> Sharing live location</div>
+        <button class="dt-btn dt-btn-secondary" id="dtDeliveredBtn" onclick="confirmDelivered()">Mark as Delivered</button>
+        <div class="dt-error" id="dtError"></div>`;
+    } else if (currentStatus === 'DELIVERED') {
+      body.innerHTML = `
+        <div class="dt-code">${code}</div>
+        <p class="dt-done">✓ Delivered — thanks for driving with Ekoyini!</p>`;
+      if (watchId != null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
+    } else {
+      body.innerHTML = `
+        <div class="dt-code">${code}</div>
+        <p class="dt-status">This order isn't ready for pickup yet.</p>`;
+    }
+  }
+
+  function renderError(msg) {
+    document.getElementById('dtBody').innerHTML = `<div class="dt-code">${code || '—'}</div><div class="dt-error">${msg}</div>`;
+  }
+
+  async function confirmPickup() {
+    const btn = document.getElementById('dtPickupBtn');
+    btn.disabled = true;
+    btn.textContent = 'Confirming…';
+    try {
+      const res = await fetch(`/order/${encodeURIComponent(code)}/confirm-pickup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to confirm pickup');
+      currentStatus = data.status;
+      render();
+    } catch (err) {
+      console.error(err);
+      btn.disabled = false;
+      btn.textContent = 'Confirm Pickup';
+      document.getElementById('dtError').textContent = err.message;
+    }
+  }
+
+  async function confirmDelivered() {
+    const btn = document.getElementById('dtDeliveredBtn');
+    btn.disabled = true;
+    btn.textContent = 'Confirming…';
+    try {
+      const res = await fetch(`/order/${encodeURIComponent(code)}/confirm-delivered`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to confirm delivery');
+      currentStatus = data.status;
+      render();
+    } catch (err) {
+      console.error(err);
+      btn.disabled = false;
+      btn.textContent = 'Mark as Delivered';
+      document.getElementById('dtError').textContent = err.message;
+    }
+  }
 
   function startSharing() {
-    if (!code || !token) {
-      showError('This link is missing its order code or token — ask dispatch to resend it.');
-      return;
-    }
     if (!navigator.geolocation) {
-      showError('Your browser doesn\'t support location sharing.');
+      document.getElementById('dtError').textContent = 'Your browser doesn\'t support location sharing.';
       return;
     }
-    document.getElementById('dtStartBtn').disabled = true;
-    document.getElementById('dtStartBtn').textContent = 'Requesting location access…';
+    const startBtn = document.getElementById('dtStartBtn');
+    startBtn.disabled = true;
+    startBtn.textContent = 'Requesting location access…';
 
     watchId = navigator.geolocation.watchPosition(
       (pos) => {
-        document.getElementById('dtStartBtn').style.display = 'none';
+        startBtn.style.display = 'none';
         document.getElementById('dtSharing').classList.add('active');
         document.getElementById('dtError').textContent = '';
         postLocation(pos.coords.latitude, pos.coords.longitude);
       },
       (err) => {
         console.error(err);
-        document.getElementById('dtStartBtn').disabled = false;
-        document.getElementById('dtStartBtn').textContent = 'Start Sharing My Location';
-        showError(err.code === 1 ? 'Location access was denied — enable it in your browser settings and try again.' : 'Couldn\'t get your location. Try again.');
+        startBtn.disabled = false;
+        startBtn.textContent = 'Start Sharing My Location';
+        document.getElementById('dtError').textContent = err.code === 1 ? 'Location access was denied — enable it in your browser settings and try again.' : 'Couldn\'t get your location. Try again.';
       },
       { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 }
     );
@@ -86,13 +176,11 @@
     }
   }
 
-  function showError(msg) {
-    document.getElementById('dtError').textContent = msg;
-  }
-
   window.addEventListener('beforeunload', () => {
     if (watchId != null) navigator.geolocation.clearWatch(watchId);
   });
+
+  init();
   </script>
 </body>
 </html>

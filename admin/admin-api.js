@@ -170,11 +170,18 @@ async function loadOrders() {
 
 function getActionButtons(order) {
     let buttons = '';
+    // EFT is the one payment method that needs a human to actually check
+    // the bank statement — COD is paid at the door and card is confirmed
+    // automatically by the Yoco webhook, so neither ever needs this button.
+    if (order.status === 'PAYMENT_PENDING' && order.paymentMethod === 'eft') {
+        buttons += `<button class="btn btn-confirm-payment" onclick="confirmPayment('${order.code}')">Confirm Payment Received</button>`;
+    }
     if (order.status === 'PAYMENT_PENDING' || order.status === 'PENDING') {
         buttons += `<button class="btn btn-assign" onclick="openAssignModal('${order.code}')">Assign</button>`;
     }
     if (order.status === 'PENDING' && order.tavern) {
-        buttons += `<button class="btn btn-dispatch" onclick="sendDispatchWhatsApp('${order.code}')">Send WhatsApp & Dispatch</button>`;
+        buttons += `<button class="btn btn-dispatch" onclick="sendDispatchWhatsApp('${order.code}')">Send WhatsApp to Tavern & Driver</button>`;
+        buttons += `<button class="btn btn-assign" onclick="markPickedUpManually('${order.code}')" title="Only if the driver can't use their own confirm-pickup link">Mark Picked Up (Manual)</button>`;
     }
     if (order.status === 'DISPATCHED') {
         buttons += `<button class="btn btn-deliver" onclick="markDelivered('${order.code}')">Deliver</button>`;
@@ -212,8 +219,8 @@ function formatCodFlagBadge(order) {
 
 function formatStatus(status) {
     const map = {
-        PAYMENT_PENDING: 'Payment Pending',
-        PENDING: 'Ready',
+        PAYMENT_PENDING: 'Awaiting EFT Payment',
+        PENDING: 'Packing',
         DISPATCHED: 'Dispatched',
         DELIVERED: 'Delivered',
     };
@@ -310,11 +317,11 @@ function sendDriverWhatsApp(orderCode, driverName, driverPhone, order) {
     const shareLink = order.driverShareToken
         ? `${window.location.origin}/driver-track.html?code=${encodeURIComponent(orderCode)}&token=${encodeURIComponent(order.driverShareToken)}`
         : null;
-    const message = `*Ekoyini Delivery - ${orderCode}*\n\nHi ${driverName}!\n\n*Pickup:* ${tavern.name} (${tavern.area})\n*Deliver to:* ${order.address}\n\n*Order:*\n${order.items.map(item => `${item.name} x${item.quantity}`).join('\n')}\n\n*Total:* R${order.total}\n*Order Code:* ${orderCode}\n${shareLink ? `\n*Share your live location so the customer can track you:*\n${shareLink}\n` : ''}\n*Customer will give you this code.*\nConfirm delivery by replying to this message.`;
+    const message = `*Ekoyini Delivery - ${orderCode}*\n\nHi ${driverName}!\n\n*Pickup:* ${tavern.name} (${tavern.area})\n*Deliver to:* ${order.address}\n\n*Order:*\n${order.items.map(item => `${item.name} x${item.quantity}`).join('\n')}\n\n*Total:* R${order.total}\n*Order Code:* ${orderCode}\n${shareLink ? `\n*Open this link once you've collected the order — confirm pickup, then share your live location so the customer can track you:*\n${shareLink}\n` : ''}\n*Customer will give you this code.*\nThe same link also lets you mark it delivered once it's dropped off.`;
     window.open(`https://wa.me/${driverPhone}?text=${encodeURIComponent(message)}`, '_blank');
 }
 
-async function sendDispatchWhatsApp(orderCode) {
+function sendDispatchWhatsApp(orderCode) {
     const order = allOrders.find(o => o.code === orderCode);
     if (!order || !order.tavern || !order.driverName) {
         alert('Please assign tavern and driver first');
@@ -323,8 +330,20 @@ async function sendDispatchWhatsApp(orderCode) {
     sendTavernWhatsApp(orderCode, order.tavern, order);
     sendDriverWhatsApp(orderCode, order.driverName, order.driverPhone, order);
 
-    // Sending the dispatch WhatsApp *is* the dispatch action — move the
-    // order to DISPATCHED so the "Deliver" button appears next.
+    // No status change here — the order moves to DISPATCHED when the
+    // driver taps "Confirm Pickup" on their own driver-track.html link
+    // (POST /order/:code/confirm-pickup), not just because a message was
+    // sent. See markPickedUpManually() for the fallback when a driver
+    // can't use that link.
+    alert('WhatsApp messages sent to tavern and driver! The order moves to Dispatched once the driver confirms pickup on their link.');
+}
+
+// Fallback for a driver who can't use the driver-track.html link (no
+// smartphone, bad signal) — an admin can still move the order forward
+// manually instead of it being stuck waiting on a confirmation that will
+// never come.
+async function markPickedUpManually(orderCode) {
+    if (!confirm('Mark this order as picked up / dispatched manually?')) return;
     try {
         const res = await adminFetch(`/order/${orderCode}/status`, {
             method: 'PATCH',
@@ -334,8 +353,27 @@ async function sendDispatchWhatsApp(orderCode) {
         loadOrders();
     } catch (err) {
         console.error(err);
+        alert('Failed to update status');
     }
-    alert('WhatsApp messages sent to tavern and driver!');
+}
+
+// EFT-only — check the bank statement for this order's amount before
+// clicking. This is the one alert the customer actually asked for: it
+// moves PAYMENT_PENDING → PENDING and triggers the "payment received,
+// order being packed" email server-side.
+async function confirmPayment(orderCode) {
+    if (!confirm('Confirm you\'ve verified this EFT payment in the bank statement?')) return;
+    try {
+        const res = await adminFetch(`/order/${orderCode}/confirm-payment`, { method: 'PATCH' });
+        if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(data.error || 'Failed to confirm payment');
+        }
+        loadOrders();
+    } catch (err) {
+        console.error(err);
+        alert(err.message || 'Failed to confirm payment');
+    }
 }
 
 // ============================================

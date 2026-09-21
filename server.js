@@ -12,7 +12,7 @@ const prisma = new PrismaClient();
 app.set("trust proxy", true);
 
 const { createYocoCheckout, getYocoCheckout, checkoutLooksPaid, verifyYocoWebhookSignature, extractCheckoutId, isYocoConfigured } = require("./payments.js");
-const { sendOrderConfirmationEmail, sendAdminOrderAlertEmail, sendPaymentFailureAlertEmail } = require("./emails.js");
+const { sendOrderConfirmationEmail, sendAdminOrderAlertEmail, sendPaymentFailureAlertEmail, sendPaymentConfirmedEmail } = require("./emails.js");
 
 app.use(express.static("public"));
 app.use("/admin", express.static("admin"));
@@ -445,7 +445,7 @@ async function validateAndPriceOrder({ address, items, customerPhone, paymentMet
 // Order row itself, all in one transaction. Called directly for COD/EFT
 // (payment happens at the door / independently), and from the Yoco
 // webhook handler for card (only after Yoco confirms payment succeeded).
-async function createOrderTransaction({ userId, address, customerName, customerPhone, paymentMethod, promoCode, status, priced, codFlagged, codFlagReason }) {
+async function createOrderTransaction({ userId, address, customerName, customerPhone, customerEmail, paymentMethod, promoCode, status, priced, codFlagged, codFlagReason }) {
   const { orderItems, stockNeeded, subtotal, coolerDiscount } = priced;
 
   let promo = null;
@@ -498,6 +498,7 @@ async function createOrderTransaction({ userId, address, customerName, customerP
         address,
         customerName,
         customerPhone,
+        customerEmail,
         paymentMethod: paymentMethod || "cod",
         promoCode: promo ? promo.code : null,
         promoDiscount: promo ? promoDiscount : null,
@@ -546,11 +547,18 @@ app.post("/order", requireUser, async (req, res) => {
       address,
       customerName,
       customerPhone,
+      customerEmail: req.user.email,
       paymentMethod,
       promoCode,
       priced,
       codFlagged,
       codFlagReason,
+      // EFT needs an admin to actually confirm the bank transfer landed —
+      // that's the only payment method that waits at PAYMENT_PENDING now.
+      // COD is paid at the door (nothing to confirm upfront) and card is
+      // already confirmed by the time the Yoco webhook creates the order,
+      // so both go straight to PENDING (packed/ready for pickup).
+      status: paymentMethod === "eft" ? "PAYMENT_PENDING" : "PENDING",
     });
     console.log("New order:", order.code);
     sendOrderConfirmationEmail(order, req.user.email).catch((e) => console.error("[email] confirmation failed:", e));
@@ -751,6 +759,7 @@ app.post("/webhooks/yoco", async (req, res) => {
       address: payload.address,
       customerName: payload.customerName,
       customerPhone: payload.customerPhone,
+      customerEmail: payload.customerEmail,
       paymentMethod: "card",
       promoCode: payload.promoCode,
       status: "PENDING", // card is pre-paid — skip PAYMENT_PENDING, ready to dispatch
@@ -805,6 +814,7 @@ app.get("/api/order/:code/track", async (req, res) => {
       select: {
         code: true,
         status: true,
+        paymentMethod: true,
         createdAt: true,
         updatedAt: true,
         driverName: true,
@@ -876,7 +886,10 @@ app.get("/orders", requireAdmin, async (req, res) => {
   res.json(orders);
 });
 
-// 🏪 ADMIN: ASSIGN TAVERN + DRIVER
+// 🏪 ADMIN: ASSIGN TAVERN + DRIVER — can happen before an EFT order's
+// payment is actually confirmed (the tavern can be lined up in parallel),
+// so this never promotes status on its own. Only CONFIRM PAYMENT (below)
+// moves an order out of PAYMENT_PENDING now.
 app.patch("/order/:code/assign", requireAdmin, async (req, res) => {
   try {
     const { tavernId, driverName, driverPhone, driverVehicle } = req.body;
@@ -887,7 +900,7 @@ app.patch("/order/:code/assign", requireAdmin, async (req, res) => {
     const driverShareToken = crypto.randomBytes(16).toString("hex");
     const order = await prisma.order.update({
       where: { code: req.params.code },
-      data: { tavernId, driverName, driverPhone, driverVehicle, driverShareToken, status: "PENDING" },
+      data: { tavernId, driverName, driverPhone, driverVehicle, driverShareToken },
       include: { tavern: true },
     });
     await logAdminAction(req, "ASSIGN_ORDER", order.code, `tavern=${order.tavern?.name || tavernId}, driver=${driverName}`);
@@ -895,6 +908,34 @@ app.patch("/order/:code/assign", requireAdmin, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(404).json({ error: "Order not found" });
+  }
+});
+
+// 💰 ADMIN: CONFIRM PAYMENT RECEIVED — EFT-only. COD is paid at the door
+// and card is confirmed automatically by the Yoco webhook, so those never
+// sit at PAYMENT_PENDING; EFT is the one method where a human has to check
+// the bank statement before the order can move. This is the single alert
+// the customer actually asked for: "payment received, order being packed."
+app.patch("/order/:code/confirm-payment", requireAdmin, async (req, res) => {
+  try {
+    const order = await prisma.order.findUnique({ where: { code: req.params.code } });
+    if (!order) return res.status(404).json({ error: "Order not found" });
+    if (order.paymentMethod !== "eft") {
+      return res.status(400).json({ error: "Only EFT orders need a manual payment confirmation" });
+    }
+    if (order.status !== "PAYMENT_PENDING") {
+      return res.status(400).json({ error: `Order is already ${order.status.toLowerCase()}` });
+    }
+    const updated = await prisma.order.update({
+      where: { code: req.params.code },
+      data: { status: "PENDING" },
+    });
+    await logAdminAction(req, "CONFIRM_PAYMENT", order.code, `EFT payment confirmed by ${req.user?.email || "api-token"}`);
+    sendPaymentConfirmedEmail(updated, updated.customerEmail).catch((e) => console.error("[email] payment-confirmed failed:", e));
+    res.json(updated);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to confirm payment" });
   }
 });
 
@@ -925,6 +966,53 @@ app.post("/order/:code/location", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to update location" });
+  }
+});
+
+// 🚚 DRIVER: CONFIRM PICKUP — same token-authed, no-login pattern as
+// /location above. Lets the driver move the order to DISPATCHED themselves
+// from driver-track.html the moment they actually have it, instead of the
+// admin having to relay that over WhatsApp and click it manually.
+app.post("/order/:code/confirm-pickup", async (req, res) => {
+  try {
+    const { token } = req.body;
+    const order = await prisma.order.findUnique({ where: { code: req.params.code } });
+    if (!order || !order.driverShareToken || order.driverShareToken !== token) {
+      return res.status(403).json({ error: "Invalid or expired share link" });
+    }
+    if (order.status !== "PENDING") {
+      return res.status(400).json({ error: "This order isn't ready for pickup yet" });
+    }
+    const updated = await prisma.order.update({
+      where: { code: req.params.code },
+      data: { status: "DISPATCHED" },
+    });
+    res.json({ ok: true, status: updated.status });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to confirm pickup" });
+  }
+});
+
+// 🏁 DRIVER: CONFIRM DELIVERED — same pattern again.
+app.post("/order/:code/confirm-delivered", async (req, res) => {
+  try {
+    const { token } = req.body;
+    const order = await prisma.order.findUnique({ where: { code: req.params.code } });
+    if (!order || !order.driverShareToken || order.driverShareToken !== token) {
+      return res.status(403).json({ error: "Invalid or expired share link" });
+    }
+    if (order.status !== "DISPATCHED") {
+      return res.status(400).json({ error: "This order isn't out for delivery" });
+    }
+    const updated = await prisma.order.update({
+      where: { code: req.params.code },
+      data: { status: "DELIVERED" },
+    });
+    res.json({ ok: true, status: updated.status });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to confirm delivery" });
   }
 });
 
