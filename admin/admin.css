@@ -57,6 +57,17 @@ body {
 .admin-header h1 {
         font-size: 22px;
             margin-bottom: 15px;
+                display: flex;
+                    align-items: center;
+                        justify-content: center;
+                            gap: 10px;
+}
+
+.admin-header h1 img {
+        height: 28px;
+            width: 28px;
+                object-fit: contain;
+                    border-radius: 6px;
 }
 
 .header-stats {

@@ -3,11 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/brand/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/brand/favicon-16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/brand/favicon-180.png">
   <title>Ekoyini — Share Delivery Location</title>
   <link rel="stylesheet" href="style.css">
   <style>
     .dt-page { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; text-align: center; }
-    .dt-logo { font-family: var(--font-display); font-size: 22px; font-weight: 700; color: var(--gold-deep); margin-bottom: 24px; }
+    .dt-logo { font-family: var(--font-display); font-size: 22px; font-weight: 700; color: var(--gold-deep); margin-bottom: 24px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    .dt-logo img { height: 52px; width: 52px; object-fit: contain; border-radius: 12px; }
     .dt-code { font-family: monospace; font-size: 18px; font-weight: 700; color: var(--terra-light); margin-bottom: 8px; }
     .dt-status { font-size: 13px; color: var(--muted); margin-bottom: 24px; max-width: 320px; line-height: 1.5; }
     .dt-btn { background: var(--terra-light); color: #fff; border: none; padding: 16px 32px; border-radius: var(--r-sm); font-size: 15px; font-weight: 700; margin-bottom: 12px; }
@@ -23,7 +28,7 @@
 </head>
 <body>
   <div class="dt-page">
-    <div class="dt-logo">Ekoyini</div>
+    <div class="dt-logo"><img src="images/brand/ekoyini-icon.png" alt="Ekoyini"><span>Ekoyini</span></div>
     <div id="dtBody">
       <div class="dt-code" id="dtCode">—</div>
       <p class="dt-status" id="dtLoadingMsg">Loading order…</p>
