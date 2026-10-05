@@ -15,21 +15,13 @@
     .promo-code-row { display: flex; gap: 8px; padding: 0 12px 12px; }
     .promo-code-row input { flex: 1; background: var(--card); border: 1px solid var(--border); padding: 10px; border-radius: 8px; color: var(--white); font-size: 13px; }
     .promo-code-row button { background: var(--surface); border: 1px solid var(--border); color: var(--muted); padding: 10px 14px; border-radius: 8px; font-size: 12px; cursor: pointer; }
-    .promo-applied { display: flex; align-items: center; justify-content: space-between; margin: -4px 12px 12px; padding: 8px 12px; background: var(--green-glow); color: var(--green-light); border-radius: 8px; font-size: 12px; font-weight: 600; }
+    .promo-applied { display: flex; align-items: center; justify-content: space-between; margin: -4px 12px 12px; padding: 8px 12px; background: var(--green-glow); color: var(--green-light); border: 1px solid rgba(127, 243, 164, 0.2); border-radius: 8px; }
     .promo-applied button { background: none; border: none; color: inherit; font-size: 16px; line-height: 1; cursor: pointer; padding: 0 2px; }
     .purchase-options { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
     .purchase-type-btn { background: var(--card); border: 1px solid var(--border); color: var(--white); padding: 12px; border-radius: 8px; font-size: 13px; cursor: pointer; transition: all 0.2s; }
     .purchase-type-btn.selected { background: var(--terra-light); border-color: var(--terra); }
-    /* Explicit remove — set apart from the qty stepper (margin, muted
-       color) so it doesn't read as a third step of the same control. */
     .remove-btn { margin-left: 4px; color: var(--muted); border-color: transparent; background: transparent; }
     .remove-btn:hover { color: var(--danger); border-color: var(--danger); background: rgba(214, 54, 42, 0.08); }
-    /* Case-mode price: the case-discounted line total is the big number
-       (cip-total, reuses .cart-item-price's size/weight); the "was / now"
-       per-unit comparison sits underneath it as subtext — original single
-       price struck through and faded, discounted case price vivid in the
-       savings-signal green (see style.css's palette note on --green-light
-       being reserved for exactly this: a savings/success signal). */
     .cip-total { margin-bottom: 2px; }
     .cip-compare { display: flex; align-items: baseline; gap: 6px; justify-content: flex-end; }
     .cip-was { font-size: 10px; color: var(--faint); text-decoration: line-through; filter: blur(0.25px); opacity: 0.8; }
@@ -37,7 +29,6 @@
   </style>
 </head>
 <body>
-  <!-- NAVBAR -->
   <nav class="navbar">
     <a href="shop.html" class="back-arrow">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><polyline points="15 18 9 12 15 6"/></svg>
@@ -49,7 +40,6 @@
     <div id="navAuthSlot"></div>
   </nav>
 
-  <!-- ADDRESS -->
   <div class="address-bar">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
       <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
@@ -58,7 +48,6 @@
     <button class="addr-save" onclick="editAddress()">Edit</button>
   </div>
 
-  <!-- PURCHASE TYPE SELECTOR -->
   <div class="purchase-options">
     <div style="font-size: 12px; color: var(--muted); padding: 0 4px;">Order as:</div>
     <button class="purchase-type-btn selected" data-type="single" onclick="setPurchaseType('single')">Individual Bottles</button>
@@ -66,27 +55,21 @@
   </div>
 
   <div class="page">
-    <!-- CART ITEMS -->
     <div id="cartPage"></div>
 
-    <!-- PROMO CODE -->
     <div class="promo-code-row" id="promoRow">
       <input type="text" id="promoInput" placeholder="Promo code">
       <button onclick="applyPromo()" id="promoApplyBtn">Apply</button>
     </div>
     <div class="promo-applied" id="promoApplied" style="display:none;"></div>
 
-    <!-- SUMMARY -->
     <div class="order-summary" id="summary"></div>
 
-    <!-- CHECKOUT BUTTON -->
     <button class="cta-btn" onclick="goToCheckout()" style="margin-bottom: 20px;">Proceed to Checkout</button>
-  </div><!-- /page -->
+  </div>
 
-  <!-- TOAST -->
   <div class="toast" id="toastEl"></div>
 
-  <!-- ADDRESS EDIT MODAL -->
   <div class="modal-overlay" id="addressModal">
     <div class="modal-sheet">
       <div class="modal-handle"></div>
@@ -99,7 +82,6 @@
     </div>
   </div>
 
-  <!-- BOTTOM NAV -->
   <nav class="bottom-nav">
     <a href="index.html" class="bnav-item">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
@@ -131,13 +113,9 @@
 
   let cart = EkoyiniCart.get();
   let products = [];
-  let purchaseType = 'single'; // 'single' or 'case'
-  let appliedPromo = null; // { code, discountPct } once validated
+  let purchaseType = 'single';
+  let appliedPromo = null;
 
-  // Case mode is bought in whole cases, not a linear per-bottle scale — a
-  // cart qty of 1 bottle in case mode means "1 case, short 23 bottles,"
-  // not "1/24th of a case." Round up to the nearest full case rather than
-  // charge (and display) a fractional-case price.
   function roundUpToCase(qty, unitsPerCase) {
     return Math.ceil(qty / unitsPerCase) * unitsPerCase;
   }
@@ -216,12 +194,6 @@
 
       const caseUnitPrice = p.retailCaseZAR / p.unitsPerCase;
 
-      // Case mode: the big number is the actual case-purchase amount
-      // (retailCaseZAR × number of cases) — not a linear per-bottle scale
-      // of the raw cart qty, which used to make the big price and the
-      // "now" subtext identical whenever qty was small. The original
-      // single-bottle price (struck through) and the discounted per-unit
-      // case price (vivid) stay as subtext underneath it, unchanged.
       let itemTotal, priceBlock, qtyLabel;
       if (purchaseType === 'case') {
         const numberOfCases = roundUpToCase(qty, p.unitsPerCase) / p.unitsPerCase;
@@ -252,7 +224,7 @@
             <button class="qty-btn" onclick="updateQty('${skuId}', -1)">−</button>
             <span class="qty-val">${qtyLabel}</span>
             <button class="qty-btn" onclick="updateQty('${skuId}', 1)">+</button>
-            <button class="qty-btn remove-btn" onclick="removeItem('${skuId}')" aria-label="Remove ${p.name.replace(/"/g, '&quot;')} from cart">
+            <button class="qty-btn remove-btn" onclick="removeItem('${skuId}')" aria-label="Remove ${p.name.replace(/\"/g, '&quot;')} from cart">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
             </button>
           </div>
@@ -266,7 +238,7 @@
     const summary = document.getElementById('summary');
     const subtotal = computeSubtotal();
     const promoDiscount = appliedPromo ? subtotal * (appliedPromo.discountPct / 100) : 0;
-    const delivery = subtotal > 200 ? 0 : 50;
+    const delivery = subtotal > 1000 ? 0 : 50;
     const total = subtotal - promoDiscount + delivery;
 
     summary.innerHTML = `
@@ -276,7 +248,7 @@
       </div>
       ${appliedPromo ? `<div class="summary-row"><span>Promo (${appliedPromo.code})</span><span>-R${promoDiscount.toFixed(2)}</span></div>` : ''}
       <div class="summary-row">
-        <span>Delivery <span style="font-size: 10px; color: var(--muted);">(free over R200)</span></span>
+        <span>Delivery <span style="font-size: 10px; color: var(--muted);">(free over R1000)</span></span>
         <span>R${delivery.toFixed(2)}</span>
       </div>
       <div class="summary-row total">
@@ -291,9 +263,6 @@
     document.querySelectorAll('.purchase-type-btn').forEach(b => b.classList.remove('selected'));
     document.querySelector(`[data-type="${type}"]`).classList.add('selected');
 
-    // Switching to case mode: auto-complete every item to a whole case by
-    // topping up the singles already in the cart, instead of leaving a
-    // partial-case quantity that prices out strangely.
     if (type === 'case') {
       Object.keys(cart).forEach(skuId => {
         const p = products.find(x => x.id === skuId);
@@ -309,8 +278,6 @@
 
   function updateQty(skuId, delta) {
     const p = products.find(x => x.id === skuId);
-    // Case mode moves a whole case at a time — the cart qty must stay a
-    // multiple of unitsPerCase so the case-purchase price stays exact.
     const step = (purchaseType === 'case' && p) ? p.unitsPerCase * (delta > 0 ? 1 : -1) : delta;
     const newQty = (cart[skuId] || 0) + step;
     if (newQty <= 0) {
@@ -323,8 +290,6 @@
     renderSummary();
   }
 
-  // Explicit remove, regardless of quantity — distinct from "−" to 0,
-  // since that requires as many taps as the quantity itself.
   function removeItem(skuId) {
     delete cart[skuId];
     EkoyiniCart.save(cart);
@@ -410,10 +375,8 @@
     window.location.href = 'checkout.html';
   }
 
-  // Live re-render on cart changes from another tab (or this one).
   window.addEventListener('ekoyini:cart-updated', () => { cart = EkoyiniCart.get(); renderCart(); renderSummary(); });
 
-  // Init
   document.getElementById('cartAddress').value = EkoyiniAddress.get();
   if (requireAgeGate()) loadCart();
   </script>
