@@ -1,0 +1,14 @@
+{
+  "description": "Image URLs for SKU items from retail sources (Checkers, Makro, Pick n Pay, etc.)",
+  "format": "JSON object with SKU name (exact match to skus.csv) as key, image URL string as value",
+  "example": {
+    "Absolut Original Blue": "https://example.com/absolut-original-blue.jpg",
+    "Castle Lager": "https://example.com/castle-lager.jpg",
+    "Heineken": "https://example.com/heineken.jpg"
+  },
+  "instructions": "Replace the 'example' entries below with your actual SKU names and image URLs. The name must exactly match the 'name' column in skus.csv for the script to find and update the correct products.",
+  "images": {
+    "example_sku_1": "https://example-image-url.jpg",
+    "example_sku_2": "https://example-image-url.jpg"
+  }
+}
