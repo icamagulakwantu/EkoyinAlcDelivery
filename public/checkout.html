@@ -198,10 +198,14 @@
   <script src="script.js"></script>
   <script src="pricing.js"></script>
   <script>
-  // Cooler Box eligibility + tier thresholds — shared with server.js via
+  // Cooler Box tiers and the delivery fee are shared with server.js via
   // pricing.js. This is a *preview only*; the server recomputes the real
   // total and ignores anything sent from the client.
-  const { COOLER_ELIGIBLE, coolerDiscountPct } = EkoyiniPricing;
+  const { COOLER_ELIGIBLE, coolerDiscountPct, deliveryFee } = EkoyiniPricing;
+
+  function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
 
   const checkoutData = JSON.parse(localStorage.getItem('ekoyini_checkout_data') || '{}');
   let products = [];
@@ -316,7 +320,7 @@
 
     const coolerDiscount = coolerSubtotal * coolerDiscountPct(coolerSubtotal);
     const promoDiscount = appliedPromo ? (subtotal - coolerDiscount) * (appliedPromo.discountPct / 100) : 0;
-    const delivery = subtotal > 200 ? 0 : 50;
+    const delivery = deliveryFee(subtotal);
     const total = subtotal - coolerDiscount - promoDiscount + delivery;
     return { lines, subtotal, coolerDiscount, promoDiscount, delivery, total };
   }
@@ -327,7 +331,7 @@
 
     review.innerHTML = lines.map(l => `
       <div class="order-review-item">
-        <span>${l.name} × ${l.qty}</span>
+        <span>${escapeHtml(l.name)} × ${escapeHtml(l.qty)}</span>
         <span>R${l.itemTotal.toFixed(2)}</span>
       </div>`).join('');
 
@@ -335,7 +339,7 @@
     totals.innerHTML = `
       <div class="order-review-item"><span>Subtotal</span><span>R${subtotal.toFixed(2)}</span></div>
       ${coolerDiscount > 0 ? `<div class="order-review-item"><span>Cooler Box discount</span><span>-R${coolerDiscount.toFixed(2)}</span></div>` : ''}
-      ${appliedPromo ? `<div class="order-review-item"><span>Promo (${appliedPromo.code})</span><span>-R${promoDiscount.toFixed(2)}</span></div>` : ''}
+      ${appliedPromo ? `<div class="order-review-item"><span>Promo (${escapeHtml(appliedPromo.code)})</span><span>-R${promoDiscount.toFixed(2)}</span></div>` : ''}
       <div class="order-review-item"><span>Delivery</span><span>R${delivery.toFixed(2)}</span></div>
       <div class="order-review-total"><span>Total</span><span>R${total.toFixed(2)}</span></div>`;
     review.appendChild(totals);
@@ -354,7 +358,7 @@
     const desc = document.getElementById('codPaymentDesc');
     if (!codEligibility) return;
 
-    const { trackRecordOk, accountAgeMonths, priorOrderCount, minAccountAgeMonths, minPriorOrders, minOrderTotal, maxOrderTotal } = codEligibility;
+    const { trackRecordOk, trackRecordMessage, minOrderTotal, maxOrderTotal } = codEligibility;
 
     let reason = null;
     if (total > maxOrderTotal) {
@@ -362,7 +366,9 @@
     } else if (total <= minOrderTotal) {
       reason = `Needs an order over R${minOrderTotal}.`;
     } else if (!trackRecordOk) {
-      reason = `Unlocks once your account is ${minAccountAgeMonths}+ months old and you've placed ${minPriorOrders}+ orders (you're at ${accountAgeMonths} month${accountAgeMonths === 1 ? '' : 's'}, ${priorOrderCount} order${priorOrderCount === 1 ? '' : 's'}).`;
+      // The server writes this message so the rule can change on Render
+      // (COD_MIN_DELIVERED_ORDERS) without touching this page.
+      reason = trackRecordMessage || 'Cash on delivery unlocks after a few delivered orders.';
     }
 
     if (reason) {
@@ -415,7 +421,7 @@
     document.getElementById('promoRow').style.display = 'none';
     const applied = document.getElementById('promoApplied');
     applied.style.display = 'flex';
-    applied.innerHTML = `<span>${code} applied — ${pct}% off</span><button type="button" onclick="removePromo()">&times;</button>`;
+    applied.innerHTML = `<span>${escapeHtml(code)} applied — ${escapeHtml(pct)}% off</span><button type="button" onclick="removePromo()">&times;</button>`;
   }
 
   function removePromo() {
@@ -510,7 +516,7 @@
       localStorage.removeItem('ekoyini_promo_code');
       showToast('Order placed! Code: ' + orderCode);
       setTimeout(() => {
-        window.location.href = `order-confirmation.html?code=${orderCode}`;
+        window.location.href = `order-confirmation.html?code=${encodeURIComponent(orderCode)}`;
       }, 1200);
     } catch (err) {
       console.error('Order submission error:', err);
