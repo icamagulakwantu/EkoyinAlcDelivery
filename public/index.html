@@ -1,1 +1,545 @@
-__SEE_BELOW__
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/brand/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/brand/favicon-16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/brand/favicon-180.png">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#faf6ee">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Ekoyini">
+  <title>Ekoyini — Alcohol Delivery</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ── INDEX-SPECIFIC ──
+       Rebuilt to match how on-demand delivery home screens actually work
+       (Sixty60, Uber Eats, Drizly): location + search up top as one
+       functional unit, one clear ride-along mention (not three), a deal
+       carousel, nearby stores, done. The old version repeated the
+       ride-along pitch three times (USP chip, dark banner, "How it
+       works" step) and carried a permanent marketing hero + 4-step
+       explainer that belongs in first-run onboarding, not every visit —
+       see the onboarding carousel below, which already covers this. */
+    .home-top { padding: 14px 16px 2px; }
+    .greet-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 8px; }
+
+    /* Location and search — two clearly separate controls (own card each,
+       own label), not merged into one row where it's unclear which field
+       does what. Grouped together at the top as a unit, but visually
+       distinct: the address pill reads as "where", the search bar reads
+       as "what". */
+    .field-label { font-size: 10px; font-weight: 700; color: var(--faint); text-transform: uppercase; letter-spacing: 0.5px; margin: 0 2px 5px; }
+    .locate-card, .search-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; margin-bottom: 12px; }
+    .locate-row, .search-row { display: flex; align-items: center; gap: 10px; padding: 12px 14px; }
+    .locate-row svg { color: var(--terra-light); flex-shrink: 0; }
+    .locate-row input { flex: 1; min-width: 0; background: transparent; border: none; color: var(--white); font-size: 13px; font-weight: 600; outline: none; }
+    .locate-row input::placeholder { color: var(--faint); font-weight: 400; }
+    .locate-save { font-size: 11px; font-weight: 700; color: var(--terra-light); background: none; border: none; padding: 6px; flex-shrink: 0; }
+    .search-row svg { color: var(--muted); flex-shrink: 0; }
+    .search-row input { flex: 1; min-width: 0; background: transparent; border: none; color: var(--white); font-size: 13px; outline: none; }
+    .search-row input::placeholder { color: var(--faint); }
+    .search-row button { background: var(--terra-light); border: none; width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; flex-shrink: 0; }
+
+    /* Ride-Along — said once, here, instead of a chip + a dark banner +
+       a "How it works" step all making the same point. */
+    .ridealong-strip { display: flex; align-items: center; gap: 12px; background: var(--card); border: 1px solid var(--border); border-radius: var(--r-md); padding: 12px 14px; margin-bottom: 4px; cursor: pointer; transition: border-color 0.2s; }
+    .ridealong-strip:hover { border-color: var(--green-mid); }
+    .rs-icon { width: 38px; height: 38px; border-radius: 10px; background: var(--green-glow); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .rs-text { flex: 1; min-width: 0; }
+    .rs-text strong { display: block; font-family: var(--font-display); font-size: 13px; color: var(--white); }
+    .rs-text span { font-size: 11px; color: var(--muted); line-height: 1.4; }
+    .rs-arrow { color: var(--faint); flex-shrink: 0; }
+
+    /* Trust strip — demoted from "first thing you see" to a quiet line
+       near the bottom, closer to a footer credential than a hero stat. */
+    .trust-mini { display: flex; justify-content: center; gap: 20px; padding: 4px 16px 8px; }
+    .trust-mini .tm-stat { font-size: 11px; color: var(--muted); }
+    .trust-mini .tm-stat b { color: var(--gold-deep); font-weight: 700; }
+
+    /* STORE CARDS */
+    .store-scroll { display: flex; gap: 10px; overflow-x: auto; padding: 0 16px 8px; scrollbar-width: none; }
+    .store-scroll::-webkit-scrollbar { display: none; }
+    .store-card { flex-shrink: 0; width: 160px; background: var(--card); border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; transition: border-color 0.2s; cursor: pointer; }
+    .store-card:hover { border-color: var(--green-mid); }
+    .store-img { height: 80px; background: var(--surface); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 26px; font-weight: 700; color: var(--gold-deep); }
+    .store-body { padding: 10px; }
+    .store-name { font-size: 12px; font-weight: 700; color: var(--white); margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .store-meta { font-size: 10px; color: var(--muted); display: flex; align-items: center; gap: 4px; }
+    .store-empty { padding: 20px 16px; color: var(--muted); font-size: 12px; }
+
+    /* NEIGHBOURHOOD FILTER (Nearby Stores) */
+    .hood-filter { display: flex; gap: 8px; overflow-x: auto; padding: 0 16px 12px; scrollbar-width: none; }
+    .hood-filter::-webkit-scrollbar { display: none; }
+
+    /* INSTALL APP PROMPT — only appears when the browser says the app is installable */
+    .install-strip { display: none; align-items: center; gap: 12px; margin: 12px 16px 0; padding: 12px 14px; background: var(--card); border: 1px solid var(--border); border-radius: var(--r-md); }
+    .install-strip.show { display: flex; }
+    .install-strip img { width: 36px; height: 36px; border-radius: 9px; }
+    .install-strip .is-text { flex: 1; min-width: 0; font-size: 12px; color: var(--muted); line-height: 1.4; }
+    .install-strip .is-text strong { display: block; color: var(--white); font-size: 13px; }
+    .install-strip .is-btn { background: var(--terra-light); color: #fff; border: none; border-radius: 999px; padding: 8px 14px; font-size: 12px; font-weight: 700; }
+    .install-strip .is-close { background: none; border: none; color: var(--faint); font-size: 18px; padding: 4px; }
+
+    /* ── AGE VERIFICATION GATE ──
+       First-visit full-screen gate, shown before anything else. Deliberately
+       max-contrast (pure black / pure white / terracotta) rather than the
+       site's usual --card/--surface tones — this is the one screen where
+       "readable in harsh sunlight" outweighs "on-brand". */
+    .age-gate {
+      position: fixed; inset: 0; z-index: 9999;
+      background: #000;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 32px 24px; text-align: center;
+    }
+    .age-gate.hidden { display: none; }
+    .age-gate .ag-numeral {
+      font-family: var(--font-display); font-weight: 900;
+      font-size: 96px; line-height: 1; color: #e07c3a;
+      margin-bottom: 8px; letter-spacing: -2px;
+    }
+    .age-gate h1 {
+      font-family: var(--font-display); font-size: 22px; color: #fff;
+      margin-bottom: 12px; max-width: 320px;
+    }
+    .age-gate p { font-size: 14px; color: #d8d8d8; max-width: 320px; line-height: 1.6; margin-bottom: 32px; }
+    .age-gate .ag-actions { width: 100%; max-width: 320px; display: flex; flex-direction: column; gap: 12px; }
+    .age-gate .ag-yes {
+      background: var(--terra); color: #fff; border: none;
+      min-height: 56px; border-radius: var(--r-sm);
+      font-size: 16px; font-weight: 700; letter-spacing: 0.2px;
+    }
+    .age-gate .ag-yes:active { background: var(--terra-light); }
+    .age-gate .ag-no {
+      background: transparent; color: #9a9a9a; border: 1.5px solid #333;
+      min-height: 48px; border-radius: var(--r-sm); font-size: 13px; font-weight: 600;
+    }
+    .age-gate .ag-legal { margin-top: 20px; font-size: 10px; color: #666; max-width: 300px; line-height: 1.5; }
+    .age-gate .ag-blocked { display: none; }
+    .age-gate.blocked .ag-numeral, .age-gate.blocked h1, .age-gate.blocked p, .age-gate.blocked .ag-actions, .age-gate.blocked .ag-legal { display: none; }
+    .age-gate.blocked .ag-blocked { display: block; font-size: 15px; color: #fff; max-width: 300px; line-height: 1.6; }
+
+    /* ── ONBOARDING (first-run only, shown before the age gate) ── */
+    .onboarding {
+      position: fixed; inset: 0; z-index: 10000;
+      background: linear-gradient(160deg, #0d1a14 0%, #080c0a 60%);
+      display: flex; flex-direction: column;
+    }
+    .onboarding.hidden { display: none; }
+    .ob-skip {
+      align-self: flex-end; margin: 20px 20px 0; font-size: 12px;
+      color: #8a9a8f; font-weight: 600; padding: 8px;
+    }
+    .ob-slides { flex: 1; position: relative; overflow: hidden; }
+    .ob-slide {
+      position: absolute; inset: 0; display: none;
+      flex-direction: column; align-items: center; justify-content: center;
+      text-align: center; padding: 20px 32px 0;
+    }
+    .ob-slide.active { display: flex; animation: ob-in 0.35s ease; }
+    @keyframes ob-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+    .ob-icon {
+      width: 96px; height: 96px; border-radius: 50%;
+      background: rgba(255, 199, 0, 0.15); border: 1.5px solid #cc9900;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 28px;
+    }
+    .ob-icon svg { width: 40px; height: 40px; }
+    .ob-slide h2 { font-family: var(--font-display); font-size: 24px; color: #f4f7f5; margin-bottom: 12px; max-width: 280px; }
+    .ob-slide p { font-size: 14px; color: #8a9a8f; line-height: 1.6; max-width: 280px; }
+    .ob-footer { padding: 24px 24px 36px; }
+    .ob-dots { display: flex; justify-content: center; gap: 6px; margin-bottom: 20px; }
+    .ob-dot { width: 7px; height: 7px; border-radius: 50%; background: #2a3a30; transition: background 0.2s, width 0.2s; }
+    .ob-dot.active { background: var(--terra); width: 20px; border-radius: 4px; }
+
+    .site-footer { text-align: center; font-size: 11px; color: var(--muted); padding: 8px 16px 20px; }
+    .site-footer a { color: var(--muted); text-decoration: underline; text-underline-offset: 2px; margin: 0 8px; }
+  </style>
+  <link rel="stylesheet" href="premium.css">
+</head>
+<body>
+  <!-- ONBOARDING (first-run) -->
+  <div class="onboarding hidden" id="onboarding">
+    <div class="ob-skip" onclick="onboardingFinish()">Skip →</div>
+    <div class="ob-slides">
+      <div class="ob-slide active" data-slide="0">
+        <div class="ob-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#cc9900" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14M5 17a2 2 0 1 0 4 0 2 2 0 0 0-4 0zM15 17a2 2 0 1 0 4 0 2 2 0 0 0-4 0zM5 17V9l2-4h10l2 4v8"/></svg></div>
+        <h2>Ride-Along Delivery</h2>
+        <p>No dedicated fleet, no long wait. We match your order to e-hailing drivers already heading your way.</p>
+      </div>
+      <div class="ob-slide" data-slide="1">
+        <div class="ob-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#cc9900" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M4.5 4.5l15 15M19.5 4.5l-15 15"/></svg></div>
+        <h2>Build Your Cooler Box</h2>
+        <p>Beer, spirits, mixers, ice — bundle them up in Shop and unlock up to 15% off automatically.</p>
+      </div>
+      <div class="ob-slide" data-slide="2">
+        <div class="ob-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#cc9900" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+        <h2>Delivered To Your Kasi</h2>
+        <p>Order from liquor stores in your own area, and follow your order status right through to your door.</p>
+      </div>
+    </div>
+    <div class="ob-footer">
+      <div class="ob-dots" id="obDots"></div>
+      <button class="cta-btn" id="obNextBtn" onclick="onboardingNext()">Next</button>
+    </div>
+  </div>
+
+  <!-- AGE VERIFICATION GATE -->
+  <div class="age-gate hidden" id="ageGate">
+    <div class="ag-numeral">18+</div>
+    <h1>You must be 18 or older to enter Ekoyini</h1>
+    <p>We deliver alcohol responsibly. Please confirm your age before browsing.</p>
+    <div class="ag-actions">
+      <button class="ag-yes" onclick="ageGateConfirm(true)">I am 18 or older</button>
+      <button class="ag-no" onclick="ageGateConfirm(false)">I am under 18</button>
+    </div>
+    <p class="ag-legal">By continuing you confirm you are of legal drinking age in South Africa. Ekoyini does not sell or deliver alcohol to minors.</p>
+    <div class="ag-blocked">Sorry — you must be 18 or older to use Ekoyini. Please come back when you're of legal drinking age.</div>
+  </div>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="logo">
+      <img src="images/brand/ekoyini-icon.png" alt="Ekoyini">
+      <div class="logo-text">Ekoyini</div>
+    </div>
+    <div class="nav-right" style="display:flex; align-items:center; gap:10px;">
+      <div id="navAuthSlot"></div>
+      <a href="cart.html" class="nav-icon-btn" aria-label="Cart">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+          <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+        </svg>
+        <span class="badge" id="navCartCount">0</span>
+      </a>
+    </div>
+  </nav>
+
+  <div class="page">
+    <!-- INSTALL APP -->
+    <div class="install-strip" id="installStrip">
+      <img src="images/brand/ekoyini-icon.png" alt="">
+      <div class="is-text"><strong>Get the Ekoyini app</strong>Add it to your home screen — faster and works on low data.</div>
+      <button class="is-btn" id="installBtn">Install</button>
+      <button class="is-close" id="installClose" aria-label="Dismiss">×</button>
+    </div>
+
+    <div class="home-top fade-up">
+      <div class="greet-label" id="greetLabel">Good evening</div>
+
+      <div class="field-label">Deliver to</div>
+      <div class="locate-card">
+        <div class="locate-row">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+          </svg>
+          <input type="text" id="addressInput" placeholder="Enter your delivery address" value="">
+          <button class="locate-save" onclick="saveAddress()">Save</button>
+        </div>
+      </div>
+
+      <div class="field-label">Search products</div>
+      <div class="search-card">
+        <form class="search-row" onsubmit="event.preventDefault(); runSearch();">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input type="text" placeholder="Search Black Label, Savanna, Hennessy…" id="searchInput">
+          <button type="submit" aria-label="Search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- RIDE-ALONG — said once. -->
+    <div class="ridealong-strip fade-up-1" onclick="window.location='track.html'">
+      <div class="rs-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--terra-light)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M5 17h14M5 17a2 2 0 1 0 4 0 2 2 0 0 0-4 0zM15 17a2 2 0 1 0 4 0 2 2 0 0 0-4 0zM5 17V9l2-4h10l2 4v8"/></svg>
+      </div>
+      <div class="rs-text">
+        <strong>Ride-Along Delivery</strong>
+        <span>Matched to a driver already heading your way — avg 30–45 min. Tap to track.</span>
+      </div>
+      <svg class="rs-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+
+    <!-- SHOP BY OCCASION -->
+    <div class="section-header fade-up-2">
+      <h2>Shop By Occasion</h2>
+      <a href="shop.html">See all →</a>
+    </div>
+    <div class="promo-scroll fade-up-2">
+      <div class="promo-card" onclick="window.location='shop.html?collection=festive'">
+        <div class="promo-bg festive"></div>
+        <div class="promo-content">
+          <div class="promo-tag">Festive Season</div>
+          <div class="promo-title">Festive Season<br>Crate</div>
+          <div class="promo-cta">Shop the crate →</div>
+        </div>
+      </div>
+      <div class="promo-card" onclick="window.location='shop.html?collection=braai'">
+        <div class="promo-bg"></div>
+        <div class="promo-content">
+          <div class="promo-tag">Weekend Special</div>
+          <div class="promo-title">Weekend Braai<br>Pack</div>
+          <div class="promo-cta">Shop the pack →</div>
+        </div>
+      </div>
+      <div class="promo-card" onclick="window.location='shop.html?collection=stokvel'">
+        <div class="promo-bg terra"></div>
+        <div class="promo-content">
+          <div class="promo-tag">Best Seller</div>
+          <div class="promo-title">Stokvel &amp; Party<br>Case</div>
+          <div class="promo-cta">Shop the case →</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NEARBY STORES -->
+    <div class="section-header fade-up-3" id="storesSection">
+      <h2>Nearby Stores</h2>
+      <a href="shop.html">View all →</a>
+    </div>
+    <div class="hood-filter fade-up-3" id="hoodFilter"></div>
+    <div class="store-scroll fade-up-3" id="storeScroll">
+      <div class="skel-store-card"></div>
+      <div class="skel-store-card"></div>
+      <div class="skel-store-card"></div>
+    </div>
+
+    <!-- TRUST STRIP -->
+    <div class="trust-mini fade-up-4" id="trustStrip" style="display:none;">
+      <div class="tm-stat"><b id="statProducts">—</b> products</div>
+      <div class="tm-stat"><b id="statTaverns">—</b> verified taverns</div>
+      <div class="tm-stat"><b id="statAreas">—</b> townships</div>
+    </div>
+
+    <!-- SHOP CTA -->
+    <div class="spacer-sm"></div>
+    <button class="cta-btn fade-up-4" onclick="window.location='shop.html'">Browse Full Menu</button>
+
+    <div class="site-footer">
+      <a href="terms.html">Terms</a><a href="privacy.html">Privacy</a>
+      <div style="margin-top:6px;">© <span id="footerYear"></span> Ekoyini · 18+ only · Drink responsibly</div>
+    </div>
+  </div><!-- /page -->
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <a href="index.html" class="bnav-item active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Home
+    </a>
+    <a href="shop.html" class="bnav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+      Shop
+    </a>
+    <a href="cart.html" class="bnav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+      Cart
+      <span class="bnav-badge" id="bnavCartCount" style="display:none">0</span>
+    </a>
+    <a href="track.html" class="bnav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Track
+    </a>
+    <a href="profile.html" class="bnav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Profile
+    </a>
+  </nav>
+
+  <div class="toast" id="toastEl"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="auth.js"></script>
+  <script src="script.js"></script>
+  <script>
+  renderNavAuth();
+  document.getElementById('footerYear').textContent = new Date().getFullYear();
+
+  // Store names/areas come from the database — escape before innerHTML.
+  function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  // ── INSTALLABLE APP ──
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch((e) => console.error('SW failed:', e)));
+  }
+  let installEvent = null;
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    if (localStorage.getItem('ekoyini_install_dismissed') === 'true') return;
+    installEvent = e;
+    document.getElementById('installStrip').classList.add('show');
+  });
+  document.getElementById('installBtn').onclick = async () => {
+    if (!installEvent) return;
+    installEvent.prompt();
+    await installEvent.userChoice;
+    installEvent = null;
+    document.getElementById('installStrip').classList.remove('show');
+  };
+  document.getElementById('installClose').onclick = () => {
+    localStorage.setItem('ekoyini_install_dismissed', 'true');
+    document.getElementById('installStrip').classList.remove('show');
+  };
+
+  // ── FIRST-RUN FLOW: onboarding, then age gate ──
+  let obSlide = 0;
+  const OB_SLIDE_COUNT = 3;
+
+  function renderObDots() {
+    document.getElementById('obDots').innerHTML = Array.from({ length: OB_SLIDE_COUNT })
+      .map((_, i) => `<div class="ob-dot ${i === obSlide ? 'active' : ''}"></div>`).join('');
+  }
+
+  function onboardingNext() {
+    obSlide++;
+    if (obSlide >= OB_SLIDE_COUNT) { onboardingFinish(); return; }
+    document.querySelectorAll('.ob-slide').forEach(s => s.classList.toggle('active', +s.dataset.slide === obSlide));
+    renderObDots();
+    document.getElementById('obNextBtn').textContent = obSlide === OB_SLIDE_COUNT - 1 ? 'Get Started' : 'Next';
+  }
+
+  function onboardingFinish() {
+    localStorage.setItem('ekoyini_onboarded', 'true');
+    document.getElementById('onboarding').classList.add('hidden');
+    initAgeGate();
+  }
+
+  function initAgeGate() {
+    const KEY = 'ekoyini_age_verified';
+    if (localStorage.getItem(KEY) === 'true') { document.body.style.overflow = ''; return; }
+    document.getElementById('ageGate').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  }
+  function ageGateConfirm(isAdult) {
+    const gate = document.getElementById('ageGate');
+    if (isAdult) {
+      localStorage.setItem('ekoyini_age_verified', 'true');
+      const ret = new URLSearchParams(window.location.search).get('return');
+      // Only allow same-site relative returns (prevents open redirects).
+      if (ret && /^[a-z0-9\-_.\/?=&%]+$/i.test(ret) && !ret.includes('//')) { window.location.href = ret; return; }
+      gate.classList.add('hidden');
+      document.body.style.overflow = '';
+    } else {
+      gate.classList.add('blocked');
+    }
+  }
+
+  function initFirstRun() {
+    document.body.style.overflow = 'hidden';
+    renderObDots();
+    if (localStorage.getItem('ekoyini_onboarded') !== 'true') {
+      document.getElementById('onboarding').classList.remove('hidden');
+    } else {
+      initAgeGate();
+    }
+  }
+  initFirstRun();
+
+  const saved = EkoyiniAddress.get();
+  if (saved) document.getElementById('addressInput').value = saved;
+
+  function saveAddress() {
+    const val = document.getElementById('addressInput').value.trim();
+    if (val) { EkoyiniAddress.save(val); showToast('Address saved'); }
+  }
+
+  function runSearch() {
+    const q = document.getElementById('searchInput').value.trim();
+    window.location.href = q ? `shop.html?q=${encodeURIComponent(q)}` : 'shop.html';
+  }
+
+  async function loadTrustStrip() {
+    try {
+      const res = await fetch('/api/stats');
+      if (!res.ok) throw new Error('Bad response');
+      const stats = await res.json();
+      document.getElementById('statProducts').textContent = stats.products;
+      document.getElementById('statTaverns').textContent = stats.taverns;
+      document.getElementById('statAreas').textContent = stats.areas;
+      document.getElementById('trustStrip').style.display = 'flex';
+    } catch (err) {
+      console.error('Failed to load trust stats:', err);
+    }
+  }
+  loadTrustStrip();
+
+  function updateBadges() {
+    const count = EkoyiniCart.count();
+    document.getElementById('navCartCount').textContent = count;
+    const bnav = document.getElementById('bnavCartCount');
+    bnav.textContent = count;
+    bnav.style.display = count > 0 ? 'flex' : 'none';
+  }
+  window.addEventListener('ekoyini:cart-updated', updateBadges);
+  updateBadges();
+
+  const h = new Date().getHours();
+  document.getElementById('greetLabel').textContent = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+
+  let allTaverns = [];
+  let activeHood = 'All';
+
+  async function loadStores() {
+    const scroll = document.getElementById('storeScroll');
+    try {
+      const res = await fetch('/api/taverns');
+      if (!res.ok) throw new Error('Bad response');
+      allTaverns = await res.json();
+      if (allTaverns.length === 0) {
+        document.getElementById('hoodFilter').innerHTML = '';
+        scroll.innerHTML = '<div class="store-empty">No stores nearby yet — check back soon.</div>';
+        return;
+      }
+      renderHoodFilter();
+      renderStores();
+    } catch (err) {
+      console.error('Failed to load stores:', err);
+      scroll.innerHTML = '<div class="store-empty">Couldn\'t load nearby stores.</div>';
+    }
+  }
+
+  function renderHoodFilter() {
+    const hoods = ['All', ...new Set(allTaverns.map(t => t.area))];
+    const filter = document.getElementById('hoodFilter');
+    filter.innerHTML = hoods.map((h, i) => `
+      <div class="pill-tag ${h === activeHood ? 'active' : ''}" data-hood-index="${i}">${h === 'All' ? 'All Areas' : escapeHtml(h)}</div>
+    `).join('');
+    filter.querySelectorAll('[data-hood-index]').forEach((el) => {
+      el.onclick = () => setHood(hoods[+el.dataset.hoodIndex]);
+    });
+  }
+
+  function setHood(hood) {
+    activeHood = hood;
+    renderHoodFilter();
+    renderStores();
+  }
+
+  function renderStores() {
+    const scroll = document.getElementById('storeScroll');
+    const filtered = activeHood === 'All' ? allTaverns : allTaverns.filter(t => t.area === activeHood);
+    if (filtered.length === 0) {
+      scroll.innerHTML = `<div class="store-empty">No stores in ${escapeHtml(activeHood)} yet — try another area.</div>`;
+      return;
+    }
+    scroll.innerHTML = filtered.map((t) => `
+      <div class="store-card" onclick="window.location='shop.html'">
+        <div class="store-img">${escapeHtml((t.name || '?')[0].toUpperCase())}</div>
+        <div class="store-body">
+          <div class="store-name">${escapeHtml(t.name)}</div>
+          <div class="store-meta">${escapeHtml(t.area)}</div>
+        </div>
+      </div>`).join('');
+  }
+  loadStores();
+  </script>
+</body>
+</html>
