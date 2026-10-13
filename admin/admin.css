@@ -390,6 +390,11 @@ body {
             color: #383d41;
 }
 
+.status-cancelled {
+        background: #f8d7da;
+            color: #721c24;
+}
+
 .order-details {
         font-size: 14px;
             margin-bottom: 10px;
@@ -500,6 +505,11 @@ body {
 .btn-delete {
         background: #ff4444;
             color: white;
+}
+
+.btn-cancel-order {
+        background: #fff3cd;
+            color: #856404;
 }
 
 .no-orders {
@@ -734,4 +744,3 @@ body {
         opacity: 0.6;
             cursor: not-allowed;
 }
-
