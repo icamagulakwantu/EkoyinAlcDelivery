@@ -202,9 +202,18 @@ function getActionButtons(order) {
     if (order.status === 'DISPATCHED') {
         buttons += `<button class="btn btn-deliver" onclick="markDelivered('${code}')">Deliver</button>`;
     }
+    // Cancellation restores stock atomically — available at any stage up
+    // to DELIVERED/CANCELLED themselves, for any admin (not super-admin
+    // only), since it's recoverable (unlike delete) and dispatchers are
+    // the ones actually fielding "please cancel my order" calls.
+    if (order.status !== 'DELIVERED' && order.status !== 'CANCELLED') {
+        buttons += `<button class="btn btn-cancel-order" onclick="cancelOrder('${code}')">Cancel Order</button>`;
+    }
     // Deleting an order is a super-admin-only action (also enforced
     // server-side) — a dispatcher shouldn't be able to erase order history.
-    if (currentAdminRole === 'SUPER_ADMIN') {
+    // Only possible once an order is CANCELLED or DELIVERED (server enforces
+    // this too), so stock is never silently lost by deleting a live order.
+    if (currentAdminRole === 'SUPER_ADMIN' && (order.status === 'CANCELLED' || order.status === 'DELIVERED')) {
         buttons += `<button class="btn btn-delete" onclick="deleteOrder('${code}')">Delete</button>`;
     }
     return buttons;
@@ -239,6 +248,7 @@ function formatStatus(status) {
         PENDING: 'Packing',
         DISPATCHED: 'Dispatched',
         DELIVERED: 'Delivered',
+        CANCELLED: 'Cancelled',
     };
     return map[status] || status;
 }
@@ -423,6 +433,30 @@ async function deleteOrder(orderCode) {
         alert('Failed to delete order');
     }
 }
+
+// Restores stock atomically server-side (cancelOrderTransaction in
+// server.js) — safe at any stage before DELIVERED/CANCELLED. The reason
+// is optional and stored on the order (Order.cancelReason) for later
+// reference, same as the activity log records who did it and when.
+async function cancelOrder(orderCode) {
+    if (!confirm(`Cancel order ${orderCode}? This restores its stock.`)) return;
+    const reason = prompt('Reason for cancelling (optional):') || '';
+    try {
+        const res = await adminFetch(`/order/${encodeURIComponent(orderCode)}/admin-cancel`, {
+            method: 'POST',
+            body: JSON.stringify({ reason }),
+        });
+        if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(data.error || 'Failed to cancel order');
+        }
+        loadOrders();
+    } catch (err) {
+        console.error(err);
+        alert(err.message || 'Failed to cancel order');
+    }
+}
+window.cancelOrder = cancelOrder;
 
 // ============================================
 // SECTION SWITCHING (Orders / Inventory / Admins)
