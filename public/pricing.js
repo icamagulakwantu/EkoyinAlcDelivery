@@ -7,7 +7,9 @@
 // be made in three places by hand, with nothing to catch a missed one.
 // The delivery fee lives here too now: it had drifted (R200 on the server
 // and checkout, R1000 on the cart page), so customers saw one number and
-// were charged another.
+// were charged another. R1000 is correct — that's the intended free-
+// delivery threshold — so the server and checkout now match the cart
+// instead of the other way around.
 // ═══════════════════════════════════════════════
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) {
@@ -36,7 +38,7 @@
 
   // Delivery is free once the (pre-discount) subtotal is above this.
   // Change it here and the server, cart and checkout all follow.
-  const FREE_DELIVERY_THRESHOLD = 200;
+  const FREE_DELIVERY_THRESHOLD = 1000;
   const DELIVERY_FEE = 50;
 
   function deliveryFee(subtotal) {
