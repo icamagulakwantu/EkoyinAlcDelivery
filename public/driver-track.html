@@ -11,28 +11,33 @@
   <link rel="stylesheet" href="style.css">
   <style>
     .dt-page { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; text-align: center; }
-    .dt-logo { font-family: var(--font-display); font-size: 22px; font-weight: 700; color: var(--gold-deep); margin-bottom: 24px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    .dt-card { width: 100%; max-width: 400px; background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 28px 22px; box-shadow: 0 10px 28px rgba(23,20,14,.08); }
+    .dt-logo { font-family: var(--font-display); font-size: 22px; font-weight: 700; color: var(--gold-deep); margin-bottom: 20px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
     .dt-logo img { height: 52px; width: 52px; object-fit: contain; border-radius: 12px; }
-    .dt-code { font-family: monospace; font-size: 18px; font-weight: 700; color: var(--terra-light); margin-bottom: 8px; }
-    .dt-status { font-size: 13px; color: var(--muted); margin-bottom: 24px; max-width: 320px; line-height: 1.5; }
-    .dt-btn { background: var(--terra-light); color: #fff; border: none; padding: 16px 32px; border-radius: var(--r-sm); font-size: 15px; font-weight: 700; margin-bottom: 12px; }
+    .dt-label { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+    .dt-code { font-family: monospace; font-size: 20px; font-weight: 800; letter-spacing: .06em; color: var(--terra-light); margin-bottom: 12px; }
+    .dt-status { font-size: 14px; color: var(--muted); margin-bottom: 22px; line-height: 1.5; }
+    .dt-btn { width: 100%; min-height: 54px; background: var(--terra-light); color: #fff; border: none; border-radius: 999px; font-size: 16px; font-weight: 700; margin-bottom: 12px; box-shadow: 0 8px 20px -8px var(--terra-light); }
     .dt-btn:disabled { opacity: 0.5; }
-    .dt-btn-secondary { background: var(--green-light); }
-    .dt-sharing { display: none; align-items: center; gap: 8px; background: var(--green-glow); color: var(--green-light); padding: 10px 18px; border-radius: 20px; font-size: 13px; font-weight: 700; margin-bottom: 16px; }
+    .dt-btn-secondary { background: var(--green-light); box-shadow: 0 8px 20px -8px var(--green-light); }
+    .dt-sharing { display: none; align-items: center; justify-content: center; gap: 8px; background: var(--green-glow); color: var(--green-light); padding: 10px 18px; border-radius: 999px; font-size: 13px; font-weight: 700; margin-bottom: 14px; }
     .dt-sharing.active { display: flex; }
     .dt-pulse { width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: dtpulse 1.4s ease-in-out infinite; }
     @keyframes dtpulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-    .dt-error { color: var(--terra); font-size: 12px; margin-top: 12px; max-width: 300px; }
+    .dt-error { color: var(--terra); font-size: 13px; margin-top: 8px; line-height: 1.5; }
     .dt-done { color: var(--green-light); font-size: 16px; font-weight: 700; }
   </style>
   <link rel="stylesheet" href="premium.css">
 </head>
 <body>
   <div class="dt-page">
-    <div class="dt-logo"><img src="images/brand/ekoyini-icon.png" alt="Ekoyini"><span>Ekoyini</span></div>
-    <div id="dtBody">
-      <div class="dt-code" id="dtCode">—</div>
-      <p class="dt-status" id="dtLoadingMsg">Loading order…</p>
+    <div class="dt-card">
+      <div class="dt-logo"><img src="images/brand/ekoyini-icon.png" alt="Ekoyini"><span>Ekoyini Driver</span></div>
+      <div id="dtBody">
+        <div class="dt-label">Order</div>
+        <div class="dt-code" id="dtCode">—</div>
+        <p class="dt-status">Loading order…</p>
+      </div>
     </div>
   </div>
 
@@ -40,7 +45,12 @@
   const params = new URLSearchParams(window.location.search);
   const code = params.get('code');
   const token = params.get('token');
-  document.getElementById('dtCode').textContent = code || 'No order code';
+
+  // The code comes from the URL, so it must never be inserted as markup.
+  function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+  const codeHtml = `<div class="dt-label">Order</div><div class="dt-code">${escapeHtml(code || 'No order code')}</div>`;
 
   let watchId = null;
   let currentStatus = null;
@@ -62,80 +72,68 @@
     }
   }
 
+  function stopWatching() {
+    if (watchId != null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
+  }
+
   function render() {
     const body = document.getElementById('dtBody');
     if (currentStatus === 'PENDING') {
-      body.innerHTML = `
-        <div class="dt-code">${code}</div>
+      body.innerHTML = `${codeHtml}
         <p class="dt-status">This order is packed and ready. Tap below once you've collected it from the tavern.</p>
-        <button class="dt-btn" id="dtPickupBtn" onclick="confirmPickup()">Confirm Pickup</button>
+        <button class="dt-btn" id="dtPickupBtn">Confirm Pickup</button>
         <div class="dt-error" id="dtError"></div>`;
+      document.getElementById('dtPickupBtn').onclick = confirmPickup;
     } else if (currentStatus === 'DISPATCHED') {
-      body.innerHTML = `
-        <div class="dt-code">${code}</div>
-        <p class="dt-status">Tap below to share your live location with the customer while you're on your way. You can stop any time — just close this tab.</p>
-        <button class="dt-btn" id="dtStartBtn" onclick="startSharing()">Start Sharing My Location</button>
+      body.innerHTML = `${codeHtml}
+        <p class="dt-status">Share your live location with the customer while you're on your way. Remember to check ID (18+) at the door.</p>
+        <button class="dt-btn" id="dtStartBtn">Start Sharing My Location</button>
         <div class="dt-sharing" id="dtSharing"><span class="dt-pulse"></span> Sharing live location</div>
-        <button class="dt-btn dt-btn-secondary" id="dtDeliveredBtn" onclick="confirmDelivered()">Mark as Delivered</button>
+        <button class="dt-btn dt-btn-secondary" id="dtDeliveredBtn">Mark as Delivered</button>
         <div class="dt-error" id="dtError"></div>`;
+      document.getElementById('dtStartBtn').onclick = startSharing;
+      document.getElementById('dtDeliveredBtn').onclick = confirmDelivered;
     } else if (currentStatus === 'DELIVERED') {
-      body.innerHTML = `
-        <div class="dt-code">${code}</div>
-        <p class="dt-done">✓ Delivered — thanks for driving with Ekoyini!</p>`;
-      if (watchId != null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
+      stopWatching();
+      body.innerHTML = `${codeHtml}<p class="dt-done">Delivered — thanks for driving with Ekoyini!</p>`;
+    } else if (currentStatus === 'CANCELLED') {
+      stopWatching();
+      body.innerHTML = `${codeHtml}<p class="dt-status">This order has been cancelled. Please don't deliver it — contact dispatch if you've already collected it.</p>`;
     } else {
-      body.innerHTML = `
-        <div class="dt-code">${code}</div>
-        <p class="dt-status">This order isn't ready for pickup yet.</p>`;
+      body.innerHTML = `${codeHtml}<p class="dt-status">This order isn't ready for pickup yet.</p>`;
     }
   }
 
   function renderError(msg) {
-    document.getElementById('dtBody').innerHTML = `<div class="dt-code">${code || '—'}</div><div class="dt-error">${msg}</div>`;
+    document.getElementById('dtBody').innerHTML = `${codeHtml}<div class="dt-error">${escapeHtml(msg)}</div>`;
   }
 
-  async function confirmPickup() {
-    const btn = document.getElementById('dtPickupBtn');
+  async function postDriverAction(path, btn, idleLabel) {
     btn.disabled = true;
     btn.textContent = 'Confirming…';
     try {
-      const res = await fetch(`/order/${encodeURIComponent(code)}/confirm-pickup`, {
+      const res = await fetch(`/order/${encodeURIComponent(code)}/${path}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to confirm pickup');
+      if (!res.ok) throw new Error(data.error || 'Something went wrong');
       currentStatus = data.status;
       render();
     } catch (err) {
       console.error(err);
       btn.disabled = false;
-      btn.textContent = 'Confirm Pickup';
+      btn.textContent = idleLabel;
       document.getElementById('dtError').textContent = err.message;
     }
   }
 
-  async function confirmDelivered() {
-    const btn = document.getElementById('dtDeliveredBtn');
-    btn.disabled = true;
-    btn.textContent = 'Confirming…';
-    try {
-      const res = await fetch(`/order/${encodeURIComponent(code)}/confirm-delivered`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to confirm delivery');
-      currentStatus = data.status;
-      render();
-    } catch (err) {
-      console.error(err);
-      btn.disabled = false;
-      btn.textContent = 'Mark as Delivered';
-      document.getElementById('dtError').textContent = err.message;
-    }
+  function confirmPickup() {
+    postDriverAction('confirm-pickup', document.getElementById('dtPickupBtn'), 'Confirm Pickup');
+  }
+  function confirmDelivered() {
+    postDriverAction('confirm-delivered', document.getElementById('dtDeliveredBtn'), 'Mark as Delivered');
   }
 
   function startSharing() {
@@ -166,26 +164,24 @@
 
   let lastSent = 0;
   async function postLocation(lat, lng) {
-    // Throttle to roughly once every 10s — watchPosition can fire much
-    // more often than that, and the server/customer don't need it to.
+    // Throttle to ~10s; the server's rate limit allows this comfortably.
     const now = Date.now();
     if (now - lastSent < 10000) return;
     lastSent = now;
     try {
-      await fetch(`/order/${encodeURIComponent(code)}/location`, {
+      const res = await fetch(`/order/${encodeURIComponent(code)}/location`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token, lat, lng }),
       });
+      // Order was cancelled or delivered elsewhere — stop broadcasting.
+      if (res.status === 400) { stopWatching(); init(); }
     } catch (err) {
       console.error('Failed to post location:', err);
     }
   }
 
-  window.addEventListener('beforeunload', () => {
-    if (watchId != null) navigator.geolocation.clearWatch(watchId);
-  });
-
+  window.addEventListener('beforeunload', stopWatching);
   init();
   </script>
 </body>
