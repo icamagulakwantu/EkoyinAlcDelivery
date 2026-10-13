@@ -19,6 +19,7 @@
     .checkbox-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; }
     .checkbox-row input[type="checkbox"] { width: 18px; height: 18px; margin-top: 2px; cursor: pointer; }
     .checkbox-row label { font-size: 12px; color: var(--muted); line-height: 1.5; cursor: pointer; flex: 1; }
+    .checkbox-row label a { color: var(--gold-deep); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
     /* Matches the max-contrast age gate on the home screen — same black
        surface + terracotta accent, so the compliance moment reads as one
        consistent system rather than a generic red warning box. */
@@ -115,7 +116,8 @@
       </div>
       <div class="checkbox-row">
         <input type="checkbox" id="termsConfirm">
-        <label for="termsConfirm">I agree to Ekoyini's Terms & Conditions and Privacy Policy</label>
+        <!-- Links open in a new tab so the customer doesn't lose their checkout. -->
+        <label for="termsConfirm">I agree to Ekoyini's <a href="terms.html" target="_blank" rel="noopener">Terms &amp; Conditions</a> and <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a></label>
       </div>
     </div>
 
