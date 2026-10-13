@@ -1,10 +1,4 @@
-// server.js
-// ...
-
 require("dotenv").config();
-// Delivery is free only for orders above R1000.
-const delivery = subtotal > 1000 ? 0 : 50;
-const total = Math.round((subtotal - coolerDiscount - promoDiscount + delivery) * 100) / 100;
 
 const express = require("express");
 const crypto = require("crypto");
@@ -17,7 +11,16 @@ const prisma = new PrismaClient();
 // would build broken (non-https) Yoco redirect URLs.
 app.set("trust proxy", true);
 
-const { createYocoCheckout, getYocoCheckout, checkoutLooksPaid, verifyYocoWebhookSignature, extractCheckoutId, isYocoConfigured } = require("./payments.js");
+const {
+  createYocoCheckout,
+  getYocoCheckout,
+  checkoutLooksPaid,
+  extractPaidAmountCents,
+  extractCurrency,
+  verifyYocoWebhookSignature,
+  extractCheckoutId,
+  isYocoConfigured,
+} = require("./payments.js");
 const { sendOrderConfirmationEmail, sendAdminOrderAlertEmail, sendPaymentFailureAlertEmail, sendPaymentConfirmedEmail } = require("./emails.js");
 
 app.use(express.static("public"));
@@ -59,16 +62,10 @@ async function requireUser(req, res, next) {
 }
 
 // ── Admin auth ──────────────────────────────────────────────
-// Real per-user auth: a logged-in Supabase user whose email is in the
-// ADMIN_EMAILS allowlist (comma-separated, case-insensitive) is always a
-// SUPER_ADMIN — that's the root bootstrap path, since you need at least
-// one admin able to grant anyone else access before a role table means
-// anything. Beyond that, the AdminUser table holds delegated admins with
-// an actual role (SUPER_ADMIN or DISPATCHER), managed via /admin/admins.
-// The shared ADMIN_API_TOKEN header still works too — kept for scripts/
-// curl (e.g. the /admin/enrich-images trigger) and as a bootstrap path
-// before any admin account is set up. Once every admin has a real
-// account, drop ADMIN_API_TOKEN from the environment to retire it.
+// A logged-in Supabase user whose email is in the ADMIN_EMAILS allowlist
+// is always a SUPER_ADMIN (root bootstrap). The AdminUser table holds
+// delegated admins with a role (SUPER_ADMIN or DISPATCHER). The shared
+// ADMIN_API_TOKEN header still works for scripts/curl.
 function isAdminEmail(email) {
   const allowlist = (process.env.ADMIN_EMAILS || "")
     .split(",")
@@ -101,9 +98,6 @@ async function requireAdmin(req, res, next) {
   return res.status(401).json({ error: "Unauthorized" });
 }
 
-// Layer on top of requireAdmin (run after it) — gates the actions that
-// shouldn't be available to every dispatcher: deleting orders, managing
-// inventory, and managing other admins' access.
 function requireSuperAdmin(req, res, next) {
   if (req.adminRole !== "SUPER_ADMIN") {
     return res.status(403).json({ error: "This action requires a super-admin account" });
@@ -111,10 +105,7 @@ function requireSuperAdmin(req, res, next) {
   next();
 }
 
-// Fire-and-forget-but-awaited record of who did what. Never blocks or
-// fails the actual admin action — a logging failure shouldn't stop an
-// order from being dispatched — so errors here are swallowed, just logged
-// to the console for visibility.
+// Record of who did what. Never blocks or fails the actual admin action.
 async function logAdminAction(req, action, targetId, detail) {
   try {
     await prisma.adminAuditLog.create({
@@ -130,9 +121,21 @@ async function logAdminAction(req, action, targetId, detail) {
   }
 }
 
-// ── Cooler Box pricing — shared with the browser via public/pricing.js,
-// see that file for why. This used to be copy-pasted here separately.
-const { COOLER_ELIGIBLE, coolerDiscountPct } = require("./public/pricing.js");
+// ── Pricing — shared with the browser via public/pricing.js, so the cart,
+// checkout and server can never disagree on discounts or the delivery fee.
+const { COOLER_ELIGIBLE, coolerDiscountPct, deliveryFee } = require("./public/pricing.js");
+
+// Shared total calculation (subtotal → minus Cooler Box and promo → plus
+// delivery). Previously copy-pasted in three places.
+function computeOrderTotal(subtotal, coolerDiscount, promoDiscount) {
+  const delivery = deliveryFee(subtotal);
+  return Math.round((subtotal - coolerDiscount - promoDiscount + delivery) * 100) / 100;
+}
+
+function computePromoDiscount(subtotal, coolerDiscount, promo) {
+  if (!promo) return 0;
+  return Math.round((subtotal - coolerDiscount) * (promo.discountPct / 100) * 100) / 100;
+}
 
 // 🩺 HEALTH — DB connectivity check, hit this first when debugging
 app.get("/api/health", async (req, res) => {
@@ -145,12 +148,32 @@ app.get("/api/health", async (req, res) => {
   }
 });
 
-// 🛒 CATALOG — replaces the hardcoded CATALOG object in shop.html
+// Only customer-facing fields. The supplier price sheet columns
+// (listPriceZAR, supplierCase*/supplierPallet*, palletPackQty,
+// supplierPortfolio) are cost data and must never leave the server —
+// before this, anyone could read Ekoyini's margins from the browser.
+const PUBLIC_PRODUCT_FIELDS = {
+  id: true,
+  name: true,
+  category: true,
+  productType: true,
+  bottleFormat: true,
+  unitsPerCase: true,
+  retailSingleZAR: true,
+  retailCaseDiscountPct: true,
+  retailCaseZAR: true,
+  imageUrl: true,
+  brandTags: true,
+  stock: true,
+};
+
+// 🛒 CATALOG
 app.get("/api/products", async (req, res) => {
   try {
     const { category } = req.query;
     const products = await prisma.skuItem.findMany({
       where: category ? { category } : undefined,
+      select: PUBLIC_PRODUCT_FIELDS,
       orderBy: [{ category: "asc" }, { name: "asc" }],
     });
     res.json(products);
@@ -160,8 +183,7 @@ app.get("/api/products", async (req, res) => {
   }
 });
 
-// 🏪 TAVERNS — public store list for the homepage. Deliberately narrow:
-// only what's safe to show a customer, never the tavern's phone number.
+// 🏪 TAVERNS — public store list for the homepage. Never the phone number.
 app.get("/api/taverns", async (req, res) => {
   try {
     const taverns = await prisma.tavern.findMany({
@@ -175,10 +197,7 @@ app.get("/api/taverns", async (req, res) => {
   }
 });
 
-// 📊 STATS — real, computed trust-signal numbers for the homepage (product
-// count, verified tavern count, distinct townships served). Never hardcode
-// these in the frontend — they drift the moment the catalog or tavern list
-// changes, and a stale trust number is worse than no trust number.
+// 📊 STATS — real, computed trust-signal numbers for the homepage.
 app.get("/api/stats", async (req, res) => {
   try {
     const [products, taverns, areas] = await Promise.all([
@@ -193,21 +212,13 @@ app.get("/api/stats", async (req, res) => {
   }
 });
 
-// 🏪 ADMIN: full tavern records (includes phone) for the assign-order
-// dropdown + WhatsApp dispatch messages.
+// 🏪 ADMIN: full tavern records (includes phone)
 app.get("/admin/taverns", requireAdmin, async (req, res) => {
   const taverns = await prisma.tavern.findMany({ orderBy: { name: "asc" } });
   res.json(taverns);
 });
 
-// 🖼️ ADMIN: one-off image enrichment job (real product photos via Open
-// Food Facts, free, no API key). Render has real outbound internet access
-// unlike some sandboxed dev environments, so this runs server-side here
-// rather than as a local script. Long-running (~300ms/product, polite to
-// the free API) — responds immediately and processes in the background.
-// Products with no confident match keep their category placeholder image.
-// Trigger once with: curl -X POST -H "x-admin-token: $ADMIN_API_TOKEN" https://<host>/admin/enrich-images
-// Progress logs to the Render console; check /admin/enrich-images/status for a live count.
+// 🖼️ ADMIN: one-off image enrichment job (Open Food Facts, no API key).
 let enrichStatus = { running: false, checked: 0, updated: 0, total: 0 };
 
 app.post("/admin/enrich-images", requireAdmin, async (req, res) => {
@@ -252,9 +263,7 @@ app.get("/admin/enrich-images/status", requireAdmin, (req, res) => {
   res.json(enrichStatus);
 });
 
-// 🏷️ PROMO CODES — shared validation, used by both the preview endpoint
-// (cart/checkout, no side effects) and order creation (the only place a
-// code is actually redeemed). subtotal here is pre-delivery, pre-discount.
+// 🏷️ PROMO CODES — shared validation. subtotal here is pre-delivery, pre-discount.
 async function checkPromoCode(code, subtotal) {
   if (!code) return { promo: null };
   const promo = await prisma.promoCode.findUnique({ where: { code: code.trim().toUpperCase() } });
@@ -287,27 +296,26 @@ app.post("/api/promo/validate", async (req, res) => {
 });
 
 // ── Cash-on-delivery eligibility ─────────────────────────────
-// Real cash changing hands at the door is the riskiest payment path we
-// offer — both a fraud surface (no chargeback-style recourse) and, at
-// the high end, a driver-safety issue. Enforced here, server-side, not
-// just hinted at in the checkout UI:
-//   1. Track record — account older than 3 months AND at least 30 prior
-//      orders placed, both required. Either alone isn't enough: a brand
-//      new account with 30 orders in a week has no real track record,
-//      and a 3-year-old account that's only ordered twice doesn't either.
-//   2. This order's amount — needs to clear R300 (stricter than the
-//      R200 free-delivery threshold elsewhere in the app) and is always
-//      capped at R1500, regardless of how established the account is —
-//      purely so a driver is never holding more cash than that.
-//   3. Pattern deviation — flagged, not blocked, when an order swings
-//      far outside what this customer has actually bought before (e.g.
-//      someone who's only ever bought Hennessy VS suddenly ordering
-//      several brands/categories they've never touched, for several
-//      times their usual spend). Surfaces on the admin dashboard for a
-//      human to glance at before dispatch — a deviation isn't proof of
-//      fraud on its own, so it never auto-rejects.
-const COD_MIN_ACCOUNT_AGE_MONTHS = 3;
-const COD_MIN_PRIOR_ORDERS = 30;
+// Enforced server-side:
+//   1. Track record — a minimum number of orders actually DELIVERED to
+//      this account (and optionally a minimum account age). The old rule
+//      (3+ months AND 30+ orders) meant no customer could use COD for the
+//      first months after launch. Delivered orders are a much better trust
+//      signal than placed orders, so the bar can be far lower.
+//      Both thresholds can be tuned on Render without a code change:
+//        COD_MIN_DELIVERED_ORDERS (default 2)
+//        COD_MIN_ACCOUNT_AGE_MONTHS (default 0)
+//   2. This order's amount — must clear R300 and is always capped at
+//      R1500 so a driver is never holding more cash than that.
+//   3. Pattern deviation — flagged (not blocked) for the admin to glance
+//      at before dispatch.
+function intFromEnv(name, fallback) {
+  const n = parseInt(process.env[name], 10);
+  return Number.isInteger(n) && n >= 0 ? n : fallback;
+}
+
+const COD_MIN_ACCOUNT_AGE_MONTHS = intFromEnv("COD_MIN_ACCOUNT_AGE_MONTHS", 0);
+const COD_MIN_DELIVERED_ORDERS = intFromEnv("COD_MIN_DELIVERED_ORDERS", 2);
 const COD_MIN_ORDER_TOTAL = 300;
 const COD_MAX_ORDER_TOTAL = 1500;
 
@@ -320,10 +328,25 @@ function monthsSince(dateStr) {
   return Math.max(0, months);
 }
 
-// Orders placed but never actually confirmed (abandoned card checkouts
-// stuck at PAYMENT_PENDING) don't count as "using the account."
+// Orders placed but never confirmed (stuck at PAYMENT_PENDING) don't count.
 async function countConfirmedOrders(userId) {
   return prisma.order.count({ where: { userId, status: { not: "PAYMENT_PENDING" } } });
+}
+
+async function countDeliveredOrders(userId) {
+  return prisma.order.count({ where: { userId, status: "DELIVERED" } });
+}
+
+function plural(n, word) {
+  return `${n} ${word}${n === 1 ? "" : "s"}`;
+}
+
+function codTrackRecordMessage(accountAgeMonths, deliveredOrderCount) {
+  const needs = [`${plural(COD_MIN_DELIVERED_ORDERS, "delivered order")}`];
+  if (COD_MIN_ACCOUNT_AGE_MONTHS > 0) needs.unshift(`an account ${COD_MIN_ACCOUNT_AGE_MONTHS}+ months old`);
+  const have = [`${plural(deliveredOrderCount, "delivered order")}`];
+  if (COD_MIN_ACCOUNT_AGE_MONTHS > 0) have.unshift(plural(accountAgeMonths, "month"));
+  return `Cash on delivery unlocks after ${needs.join(" and ")} (you're at ${have.join(", ")}). Please pay by card or EFT for now.`;
 }
 
 async function assessCodEligibility({ userId, userCreatedAt, orderTotal, skuIds }) {
@@ -338,20 +361,16 @@ async function assessCodEligibility({ userId, userCreatedAt, orderTotal, skuIds 
   }
 
   const accountAgeMonths = monthsSince(userCreatedAt);
-  const priorOrderCount = await countConfirmedOrders(userId);
+  const [deliveredOrderCount, priorOrderCount] = await Promise.all([
+    countDeliveredOrders(userId),
+    countConfirmedOrders(userId),
+  ]);
 
-  if (accountAgeMonths < COD_MIN_ACCOUNT_AGE_MONTHS || priorOrderCount < COD_MIN_PRIOR_ORDERS) {
-    return {
-      eligible: false,
-      error: `Cash on delivery unlocks once your account is ${COD_MIN_ACCOUNT_AGE_MONTHS}+ months old and you've placed ${COD_MIN_PRIOR_ORDERS}+ orders (you're at ${accountAgeMonths} month${accountAgeMonths === 1 ? "" : "s"}, ${priorOrderCount} order${priorOrderCount === 1 ? "" : "s"}). Please pay by card or EFT for now.`,
-      accountAgeMonths,
-      priorOrderCount,
-    };
+  if (accountAgeMonths < COD_MIN_ACCOUNT_AGE_MONTHS || deliveredOrderCount < COD_MIN_DELIVERED_ORDERS) {
+    return { eligible: false, error: codTrackRecordMessage(accountAgeMonths, deliveredOrderCount) };
   }
 
-  // Pattern check — only meaningful once there's real history to compare
-  // against; skip it for accounts that just barely cleared the 30-order
-  // gate with too little signal to call anything "unusual" yet.
+  // Pattern check — only meaningful once there's real history to compare.
   let flagged = false;
   let flagReason = null;
   if (priorOrderCount >= 5 && skuIds.length > 0) {
@@ -374,27 +393,22 @@ async function assessCodEligibility({ userId, userCreatedAt, orderTotal, skuIds 
     }
   }
 
-  return { eligible: true, flagged, flagReason, accountAgeMonths, priorOrderCount };
+  return { eligible: true, flagged, flagReason };
 }
 
-// Mirrors the total calc inside createOrderTransaction (subtotal minus
-// Cooler Box and promo discounts, plus delivery) without writing
-// anything — needed to check a COD order's amount before the order (and
-// the real promo redemption) is actually created.
+// Mirrors the total calc inside createOrderTransaction without writing
+// anything — needed to check a COD order's amount before it's created.
 async function estimateOrderTotal({ subtotal, coolerDiscount }, promoCode) {
-  let promoDiscount = 0;
+  let promo = null;
   if (promoCode) {
-    const { promo } = await checkPromoCode(promoCode, subtotal - coolerDiscount);
-    if (promo) promoDiscount = Math.round((subtotal - coolerDiscount) * (promo.discountPct / 100) * 100) / 100;
+    const result = await checkPromoCode(promoCode, subtotal - coolerDiscount);
+    promo = result.promo || null;
   }
-  const delivery = subtotal > 200 ? 0 : 50;
-  return Math.round((subtotal - coolerDiscount - promoDiscount + delivery) * 100) / 100;
+  return computeOrderTotal(subtotal, coolerDiscount, computePromoDiscount(subtotal, coolerDiscount, promo));
 }
 
-// ── Order pricing + validation — shared by the immediate COD/EFT path
-// (POST /order below) and the card path, where the same logic runs again
-// inside the webhook handler once Yoco confirms payment, not at checkout-
-// session creation time. Pure computation only; no DB writes.
+// ── Order pricing + validation — shared by COD/EFT and the card path.
+// Pure computation only; no DB writes.
 async function validateAndPriceOrder({ address, items, customerPhone, paymentMethod, allowedPaymentMethods }) {
   if (!address || typeof address !== "string" || address.trim().length < 5) {
     return { error: "Please enter a valid delivery address" };
@@ -417,7 +431,7 @@ async function validateAndPriceOrder({ address, items, customerPhone, paymentMet
   let subtotal = 0;
   let coolerSubtotal = 0;
   const orderItems = [];
-  const stockNeeded = []; // { skuId, name, units } — units are individual bottles, not cases
+  const stockNeeded = []; // units are individual bottles, not cases
 
   for (const i of items) {
     const sku = skuMap.get(i.skuId);
@@ -425,10 +439,7 @@ async function validateAndPriceOrder({ address, items, customerPhone, paymentMet
     if (!sku || !Number.isInteger(rawQuantity) || rawQuantity <= 0) {
       return { error: `Invalid item: ${i.skuId}` };
     }
-    // Case mode is bought in whole cases — quantity is always a bottle
-    // count (same field as single mode), so round it up to the nearest
-    // full case server-side too, matching cart.html/checkout.html, rather
-    // than trusting the client sent an exact multiple.
+    // Case mode is bought in whole cases — round up server-side too.
     const quantity = i.purchaseType === "case"
       ? Math.ceil(rawQuantity / sku.unitsPerCase) * sku.unitsPerCase
       : rawQuantity;
@@ -438,8 +449,6 @@ async function validateAndPriceOrder({ address, items, customerPhone, paymentMet
     if (COOLER_ELIGIBLE.has(sku.category)) coolerSubtotal += itemTotal;
 
     orderItems.push({ skuId: sku.id, name: sku.name, price: unitPrice, quantity });
-    // quantity is already a bottle count in both modes (case mode was
-    // just rounded up to a case multiple above) — no further scaling.
     stockNeeded.push({ skuId: sku.id, name: sku.name, units: quantity });
   }
 
@@ -447,15 +456,11 @@ async function validateAndPriceOrder({ address, items, customerPhone, paymentMet
   return { orderItems, stockNeeded, subtotal, coolerDiscount };
 }
 
-// Runs the actual atomic write: stock decrement, promo redemption, and the
-// Order row itself, all in one transaction. Called directly for COD/EFT
-// (payment happens at the door / independently), and from the Yoco
-// webhook handler for card (only after Yoco confirms payment succeeded).
+// Atomic write: stock decrement, promo redemption, and the Order row.
 async function createOrderTransaction({ userId, address, customerName, customerPhone, customerEmail, paymentMethod, promoCode, status, priced, codFlagged, codFlagReason }) {
   const { orderItems, stockNeeded, subtotal, coolerDiscount } = priced;
 
   let promo = null;
-  let promoDiscount = 0;
   if (promoCode) {
     const result = await checkPromoCode(promoCode, subtotal - coolerDiscount);
     if (result.error) {
@@ -464,17 +469,11 @@ async function createOrderTransaction({ userId, address, customerName, customerP
       throw err;
     }
     promo = result.promo;
-    if (promo) promoDiscount = Math.round((subtotal - coolerDiscount) * (promo.discountPct / 100) * 100) / 100;
   }
-
-  const delivery = subtotal > 200 ? 0 : 50;
-  const total = Math.round((subtotal - coolerDiscount - promoDiscount + delivery) * 100) / 100;
+  const promoDiscount = computePromoDiscount(subtotal, coolerDiscount, promo);
+  const total = computeOrderTotal(subtotal, coolerDiscount, promoDiscount);
   const code = "EKO-" + Math.random().toString(36).slice(2, 8).toUpperCase();
 
-  // Decrement stock and increment the promo's usage count in the same
-  // transaction as the order write — avoids two races: two customers
-  // both slipping in under a promo's maxUses cap, or both buying the
-  // last few units of something between the check and the write.
   return prisma.$transaction(async (tx) => {
     for (const need of stockNeeded) {
       const { count } = await tx.skuItem.updateMany({
@@ -521,12 +520,7 @@ async function createOrderTransaction({ userId, address, customerName, customerP
 
 const DIRECT_PAYMENT_METHODS = new Set(["cod", "eft"]);
 
-// 📦 CREATE ORDER (customer, auth-gated) — COD/EFT only. Card goes through
-// POST /order/checkout-session + the Yoco webhook instead, since payment
-// isn't confirmed yet at the moment this would otherwise be called.
-// Only skuId + quantity + purchaseType come from the client — every price
-// is recomputed here from the current DB values. This closes the exploit
-// where an editable price field on the client could set its own total.
+// 📦 CREATE ORDER (customer, auth-gated) — COD/EFT only.
 app.post("/order", requireUser, async (req, res) => {
   try {
     const { address, items, customerName, customerPhone, paymentMethod, promoCode } = req.body;
@@ -559,11 +553,7 @@ app.post("/order", requireUser, async (req, res) => {
       priced,
       codFlagged,
       codFlagReason,
-      // EFT needs an admin to actually confirm the bank transfer landed —
-      // that's the only payment method that waits at PAYMENT_PENDING now.
-      // COD is paid at the door (nothing to confirm upfront) and card is
-      // already confirmed by the time the Yoco webhook creates the order,
-      // so both go straight to PENDING (packed/ready for pickup).
+      // EFT waits for an admin to confirm the transfer; COD goes straight to packing.
       status: paymentMethod === "eft" ? "PAYMENT_PENDING" : "PENDING",
     });
     console.log("New order:", order.code);
@@ -583,31 +573,25 @@ app.post("/order", requireUser, async (req, res) => {
   }
 });
 
-// 💳 PAYMENT CONFIG — lets checkout.html know whether to enable the card
-// radio at all. Stays off (disabled, as it's always been) until
-// YOCO_SECRET_KEY is actually set in the environment.
+// 💳 PAYMENT CONFIG — lets checkout.html know whether to enable card.
 app.get("/api/payment-config", (req, res) => {
   res.json({ cardEnabled: isYocoConfigured() });
 });
 
-// 🚚 COD ELIGIBILITY (track record only) — lets checkout.html show/hide the
-// Pay on Delivery option with a real reason before the customer even tries
-// to submit. Doesn't know the current order's amount (checkout.html already
-// has the cart total client-side to check that half against
-// COD_MIN_ORDER_TOTAL/COD_MAX_ORDER_TOTAL) — this only covers the part that
-// needs a DB lookup: account age and order-count history. The actual gate
-// is still POST /order's own server-side check; this is a preview.
+// 🚚 COD ELIGIBILITY (track record only) — preview for checkout.html.
+// The real gate is still POST /order's own server-side check.
 app.get("/api/cod-eligibility", requireUser, async (req, res) => {
   try {
     const accountAgeMonths = monthsSince(req.user.created_at);
-    const priorOrderCount = await countConfirmedOrders(req.user.id);
-    const trackRecordOk = accountAgeMonths >= COD_MIN_ACCOUNT_AGE_MONTHS && priorOrderCount >= COD_MIN_PRIOR_ORDERS;
+    const deliveredOrderCount = await countDeliveredOrders(req.user.id);
+    const trackRecordOk = accountAgeMonths >= COD_MIN_ACCOUNT_AGE_MONTHS && deliveredOrderCount >= COD_MIN_DELIVERED_ORDERS;
     res.json({
       trackRecordOk,
+      trackRecordMessage: trackRecordOk ? null : codTrackRecordMessage(accountAgeMonths, deliveredOrderCount),
       accountAgeMonths,
-      priorOrderCount,
+      deliveredOrderCount,
       minAccountAgeMonths: COD_MIN_ACCOUNT_AGE_MONTHS,
-      minPriorOrders: COD_MIN_PRIOR_ORDERS,
+      minDeliveredOrders: COD_MIN_DELIVERED_ORDERS,
       minOrderTotal: COD_MIN_ORDER_TOTAL,
       maxOrderTotal: COD_MAX_ORDER_TOTAL,
     });
@@ -621,11 +605,8 @@ function appBaseUrl(req) {
   return process.env.APP_BASE_URL || `${req.protocol}://${req.get("host")}`;
 }
 
-// 💳 CARD CHECKOUT — start a Yoco hosted checkout. Doesn't create an Order
-// or touch stock/promo yet; that only happens once POST /webhooks/yoco
-// confirms the payment actually succeeded. Stores the validated order
-// payload in PendingCheckout so the webhook has everything it needs to
-// finish the job without trusting anything the client sends at that point.
+// 💳 CARD CHECKOUT — start a Yoco hosted checkout. The Order is only
+// created once POST /webhooks/yoco confirms payment.
 app.post("/order/checkout-session", requireUser, async (req, res) => {
   if (!isYocoConfigured()) return res.status(400).json({ error: "Card payment isn't available yet" });
   try {
@@ -639,33 +620,22 @@ app.post("/order/checkout-session", requireUser, async (req, res) => {
     });
     if (priced.error) return res.status(400).json({ error: priced.error });
 
-    // Non-mutating promo preview — the real redemption (usedCount
-    // increment) only happens inside createOrderTransaction, after payment
-    // is confirmed. This is just to quote Yoco the correct final amount.
-    let promoDiscount = 0;
+    let promo = null;
     if (promoCode) {
       const result = await checkPromoCode(promoCode, priced.subtotal - priced.coolerDiscount);
       if (result.error) return res.status(400).json({ error: result.error });
-      if (result.promo) promoDiscount = Math.round((priced.subtotal - priced.coolerDiscount) * (result.promo.discountPct / 100) * 100) / 100;
+      promo = result.promo;
     }
-    const delivery = priced.subtotal > 200 ? 0 : 50;
-    const total = Math.round((priced.subtotal - priced.coolerDiscount - promoDiscount + delivery) * 100) / 100;
+    const promoDiscount = computePromoDiscount(priced.subtotal, priced.coolerDiscount, promo);
+    const total = computeOrderTotal(priced.subtotal, priced.coolerDiscount, promoDiscount);
     const amountCents = Math.round(total * 100);
 
     const base = appBaseUrl(req);
-    // The PendingCheckout id isn't known until after we've created it, but
-    // Yoco needs redirect URLs up front — create the DB row first with a
-    // placeholder Yoco id, then update it once Yoco responds. (Two round
-    // trips, but this only runs once per checkout attempt, not per order.)
     const pending = await prisma.pendingCheckout.create({
       data: {
         userId: req.user.id,
         yocoCheckoutId: `pending-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
         amountCents,
-        // customerEmail is captured here (from the verified session) rather
-        // than looked up later — the webhook handler has no user session to
-        // work from, and fetching it via Supabase's admin API would need a
-        // service-role key this app doesn't otherwise need or have.
         payload: JSON.stringify({ address, items, customerName, customerPhone, promoCode: promoCode || null, customerEmail: req.user.email }),
       },
     });
@@ -693,8 +663,7 @@ app.post("/order/checkout-session", requireUser, async (req, res) => {
   }
 });
 
-// Polled by order-confirmation.html while it's waiting for the webhook to
-// land — Yoco's redirect can beat the webhook there by a second or two.
+// Polled by order-confirmation.html while waiting for the webhook.
 app.get("/api/checkout-session/:id/status", requireUser, async (req, res) => {
   try {
     const pending = await prisma.pendingCheckout.findUnique({ where: { id: req.params.id } });
@@ -706,10 +675,19 @@ app.get("/api/checkout-session/:id/status", requireUser, async (req, res) => {
   }
 });
 
-// 🪝 YOCO WEBHOOK — the only thing this integration actually trusts for
-// "was this paid". Verifies the signature, re-fetches the checkout from
-// Yoco directly (never trusts the webhook payload's own claim of success),
-// then runs the same order-creation transaction COD/EFT uses.
+// Marks a paid checkout as needing a human (refund or manual order) and
+// emails the admins. Used for both amount mismatches and order failures.
+async function flagPaidCheckoutForReview(pending, reason) {
+  await prisma.pendingCheckout.update({
+    where: { id: pending.id },
+    data: { status: "FAILED_NEEDS_REFUND", failureReason: reason },
+  }).catch((e) => console.error("[yoco webhook] Failed to flag checkout:", e));
+  sendPaymentFailureAlertEmail(pending, reason).catch((e) => console.error("[email] failure alert failed:", e));
+}
+
+// 🪝 YOCO WEBHOOK — verifies the signature, re-fetches the checkout from
+// Yoco, checks the amount actually paid matches what we quoted, then runs
+// the same order-creation transaction COD/EFT uses.
 app.post("/webhooks/yoco", async (req, res) => {
   const signatureValid = verifyYocoWebhookSignature(req.headers, req.rawBody);
   if (!signatureValid) {
@@ -723,17 +701,7 @@ app.post("/webhooks/yoco", async (req, res) => {
     return res.status(400).json({ error: "No checkout id in payload" });
   }
 
-  // Deliberately not filtering on req.body.type (e.g. "payment.succeeded")
-  // here — the real gate is checkoutLooksPaid() below, which is based on
-  // a fresh re-fetch from Yoco's own API, not on what this payload claims.
-  // A webhook for any other event type on a real checkout just resolves to
-  // "not paid yet" and returns harmlessly, so skipping the type check
-  // doesn't weaken anything and keeps this working even if the exact
-  // event-type string turns out to differ from what's assumed here.
-
-  // Always ack fast — Yoco retries on non-2xx, and the actual work below
-  // is idempotent (guarded by PendingCheckout.status), so double delivery
-  // is safe either way.
+  // Ack fast — the work below is idempotent (guarded by PendingCheckout.status).
   res.json({ received: true });
 
   try {
@@ -742,11 +710,24 @@ app.post("/webhooks/yoco", async (req, res) => {
       console.error("[yoco webhook] No PendingCheckout for Yoco checkout:", checkoutId);
       return;
     }
-    if (pending.status !== "PENDING") return; // already handled — idempotent no-op
+    if (pending.status !== "PENDING") return; // already handled
 
     const checkout = await getYocoCheckout(checkoutId);
     if (!checkoutLooksPaid(checkout)) {
       console.log(`[yoco webhook] Checkout ${checkoutId} not in a paid state yet:`, checkout.status || checkout.state);
+      return;
+    }
+
+    // The amount Yoco actually charged must match what we quoted, in ZAR.
+    // If it can't be read at all, a human checks it — never assume it's fine.
+    const paidCents = extractPaidAmountCents(checkout);
+    const currency = extractCurrency(checkout);
+    if (paidCents !== pending.amountCents || (currency && currency !== "ZAR")) {
+      const reason = paidCents == null
+        ? `Could not read the paid amount from Yoco (expected R${(pending.amountCents / 100).toFixed(2)}). Check the Yoco dashboard before dispatching.`
+        : `Paid R${(paidCents / 100).toFixed(2)} ${currency || ""} but the order total was R${(pending.amountCents / 100).toFixed(2)} ZAR.`;
+      console.error(`[yoco webhook] Amount check failed for ${checkoutId}: ${reason}`, checkout);
+      await flagPaidCheckoutForReview(pending, reason);
       return;
     }
 
@@ -768,7 +749,7 @@ app.post("/webhooks/yoco", async (req, res) => {
       customerEmail: payload.customerEmail,
       paymentMethod: "card",
       promoCode: payload.promoCode,
-      status: "PENDING", // card is pre-paid — skip PAYMENT_PENDING, ready to dispatch
+      status: "PENDING",
       priced,
     });
 
@@ -778,20 +759,18 @@ app.post("/webhooks/yoco", async (req, res) => {
     });
     console.log(`[yoco webhook] Order ${order.code} created from checkout ${checkoutId}`);
 
+    // Prices can change between quoting and payment — the customer has
+    // still paid the quoted amount, so keep the order but tell the admins.
+    if (Math.round(order.total * 100) !== pending.amountCents) {
+      console.warn(`[yoco webhook] Order ${order.code} total R${order.total} differs from paid R${pending.amountCents / 100}`);
+    }
+
     sendOrderConfirmationEmail(order, payload.customerEmail).catch((e) => console.error("[email] confirmation failed:", e));
     sendAdminOrderAlertEmail(order).catch((e) => console.error("[email] admin alert failed:", e));
   } catch (err) {
-    // The customer has already paid at this point — this is the one
-    // failure mode that needs a human, not just a log line.
     console.error("[yoco webhook] Failed to create order after payment:", err);
     const pending = await prisma.pendingCheckout.findUnique({ where: { yocoCheckoutId: checkoutId } }).catch(() => null);
-    if (pending) {
-      await prisma.pendingCheckout.update({
-        where: { id: pending.id },
-        data: { status: "FAILED_NEEDS_REFUND", failureReason: err.message },
-      }).catch(() => {});
-      sendPaymentFailureAlertEmail(pending, err.message).catch((e) => console.error("[email] failure alert failed:", e));
-    }
+    if (pending) await flagPaidCheckoutForReview(pending, err.message);
   }
 });
 
@@ -811,7 +790,7 @@ app.get("/api/my-orders", requireUser, async (req, res) => {
 });
 
 // 📍 PUBLIC ORDER TRACKING — no login required, just the order code
-const LOCATION_STALE_AFTER_MS = 3 * 60 * 1000; // a driver ping older than this isn't "live" anymore
+const LOCATION_STALE_AFTER_MS = 3 * 60 * 1000;
 
 app.get("/api/order/:code/track", async (req, res) => {
   try {
@@ -836,9 +815,6 @@ app.get("/api/order/:code/track", async (req, res) => {
     });
     if (!order) return res.status(404).json({ error: "Order not found" });
 
-    // Don't show a stale dot as if it were live — if the driver's phone
-    // lost signal or they closed the tab, say so isn't shown at all rather
-    // than silently misleading the customer about where the driver is.
     const isFresh = order.driverLocationAt && Date.now() - new Date(order.driverLocationAt).getTime() < LOCATION_STALE_AFTER_MS;
     if (!isFresh) {
       order.driverLat = null;
@@ -852,8 +828,7 @@ app.get("/api/order/:code/track", async (req, res) => {
   }
 });
 
-// ⭐ CUSTOMER: RATE A DELIVERED ORDER — auth-gated so only the order's own
-// owner can rate it, one rating per order, only once it's actually DELIVERED.
+// ⭐ CUSTOMER: RATE A DELIVERED ORDER
 app.post("/order/:code/rate", requireUser, async (req, res) => {
   try {
     const { rating, comment } = req.body;
@@ -892,17 +867,10 @@ app.get("/orders", requireAdmin, async (req, res) => {
   res.json(orders);
 });
 
-// 🏪 ADMIN: ASSIGN TAVERN + DRIVER — can happen before an EFT order's
-// payment is actually confirmed (the tavern can be lined up in parallel),
-// so this never promotes status on its own. Only CONFIRM PAYMENT (below)
-// moves an order out of PAYMENT_PENDING now.
+// 🏪 ADMIN: ASSIGN TAVERN + DRIVER — never promotes status on its own.
 app.patch("/order/:code/assign", requireAdmin, async (req, res) => {
   try {
     const { tavernId, driverName, driverPhone, driverVehicle } = req.body;
-    // A fresh share token per assignment — no driver account exists, so
-    // this random token in a URL is what authorizes driver-track.html to
-    // post location updates for this specific order (same trust model the
-    // order tracking code itself already uses).
     const driverShareToken = crypto.randomBytes(16).toString("hex");
     const order = await prisma.order.update({
       where: { code: req.params.code },
@@ -917,11 +885,7 @@ app.patch("/order/:code/assign", requireAdmin, async (req, res) => {
   }
 });
 
-// 💰 ADMIN: CONFIRM PAYMENT RECEIVED — EFT-only. COD is paid at the door
-// and card is confirmed automatically by the Yoco webhook, so those never
-// sit at PAYMENT_PENDING; EFT is the one method where a human has to check
-// the bank statement before the order can move. This is the single alert
-// the customer actually asked for: "payment received, order being packed."
+// 💰 ADMIN: CONFIRM PAYMENT RECEIVED — EFT-only.
 app.patch("/order/:code/confirm-payment", requireAdmin, async (req, res) => {
   try {
     const order = await prisma.order.findUnique({ where: { code: req.params.code } });
@@ -945,10 +909,7 @@ app.patch("/order/:code/confirm-payment", requireAdmin, async (req, res) => {
   }
 });
 
-// 📍 DRIVER: SHARE LIVE LOCATION — public (no login; drivers aren't real
-// accounts here), authorized only by the per-order driverShareToken.
-// Only accepted while the order is actually DISPATCHED — no reason for a
-// stale token to keep updating a delivered/undispatched order.
+// 📍 DRIVER: SHARE LIVE LOCATION — authorized by the per-order driverShareToken.
 app.post("/order/:code/location", async (req, res) => {
   try {
     const { token, lat, lng } = req.body;
@@ -975,10 +936,7 @@ app.post("/order/:code/location", async (req, res) => {
   }
 });
 
-// 🚚 DRIVER: CONFIRM PICKUP — same token-authed, no-login pattern as
-// /location above. Lets the driver move the order to DISPATCHED themselves
-// from driver-track.html the moment they actually have it, instead of the
-// admin having to relay that over WhatsApp and click it manually.
+// 🚚 DRIVER: CONFIRM PICKUP
 app.post("/order/:code/confirm-pickup", async (req, res) => {
   try {
     const { token } = req.body;
@@ -1000,7 +958,7 @@ app.post("/order/:code/confirm-pickup", async (req, res) => {
   }
 });
 
-// 🏁 DRIVER: CONFIRM DELIVERED — same pattern again.
+// 🏁 DRIVER: CONFIRM DELIVERED
 app.post("/order/:code/confirm-delivered", async (req, res) => {
   try {
     const { token } = req.body;
@@ -1050,15 +1008,12 @@ app.delete("/order/:code", requireAdmin, requireSuperAdmin, async (req, res) => 
   }
 });
 
-// 👤 ADMIN: WHO AM I — lets the dashboard know its own role so it can
-// show/hide super-admin-only UI (Inventory edits, Delete, Manage Admins)
-// without guessing or trying an action just to see if it 403s.
+// 👤 ADMIN: WHO AM I
 app.get("/admin/me", requireAdmin, (req, res) => {
   res.json({ email: req.user?.email || null, role: req.adminRole });
 });
 
-// 📦 ADMIN: INVENTORY — list every product with its current stock count.
-// Any admin can view; only super-admins can change it (see PATCH below).
+// 📦 ADMIN: INVENTORY
 app.get("/admin/products", requireAdmin, async (req, res) => {
   try {
     const products = await prisma.skuItem.findMany({
@@ -1091,9 +1046,7 @@ app.patch("/admin/products/:id/stock", requireAdmin, requireSuperAdmin, async (r
   }
 });
 
-// 👥 ADMIN: MANAGE ADMINS — super-admin only. ADMIN_EMAILS-bootstrapped
-// accounts don't live in this table and can't be removed from here (that's
-// an env var change on Render); this only manages delegated AdminUser rows.
+// 👥 ADMIN: MANAGE ADMINS — super-admin only.
 app.get("/admin/admins", requireAdmin, requireSuperAdmin, async (req, res) => {
   try {
     const admins = await prisma.adminUser.findMany({ orderBy: { createdAt: "asc" } });
@@ -1142,8 +1095,7 @@ app.delete("/admin/admins/:id", requireAdmin, requireSuperAdmin, async (req, res
   }
 });
 
-// 📜 ADMIN: AUDIT LOG — super-admin only. Read-only, newest first, capped
-// at 200 rows (this is a dashboard list, not a reporting tool).
+// 📜 ADMIN: AUDIT LOG — super-admin only, newest 200 rows.
 app.get("/admin/audit-log", requireAdmin, requireSuperAdmin, async (req, res) => {
   try {
     const logs = await prisma.adminAuditLog.findMany({
