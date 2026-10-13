@@ -184,6 +184,27 @@ function computePromoDiscount(subtotal, coolerDiscount, promo) {
   return Math.round((subtotal - coolerDiscount) * (promo.discountPct / 100) * 100) / 100;
 }
 
+// ── Delivery pin + landmark (all optional) ─────────────────
+// The customer can drop a GPS pin at checkout and/or describe a landmark.
+// Anything invalid is simply dropped (never blocks the order) — a pin
+// outside South Africa's rough bounding box is almost certainly a desktop
+// browser's IP-based guess, not where the customer actually is.
+const SA_BOUNDS = { minLat: -35.5, maxLat: -21.5, minLng: 16, maxLng: 33.5 };
+
+function parseDeliveryLocation({ landmark, deliveryLat, deliveryLng }) {
+  const cleanLandmark = typeof landmark === "string" ? landmark.trim().slice(0, 200) || null : null;
+  const lat = parseFloat(deliveryLat);
+  const lng = parseFloat(deliveryLng);
+  const pinOk = Number.isFinite(lat) && Number.isFinite(lng)
+    && lat >= SA_BOUNDS.minLat && lat <= SA_BOUNDS.maxLat
+    && lng >= SA_BOUNDS.minLng && lng <= SA_BOUNDS.maxLng;
+  return {
+    landmark: cleanLandmark,
+    deliveryLat: pinOk ? Math.round(lat * 1e6) / 1e6 : null,
+    deliveryLng: pinOk ? Math.round(lng * 1e6) / 1e6 : null,
+  };
+}
+
 // 🩺 HEALTH — DB connectivity check, hit this first when debugging
 app.get("/api/health", async (req, res) => {
   try {
@@ -521,8 +542,9 @@ function generateOrderCode() {
   return code;
 }
 
-async function createOrderTransaction({ userId, address, customerName, customerPhone, customerEmail, paymentMethod, promoCode, status, priced, codFlagged, codFlagReason }) {
+async function createOrderTransaction({ userId, address, customerName, customerPhone, customerEmail, paymentMethod, promoCode, status, priced, codFlagged, codFlagReason, location }) {
   const { orderItems, stockNeeded, subtotal, coolerDiscount } = priced;
+  const { landmark, deliveryLat, deliveryLng } = parseDeliveryLocation(location || {});
 
   let promo = null;
   if (promoCode) {
@@ -571,6 +593,9 @@ async function createOrderTransaction({ userId, address, customerName, customerP
             code: generateOrderCode(),
             userId,
             address,
+            landmark,
+            deliveryLat,
+            deliveryLng,
             customerName,
             customerPhone,
             customerEmail,
@@ -602,7 +627,7 @@ const DIRECT_PAYMENT_METHODS = new Set(["cod", "eft"]);
 // 📦 CREATE ORDER (customer, auth-gated) — COD/EFT only.
 app.post("/order", writeLimiter, requireUser, async (req, res) => {
   try {
-    const { address, items, customerName, customerPhone, paymentMethod, promoCode } = req.body;
+    const { address, items, customerName, customerPhone, paymentMethod, promoCode, landmark, deliveryLat, deliveryLng } = req.body;
     const priced = await validateAndPriceOrder({ address, items, customerPhone, paymentMethod, allowedPaymentMethods: DIRECT_PAYMENT_METHODS });
     if (priced.error) return res.status(400).json({ error: priced.error });
 
@@ -632,6 +657,7 @@ app.post("/order", writeLimiter, requireUser, async (req, res) => {
       priced,
       codFlagged,
       codFlagReason,
+      location: { landmark, deliveryLat, deliveryLng },
       // EFT waits for an admin to confirm the transfer; COD goes straight to packing.
       status: paymentMethod === "eft" ? "PAYMENT_PENDING" : "PENDING",
     });
@@ -689,7 +715,7 @@ function appBaseUrl(req) {
 app.post("/order/checkout-session", writeLimiter, requireUser, async (req, res) => {
   if (!isYocoConfigured()) return res.status(400).json({ error: "Card payment isn't available yet" });
   try {
-    const { address, items, customerName, customerPhone, promoCode } = req.body;
+    const { address, items, customerName, customerPhone, promoCode, landmark, deliveryLat, deliveryLng } = req.body;
     const priced = await validateAndPriceOrder({
       address,
       items,
@@ -708,6 +734,7 @@ app.post("/order/checkout-session", writeLimiter, requireUser, async (req, res) 
     const promoDiscount = computePromoDiscount(priced.subtotal, priced.coolerDiscount, promo);
     const total = computeOrderTotal(priced.subtotal, priced.coolerDiscount, promoDiscount);
     const amountCents = Math.round(total * 100);
+    const location = parseDeliveryLocation({ landmark, deliveryLat, deliveryLng });
 
     const base = appBaseUrl(req);
     const pending = await prisma.pendingCheckout.create({
@@ -715,7 +742,7 @@ app.post("/order/checkout-session", writeLimiter, requireUser, async (req, res) 
         userId: req.user.id,
         yocoCheckoutId: `pending-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
         amountCents,
-        payload: JSON.stringify({ address, items, customerName, customerPhone, promoCode: promoCode || null, customerEmail: req.user.email }),
+        payload: JSON.stringify({ address, items, customerName, customerPhone, promoCode: promoCode || null, customerEmail: req.user.email, ...location }),
       },
     });
 
@@ -830,6 +857,7 @@ app.post("/webhooks/yoco", async (req, res) => {
       promoCode: payload.promoCode,
       status: "PENDING",
       priced,
+      location: { landmark: payload.landmark, deliveryLat: payload.deliveryLat, deliveryLng: payload.deliveryLng },
     });
 
     await prisma.pendingCheckout.update({
