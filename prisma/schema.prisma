@@ -146,7 +146,7 @@ model PendingCheckout {
   userId          String
   yocoCheckoutId  String    @unique
   amountCents     Int
-  payload         String // JSON-encoded: { address, items, customerName, customerPhone, promoCode }
+  payload         String // JSON-encoded: { address, items, customerName, customerPhone, promoCode, landmark, deliveryLat, deliveryLng }
   status          String    @default("PENDING") // PENDING | COMPLETED | FAILED_NEEDS_REFUND
   orderCode       String? // set once the real Order is created
   failureReason   String?
@@ -176,6 +176,13 @@ model Order {
   code          String      @unique
   userId        String?
   address       String
+  // Township and informal-settlement addresses are often hard for a driver
+  // to find from the street address alone. The customer can drop a GPS pin
+  // ("use my location") and/or describe a landmark ("blue gate opposite the
+  // spaza"). All optional — an order without them works exactly as before.
+  landmark      String?
+  deliveryLat   Float?
+  deliveryLng   Float?
   customerName  String?
   customerPhone String?
   // Captured at creation (same reason customerName/customerPhone are
