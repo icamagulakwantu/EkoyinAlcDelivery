@@ -1,0 +1,14 @@
+{
+  "name": "Ekoyini — Alcohol Delivery",
+  "short_name": "Ekoyini",
+  "description": "Drinks from your local tavern, delivered to your kasi.",
+  "start_url": "/index.html",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#faf6ee",
+  "theme_color": "#faf6ee",
+  "icons": [
+    { "src": "/images/brand/favicon-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "/images/brand/ekoyini-icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
