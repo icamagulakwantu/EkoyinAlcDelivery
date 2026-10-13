@@ -22,6 +22,12 @@ function formatRand(amount) {
     return `R${Number(amount || 0).toFixed(2)}`;
 }
 
+// Google Maps link for the customer's optional delivery pin (null if none).
+function deliveryMapsUrl(order) {
+    if (order.deliveryLat == null || order.deliveryLng == null) return null;
+    return `https://www.google.com/maps?q=${Number(order.deliveryLat)},${Number(order.deliveryLng)}`;
+}
+
 // ============================================
 // ADMIN LOGIN — real Supabase Auth (per-person, server-verified)
 // ============================================
@@ -196,6 +202,7 @@ function showMoreOrders() {
 window.showMoreOrders = showMoreOrders;
 
 function renderOrderCard(order) {
+    const mapsUrl = deliveryMapsUrl(order);
     return `
         <div class="order-card">
             <div class="order-header">
@@ -205,6 +212,8 @@ function renderOrderCard(order) {
             <div class="order-details">
                 <p>${formatPaymentBadge(order)}${order.codFlagged ? formatCodFlagBadge(order) : ''}</p>
                 <p><strong>Delivery:</strong> ${esc(order.address)}</p>
+                ${order.landmark ? `<p><strong>Landmark:</strong> ${esc(order.landmark)}</p>` : ''}
+                ${mapsUrl ? `<p><strong>Pin:</strong> <a href="${esc(mapsUrl)}" target="_blank" rel="noopener">Open in Google Maps</a></p>` : ''}
                 <p><strong>Customer:</strong> ${esc(order.customerName || 'N/A')} · ${esc(order.customerPhone || 'N/A')}</p>
                 <p><strong>Date:</strong> ${esc(new Date(order.createdAt).toLocaleString())}</p>
                 ${order.status === 'CANCELLED' && order.cancelReason ? `<p><strong>Cancel reason:</strong> ${esc(order.cancelReason)}</p>` : ''}
@@ -402,7 +411,9 @@ function sendDriverWhatsApp(orderCode, driverName, driverPhone, order) {
     const shareLink = order.driverShareToken
         ? `${window.location.origin}/driver-track.html?code=${encodeURIComponent(orderCode)}&token=${encodeURIComponent(order.driverShareToken)}`
         : null;
-    const message = `*Ekoyini Delivery - ${orderCode}*\n\nHi ${driverName}!\n\n*Pickup:* ${tavern.name} (${tavern.area})\n*Deliver to:* ${order.address}\n\n*Order:*\n${order.items.map(item => `${item.name} x${item.quantity}`).join('\n')}\n\n*Total:* ${formatRand(order.total)}\n*Order Code:* ${orderCode}\n${shareLink ? `\n*Open this link once you've collected the order — confirm pickup, then share your live location so the customer can track you:*\n${shareLink}\n` : ''}\n*Customer will give you this code.*\nThe same link also lets you mark it delivered once it's dropped off.`;
+    const mapsUrl = deliveryMapsUrl(order);
+    const findIt = `${order.landmark ? `*Landmark:* ${order.landmark}\n` : ''}${mapsUrl ? `*Customer's pin:* ${mapsUrl}\n` : ''}`;
+    const message = `*Ekoyini Delivery - ${orderCode}*\n\nHi ${driverName}!\n\n*Pickup:* ${tavern.name} (${tavern.area})\n*Deliver to:* ${order.address}\n${findIt}\n*Order:*\n${order.items.map(item => `${item.name} x${item.quantity}`).join('\n')}\n\n*Total:* ${formatRand(order.total)}\n*Order Code:* ${orderCode}\n${shareLink ? `\n*Open this link once you've collected the order — confirm pickup, then share your live location so the customer can track you:*\n${shareLink}\n` : ''}\n*Customer will give you this code.*\nThe same link also lets you mark it delivered once it's dropped off.`;
     window.open(`https://wa.me/${driverPhone}?text=${encodeURIComponent(message)}`, '_blank');
 }
 
