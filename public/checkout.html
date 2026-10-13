@@ -16,6 +16,13 @@
     .field-group label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; font-weight: 600; }
     .field-group input, .field-group select { width: 100%; background: var(--surface); border: 1px solid var(--border); padding: 12px; border-radius: 8px; color: var(--white); font-size: 13px; }
     .field-group input:focus, .field-group select:focus { outline: none; border-color: var(--green-mid); }
+    .field-hint { font-size: 11px; color: var(--muted); margin-top: 6px; line-height: 1.4; }
+    .pin-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; background: var(--surface); border: 1px dashed var(--green-mid); color: var(--green-light); padding: 12px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .pin-btn:disabled { opacity: 0.6; cursor: wait; }
+    .pin-btn.pinned { border-style: solid; background: var(--green-glow); }
+    .pin-status { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; font-size: 11px; color: var(--muted); }
+    .pin-status a { color: var(--gold-deep); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
+    .pin-status button { background: none; border: none; color: var(--muted); font-size: 11px; text-decoration: underline; cursor: pointer; padding: 0; }
     .checkbox-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; }
     .checkbox-row input[type="checkbox"] { width: 18px; height: 18px; margin-top: 2px; cursor: pointer; }
     .checkbox-row label { font-size: 12px; color: var(--muted); line-height: 1.5; cursor: pointer; flex: 1; }
@@ -92,6 +99,22 @@
       <div class="field-group">
         <label>Address</label>
         <input type="text" id="deliveryAddress" readonly placeholder="Loading...">
+      </div>
+      <!-- Optional GPS pin — township and new-development addresses are often
+           hard to find from the street name alone, so the driver gets an
+           exact Google Maps link when the customer shares this. -->
+      <div class="field-group">
+        <label>Exact Location (optional)</label>
+        <button type="button" class="pin-btn" id="pinBtn" onclick="pinMyLocation()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <span id="pinBtnText">Pin my current location</span>
+        </button>
+        <div class="pin-status" id="pinStatus" style="display:none;"></div>
+        <div class="field-hint">Only use this if you're at the delivery address right now. It helps your driver find you faster.</div>
+      </div>
+      <div class="field-group">
+        <label>Landmark / Directions (optional)</label>
+        <input type="text" id="landmark" maxlength="200" placeholder="e.g. Blue gate opposite the spaza, house no. 1234">
       </div>
       <div class="field-group">
         <label>Phone Number</label>
@@ -213,6 +236,56 @@
   let products = [];
   let selectedPayment = 'cod';
   let appliedPromo = null; // { code, discountPct }
+  let deliveryPin = null; // { lat, lng, accuracy } — optional, set by pinMyLocation()
+
+  // ── Optional delivery pin ────────────────────────────────
+  // Asked only when the customer taps the button (never on page load).
+  function pinMyLocation() {
+    if (!('geolocation' in navigator)) {
+      showToast('Location isn\'t available on this device — add a landmark instead');
+      return;
+    }
+    const btn = document.getElementById('pinBtn');
+    const text = document.getElementById('pinBtnText');
+    btn.disabled = true;
+    text.textContent = 'Finding you…';
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        deliveryPin = { lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: Math.round(pos.coords.accuracy) };
+        btn.disabled = false;
+        btn.classList.add('pinned');
+        text.textContent = 'Location pinned';
+        renderPinStatus();
+      },
+      (err) => {
+        btn.disabled = false;
+        text.textContent = 'Pin my current location';
+        if (err.code === err.PERMISSION_DENIED) {
+          showToast('Location permission was blocked — allow it in your browser settings, or add a landmark instead');
+        } else {
+          showToast('Couldn\'t get your location — try again or add a landmark');
+        }
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
+    );
+  }
+  window.pinMyLocation = pinMyLocation;
+
+  function renderPinStatus() {
+    const status = document.getElementById('pinStatus');
+    if (!deliveryPin) { status.style.display = 'none'; return; }
+    const mapsUrl = `https://www.google.com/maps?q=${deliveryPin.lat},${deliveryPin.lng}`;
+    status.style.display = 'flex';
+    status.innerHTML = `<span>Accurate to about ${escapeHtml(deliveryPin.accuracy)} m · <a href="${mapsUrl}" target="_blank" rel="noopener">Check on map</a></span><button type="button" onclick="clearPin()">Remove</button>`;
+  }
+
+  function clearPin() {
+    deliveryPin = null;
+    document.getElementById('pinBtn').classList.remove('pinned');
+    document.getElementById('pinBtnText').textContent = 'Pin my current location';
+    renderPinStatus();
+  }
+  window.clearPin = clearPin;
 
   async function loadCheckout() {
     // Auth gate — checkout requires a session.
@@ -478,6 +551,9 @@
       customerName: document.getElementById('customerName').value.trim(),
       customerPhone: document.getElementById('phoneNumber').value.trim(),
       promoCode: appliedPromo ? appliedPromo.code : null,
+      landmark: document.getElementById('landmark').value.trim() || null,
+      deliveryLat: deliveryPin ? deliveryPin.lat : null,
+      deliveryLng: deliveryPin ? deliveryPin.lng : null,
     };
 
     try {
