@@ -1,737 +1,231 @@
-/* ============================================ */
-/* BODY LOCK — prevents any access until auth */
-/* ============================================ */
-body.admin-locked {
-        overflow: hidden;
+/* ═══════════════════════════════════════════════
+   EKOYINI ADMIN — premium dispatch dashboard
+   Same "Golden Hour" palette as the customer site (style.css),
+   restated here because admin.html doesn't load style.css.
+   All class names are unchanged so admin-api.js keeps working.
+   ═══════════════════════════════════════════════ */
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700;900&family=Space+Grotesk:wght@400;500;600;700&display=swap");
+
+:root {
+  --black: #faf6ee;
+  --deep: #f1e9d5;
+  --surface: #ffffff;
+  --card: #ffffff;
+  --border: #e8dcc0;
+  --hair: color-mix(in srgb, #e8dcc0 75%, transparent);
+  --green: #1a6b3a;
+  --gold: #ffc700;
+  --gold-deep: #7a5c00;
+  --terra: #ff4500;
+  --terra-light: #cc3700;
+  --glow: rgba(255, 69, 0, 0.12);
+  --ink: #17140e;
+  --muted: #6b6152;
+  --faint: #b5aa8f;
+  --danger: #d6362a;
+  --font-display: "Fraunces", serif;
+  --font-body: "Space Grotesk", -apple-system, sans-serif;
+  --shadow-sm: 0 1px 2px rgba(23,20,14,.04), 0 2px 8px rgba(23,20,14,.04);
+  --shadow-md: 0 2px 4px rgba(23,20,14,.04), 0 10px 28px rgba(23,20,14,.08);
+  --ease: cubic-bezier(.2,.8,.2,1);
 }
 
-body.admin-unlocked {
-        overflow: auto;
-}
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: var(--font-body); }
+body { background: var(--black); color: var(--ink); padding-bottom: 40px; -webkit-font-smoothing: antialiased; }
+body.admin-locked { overflow: hidden; }
+body.admin-unlocked { overflow: auto; }
+button { cursor: pointer; }
+input, select, textarea { font-size: 14px; color: var(--ink); }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--terra); outline-offset: 2px; }
 
-/* ============================================ */
-/* AUTH OVERLAY — full screen, unbypassable */
-/* ============================================ */
+/* ── Auth overlay ── */
 .auth-overlay {
-        position: fixed;
-            top: 0;
-                left: 0;
-                    width: 100%;
-                        height: 100%;
-                            background: linear-gradient(135deg, #1a1a2e, #16213e);
-                                z-index: 99999;
-                                    display: flex;
-                                        justify-content: center;
-                                            align-items: center;
-                                                padding: 20px;
-}
-
-
-/* ============================================ */
-/* EKOYINI ADMIN DASHBOARD */
-/* ============================================ */
-
-* {
-        margin: 0;
-            padding: 0;
-                box-sizing: border-box;
-                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-}
-
-body {
-        background: #f5f5f5;
-            padding-bottom: 30px;
-}
-
-/* HEADER */
-.admin-header {
-        background: black;
-            color: white;
-                padding: 20px;
-                    text-align: center;
-                        position: sticky;
-                            top: 0;
-                                z-index: 100;
-}
-
-.admin-header h1 {
-        font-size: 22px;
-            margin-bottom: 15px;
-                display: flex;
-                    align-items: center;
-                        justify-content: center;
-                            gap: 10px;
-}
-
-.admin-header h1 img {
-        height: 28px;
-            width: 28px;
-                object-fit: contain;
-                    border-radius: 6px;
-}
-
-.header-stats {
-        display: flex;
-            justify-content: center;
-                gap: 15px;
-}
-
-.stat-box {
-        background: rgba(255,255,255,0.15);
-            border-radius: 10px;
-                padding: 10px 15px;
-                    text-align: center;
-                        min-width: 70px;
-}
-
-.stat-number {
-        display: block;
-            font-size: 24px;
-                font-weight: bold;
-}
-
-.stat-label {
-        display: block;
-            font-size: 11px;
-                color: #ccc;
-}
-
-/* TABS */
-.tabs {
-        display: flex;
-            overflow-x: auto;
-                background: white;
-                    padding: 10px;
-                        gap: 5px;
-                            border-bottom: 1px solid #eee;
-                                position: sticky;
-                                    top: 120px;
-                                        z-index: 99;
-}
-
-.tab {
-        white-space: nowrap;
-            padding: 8px 16px;
-                border: none;
-                    background: #eee;
-                        border-radius: 20px;
-                            font-size: 13px;
-                                cursor: pointer;
-}
-
-.tab.active {
-        background: black;
-            color: white;
-}
-
-/* SECTION NAV (Orders / Inventory / Admins) */
-.section-nav {
-        display: flex;
-            background: #1a1a2e;
-                padding: 0 10px;
-                    position: sticky;
-                        top: 0;
-                            z-index: 101;
-}
-
-.section-tab {
-        flex: 1;
-            padding: 12px;
-                border: none;
-                    background: transparent;
-                        color: rgba(255,255,255,0.6);
-                            font-size: 13px;
-                                font-weight: 600;
-                                    cursor: pointer;
-                                        border-bottom: 3px solid transparent;
-}
-
-.section-tab.active {
-        color: white;
-            border-bottom-color: #25D366;
-}
-
-/* INVENTORY */
-.inv-search-row {
-        padding: 15px;
-}
-
-.inv-search-row input {
-        width: 100%;
-            padding: 12px;
-                border: 1px solid #ddd;
-                    border-radius: 8px;
-                        font-size: 14px;
-}
-
-.inv-row {
-        display: flex;
-            align-items: center;
-                justify-content: space-between;
-                    gap: 10px;
-                        background: white;
-                            border-radius: 10px;
-                                padding: 12px 15px;
-                                    margin: 0 15px 8px;
-                                        box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-}
-
-.inv-row-info {
-        flex: 1;
-            min-width: 0;
-}
-
-.inv-row-name {
-        font-size: 13px;
-            font-weight: 600;
-                white-space: nowrap;
-                    overflow: hidden;
-                        text-overflow: ellipsis;
-}
-
-.inv-row-meta {
-        font-size: 11px;
-            color: #999;
-}
-
-.inv-row-stock {
-        display: flex;
-            align-items: center;
-                gap: 6px;
-                    flex-shrink: 0;
-}
-
-.inv-row-stock input {
-        width: 64px;
-            padding: 8px;
-                border: 1px solid #ddd;
-                    border-radius: 6px;
-                        font-size: 13px;
-                            text-align: center;
-}
-
-.inv-row-stock button {
-        background: black;
-            color: white;
-                border: none;
-                    padding: 8px 12px;
-                        border-radius: 6px;
-                            font-size: 12px;
-                                cursor: pointer;
-}
-
-.inv-row.zero-stock {
-        background: #fff5f5;
-}
-
-.inv-row.zero-stock .inv-row-name {
-        color: #c00;
-}
-
-/* ADMINS */
-.admin-add-row {
-        display: flex;
-            gap: 8px;
-                padding: 15px;
-                    flex-wrap: wrap;
-}
-
-.admin-add-row input {
-        flex: 2;
-            min-width: 180px;
-                padding: 12px;
-                    border: 1px solid #ddd;
-                        border-radius: 8px;
-                            font-size: 14px;
-}
-
-.admin-add-row select {
-        flex: 1;
-            min-width: 120px;
-                padding: 12px;
-                    border: 1px solid #ddd;
-                        border-radius: 8px;
-                            font-size: 14px;
-}
-
-.admin-row {
-        display: flex;
-            align-items: center;
-                justify-content: space-between;
-                    background: white;
-                        border-radius: 10px;
-                            padding: 12px 15px;
-                                margin: 0 15px 8px;
-                                    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-}
-
-.admin-row-email {
-        font-size: 13px;
-            font-weight: 600;
-}
-
-.admin-role-badge {
-        display: inline-block;
-            font-size: 10px;
-                font-weight: 700;
-                    text-transform: uppercase;
-                        padding: 2px 8px;
-                            border-radius: 10px;
-                                margin-left: 6px;
-                                    background: #e2e3e5;
-                                        color: #383d41;
-}
-
-.admin-role-badge.super {
-        background: #d4edda;
-            color: #155724;
-}
-
-.admin-row button {
-        background: #ff4444;
-            color: white;
-                border: none;
-                    padding: 6px 12px;
-                        border-radius: 6px;
-                            font-size: 11px;
-                                cursor: pointer;
-}
-
-/* ACTIVITY LOG */
-.activity-row {
-        background: white;
-            border-radius: 10px;
-                padding: 12px 15px;
-                    margin: 0 15px 8px;
-                        box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-}
-
-.activity-row-top {
-        display: flex;
-            justify-content: space-between;
-                align-items: center;
-                    margin-bottom: 4px;
-}
-
-.activity-action {
-        font-size: 12px;
-            font-weight: 700;
-                text-transform: uppercase;
-                    letter-spacing: 0.3px;
-}
-
-.activity-time {
-        font-size: 10px;
-            color: #999;
-}
-
-.activity-detail {
-        font-size: 12px;
-            color: #555;
-}
-
-.activity-admin {
-        font-size: 11px;
-            color: #999;
-            margin-top: 2px;
-}
-
-/* ORDER CARDS */
-#ordersList {
-        padding: 15px;
-}
-
-.order-card {
-        background: white;
-            border-radius: 12px;
-                padding: 15px;
-                    margin-bottom: 12px;
-                        box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-}
-
-.order-header {
-        display: flex;
-            justify-content: space-between;
-                align-items: center;
-                    margin-bottom: 10px;
-}
-
-.order-code {
-        font-weight: bold;
-            font-size: 16px;
-                font-family: monospace;
-                    letter-spacing: 1px;
-}
-
-.order-status {
-        padding: 4px 12px;
-            border-radius: 15px;
-                font-size: 12px;
-                    font-weight: bold;
-}
-
-.status-payment_pending {
-        background: #fff3cd;
-            color: #856404;
-}
-
-.status-pending {
-        background: #cce5ff;
-            color: #004085;
-}
-
-.status-dispatched {
-        background: #d4edda;
-            color: #155724;
-}
-
-.status-delivered {
-        background: #e2e3e5;
-            color: #383d41;
-}
-
-.order-details {
-        font-size: 14px;
-            margin-bottom: 10px;
-}
-
-.payment-badge {
-        display: inline-block;
-            padding: 3px 10px;
-                border-radius: 10px;
-                    font-size: 11px;
-                        font-weight: bold;
-                            background: #e2e3e5;
-                                color: #383d41;
-}
-
-.payment-badge.cod {
-        background: #e2e3e5;
-            color: #383d41;
-}
-
-.payment-badge.eft {
-        background: #fff3cd;
-            color: #856404;
-}
-
-.payment-badge.cod-flag {
-        background: #f8d7da;
-            color: #721c24;
-                cursor: help;
-}
-
-.order-details p {
-        margin: 4px 0;
-}
-
-.order-items {
-        background: #f9f9f9;
-            border-radius: 8px;
-                padding: 10px;
-                    margin: 10px 0;
-                        font-size: 13px;
-}
-
-.order-items .item-row {
-        display: flex;
-            justify-content: space-between;
-                padding: 3px 0;
-}
-
-.order-items .total-row {
-        display: flex;
-            justify-content: space-between;
-                padding-top: 8px;
-                    margin-top: 5px;
-                        border-top: 2px solid #000;
-                            font-weight: bold;
-                                font-size: 15px;
-}
-
-.assigned-info {
-        background: #e8f5e9;
-            border-radius: 8px;
-                padding: 10px;
-                    margin: 10px 0;
-                        font-size: 13px;
-}
-
-.assigned-info p {
-        margin: 3px 0;
-}
-
-.order-actions {
-        display: flex;
-            gap: 8px;
-                margin-top: 10px;
-}
-
-.btn {
-        flex: 1;
-            padding: 10px;
-                border: none;
-                    border-radius: 8px;
-                        font-size: 13px;
-                            cursor: pointer;
-                                font-weight: bold;
-}
-
-.btn-confirm-payment {
-        background: #7a5c00;
-            color: white;
-}
-
-.btn-assign {
-        background: black;
-            color: white;
-}
-
-.btn-dispatch {
-        background: #25D366;
-            color: white;
-}
-
-.btn-deliver {
-        background: #4CAF50;
-            color: white;
-}
-
-.btn-delete {
-        background: #ff4444;
-            color: white;
-}
-
-.no-orders {
-        text-align: center;
-            padding: 40px;
-                color: #999;
-                    font-size: 16px;
-}
-
-/* ASSIGN MODAL */
-.assign-modal-content {
-        width: 90%;
-            max-width: 400px;
-}
-
-.assign-modal-content h2 {
-        margin-bottom: 10px;
-}
-
-.assign-section {
-        margin: 15px 0;
-}
-
-.assign-section h3 {
-        font-size: 14px;
-            margin-bottom: 8px;
-                color: #666;
-}
-
-.assign-section select,
-.assign-section input {
-        width: 100%;
-            padding: 12px;
-                border: 1px solid #ddd;
-                    border-radius: 8px;
-                        font-size: 14px;
-                            margin-bottom: 8px;
-}
-
-.assign-actions {
-        display: flex;
-            flex-direction: column;
-                gap: 8px;
-                    margin-top: 15px;
-}
-
-.dispatch-btn {
-        background: #25D366;
-            color: white;
-                border: none;
-                    padding: 14px;
-                        border-radius: 8px;
-                            font-size: 15px;
-                                cursor: pointer;
-                                    font-weight: bold;
-}
-
-/* MODAL */
-.modal {
-        display: flex;
-            position: fixed;
-                z-index: 1000;
-                    left: 0; top: 0;
-                        width: 100%; height: 100%;
-                            background: rgba(0,0,0,0.8);
-                                justify-content: center;
-                                    align-items: center;
-}
-
-.modal-content {
-        background: white;
-            padding: 25px;
-                border-radius: 12px;
-                    width: 85%;
-                        max-width: 350px;
-}
-
-.secondary-btn {
-        background: #eee;
-            color: #333;
-                border: none;
-                    padding: 12px;
-                        border-radius: 8px;
-                            font-size: 14px;
-                                cursor: pointer;
-                                    width: 100%;
-}
-
-/* ============================================ */
-/* PIN SCREEN */
-/* ============================================ */
-.pin-screen {
-        display: flex;
-            justify-content: center;
-                align-items: center;
-                    min-height: 100vh;
-                        background: linear-gradient(135deg, #1a1a2e, #16213e);
-                            padding: 20px;
-}
-
+  position: fixed; inset: 0; z-index: 99999; padding: 20px;
+  display: flex; justify-content: center; align-items: center;
+  background:
+    radial-gradient(circle at 20% 10%, rgba(255,199,0,.18), transparent 45%),
+    radial-gradient(circle at 85% 90%, rgba(255,69,0,.14), transparent 45%),
+    var(--black);
+}
+.pin-screen { display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
 .pin-card {
-        background: white;
-            border-radius: 20px;
-                padding: 30px;
-                    text-align: center;
-                        width: 100%;
-                            max-width: 320px;
-                                box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+  background: var(--card); border: 1px solid var(--hair); border-radius: 24px;
+  padding: 32px 26px; width: 100%; max-width: 380px; text-align: center; box-shadow: var(--shadow-md);
+}
+.pin-card h2 { font-family: var(--font-display); font-size: 26px; color: var(--gold-deep); margin-bottom: 6px; }
+.pin-card p { font-size: 14px; color: var(--muted); margin-bottom: 8px; }
+.pin-card label { font-weight: 600; letter-spacing: .03em; text-transform: uppercase; color: var(--muted) !important; }
+.pin-card input {
+  background: var(--surface) !important; border: 1px solid var(--border) !important;
+  border-radius: 12px !important; min-height: 48px; transition: border-color .2s, box-shadow .2s;
+}
+.pin-card input:focus { outline: none; border-color: var(--terra) !important; box-shadow: 0 0 0 4px var(--glow); }
+
+/* ── Header ── */
+.admin-header {
+  position: sticky; top: 0; z-index: 100; padding: 18px 20px 16px; text-align: center;
+  background: linear-gradient(180deg, #1d1810, #17140e); color: #faf6ee;
+  box-shadow: 0 6px 24px rgba(23,20,14,.18);
+}
+.admin-header h1 {
+  font-family: var(--font-display); font-size: 22px; font-weight: 700; color: var(--gold);
+  display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 14px; letter-spacing: -.01em;
+}
+.admin-header h1 img { height: 32px; width: 32px; object-fit: contain; border-radius: 8px; }
+.header-stats { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+.stat-box {
+  background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
+  border-radius: 14px; padding: 10px 16px; min-width: 92px;
+}
+.stat-number { display: block; font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; color: #fff; }
+.stat-label { display: block; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: rgba(250,246,238,.6); margin-top: 2px; }
+.admin-header .secondary-btn {
+  background: transparent; color: rgba(250,246,238,.75); border: 1px solid rgba(255,255,255,.18);
+  border-radius: 999px; padding: 8px 16px; font-size: 12px; margin: 12px auto 0; display: block; min-height: 0;
 }
 
-.pin-logo {
-        font-size: 50px;
-            margin-bottom: 15px;
+/* ── Section nav ── */
+.section-nav {
+  display: flex; gap: 4px; padding: 8px 12px; background: var(--surface);
+  border-bottom: 1px solid var(--hair); position: sticky; top: 0; z-index: 101; overflow-x: auto;
 }
-
-.pin-card h2 {
-        font-size: 20px;
-            margin-bottom: 5px;
-                color: #1a1a2e;
+.section-tab {
+  flex: 1; padding: 10px 14px; border: none; background: transparent; border-radius: 999px;
+  color: var(--muted); font-size: 13px; font-weight: 600; white-space: nowrap; transition: all .2s var(--ease);
 }
+.section-tab:hover { background: var(--black); }
+.section-tab.active { background: var(--ink); color: var(--black); }
 
-.pin-card p {
-        font-size: 13px;
-            color: #666;
-                margin-bottom: 20px;
+/* ── Filter tabs ── */
+.tabs {
+  display: flex; overflow-x: auto; gap: 8px; padding: 12px 16px; background: var(--black);
+  position: sticky; top: 56px; z-index: 99; scrollbar-width: none;
 }
-
-.pin-dots {
-        display: flex;
-            justify-content: center;
-                gap: 15px;
-                    margin-bottom: 25px;
+.tabs::-webkit-scrollbar { display: none; }
+.tab {
+  white-space: nowrap; padding: 8px 14px; border: 1px solid var(--hair); background: var(--surface);
+  border-radius: 999px; font-size: 13px; font-weight: 600; color: var(--muted); transition: all .2s var(--ease);
 }
+.tab.active { background: var(--terra-light); border-color: var(--terra-light); color: #fff; }
 
-.pin-dots .dot {
-        width: 14px;
-            height: 14px;
-                border-radius: 50%;
-                    border: 2px solid #ddd;
-                        transition: all 0.2s;
+/* ── Order cards ── */
+#ordersList { padding: 4px 16px 16px; max-width: 1100px; margin: 0 auto; display: grid; gap: 12px; }
+@media (min-width: 900px) { #ordersList { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+.order-card {
+  background: var(--card); border: 1px solid var(--hair); border-radius: 18px; padding: 18px;
+  box-shadow: var(--shadow-sm); transition: box-shadow .2s var(--ease);
 }
-
-.pin-dots .dot.filled {
-        background: #1a1a2e;
-            border-color: #1a1a2e;
+.order-card:hover { box-shadow: var(--shadow-md); }
+.order-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 12px; }
+.order-code { font-family: ui-monospace, monospace; font-weight: 700; font-size: 15px; letter-spacing: .06em; color: var(--terra-light); }
+.order-status { padding: 4px 11px; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.status-payment_pending { background: rgba(255,199,0,.18); color: var(--gold-deep); }
+.status-pending { background: var(--glow); color: var(--terra-light); }
+.status-dispatched { background: rgba(26,107,58,.12); color: var(--green); }
+.status-delivered { background: var(--deep); color: var(--muted); }
+.status-cancelled { background: rgba(214,54,42,.1); color: var(--danger); }
+.order-details { font-size: 14px; line-height: 1.5; margin-bottom: 10px; color: var(--ink); }
+.order-details p { margin: 4px 0; }
+.payment-badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; background: var(--deep); color: var(--muted); }
+.payment-badge.cod { background: var(--deep); color: var(--muted); }
+.payment-badge.eft { background: rgba(255,199,0,.18); color: var(--gold-deep); }
+.payment-badge.cod-flag { background: rgba(214,54,42,.1); color: var(--danger); cursor: help; }
+.order-items { background: var(--black); border: 1px solid var(--hair); border-radius: 12px; padding: 12px; margin: 10px 0; font-size: 13px; }
+.order-items .item-row { display: flex; justify-content: space-between; gap: 8px; padding: 3px 0; color: var(--muted); font-variant-numeric: tabular-nums; }
+.order-items .total-row {
+  display: flex; justify-content: space-between; padding-top: 10px; margin-top: 6px;
+  border-top: 1px dashed var(--border); font-weight: 700; font-size: 16px; color: var(--ink); font-variant-numeric: tabular-nums;
 }
+.assigned-info { background: rgba(26,107,58,.07); border: 1px solid rgba(26,107,58,.18); border-radius: 12px; padding: 12px; margin: 10px 0; font-size: 13px; }
+.assigned-info p { margin: 3px 0; }
+.order-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 
-.pin-keypad {
-        display: grid;
-            grid-template-columns: repeat(3, 1fr);
-                gap: 10px;
-                    max-width: 250px;
-                        margin: 0 auto;
+/* ── Buttons ── */
+.btn {
+  flex: 1 1 auto; min-height: 42px; padding: 10px 14px; border: none; border-radius: 999px;
+  font-size: 13px; font-weight: 700; transition: transform .15s var(--ease), filter .2s;
 }
-
-.pin-keypad button {
-        padding: 16px;
-            font-size: 20px;
-                font-weight: 600;
-                    border: 1px solid #e0e0e0;
-                        background: #f8f9fa;
-                            border-radius: 12px;
-                                cursor: pointer;
+.btn:hover { filter: brightness(1.05); }
+.btn:active { transform: scale(.97); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn-confirm-payment { background: var(--gold-deep); color: #fff; }
+.btn-assign { background: var(--ink); color: var(--black); }
+.btn-dispatch { background: var(--terra-light); color: #fff; box-shadow: 0 6px 16px -8px var(--terra-light); }
+.btn-deliver { background: var(--green); color: #fff; }
+.btn-delete { background: transparent; color: var(--danger); border: 1px solid rgba(214,54,42,.35); }
+.btn-cancel-order { background: rgba(214,54,42,.08); color: var(--danger); }
+.dispatch-btn {
+  background: var(--terra-light); color: #fff; border: none; min-height: 48px; padding: 12px 20px;
+  border-radius: 999px; font-size: 15px; font-weight: 700; box-shadow: 0 8px 20px -8px var(--terra-light);
 }
+.secondary-btn { background: var(--black); color: var(--ink); border: 1px solid var(--border); min-height: 46px; padding: 12px; border-radius: 999px; font-size: 14px; font-weight: 600; width: 100%; }
+.no-orders { text-align: center; padding: 56px 20px; color: var(--muted); font-size: 15px; grid-column: 1 / -1; }
 
-/* ============================================ */
-/* SHAKE ANIMATION */
-/* ============================================ */
-.shake {
-        animation: shake 0.5s ease;
+/* ── Inventory ── */
+.inv-search-row { padding: 16px; max-width: 900px; margin: 0 auto; }
+.inv-search-row input, .admin-add-row input, .admin-add-row select, .assign-section select, .assign-section input {
+  width: 100%; min-height: 48px; padding: 0 14px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; transition: border-color .2s, box-shadow .2s;
 }
-
-@keyframes shake {
-        0%, 100% { transform: translateX(0); }
-            20% { transform: translateX(-10px); }
-                40% { transform: translateX(10px); }
-                    60% { transform: translateX(-6px); }
-                        80% { transform: translateX(6px); }
+.inv-search-row input:focus, .admin-add-row input:focus, .admin-add-row select:focus,
+.assign-section select:focus, .assign-section input:focus { outline: none; border-color: var(--terra); box-shadow: 0 0 0 4px var(--glow); }
+#inventoryList, #adminsList, #activityList { max-width: 900px; margin: 0 auto; }
+.inv-row, .admin-row, .activity-row {
+  background: var(--card); border: 1px solid var(--hair); border-radius: 14px; padding: 12px 16px;
+  margin: 0 16px 8px; box-shadow: var(--shadow-sm);
 }
+.inv-row, .admin-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.inv-row-info { flex: 1; min-width: 0; }
+.inv-row-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.inv-row-meta { font-size: 12px; color: var(--muted); }
+.inv-row-stock { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.inv-row-stock input { width: 72px; min-height: 38px; padding: 6px; border: 1px solid var(--border); border-radius: 10px; text-align: center; font-variant-numeric: tabular-nums; }
+.inv-row-stock button { background: var(--ink); color: var(--black); border: none; min-height: 38px; padding: 0 14px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+.inv-row.zero-stock { background: rgba(214,54,42,.05); border-color: rgba(214,54,42,.25); }
+.inv-row.zero-stock .inv-row-name { color: var(--danger); }
 
-/* ============================================ */
-/* OTP INPUTS */
-/* ============================================ */
-.otp-inputs {
-        display: flex;
-            justify-content: center;
-                gap: 8px;
-                    margin: 20px 0;
+/* ── Admins & activity ── */
+.admin-add-row { display: flex; gap: 8px; padding: 16px; flex-wrap: wrap; max-width: 900px; margin: 0 auto; }
+.admin-add-row input { flex: 2; min-width: 200px; }
+.admin-add-row select { flex: 1; min-width: 140px; }
+.admin-row-email { font-size: 14px; font-weight: 600; word-break: break-all; }
+.admin-role-badge { display: inline-block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 3px 9px; border-radius: 999px; margin-left: 6px; background: var(--deep); color: var(--muted); }
+.admin-role-badge.super { background: rgba(255,199,0,.2); color: var(--gold-deep); }
+.admin-row button { background: transparent; color: var(--danger); border: 1px solid rgba(214,54,42,.35); padding: 6px 14px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+.activity-row-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; gap: 8px; }
+.activity-action { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--terra-light); }
+.activity-time { font-size: 11px; color: var(--faint); }
+.activity-detail { font-size: 13px; color: var(--ink); }
+.activity-admin { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+/* ── Modals ── */
+.modal {
+  display: flex; position: fixed; inset: 0; z-index: 1000; justify-content: center; align-items: center;
+  background: rgba(23,20,14,.55); backdrop-filter: blur(4px); padding: 16px;
 }
+.modal-content { background: var(--card); padding: 24px; border-radius: 22px; width: 100%; max-width: 380px; box-shadow: var(--shadow-md); }
+.assign-modal-content { max-width: 440px; max-height: 90vh; overflow-y: auto; }
+.assign-modal-content h2 { font-family: var(--font-display); font-size: 22px; margin-bottom: 6px; }
+.assign-modal-content > p { color: var(--muted); font-size: 14px; }
+.assign-section { margin: 16px 0; }
+.assign-section h3 { font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; margin-bottom: 8px; color: var(--muted); }
+.assign-section select, .assign-section input { margin-bottom: 8px; }
+.assign-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
 
-.otp-box {
-        width: 42px;
-            height: 50px;
-                border: 2px solid #ddd;
-                    border-radius: 10px;
-                        text-align: center;
-                            font-size: 22px;
-                                font-weight: 700;
-                                    outline: none;
-                                        transition: border-color 0.2s;
-}
+/* ── Legacy PIN / OTP (kept for compatibility) ── */
+.pin-logo { font-size: 50px; margin-bottom: 15px; }
+.pin-dots { display: flex; justify-content: center; gap: 15px; margin-bottom: 25px; }
+.pin-dots .dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--border); transition: all .2s; }
+.pin-dots .dot.filled { background: var(--ink); border-color: var(--ink); }
+.pin-keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 250px; margin: 0 auto; }
+.pin-keypad button { padding: 16px; font-size: 20px; font-weight: 600; border: 1px solid var(--border); background: var(--black); border-radius: 12px; }
+.shake { animation: shake .5s ease; }
+@keyframes shake { 0%,100% { transform: translateX(0); } 20% { transform: translateX(-10px); } 40% { transform: translateX(10px); } 60% { transform: translateX(-6px); } 80% { transform: translateX(6px); } }
+.otp-inputs { display: flex; justify-content: center; gap: 8px; margin: 20px 0; }
+.otp-box { width: 42px; height: 50px; border: 2px solid var(--border); border-radius: 10px; text-align: center; font-size: 22px; font-weight: 700; outline: none; }
+.otp-box:focus { border-color: var(--terra); box-shadow: 0 0 0 3px var(--glow); }
+.resend-btn { width: 100%; padding: 12px; background: var(--black); border: none; border-radius: 999px; font-size: 14px; margin-top: 10px; color: var(--muted); }
+.resend-btn:not(:disabled) { background: var(--ink); color: var(--black); }
+.resend-btn:disabled { opacity: .6; cursor: not-allowed; }
 
-.otp-box:focus {
-        border-color: #1a1a2e;
-            box-shadow: 0 0 0 3px rgba(26, 26, 46, 0.1);
-}
-
-.otp-box:not(:placeholder-shown) {
-        border-color: #1a1a2e;
-            background: #f8f9fa;
-}
-
-.resend-btn {
-        width: 100%;
-            padding: 12px;
-                background: #f0f0f0;
-                    border: none;
-                        border-radius: 10px;
-                            font-size: 14px;
-                                cursor: pointer;
-                                    margin-top: 10px;
-                                        color: #666;
-}
-
-.resend-btn:not(:disabled) {
-        background: #1a1a2e;
-            color: white;
-                cursor: pointer;
-}
-
-.resend-btn:disabled {
-        opacity: 0.6;
-            cursor: not-allowed;
-}
-
+@media (prefers-reduced-motion: reduce) { * { transition-duration: .01ms !important; animation-duration: .01ms !important; } }

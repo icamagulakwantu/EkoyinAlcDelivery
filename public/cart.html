@@ -109,8 +109,13 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="auth.js"></script>
   <script src="script.js"></script>
+  <script src="pricing.js"></script>
   <script>
   renderNavAuth();
+
+  // Delivery fee comes from pricing.js — the same function the server uses
+  // to charge, so the cart can't promise a different number than checkout.
+  const { deliveryFee, FREE_DELIVERY_THRESHOLD } = EkoyiniPricing;
 
   let cart = EkoyiniCart.get();
   let products = [];
@@ -239,7 +244,7 @@
     const summary = document.getElementById('summary');
     const subtotal = computeSubtotal();
     const promoDiscount = appliedPromo ? subtotal * (appliedPromo.discountPct / 100) : 0;
-    const delivery = subtotal > 1000 ? 0 : 50;
+    const delivery = deliveryFee(subtotal);
     const total = subtotal - promoDiscount + delivery;
 
     summary.innerHTML = `
@@ -249,7 +254,7 @@
       </div>
       ${appliedPromo ? `<div class="summary-row"><span>Promo (${appliedPromo.code})</span><span>-R${promoDiscount.toFixed(2)}</span></div>` : ''}
       <div class="summary-row">
-        <span>Delivery <span style="font-size: 10px; color: var(--muted);">(free over R1000)</span></span>
+        <span>Delivery <span style="font-size: 10px; color: var(--muted);">(free over R${FREE_DELIVERY_THRESHOLD})</span></span>
         <span>R${delivery.toFixed(2)}</span>
       </div>
       <div class="summary-row total">

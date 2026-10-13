@@ -5,15 +5,11 @@
 // ACCOUNT. Field names for createCheckout/getCheckout are taken from
 // Yoco's public developer docs (developer.yoco.com); the webhook payload
 // shape is inferred from Yoco's public "Standard Webhooks"-style signing
-// (same scheme Svix uses) since the exact event JSON wasn't directly
-// fetchable while writing this. The webhook handler is written
-// defensively — it tries several reasonable field paths for the checkout
-// id and always re-fetches the checkout from Yoco's API before trusting
-// anything, per Yoco's own guidance ("never trust the success redirect,
-// always confirm via the API"). Test with a real Yoco sandbox checkout
-// before relying on this for real orders, and check server logs on the
-// first few real webhook deliveries — adjust EXTRACT_CHECKOUT_ID below
-// if Yoco's actual payload shape differs.
+// (same scheme Svix uses). The webhook handler is written defensively —
+// it tries several reasonable field paths for the checkout id and always
+// re-fetches the checkout from Yoco's API before trusting anything. Test
+// with a real Yoco sandbox checkout before relying on this for real
+// orders, and check server logs on the first few real webhook deliveries.
 // ═══════════════════════════════════════════════
 
 const crypto = require("crypto");
@@ -45,8 +41,6 @@ async function createYocoCheckout({ amountCents, currency, successUrl, cancelUrl
     console.error("[yoco] createCheckout failed:", res.status, data);
     throw new Error(data?.message || "Failed to start card checkout");
   }
-  // redirectUrl is the documented field; fall back to a couple of
-  // plausible alternates in case the live response differs.
   const redirectUrl = data.redirectUrl || data.redirect_url || data.paymentUrl;
   if (!data.id || !redirectUrl) {
     console.error("[yoco] createCheckout returned unexpected shape:", data);
@@ -69,21 +63,29 @@ async function getYocoCheckout(checkoutId) {
   return data;
 }
 
-// Best-effort read of whatever status Yoco's checkout object uses to mean
-// "paid" — logs the raw object either way so a mismatch is visible in
-// server logs rather than silently rejecting a real payment.
 function checkoutLooksPaid(checkout) {
   const status = (checkout.status || checkout.state || "").toString().toLowerCase();
   return status === "succeeded" || status === "completed" || status === "paid";
 }
 
+// Reads the amount Yoco says was actually charged, in cents. Returns null
+// if the field can't be found — the webhook treats that as "needs a human
+// to check", never as "looks fine", so an unexpected response shape can't
+// silently let a wrong amount through.
+function extractPaidAmountCents(checkout) {
+  const raw = checkout?.amount ?? checkout?.totalAmount ?? checkout?.amountInCents;
+  const n = Number(raw);
+  return Number.isInteger(n) ? n : null;
+}
+
+function extractCurrency(checkout) {
+  const c = checkout?.currency;
+  return typeof c === "string" ? c.toUpperCase() : null;
+}
+
 // Yoco signs webhooks the same way Svix / "Standard Webhooks" does:
 //   signed_content = `${webhookId}.${webhookTimestamp}.${rawBody}`
 //   signature       = base64(HMAC-SHA256(secretBytes, signed_content))
-// sent as one or more "v1,<base64sig>" values in the webhook-signature
-// header. The signing secret from the Yoco dashboard is typically
-// prefixed "whsec_" — strip that prefix and base64-decode the rest to
-// get the raw HMAC key.
 function verifyYocoWebhookSignature(headers, rawBody) {
   const secret = process.env.YOCO_WEBHOOK_SECRET;
   if (!secret) return false;
@@ -105,13 +107,11 @@ function verifyYocoWebhookSignature(headers, rawBody) {
       try {
         return crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected));
       } catch {
-        return false; // length mismatch etc — not a match, not a crash
+        return false;
       }
     });
 }
 
-// Defensive extraction — tries the documented/likely paths for where the
-// checkout id lives inside a webhook payload.
 function extractCheckoutId(payload) {
   return (
     payload?.payload?.id ||
@@ -128,6 +128,8 @@ module.exports = {
   createYocoCheckout,
   getYocoCheckout,
   checkoutLooksPaid,
+  extractPaidAmountCents,
+  extractCurrency,
   verifyYocoWebhookSignature,
   extractCheckoutId,
 };

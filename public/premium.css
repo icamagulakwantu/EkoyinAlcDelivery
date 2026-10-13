@@ -297,10 +297,56 @@ body { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; 
 .step-text { font-size: 14px !important; line-height: 1.5; }
 .action-buttons { gap: 10px !important; }
 
+/* ── Profile & order history ── */
+.profile-card {
+  border-radius: 24px !important; border: 1px solid var(--p-hairline) !important;
+  box-shadow: var(--p-shadow-md); padding: 28px 20px 22px !important;
+  background: linear-gradient(180deg, var(--surface), var(--card)) !important;
+}
+.profile-avatar {
+  width: 72px !important; height: 72px !important; font-size: 28px !important;
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--gold-deep) 14%, transparent);
+}
+.profile-email { font-size: 16px !important; letter-spacing: -0.005em; }
+.logout-btn { border-radius: 999px !important; padding: 10px 20px !important; min-height: 40px; }
+.order-list { padding: 0 16px !important; }
+.order-card {
+  border-radius: var(--p-radius) !important; border: 1px solid var(--p-hairline) !important;
+  background: var(--card) !important; box-shadow: var(--p-shadow-sm);
+  padding: 16px !important; margin-bottom: 12px !important;
+  transition: box-shadow .2s var(--p-ease), transform .2s var(--p-ease);
+}
+.order-card:hover { box-shadow: var(--p-shadow-md); }
+.order-card-code { font-size: 14px !important; letter-spacing: .04em; }
+.order-card-status { border-radius: 999px !important; padding: 4px 10px !important; letter-spacing: .04em; }
+.order-card-total { font-size: 16px !important; font-variant-numeric: tabular-nums; }
+.reorder-btn, .cancel-order-btn { border-radius: 999px !important; padding: 8px 16px !important; font-size: 12px !important; min-height: 36px; }
+
+/* ── Auth screens (login / signup / password) ── */
+.auth-page { max-width: 420px; margin: 0 auto; padding: 48px 22px 40px !important; }
+.auth-logo-img { width: 64px !important; height: 64px !important; border-radius: 16px !important; box-shadow: var(--p-shadow-md); }
+.auth-logo { font-size: 28px !important; letter-spacing: -0.02em; }
+.auth-sub { font-size: 15px !important; color: var(--muted) !important; line-height: 1.5; margin-bottom: 28px !important; }
+.auth-field label { font-size: 12px !important; font-weight: 600 !important; letter-spacing: .03em; text-transform: uppercase; color: var(--muted) !important; }
+.auth-field input {
+  border-radius: var(--p-radius-sm) !important; border: 1px solid var(--border) !important;
+  min-height: 50px; padding: 0 14px !important; font-size: 15px !important;
+  background: var(--surface) !important; transition: border-color .2s, box-shadow .2s;
+}
+.auth-field input:focus { outline: none; border-color: var(--terra) !important; box-shadow: 0 0 0 4px var(--green-glow) !important; }
+.auth-error { border-radius: var(--p-radius-sm) !important; font-size: 13px !important; line-height: 1.45; }
+.auth-switch { font-size: 14px !important; margin-top: 22px !important; }
+.auth-switch a { font-weight: 700; }
+
 /* ── Sheets, modals, toasts ── */
 .modal-sheet { border-radius: 24px 24px 0 0 !important; box-shadow: 0 -12px 40px rgba(23, 20, 14, 0.15); }
 .modal-handle { width: 40px !important; height: 5px !important; border-radius: 999px !important; opacity: .5; }
 .toast, .toast-top { border-radius: 999px !important; box-shadow: var(--p-shadow-md) !important; font-weight: 600; }
+
+/* Keyboard users get a clear, on-brand focus ring everywhere */
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--terra) !important; outline-offset: 2px;
+}
 
 /* Skeletons match card shape */
 .skel-product-card, .skel-store-card { border-radius: var(--p-radius) !important; }

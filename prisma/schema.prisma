@@ -34,6 +34,7 @@ enum OrderStatus {
   PENDING
   DISPATCHED
   DELIVERED
+  CANCELLED
 }
 
 enum AdminRole {
@@ -62,7 +63,7 @@ model AdminUser {
 model AdminAuditLog {
   id         String   @id @default(cuid())
   adminEmail String
-  action     String // e.g. "ASSIGN_ORDER", "UPDATE_STATUS", "DELETE_ORDER", "UPDATE_STOCK", "ADD_ADMIN", "REMOVE_ADMIN"
+  action     String // e.g. "ASSIGN_ORDER", "UPDATE_STATUS", "DELETE_ORDER", "UPDATE_STOCK", "ADD_ADMIN", "REMOVE_ADMIN", "CANCEL_ORDER"
   targetId   String? // order code, product id, admin email — whatever the action's subject was
   detail     String? // short freeform description of what changed
   createdAt  DateTime @default(now())
@@ -145,7 +146,7 @@ model PendingCheckout {
   userId          String
   yocoCheckoutId  String    @unique
   amountCents     Int
-  payload         String // JSON-encoded: { address, items, customerName, customerPhone, promoCode }
+  payload         String // JSON-encoded: { address, items, customerName, customerPhone, promoCode, landmark, deliveryLat, deliveryLng }
   status          String    @default("PENDING") // PENDING | COMPLETED | FAILED_NEEDS_REFUND
   orderCode       String? // set once the real Order is created
   failureReason   String?
@@ -175,6 +176,13 @@ model Order {
   code          String      @unique
   userId        String?
   address       String
+  // Township and informal-settlement addresses are often hard for a driver
+  // to find from the street address alone. The customer can drop a GPS pin
+  // ("use my location") and/or describe a landmark ("blue gate opposite the
+  // spaza"). All optional — an order without them works exactly as before.
+  landmark      String?
+  deliveryLat   Float?
+  deliveryLng   Float?
   customerName  String?
   customerPhone String?
   // Captured at creation (same reason customerName/customerPhone are
@@ -211,6 +219,11 @@ model Order {
   // the admin dashboard. Always false/null for non-COD orders.
   codFlagged   Boolean @default(false)
   codFlagReason String?
+
+  // Set when a customer or admin cancels the order (see
+  // cancelOrderTransaction in server.js). Stock for every line item is
+  // restored atomically in the same transaction that sets this.
+  cancelReason String?
 
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
