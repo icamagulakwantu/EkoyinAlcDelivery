@@ -34,6 +34,7 @@ enum OrderStatus {
   PENDING
   DISPATCHED
   DELIVERED
+  CANCELLED
 }
 
 enum AdminRole {
@@ -62,7 +63,7 @@ model AdminUser {
 model AdminAuditLog {
   id         String   @id @default(cuid())
   adminEmail String
-  action     String // e.g. "ASSIGN_ORDER", "UPDATE_STATUS", "DELETE_ORDER", "UPDATE_STOCK", "ADD_ADMIN", "REMOVE_ADMIN"
+  action     String // e.g. "ASSIGN_ORDER", "UPDATE_STATUS", "DELETE_ORDER", "UPDATE_STOCK", "ADD_ADMIN", "REMOVE_ADMIN", "CANCEL_ORDER"
   targetId   String? // order code, product id, admin email — whatever the action's subject was
   detail     String? // short freeform description of what changed
   createdAt  DateTime @default(now())
@@ -211,6 +212,11 @@ model Order {
   // the admin dashboard. Always false/null for non-COD orders.
   codFlagged   Boolean @default(false)
   codFlagReason String?
+
+  // Set when a customer or admin cancels the order (see
+  // cancelOrderTransaction in server.js). Stock for every line item is
+  // restored atomically in the same transaction that sets this.
+  cancelReason String?
 
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
