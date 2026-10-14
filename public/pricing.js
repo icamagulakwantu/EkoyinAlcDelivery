@@ -47,7 +47,11 @@
     return subtotal > FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
   }
 
+  // Orders below this (pre-discount) subtotal don't qualify for delivery.
+  const MIN_ORDER_SUBTOTAL = 300;
+
   return {
+    MIN_ORDER_SUBTOTAL,
     COOLER_ELIGIBLE,
     COOLER_MIN_SUBTOTAL,
     COOLER_DISCOUNT_PCT,

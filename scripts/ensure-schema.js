@@ -14,6 +14,29 @@ require('dotenv').config();
 
 const STATEMENTS = [
   `ALTER TABLE "Order" ADD COLUMN IF NOT EXISTS "hiddenByCustomer" BOOLEAN NOT NULL DEFAULT false`,
+  `ALTER TABLE "SkuItem" ADD COLUMN IF NOT EXISTS "packSize" INTEGER NOT NULL DEFAULT 1`,
+  // Dumpies and cans are sold only as six-packs. One-time conversion of
+  // already-priced items: price x6, cases counted in six-packs. Rows already
+  // converted have packSize 6, so re-running never multiplies twice.
+  `UPDATE "SkuItem"
+     SET "retailSingleZAR" = ROUND(("retailSingleZAR" * 6)::numeric, 2)::double precision,
+         "unitsPerCase" = GREATEST(1, "unitsPerCase" / 6),
+         "packSize" = 6
+   WHERE "packSize" = 1
+     AND "retailSingleZAR" > 0
+     AND ("bottleFormat" ILIKE 'Dumpy%' OR "bottleFormat" ILIKE 'Can%')`,
+  `CREATE TABLE IF NOT EXISTS "DriverReport" (
+     "id" TEXT NOT NULL PRIMARY KEY,
+     "orderCode" TEXT NOT NULL,
+     "userId" TEXT NOT NULL,
+     "driverName" TEXT,
+     "driverPhone" TEXT,
+     "category" TEXT NOT NULL,
+     "message" TEXT NOT NULL,
+     "status" TEXT NOT NULL DEFAULT 'OPEN',
+     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+   )`,
+  `CREATE INDEX IF NOT EXISTS "DriverReport_orderCode_idx" ON "DriverReport"("orderCode")`,
 ];
 
 async function main() {
