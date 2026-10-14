@@ -13,7 +13,7 @@ const prisma = new PrismaClient();
 // for express-rate-limit to read the real client IP instead of Render's.
 app.set("trust proxy", true);
 
-// ── Rate limiting ───────────────────────────────────────────
+// ── Rate limiting ───────────────────────────────────────────────────────
 // Order codes unlock public tracking (including a driver's live location),
 // promo codes are a 6-10 char guessable string, and order creation is the
 // one place a bot could hammer stock/promo usage — all three need a cap
@@ -77,7 +77,7 @@ app.use("/admin", express.static("admin"));
 // exact raw body, not a re-serialized version of the parsed object.
 app.use(express.json({ verify: (req, res, buf) => { req.rawBody = buf; } }));
 
-// ── Supabase Auth (customer login) ─────────────────────────
+// ── Supabase Auth (customer login) ───────────────────────────────
 // Verifies the bearer token against Supabase's own /auth/v1/user endpoint —
 // no Supabase Admin SDK needed server-side, just the anon key.
 async function verifySupabaseToken(req) {
@@ -108,7 +108,7 @@ async function requireUser(req, res, next) {
   next();
 }
 
-// ── Admin auth ──────────────────────────────────────────────
+// ── Admin auth ────────────────────────────────────────────────────────
 // A logged-in Supabase user whose email is in the ADMIN_EMAILS allowlist
 // is always a SUPER_ADMIN (root bootstrap). The AdminUser table holds
 // delegated admins with a role (SUPER_ADMIN or DISPATCHER). The shared
@@ -170,7 +170,7 @@ async function logAdminAction(req, action, targetId, detail) {
 
 // ── Pricing — shared with the browser via public/pricing.js, so the cart,
 // checkout and server can never disagree on discounts or the delivery fee.
-const { COOLER_ELIGIBLE, coolerDiscountPct, deliveryFee } = require("./public/pricing.js");
+const { COOLER_ELIGIBLE, coolerDiscountPct, deliveryFee, MIN_ORDER_SUBTOTAL } = require("./public/pricing.js");
 
 // Shared total calculation (subtotal → minus Cooler Box and promo → plus
 // delivery). Previously copy-pasted in three places.
@@ -227,6 +227,7 @@ const PUBLIC_PRODUCT_FIELDS = {
   productType: true,
   bottleFormat: true,
   unitsPerCase: true,
+  packSize: true,
   retailSingleZAR: true,
   retailCaseDiscountPct: true,
   retailCaseZAR: true,
@@ -363,7 +364,7 @@ app.post("/api/promo/validate", promoLimiter, async (req, res) => {
   }
 });
 
-// ── Cash-on-delivery eligibility ─────────────────────────────
+// ── Cash-on-delivery eligibility ──────────────────────────────
 // Enforced server-side:
 //   1. Track record — a minimum number of orders actually DELIVERED to
 //      this account (and optionally a minimum account age). The old rule
@@ -499,7 +500,7 @@ async function validateAndPriceOrder({ address, items, customerPhone, paymentMet
   let subtotal = 0;
   let coolerSubtotal = 0;
   const orderItems = [];
-  const stockNeeded = []; // units are individual bottles, not cases
+  const stockNeeded = []; // units are individual bottles (six-packs for dumpies/cans), not cases
 
   for (const i of items) {
     const sku = skuMap.get(i.skuId);
@@ -523,6 +524,12 @@ async function validateAndPriceOrder({ address, items, customerPhone, paymentMet
 
     orderItems.push({ skuId: sku.id, name: sku.name, price: unitPrice, quantity });
     stockNeeded.push({ skuId: sku.id, name: sku.name, units: quantity });
+  }
+
+  // Orders below the minimum don't qualify for delivery. Compared on the
+  // pre-discount subtotal, same as the cart and checkout pages.
+  if (subtotal < MIN_ORDER_SUBTOTAL) {
+    return { error: `Orders under R${MIN_ORDER_SUBTOTAL} don't qualify for delivery — please add R${(MIN_ORDER_SUBTOTAL - subtotal).toFixed(2)} more to your cart` };
   }
 
   const coolerDiscount = coolerSubtotal * coolerDiscountPct(coolerSubtotal);
@@ -1333,6 +1340,9 @@ app.get("/admin/audit-log", requireAdmin, requireSuperAdmin, async (req, res) =>
     res.status(500).json({ error: "Failed to load audit log" });
   }
 });
+
+// Feature routes that live in their own files (driver reports, ...).
+require("./routes/index.js")(app, { prisma, requireUser, requireAdmin, requireSuperAdmin, writeLimiter, trackLimiter, logAdminAction });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
