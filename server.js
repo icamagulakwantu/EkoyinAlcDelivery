@@ -512,6 +512,11 @@ async function validateAndPriceOrder({ address, items, customerPhone, paymentMet
       ? Math.ceil(rawQuantity / sku.unitsPerCase) * sku.unitsPerCase
       : rawQuantity;
     const unitPrice = i.purchaseType === "case" ? sku.retailCaseZAR / sku.unitsPerCase : sku.retailSingleZAR;
+    // Products added with a photo but no price yet carry a price of 0 —
+    // they're shown as "Price coming soon" and must never be orderable.
+    if (!(unitPrice > 0)) {
+      return { error: `${sku.name} isn't priced yet and can't be ordered — please remove it from your cart` };
+    }
     const itemTotal = unitPrice * quantity;
     subtotal += itemTotal;
     if (COOLER_ELIGIBLE.has(sku.category)) coolerSubtotal += itemTotal;
@@ -881,11 +886,12 @@ app.post("/webhooks/yoco", async (req, res) => {
   }
 });
 
-// 📜 CUSTOMER: MY ORDERS
+// 📜 CUSTOMER: MY ORDERS — orders the customer has removed from their own
+// list (hiddenByCustomer) are skipped here only. Admin /orders still sees all.
 app.get("/api/my-orders", requireUser, async (req, res) => {
   try {
     const orders = await prisma.order.findMany({
-      where: { userId: req.user.id },
+      where: { userId: req.user.id, hiddenByCustomer: false },
       include: { items: true, tavern: { select: { name: true, area: true } } },
       orderBy: { createdAt: "desc" },
     });
@@ -1167,6 +1173,31 @@ app.post("/order/:code/cancel", writeLimiter, requireUser, async (req, res) => {
     res.json({ ok: true, order: updated });
   } catch (err) {
     cancelErrorResponse(err, res);
+  }
+});
+
+// 🙈 CUSTOMER: REMOVE A FINISHED ORDER FROM THEIR OWN LIST — a soft hide, not
+// a delete. Only cancelled or delivered orders qualify (nothing in motion can
+// disappear). The row, its items, stock history and the admin view are all
+// untouched; only /api/my-orders skips it.
+const CUSTOMER_REMOVABLE_STATUSES = new Set(["CANCELLED", "DELIVERED"]);
+
+app.post("/order/:code/hide", requireUser, async (req, res) => {
+  try {
+    const order = await prisma.order.findUnique({ where: { code: req.params.code } });
+    if (!order) return res.status(404).json({ error: "Order not found" });
+    if (order.userId !== req.user.id) return res.status(403).json({ error: "This isn't your order" });
+    if (!CUSTOMER_REMOVABLE_STATUSES.has(order.status)) {
+      return res.status(400).json({ error: "Only cancelled or delivered orders can be removed" });
+    }
+    await prisma.order.update({
+      where: { code: req.params.code },
+      data: { hiddenByCustomer: true },
+    });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to remove order" });
   }
 });
 
