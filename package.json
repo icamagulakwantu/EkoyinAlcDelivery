@@ -3,14 +3,15 @@
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "postinstall": "prisma generate",
+    "start": "node scripts/ensure-schema.js && node server.js",
+    "postinstall": "prisma generate && node scripts/ensure-schema.js",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
     "seed": "node prisma/seed.js",
     "enrich-images": "node scripts/enrich-images.js",
     "optimize-images": "node scripts/optimize-images.js",
-    "sync-images": "node prisma/sync-images.js"
+    "sync-images": "node prisma/sync-images.js",
+    "ensure-schema": "node scripts/ensure-schema.js"
   },
   "prisma": {
     "seed": "node prisma/seed.js"
