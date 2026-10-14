@@ -40,11 +40,30 @@
     .product-card.out-of-stock { opacity: 0.55; }
     .stock-badge { position: absolute; top: 8px; left: 8px; z-index: 1; background: var(--white); color: var(--surface); font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; padding: 3px 7px; border-radius: 4px; }
     .add-btn-disabled { font-size: 10px; color: var(--muted); font-weight: 600; }
+    .price-soon { font-size: 12px; font-weight: 700; color: var(--muted); cursor: default; }
     .fav-btn.active { color: var(--terra); }
     #favToggle { cursor: pointer; }
     #favToggle.active { background: var(--terra-light); color: #fff; border-color: var(--terra-light); }
     .brand-filter-pill { cursor: pointer; }
     .brand-filter-pill.active { background: var(--gold); border-color: var(--gold); color: #1a1400; }
+
+    /* PRODUCT PHOTO BOX — every card gets the same fixed square, so photos of
+       any shape sit in the same place. object-fit: contain scales a photo to
+       fit INSIDE the box (never cropped, never stretched, never overflowing),
+       and the padding keeps bottles off the edges. */
+    .product-img-box {
+      position: relative; width: 100%; aspect-ratio: 1 / 1; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      padding: 14px; overflow: hidden;
+      background: var(--black); border-bottom: 1px solid var(--p-hairline, var(--border));
+    }
+    .product-img-box img {
+      display: block; width: 100%; height: 100%;
+      object-fit: contain; object-position: center;
+    }
+    .product-img-box .img-fallback {
+      font-family: var(--font-display); font-size: 34px; font-weight: 700; color: var(--faint);
+    }
 
     /* HERO AISLE BANNER — crossfade + slide between aisles as you tap a
        category pill, the same motion language as the onboarding carousel
@@ -73,8 +92,7 @@
     .shop-hero-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.4); transition: background 0.2s, width 0.2s; cursor: pointer; }
     .shop-hero-dot.active { background: #fff; width: 16px; border-radius: 3px; }
 
-    /* Brand story badges — small chips in the card's text flow (product
-       cards have no photo area to float a corner badge over), only ever
+    /* Brand story badges — small chips in the card's text flow, only ever
        rendered for a SKU whose brandTags array actually has something in
        it (see schema.prisma's note on how strict that bar is). */
     .brand-badges { display: flex; flex-wrap: wrap; gap: 4px; margin: 2px 0 4px; }
@@ -161,9 +179,7 @@
     </div>
     <div class="cooler-progress-track"><div class="cooler-progress-fill" id="coolerFill" style="width:0%"></div></div>
     <div class="cooler-tier-labels">
-      <span id="tier600">R600 · 5%</span>
-      <span id="tier1000">R1000 · 10%</span>
-      <span id="tier1500">R1500 · 15%</span>
+      <span id="coolerGoal">R750 · 5% off</span>
     </div>
     <div class="cooler-slots" id="coolerSlots"></div>
   </div>
@@ -219,9 +235,9 @@
   <script>
   renderNavAuth();
 
-  // Cooler Box eligibility — shared with server.js via pricing.js, see
+  // Cooler Box rules — shared with server.js via pricing.js, see
   // that file for why (used to be copy-pasted separately in 3 places).
-  const { COOLER_ELIGIBLE } = EkoyiniPricing;
+  const { COOLER_ELIGIBLE, COOLER_MIN_SUBTOTAL, COOLER_DISCOUNT_PCT } = EkoyiniPricing;
 
   let cart = EkoyiniCart.get();
   let products = [];
@@ -249,6 +265,14 @@
   }
 
   function fmtPrice(v) { return v == null ? 'POA' : 'R' + v.toFixed(2); }
+
+  // Products added with a photo but no price yet are stored with a price of 0.
+  function isPriced(p) { return p.retailSingleZAR > 0; }
+
+  // Product names/sizes go into innerHTML, so they are escaped first.
+  function esc(value) {
+    return String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
 
   let showFavoritesOnly = false;
 
@@ -281,6 +305,17 @@
   function brandBadgesHTML(p) {
     if (!p.brandTags || p.brandTags.length === 0) return '';
     return `<div class="brand-badges">${p.brandTags.map(t => `<span class="tag-gold">${BRAND_TAG_LABELS[t] || t}</span>`).join('')}</div>`;
+  }
+
+  // Fixed square photo box. If the photo fails to load, it is swapped for the
+  // product's first letter so the card keeps exactly the same layout.
+  function productImageHTML(p) {
+    const letter = esc((p.name || '?').trim().charAt(0).toUpperCase());
+    if (!p.imageUrl) return `<div class="product-img-box"><span class="img-fallback">${letter}</span></div>`;
+    return `<div class="product-img-box">
+      <img src="${esc(p.imageUrl)}" alt="${esc(p.name)}" loading="lazy" decoding="async"
+        onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'img-fallback',textContent:'${letter}'}))">
+    </div>`;
   }
 
   // ── HERO AISLE BANNER ──
@@ -448,7 +483,7 @@
         ? 'No favorites yet — tap the heart on a product to save it here.'
         : activeBrandFilters.size > 0
           ? `No products currently match ${[...activeBrandFilters].map(t => BRAND_TAG_LABELS[t]).join(' + ')} — we only tag a brand once its story is actually verified, so this list grows as we source more.`
-          : `No products match${searchQuery ? ` "${searchQuery}"` : ' this filter'}.`;
+          : `No products match${searchQuery ? ` "${esc(searchQuery)}"` : ' this filter'}.`;
       page.innerHTML = `<div class="no-results">${noResultsMsg} <a href="shop.html" style="color:var(--terra-light);">Show everything</a></div>`;
       return;
     }
@@ -477,6 +512,7 @@
       grid.className = 'product-grid';
       items.forEach(p => {
         const outOfStock = p.stock <= 0;
+        const priced = isPriced(p);
         const card = document.createElement('div');
         card.className = 'product-card' + (outOfStock ? ' out-of-stock' : '');
         card.id = 'card-' + p.id;
@@ -486,14 +522,15 @@
             <svg viewBox="0 0 24 24" fill="${isFav ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
           </button>
           ${outOfStock ? '<div class="stock-badge">Out of Stock</div>' : ''}
+          ${productImageHTML(p)}
           <div class="product-info">
-            <h3>${p.name}</h3>
+            <h3>${esc(p.name)}</h3>
             ${brandBadgesHTML(p)}
-            <div class="product-size">${p.bottleFormat}</div>
+            <div class="product-size">${esc(p.bottleFormat)}</div>
             <div class="product-footer">
-              <div class="product-price" onclick="showPriceDetails('${p.id}')">
-                ${fmtPrice(p.retailSingleZAR)}
-              </div>
+              ${priced
+                ? `<div class="product-price" onclick="showPriceDetails('${p.id}')">${fmtPrice(p.retailSingleZAR)}</div>`
+                : `<div class="price-soon">Price coming soon</div>`}
               <div id="ctrl-${p.id}">${qtyControlHTML(p)}</div>
             </div>
           </div>`;
@@ -514,6 +551,7 @@
   // first load — see the buildCatalog() comment on why it can't go
   // through renderQtyControl there) and every re-render after a click.
   function qtyControlHTML(p) {
+    if (!isPriced(p)) return `<span class="add-btn-disabled">Soon</span>`;
     if (p.stock <= 0) return `<span class="add-btn-disabled">Unavailable</span>`;
     const qty = cart[p.id] || 0;
     if (qty > 0) {
@@ -535,6 +573,8 @@
   }
 
   function changeQty(id, delta) {
+    const p = products.find(x => x.id === id);
+    if (p && !isPriced(p)) return; // not orderable until it has a price
     const newQty = (cart[id] || 0) + delta;
     if (newQty <= 0) delete cart[id]; else cart[id] = newQty;
     EkoyiniCart.save(cart);
@@ -560,7 +600,7 @@
   function scrollToCoolerBox() {
     const bar = document.getElementById('coolerBar');
     if (bar.style.display === 'none' || !bar.offsetParent) {
-      showToast('Add any drink to start filling your Cooler Box — discounts unlock from R600');
+      showToast(`Add any drink to start filling your Cooler Box — ${COOLER_DISCOUNT_PCT * 100}% off from R${COOLER_MIN_SUBTOTAL}`);
       return;
     }
     bar.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -584,11 +624,15 @@
     });
 
     document.getElementById('coolerTotal').textContent = fmtPrice(subtotal);
-    const pct = Math.min(100, (subtotal / 1500) * 100);
+    const pct = Math.min(100, (subtotal / COOLER_MIN_SUBTOTAL) * 100);
     document.getElementById('coolerFill').style.width = pct + '%';
-    document.getElementById('tier600').classList.toggle('hit', subtotal >= 600);
-    document.getElementById('tier1000').classList.toggle('hit', subtotal >= 1000);
-    document.getElementById('tier1500').classList.toggle('hit', subtotal >= 1500);
+
+    const unlocked = subtotal >= COOLER_MIN_SUBTOTAL;
+    const goal = document.getElementById('coolerGoal');
+    goal.classList.toggle('hit', unlocked);
+    goal.textContent = unlocked
+      ? `${COOLER_DISCOUNT_PCT * 100}% off unlocked`
+      : `R${(COOLER_MIN_SUBTOTAL - subtotal).toFixed(2)} more for ${COOLER_DISCOUNT_PCT * 100}% off (R${COOLER_MIN_SUBTOTAL})`;
 
     const slots = document.getElementById('coolerSlots');
     slots.innerHTML = '';
@@ -606,7 +650,7 @@
 
   function showPriceDetails(id) {
     const p = products.find(x => x.id === id);
-    if (!p) return;
+    if (!p || !isPriced(p)) return;
     document.getElementById('modalTitle').textContent = p.name;
     const perUnitCase = p.retailCaseZAR / p.unitsPerCase;
     document.getElementById('priceDetailsBody').innerHTML = `
