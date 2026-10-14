@@ -76,6 +76,7 @@
     <button class="section-tab active" id="sectionTabOrders" onclick="showSection('orders', this)">Orders</button>
     <button class="section-tab" id="sectionTabInventory" onclick="showSection('inventory', this)">Inventory</button>
     <button class="section-tab" id="sectionTabReports" onclick="showSection('reports', this)">Driver reports</button>
+    <button class="section-tab" id="sectionTabDelivery" onclick="showSection('delivery', this)">Delivery</button>
     <button class="section-tab" id="sectionTabAdmins" onclick="showSection('admins', this)" style="display:none;">Admins</button>
     <button class="section-tab" id="sectionTabActivity" onclick="showSection('activity', this)" style="display:none;">Activity</button>
   </div>
@@ -107,6 +108,11 @@
   <!-- DRIVER REPORTS SECTION (customer complaints about drivers) -->
   <div id="driverReportsSection" style="display:none;">
     <div id="driverReportsList"></div>
+  </div>
+
+  <!-- DELIVERY SECTION (surge switch + tavern locations) -->
+  <div id="deliverySection" style="display:none;">
+    <div id="deliverySettingsBody"></div>
   </div>
 
   <!-- ADMINS SECTION (super-admin only) -->
@@ -158,5 +164,6 @@
   <script src="/auth.js"></script>
   <script src="admin-api.js"></script>
   <script src="driver-reports.js"></script>
+  <script src="delivery-settings.js"></script>
 </body>
 </html>
