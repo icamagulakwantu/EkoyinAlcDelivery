@@ -2,4 +2,5 @@
 // file in this folder and one line here, so server.js stays untouched.
 module.exports = function mountRoutes(app, deps) {
   require("./driver-reports.js")(app, deps);
+  require("./delivery.js")(app, deps);
 };

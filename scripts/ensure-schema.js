@@ -37,6 +37,26 @@ const STATEMENTS = [
      "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
    )`,
   `CREATE INDEX IF NOT EXISTS "DriverReport_orderCode_idx" ON "DriverReport"("orderCode")`,
+
+  // ── Distance-based delivery fees ──
+  // Tavern coordinates (set in the admin dashboard, Delivery tab).
+  `ALTER TABLE "Tavern"
+     ADD COLUMN IF NOT EXISTS "latitude" DOUBLE PRECISION,
+     ADD COLUMN IF NOT EXISTS "longitude" DOUBLE PRECISION`,
+  // Fee breakdown saved on every new order (older orders keep nulls).
+  `ALTER TABLE "Order"
+     ADD COLUMN IF NOT EXISTS "distanceKm" DOUBLE PRECISION,
+     ADD COLUMN IF NOT EXISTS "deliveryFee" DOUBLE PRECISION,
+     ADD COLUMN IF NOT EXISTS "surgeFee" DOUBLE PRECISION,
+     ADD COLUMN IF NOT EXISTS "priorityFee" DOUBLE PRECISION,
+     ADD COLUMN IF NOT EXISTS "serviceFee" DOUBLE PRECISION`,
+  // One settings row (the surge on/off switch).
+  `CREATE TABLE IF NOT EXISTS "DeliverySettings" (
+     "id" TEXT NOT NULL PRIMARY KEY,
+     "surgesEnabled" BOOLEAN NOT NULL DEFAULT true,
+     "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+   )`,
+  `INSERT INTO "DeliverySettings" ("id") VALUES ('default') ON CONFLICT ("id") DO NOTHING`,
 ];
 
 async function main() {
