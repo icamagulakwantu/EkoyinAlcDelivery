@@ -28,12 +28,14 @@
     'WINE', 'WINE_BOX', 'SPARKLING', 'CHAMPAGNE', 'WATER', 'ICE',
   ]);
 
-  // Tiers start at R600 — below that, no discount at all.
+  // Negotiated with the supplier: a single flat 5% once the eligible
+  // subtotal (the physical cooler box itself is not counted) reaches R750.
+  // Below that, no discount. The old R600/R1000/R1500 tiers are gone.
+  const COOLER_MIN_SUBTOTAL = 750;
+  const COOLER_DISCOUNT_PCT = 0.05;
+
   function coolerDiscountPct(coolerSubtotal) {
-    if (coolerSubtotal >= 1500) return 0.15;
-    if (coolerSubtotal >= 1000) return 0.10;
-    if (coolerSubtotal >= 600) return 0.05;
-    return 0;
+    return coolerSubtotal >= COOLER_MIN_SUBTOTAL ? COOLER_DISCOUNT_PCT : 0;
   }
 
   // Delivery is free once the (pre-discount) subtotal is above this.
@@ -45,5 +47,13 @@
     return subtotal > FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
   }
 
-  return { COOLER_ELIGIBLE, coolerDiscountPct, FREE_DELIVERY_THRESHOLD, DELIVERY_FEE, deliveryFee };
+  return {
+    COOLER_ELIGIBLE,
+    COOLER_MIN_SUBTOTAL,
+    COOLER_DISCOUNT_PCT,
+    coolerDiscountPct,
+    FREE_DELIVERY_THRESHOLD,
+    DELIVERY_FEE,
+    deliveryFee,
+  };
 });
