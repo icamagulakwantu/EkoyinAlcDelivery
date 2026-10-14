@@ -28,12 +28,14 @@
     .order-card-meta { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
     .order-card-total { font-size: 13px; font-weight: 700; color: var(--white); margin-top: 6px; }
     .order-card-bottom { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 6px; }
-    .order-card-actions { display: flex; gap: 8px; }
+    .order-card-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
     .reorder-btn { background: var(--terra-light); color: #fff; border: none; padding: 7px 14px; border-radius: 8px; font-size: 11px; font-weight: 700; }
     .cancel-order-btn { background: transparent; color: var(--danger); border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent); padding: 7px 14px; border-radius: 8px; font-size: 11px; font-weight: 700; }
     .cancel-order-btn:disabled { opacity: .5; }
     .remove-order-btn { background: transparent; color: var(--muted); border: 1px solid var(--border); padding: 7px 14px; border-radius: 8px; font-size: 11px; font-weight: 700; }
     .remove-order-btn:disabled { opacity: .5; }
+    .report-driver-btn { background: transparent; color: var(--muted); border: 1px solid var(--border); padding: 7px 14px; border-radius: 8px; font-size: 11px; font-weight: 700; }
+    .report-driver-btn:disabled { opacity: .6; }
     .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 13px; }
     .logged-out { text-align: center; padding: 60px 20px; }
     /* In-page confirm sheet (replaces window.confirm, which looks broken on mobile) */
@@ -46,6 +48,11 @@
     .confirm-actions button { flex: 1; min-height: 48px; border-radius: 999px; font-weight: 700; font-size: 14px; border: 1px solid var(--border); }
     .confirm-keep { background: var(--surface); color: var(--white); }
     .confirm-go { background: var(--danger); color: #fff; border-color: var(--danger) !important; }
+    .report-field { margin-bottom: 14px; }
+    .report-field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; font-weight: 600; }
+    .report-field select, .report-field textarea { width: 100%; background: var(--surface); border: 1px solid var(--border); padding: 12px; border-radius: 8px; color: var(--white); font-size: 13px; font-family: inherit; }
+    .report-field textarea { min-height: 96px; resize: vertical; }
+    .report-sheet-note { color: var(--muted); font-size: 12px; line-height: 1.5; margin-bottom: 14px; }
   </style>
   <link rel="stylesheet" href="premium.css">
 </head>
@@ -73,6 +80,32 @@
       <div class="confirm-actions">
         <button type="button" class="confirm-keep" id="confirmKeep">Keep order</button>
         <button type="button" class="confirm-go" id="confirmGo">Yes, cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- REPORT A DRIVER -->
+  <div class="confirm-backdrop" id="reportBackdrop" role="dialog" aria-modal="true" aria-labelledby="reportTitle">
+    <div class="confirm-sheet">
+      <h3 id="reportTitle">Report your driver</h3>
+      <p class="report-sheet-note" id="reportNote">Tell us what happened. Our team will look into it.</p>
+      <div class="report-field">
+        <label for="reportCategory">What went wrong?</label>
+        <select id="reportCategory">
+          <option value="RUDE">The driver was rude</option>
+          <option value="UNSAFE">I felt unsafe</option>
+          <option value="LATE">The driver was very late</option>
+          <option value="TAMPERED">My order was tampered with</option>
+          <option value="OTHER">Something else</option>
+        </select>
+      </div>
+      <div class="report-field">
+        <label for="reportMessage">Tell us more</label>
+        <textarea id="reportMessage" maxlength="1000" placeholder="What happened?"></textarea>
+      </div>
+      <div class="confirm-actions">
+        <button type="button" class="confirm-keep" id="reportCancel">Cancel</button>
+        <button type="button" class="confirm-go" id="reportSend">Send report</button>
       </div>
     </div>
   </div>
@@ -128,6 +161,9 @@
   // Mirrors POST /order/:code/hide — only finished orders can be removed
   // from the customer's own list (admin records are never affected).
   const CUSTOMER_REMOVABLE = new Set(['CANCELLED', 'DELIVERED']);
+  // Mirrors POST /api/driver-reports — a driver can be reported once the
+  // order is on the road or delivered.
+  const DRIVER_REPORTABLE = new Set(['DISPATCHED', 'DELIVERED']);
 
   async function init() {
     const session = await getSession();
@@ -165,11 +201,15 @@
   }
 
   let myOrders = [];
+  // Order codes the customer has already sent a driver report for.
+  let reportedCodes = new Set();
 
   function renderOrderCard(o) {
     const code = escapeHtml(o.code);
     const canCancel = CUSTOMER_CANCELLABLE.has(o.status);
     const canRemove = CUSTOMER_REMOVABLE.has(o.status);
+    const canReport = DRIVER_REPORTABLE.has(o.status) && !!o.driverName;
+    const alreadyReported = reportedCodes.has(o.code);
     const itemCount = o.items.length;
     return `
       <div class="order-card">
@@ -183,6 +223,9 @@
         <div class="order-card-bottom">
           <div class="order-card-total">R${Number(o.total).toFixed(2)}</div>
           <div class="order-card-actions">
+            ${canReport ? (alreadyReported
+              ? `<button class="report-driver-btn" disabled>Reported</button>`
+              : `<button class="report-driver-btn" data-report="${code}">Report driver</button>`) : ''}
             ${canCancel ? `<button class="cancel-order-btn" data-cancel="${code}">Cancel</button>` : ''}
             ${canRemove ? `<button class="remove-order-btn" data-remove="${code}">Remove</button>` : ''}
             <button class="reorder-btn" data-reorder="${code}">Reorder</button>
@@ -191,11 +234,22 @@
       </div>`;
   }
 
+  async function loadReportedCodes() {
+    try {
+      const res = await authedFetch('/api/driver-reports/mine');
+      if (res.ok) reportedCodes = new Set(await res.json());
+    } catch (err) {
+      // Non-critical: worst case the Report button shows again and the server
+      // still enforces its own limit.
+      console.error(err);
+    }
+  }
+
   async function loadOrders() {
     const list = document.getElementById('orderList');
     if (!list) return;
     try {
-      const res = await authedFetch('/api/my-orders');
+      const [res] = await Promise.all([authedFetch('/api/my-orders'), loadReportedCodes()]);
       if (!res.ok) throw new Error('Failed to load orders');
       myOrders = await res.json();
       if (myOrders.length === 0) {
@@ -207,6 +261,7 @@
       list.querySelectorAll('[data-reorder]').forEach((b) => { b.onclick = () => reorder(b.dataset.reorder); });
       list.querySelectorAll('[data-cancel]').forEach((b) => { b.onclick = () => askCancel(b.dataset.cancel, b); });
       list.querySelectorAll('[data-remove]').forEach((b) => { b.onclick = () => askRemove(b.dataset.remove, b); });
+      list.querySelectorAll('[data-report]').forEach((b) => { b.onclick = () => openReport(b.dataset.report); });
     } catch (err) {
       console.error(err);
       list.innerHTML = '<div class="empty-state">Failed to load orders. Pull down to refresh or try again later.</div>';
@@ -254,7 +309,7 @@
   function closeConfirm() { backdrop.classList.remove('show'); pendingAction = null; }
   document.getElementById('confirmKeep').onclick = closeConfirm;
   backdrop.addEventListener('click', (e) => { if (e.target === backdrop) closeConfirm(); });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeConfirm(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeConfirm(); closeReport(); } });
 
   // Runs one confirmed action against the server and reports the result.
   async function runOrderAction({ path, busyLabel, idleLabel, doneMessage, failMessage, btn }) {
@@ -282,6 +337,53 @@
       runOrderAction({ path: `${base}/hide`, busyLabel: 'Removing…', idleLabel: 'Remove', doneMessage: 'Order removed', failMessage: 'Could not remove this order', btn });
     } else {
       runOrderAction({ path: `${base}/cancel`, busyLabel: 'Cancelling…', idleLabel: 'Cancel', doneMessage: 'Order cancelled', failMessage: 'Could not cancel this order', btn });
+    }
+  };
+
+  // ── Report a driver ──
+  const reportBackdrop = document.getElementById('reportBackdrop');
+  // Order code the open report form is for.
+  let reportingCode = null;
+
+  function openReport(code) {
+    const order = myOrders.find((o) => o.code === code);
+    reportingCode = code;
+    document.getElementById('reportNote').textContent = order && order.driverName
+      ? `Order ${code} · driver ${order.driverName}. Tell us what happened and our team will look into it.`
+      : `Order ${code}. Tell us what happened and our team will look into it.`;
+    document.getElementById('reportCategory').value = 'RUDE';
+    document.getElementById('reportMessage').value = '';
+    reportBackdrop.classList.add('show');
+  }
+
+  function closeReport() { reportBackdrop.classList.remove('show'); reportingCode = null; }
+  document.getElementById('reportCancel').onclick = closeReport;
+  reportBackdrop.addEventListener('click', (e) => { if (e.target === reportBackdrop) closeReport(); });
+
+  document.getElementById('reportSend').onclick = async () => {
+    if (!reportingCode) return;
+    const message = document.getElementById('reportMessage').value.trim();
+    if (message.length < 5) { showToast('Please tell us a little more about what happened'); return; }
+    const sendBtn = document.getElementById('reportSend');
+    sendBtn.disabled = true;
+    sendBtn.textContent = 'Sending…';
+    try {
+      const res = await authedFetch('/api/driver-reports', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderCode: reportingCode, category: document.getElementById('reportCategory').value, message }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Could not send your report');
+      reportedCodes.add(reportingCode);
+      closeReport();
+      showToast('Report sent. Thank you — we will look into it.', 3000);
+      loadOrders();
+    } catch (err) {
+      showToast(err.message);
+    } finally {
+      sendBtn.disabled = false;
+      sendBtn.textContent = 'Send report';
     }
   };
 
