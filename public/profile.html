@@ -32,6 +32,8 @@
     .reorder-btn { background: var(--terra-light); color: #fff; border: none; padding: 7px 14px; border-radius: 8px; font-size: 11px; font-weight: 700; }
     .cancel-order-btn { background: transparent; color: var(--danger); border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent); padding: 7px 14px; border-radius: 8px; font-size: 11px; font-weight: 700; }
     .cancel-order-btn:disabled { opacity: .5; }
+    .remove-order-btn { background: transparent; color: var(--muted); border: 1px solid var(--border); padding: 7px 14px; border-radius: 8px; font-size: 11px; font-weight: 700; }
+    .remove-order-btn:disabled { opacity: .5; }
     .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 13px; }
     .logged-out { text-align: center; padding: 60px 20px; }
     /* In-page confirm sheet (replaces window.confirm, which looks broken on mobile) */
@@ -63,7 +65,7 @@
   <!-- PAGE -->
   <div class="page" id="profilePage"></div>
 
-  <!-- CANCEL CONFIRMATION -->
+  <!-- CONFIRMATION (cancel an order / remove a finished order) -->
   <div class="confirm-backdrop" id="confirmBackdrop" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
     <div class="confirm-sheet">
       <h3 id="confirmTitle">Cancel this order?</h3>
@@ -123,6 +125,9 @@
   // Mirrors the server rule in POST /order/:code/cancel — customers can
   // cancel until a driver has picked the order up.
   const CUSTOMER_CANCELLABLE = new Set(['PAYMENT_PENDING', 'PENDING']);
+  // Mirrors POST /order/:code/hide — only finished orders can be removed
+  // from the customer's own list (admin records are never affected).
+  const CUSTOMER_REMOVABLE = new Set(['CANCELLED', 'DELIVERED']);
 
   async function init() {
     const session = await getSession();
@@ -164,6 +169,7 @@
   function renderOrderCard(o) {
     const code = escapeHtml(o.code);
     const canCancel = CUSTOMER_CANCELLABLE.has(o.status);
+    const canRemove = CUSTOMER_REMOVABLE.has(o.status);
     const itemCount = o.items.length;
     return `
       <div class="order-card">
@@ -178,6 +184,7 @@
           <div class="order-card-total">R${Number(o.total).toFixed(2)}</div>
           <div class="order-card-actions">
             ${canCancel ? `<button class="cancel-order-btn" data-cancel="${code}">Cancel</button>` : ''}
+            ${canRemove ? `<button class="remove-order-btn" data-remove="${code}">Remove</button>` : ''}
             <button class="reorder-btn" data-reorder="${code}">Reorder</button>
           </div>
         </div>
@@ -199,47 +206,82 @@
       // Delegated handlers instead of inline onclick with interpolated codes.
       list.querySelectorAll('[data-reorder]').forEach((b) => { b.onclick = () => reorder(b.dataset.reorder); });
       list.querySelectorAll('[data-cancel]').forEach((b) => { b.onclick = () => askCancel(b.dataset.cancel, b); });
+      list.querySelectorAll('[data-remove]').forEach((b) => { b.onclick = () => askRemove(b.dataset.remove, b); });
     } catch (err) {
       console.error(err);
       list.innerHTML = '<div class="empty-state">Failed to load orders. Pull down to refresh or try again later.</div>';
     }
   }
 
-  // ── Cancel flow ──
+  // ── Confirm sheet — shared by "cancel" and "remove" ──
   const backdrop = document.getElementById('confirmBackdrop');
-  let pendingCancel = null;
+  // { type: 'cancel' | 'remove', code, btn } while the sheet is open.
+  let pendingAction = null;
+
+  function openConfirm({ type, code, btn, title, text, keepLabel, goLabel }) {
+    document.getElementById('confirmTitle').textContent = title;
+    document.getElementById('confirmText').textContent = text;
+    document.getElementById('confirmKeep').textContent = keepLabel;
+    document.getElementById('confirmGo').textContent = goLabel;
+    pendingAction = { type, code, btn };
+    backdrop.classList.add('show');
+  }
 
   function askCancel(code, btn) {
     const order = myOrders.find((o) => o.code === code);
     const paidByCard = order && order.paymentMethod === 'card';
-    document.getElementById('confirmText').textContent = paidByCard
-      ? `Order ${code} will be cancelled and your card payment refunded. Refunds can take a few working days.`
-      : `Order ${code} will be cancelled and won't be delivered.`;
-    pendingCancel = { code, btn };
-    backdrop.classList.add('show');
+    openConfirm({
+      type: 'cancel', code, btn,
+      title: 'Cancel this order?',
+      text: paidByCard
+        ? `Order ${code} will be cancelled and your card payment refunded. Refunds can take a few working days.`
+        : `Order ${code} will be cancelled and won't be delivered.`,
+      keepLabel: 'Keep order',
+      goLabel: 'Yes, cancel',
+    });
   }
 
-  function closeConfirm() { backdrop.classList.remove('show'); pendingCancel = null; }
+  function askRemove(code, btn) {
+    openConfirm({
+      type: 'remove', code, btn,
+      title: 'Remove this order?',
+      text: `Order ${code} will be removed from your order list. Ekoyini keeps its own record of the order.`,
+      keepLabel: 'Keep it',
+      goLabel: 'Yes, remove',
+    });
+  }
+
+  function closeConfirm() { backdrop.classList.remove('show'); pendingAction = null; }
   document.getElementById('confirmKeep').onclick = closeConfirm;
   backdrop.addEventListener('click', (e) => { if (e.target === backdrop) closeConfirm(); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeConfirm(); });
 
-  document.getElementById('confirmGo').onclick = async () => {
-    if (!pendingCancel) return;
-    const { code, btn } = pendingCancel;
-    closeConfirm();
+  // Runs one confirmed action against the server and reports the result.
+  async function runOrderAction({ path, busyLabel, idleLabel, doneMessage, failMessage, btn }) {
     btn.disabled = true;
-    btn.textContent = 'Cancelling…';
+    btn.textContent = busyLabel;
     try {
-      const res = await authedFetch(`/order/${encodeURIComponent(code)}/cancel`, { method: 'POST' });
+      const res = await authedFetch(path, { method: 'POST' });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || 'Could not cancel this order');
-      showToast('Order cancelled');
+      if (!res.ok) throw new Error(data.error || failMessage);
+      showToast(doneMessage);
       loadOrders();
     } catch (err) {
       showToast(err.message);
       btn.disabled = false;
-      btn.textContent = 'Cancel';
+      btn.textContent = idleLabel;
+    }
+  }
+
+  document.getElementById('confirmGo').onclick = () => {
+    if (!pendingAction) return;
+    const { type, code, btn } = pendingAction;
+    closeConfirm();
+    const base = `/order/${encodeURIComponent(code)}`;
+    if (type === 'remove') {
+      runOrderAction({ path: `${base}/hide`, busyLabel: 'Removing…', idleLabel: 'Remove', doneMessage: 'Order removed', failMessage: 'Could not remove this order', btn });
+    } else {
+      runOrderAction({ path: `${base}/cancel`, busyLabel: 'Cancelling…', idleLabel: 'Cancel', doneMessage: 'Order cancelled', failMessage: 'Could not cancel this order', btn });
     }
   };
 
