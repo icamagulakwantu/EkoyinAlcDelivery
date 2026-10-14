@@ -75,6 +75,7 @@
   <div class="section-nav">
     <button class="section-tab active" id="sectionTabOrders" onclick="showSection('orders', this)">Orders</button>
     <button class="section-tab" id="sectionTabInventory" onclick="showSection('inventory', this)">Inventory</button>
+    <button class="section-tab" id="sectionTabReports" onclick="showSection('reports', this)">Driver reports</button>
     <button class="section-tab" id="sectionTabAdmins" onclick="showSection('admins', this)" style="display:none;">Admins</button>
     <button class="section-tab" id="sectionTabActivity" onclick="showSection('activity', this)" style="display:none;">Activity</button>
   </div>
@@ -101,6 +102,11 @@
       <input type="text" id="invSearch" placeholder="Search products…" oninput="renderInventory()">
     </div>
     <div id="inventoryList"></div>
+  </div>
+
+  <!-- DRIVER REPORTS SECTION (customer complaints about drivers) -->
+  <div id="driverReportsSection" style="display:none;">
+    <div id="driverReportsList"></div>
   </div>
 
   <!-- ADMINS SECTION (super-admin only) -->
@@ -151,5 +157,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/auth.js"></script>
   <script src="admin-api.js"></script>
+  <script src="driver-reports.js"></script>
 </body>
 </html>

@@ -95,6 +95,12 @@ model SkuItem {
   retailCaseDiscountPct Float // Ekoyini's own carry-pack discount, by category
   retailCaseZAR          Float // = retailSingleZAR * unitsPerCase * (1 - retailCaseDiscountPct/100)
 
+  // How many bottles/cans one "single" purchase contains. Dumpies and cans
+  // are sold only as six-packs (packSize 6), so retailSingleZAR is the price
+  // of a whole six-pack. Everything else is 1. Column is added/converted by
+  // scripts/ensure-schema.js.
+  packSize Int @default(1)
+
   imageUrl   String?
   orderItems OrderItem[]
 
@@ -247,4 +253,23 @@ model OrderItem {
   name     String
   price    Float
   quantity Int
+}
+
+// ── Driver reports ───────────────────────────────────────
+// A customer complaint about the driver on one of their orders (rude,
+// unsafe, late, tampered package...). driverName/driverPhone are copied at
+// report time so the record survives a later re-assignment. Table is
+// created by scripts/ensure-schema.js. Reviewed in the admin dashboard.
+model DriverReport {
+  id          String   @id @default(cuid())
+  orderCode   String
+  userId      String
+  driverName  String?
+  driverPhone String?
+  category    String // RUDE | UNSAFE | LATE | TAMPERED | OTHER
+  message     String
+  status      String   @default("OPEN") // OPEN | REVIEWED | RESOLVED
+  createdAt   DateTime @default(now())
+
+  @@index([orderCode])
 }
