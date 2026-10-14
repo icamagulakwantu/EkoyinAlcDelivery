@@ -42,7 +42,7 @@ enum AdminRole {
   DISPATCHER  // day-to-day ops: view/assign/dispatch/deliver orders only
 }
 
-// ── Admin roles ──────────────────────────────────────────
+// ── Admin roles ────────────────────────────────────────────────────────
 // Delegated admins beyond the ADMIN_EMAILS env var bootstrap. Anyone in
 // ADMIN_EMAILS is implicitly SUPER_ADMIN (that's the root bootstrap — you
 // need at least one admin to be able to grant anyone else access at all).
@@ -69,7 +69,7 @@ model AdminAuditLog {
   createdAt  DateTime @default(now())
 }
 
-// ── Catalog ──────────────────────────────────────────────
+// ── Catalog ────────────────────────────────────────────────────────────
 // Supplier fields are preserved verbatim from the supplier price sheet
 // (skus.csv). Retail fields are Ekoyini's own customer-facing pricing,
 // computed in prisma/seed.js — see the rationale comment there.
@@ -128,16 +128,30 @@ model SkuItem {
   @@unique([name, bottleFormat])
 }
 
-// ── Taverns (supply partners) ───────────────────────────
+// ── Taverns (supply partners) ─────────────────────────────────────────
 model Tavern {
   id     String  @id @default(cuid())
   name   String
   area   String
   phone  String
+  // Where the tavern is, used to work out the delivery distance. Set in the
+  // admin dashboard (Delivery tab); columns are added by
+  // scripts/ensure-schema.js. A tavern without coordinates is ignored when
+  // measuring distance.
+  latitude  Float?
+  longitude Float?
   orders Order[]
 }
 
-// ── Card checkout (Yoco) ─────────────────────────────────
+// ── Delivery settings ──────────────────────────────────────────────────
+// A single row (id "default"). Created by scripts/ensure-schema.js.
+model DeliverySettings {
+  id           String   @id
+  surgesEnabled Boolean  @default(true)
+  updatedAt    DateTime @default(now()) @updatedAt
+}
+
+// ── Card checkout (Yoco) ──────────────────────────────────────────────────
 // Card payment can't create an Order the moment checkout starts — the
 // customer hasn't paid yet, and Yoco's own docs say never trust the
 // success-redirect for confirmation, only the webhook. So this table
@@ -152,7 +166,7 @@ model PendingCheckout {
   userId          String
   yocoCheckoutId  String    @unique
   amountCents     Int
-  payload         String // JSON-encoded: { address, items, customerName, customerPhone, promoCode, landmark, deliveryLat, deliveryLng }
+  payload         String // JSON-encoded: { address, items, customerName, customerPhone, promoCode, landmark, deliveryLat, deliveryLng, priorityFee }
   status          String    @default("PENDING") // PENDING | COMPLETED | FAILED_NEEDS_REFUND
   orderCode       String? // set once the real Order is created
   failureReason   String?
@@ -160,7 +174,7 @@ model PendingCheckout {
   completedAt     DateTime?
 }
 
-// ── Promo Codes ──────────────────────────────────────────
+// ── Promo Codes ────────────────────────────────────────────────────────
 model PromoCode {
   id          String    @id @default(cuid())
   code        String    @unique
@@ -173,7 +187,7 @@ model PromoCode {
   createdAt   DateTime  @default(now())
 }
 
-// ── Orders ───────────────────────────────────────────────
+// ── Orders ────────────────────────────────────────────────────────────────
 // userId links back to the Supabase Auth user (auth.users.id) who placed
 // the order. It's a plain string, not a Prisma relation, because the
 // users table lives in Supabase's own "auth" schema, not this one.
@@ -200,6 +214,15 @@ model Order {
   status        OrderStatus @default(PAYMENT_PENDING)
   promoCode     String?
   promoDiscount Float?
+
+  // Delivery fee breakdown saved at order time (older orders have nulls).
+  // total already includes all of these.
+  distanceKm  Float? // straight-line distance x 1.2 routing buffer
+  deliveryFee Float? // distance-based fee (0 when free delivery applies)
+  surgeFee    Float? // peak / late-night surge, 100% to the driver
+  priorityFee Float? // optional "Super Priority" the customer added
+  serviceFee  Float? // flat R10-R25 platform fee
+
   total         Float
   items         OrderItem[]
   tavern        Tavern?     @relation(fields: [tavernId], references: [id])
@@ -255,7 +278,7 @@ model OrderItem {
   quantity Int
 }
 
-// ── Driver reports ───────────────────────────────────────
+// ── Driver reports ────────────────────────────────────────────────────────
 // A customer complaint about the driver on one of their orders (rude,
 // unsafe, late, tampered package...). driverName/driverPhone are copied at
 // report time so the record survives a later re-assignment. Table is
