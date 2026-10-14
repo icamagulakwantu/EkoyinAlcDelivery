@@ -269,6 +269,13 @@
   // Products added with a photo but no price yet are stored with a price of 0.
   function isPriced(p) { return p.retailSingleZAR > 0; }
 
+  // Dumpies and cans are only sold as six-packs (packSize 6) — the price
+  // shown is for the whole pack, so the card says so.
+  function isPack(p) { return p.packSize > 1; }
+  function sizeLabel(p) {
+    return isPack(p) ? `${p.bottleFormat} · ${p.packSize}-pack` : p.bottleFormat;
+  }
+
   // Product names/sizes go into innerHTML, so they are escaped first.
   function esc(value) {
     return String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -324,7 +331,7 @@
   // prisma/seed.js already uses for category thumbnails, so nothing new
   // to vet. Tapping a category pill crossfades to that pill's aisle.
   const AISLES = [
-    { key: 'beer', label: 'Beer & Cider', sub: 'Cold ones for the stoep — dumpies, quarts, and RTDs.', cats: ['BEER', 'CIDER_RTD'],
+    { key: 'beer', label: 'Beer & Cider', sub: 'Cold ones for the stoep — six-packs of dumpies and cans, quarts, and RTDs.', cats: ['BEER', 'CIDER_RTD'],
       img: 'https://images.unsplash.com/photo-1608270586620-248524c67de9?auto=format&fit=crop&w=800&q=80' },
     { key: 'liquor', label: 'Spirits', sub: 'Whisky, gin, vodka, brandy, tequila, and more.', cats: ['BRANDY', 'WHISKY', 'COGNAC', 'GIN', 'VODKA', 'VODKA_PREMIUM', 'TEQUILA', 'TEQUILA_PREMIUM', 'LIQUEUR'],
       img: 'https://images.unsplash.com/photo-1527281400683-1aae777175f8?auto=format&fit=crop&w=800&q=80' },
@@ -526,7 +533,7 @@
           <div class="product-info">
             <h3>${esc(p.name)}</h3>
             ${brandBadgesHTML(p)}
-            <div class="product-size">${esc(p.bottleFormat)}</div>
+            <div class="product-size">${esc(sizeLabel(p))}</div>
             <div class="product-footer">
               ${priced
                 ? `<div class="product-price" onclick="showPriceDetails('${p.id}')">${fmtPrice(p.retailSingleZAR)}</div>`
@@ -653,10 +660,12 @@
     if (!p || !isPriced(p)) return;
     document.getElementById('modalTitle').textContent = p.name;
     const perUnitCase = p.retailCaseZAR / p.unitsPerCase;
+    const unitName = isPack(p) ? `${p.packSize}-pack` : 'bottle';
+    const unitsName = isPack(p) ? `${p.packSize}-packs` : 'units';
     document.getElementById('priceDetailsBody').innerHTML = `
-      <div class="price-details-row"><span class="pd-label">Single bottle</span><span class="pd-value">${fmtPrice(p.retailSingleZAR)}</span></div>
-      <div class="price-details-row"><span class="pd-label">Case (${p.unitsPerCase} units)</span><span class="pd-value">${fmtPrice(p.retailCaseZAR)}</span></div>
-      <div class="price-details-row"><span class="pd-label">Per unit (case)</span><span class="pd-value">${fmtPrice(perUnitCase)}</span></div>
+      <div class="price-details-row"><span class="pd-label">Single ${unitName}</span><span class="pd-value">${fmtPrice(p.retailSingleZAR)}</span></div>
+      <div class="price-details-row"><span class="pd-label">Case (${p.unitsPerCase} ${unitsName})</span><span class="pd-value">${fmtPrice(p.retailCaseZAR)}</span></div>
+      <div class="price-details-row"><span class="pd-label">Per ${unitName} (case)</span><span class="pd-value">${fmtPrice(perUnitCase)}</span></div>
       <div class="price-details-row"><span class="pd-label">Case savings</span><span class="price-details-save">${p.retailCaseDiscountPct}% off</span></div>`;
     document.getElementById('priceModal').classList.add('open');
   }
