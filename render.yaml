@@ -7,7 +7,10 @@ services:
     name: ekoyini-api
     env: node
     plan: free
-    buildCommand: npm install && npx prisma generate && npx prisma db push --accept-data-loss
+    # After the database is ready: shrink product photos to shop-friendly sizes,
+    # then link each product to its photo (and add any "price coming soon" items).
+    # Both of the last two steps are safe to re-run and never fail the deploy.
+    buildCommand: npm install && npx prisma generate && npx prisma db push --accept-data-loss && node scripts/optimize-images.js && node prisma/sync-images.js
     startCommand: node server.js
     healthCheckPath: /api/health
     envVars:
