@@ -225,6 +225,13 @@ model Order {
   // restored atomically in the same transaction that sets this.
   cancelReason String?
 
+  // Lets a customer remove a cancelled/delivered order from their own
+  // "My Orders" list without actually deleting the record — admin still
+  // sees every order regardless of this flag, so dispatch history, sales
+  // records, and the audit trail are never affected by what a customer
+  // chooses to hide from their own view.
+  hiddenByCustomer Boolean @default(false)
+
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 
