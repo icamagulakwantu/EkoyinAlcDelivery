@@ -26,6 +26,8 @@
     .cip-compare { display: flex; align-items: baseline; gap: 6px; justify-content: flex-end; }
     .cip-was { font-size: 10px; color: var(--faint); text-decoration: line-through; filter: blur(0.25px); opacity: 0.8; }
     .cip-now { font-size: 11px; font-weight: 700; color: var(--green-light); }
+    .min-order-note { margin: 10px 0 0; padding: 10px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; line-height: 1.4; background: color-mix(in srgb, var(--danger) 12%, transparent); color: var(--danger); border: 1px solid color-mix(in srgb, var(--danger) 35%, transparent); }
+    .cta-btn.blocked { opacity: 0.5; }
   </style>
   <link rel="stylesheet" href="premium.css">
 </head>
@@ -66,7 +68,7 @@
 
     <div class="order-summary" id="summary"></div>
 
-    <button class="cta-btn" onclick="goToCheckout()" style="margin-bottom: 20px;">Proceed to Checkout</button>
+    <button class="cta-btn" id="checkoutBtn" onclick="goToCheckout()" style="margin-bottom: 20px;">Proceed to Checkout</button>
   </div>
 
   <div class="toast" id="toastEl"></div>
@@ -113,14 +115,24 @@
   <script>
   renderNavAuth();
 
-  // Delivery fee comes from pricing.js — the same function the server uses
-  // to charge, so the cart can't promise a different number than checkout.
-  const { deliveryFee, FREE_DELIVERY_THRESHOLD } = EkoyiniPricing;
+  // Delivery fee and the minimum order come from pricing.js — the same file
+  // the server uses to charge, so the cart can't promise a different number
+  // than checkout.
+  const { deliveryFee, FREE_DELIVERY_THRESHOLD, MIN_ORDER_SUBTOTAL } = EkoyiniPricing;
 
   let cart = EkoyiniCart.get();
   let products = [];
   let purchaseType = 'single';
   let appliedPromo = null;
+
+  function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  // Dumpies and cans are only sold as six-packs (packSize 6).
+  function sizeLabel(p) {
+    return p.packSize > 1 ? `${p.bottleFormat} · ${p.packSize}-pack` : p.bottleFormat;
+  }
 
   function roundUpToCase(qty, unitsPerCase) {
     return Math.ceil(qty / unitsPerCase) * unitsPerCase;
@@ -219,10 +231,10 @@
       const card = document.createElement('div');
       card.className = 'cart-item';
       card.innerHTML = `
-        <div class="cart-item-img">${p.name[0].toUpperCase()}</div>
+        <div class="cart-item-img">${escapeHtml(p.name[0].toUpperCase())}</div>
         <div class="cart-item-info">
-          <h3>${p.name}</h3>
-          <div class="ci-size">${p.bottleFormat}</div>
+          <h3>${escapeHtml(p.name)}</h3>
+          <div class="ci-size">${escapeHtml(sizeLabel(p))}</div>
         </div>
         <div class="cart-item-right">
           ${priceBlock}
@@ -230,7 +242,7 @@
             <button class="qty-btn" onclick="updateQty('${skuId}', -1)">−</button>
             <span class="qty-val">${qtyLabel}</span>
             <button class="qty-btn" onclick="updateQty('${skuId}', 1)">+</button>
-            <button class="qty-btn remove-btn" onclick="removeItem('${skuId}')" aria-label="Remove ${p.name.replace(/\"/g, '&quot;')} from cart">
+            <button class="qty-btn remove-btn" onclick="removeItem('${skuId}')" aria-label="Remove ${escapeHtml(p.name)} from cart">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
             </button>
           </div>
@@ -246,8 +258,11 @@
     const promoDiscount = appliedPromo ? subtotal * (appliedPromo.discountPct / 100) : 0;
     const delivery = deliveryFee(subtotal);
     const total = subtotal - promoDiscount + delivery;
+    const hasItems = Object.keys(cart).length > 0;
+    const belowMin = hasItems && subtotal < MIN_ORDER_SUBTOTAL;
 
     summary.innerHTML = `
+      ${belowMin ? `<div class="min-order-note">Orders under R${MIN_ORDER_SUBTOTAL} don't qualify for delivery. Add R${(MIN_ORDER_SUBTOTAL - subtotal).toFixed(2)} more to check out.</div>` : ''}
       <div class="summary-row">
         <span>Subtotal</span>
         <span>R${subtotal.toFixed(2)}</span>
@@ -262,6 +277,8 @@
         <span class="amount">R${total.toFixed(2)}</span>
       </div>
       <div style="font-size:10px;color:var(--muted);padding-top:6px;">Estimated — Cooler Box and promo discounts are finalized at checkout.</div>`;
+
+    document.getElementById('checkoutBtn').classList.toggle('blocked', belowMin);
   }
 
   function setPurchaseType(type) {
@@ -375,6 +392,12 @@
     }
     if (Object.keys(cart).length === 0) {
       showToast('Your cart is empty');
+      return;
+    }
+    // The server enforces this too; blocking here saves the customer a failed checkout.
+    const subtotal = computeSubtotal();
+    if (subtotal < MIN_ORDER_SUBTOTAL) {
+      showToast(`Orders under R${MIN_ORDER_SUBTOTAL} don't qualify for delivery — add R${(MIN_ORDER_SUBTOTAL - subtotal).toFixed(2)} more`, 3500);
       return;
     }
     localStorage.setItem('ekoyini_checkout_data', JSON.stringify({ cart, purchaseType, address: addr }));
