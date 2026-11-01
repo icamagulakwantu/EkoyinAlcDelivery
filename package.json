@@ -4,6 +4,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node scripts/ensure-schema.js && node server.js",
+    "test": "node --test test/",
     "postinstall": "prisma generate && node scripts/ensure-schema.js",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
