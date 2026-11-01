@@ -70,6 +70,14 @@
     return Math.round(n * 100) / 100;
   }
 
+  // Rounds any money value to cents. Non-numeric input (undefined, null,
+  // "abc") becomes 0 instead of NaN, so a bad value can never print as
+  // "RNaN" or poison a total.
+  function roundCurrency(value) {
+    const n = Number(value);
+    return Number.isFinite(n) ? round2(n) : 0;
+  }
+
   function toRad(deg) {
     return (deg * Math.PI) / 180;
   }
@@ -146,6 +154,7 @@
     FREE_DELIVERY_THRESHOLD,
     DELIVERY_FEE,
     deliveryFee,
+    roundCurrency,
     ROUTING_BUFFER,
     PRIORITY_OPTIONS,
     haversineKm,

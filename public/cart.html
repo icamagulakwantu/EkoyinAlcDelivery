@@ -118,7 +118,7 @@
   // Delivery fee and the minimum order come from pricing.js — the same file
   // the server uses to charge, so the cart can't promise a different number
   // than checkout.
-  const { deliveryFee, FREE_DELIVERY_THRESHOLD, MIN_ORDER_SUBTOTAL } = EkoyiniPricing;
+  const { deliveryFee, FREE_DELIVERY_THRESHOLD, MIN_ORDER_SUBTOTAL, roundCurrency } = EkoyiniPricing;
 
   let cart = EkoyiniCart.get();
   let products = [];
@@ -127,6 +127,16 @@
 
   function escapeHtml(value) {
     return String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  // Single place that renders the "code applied" chip, so the promo code
+  // (which comes back from the server but originates from user input) is
+  // always escaped.
+  function showAppliedPromo(code, discountPct) {
+    document.getElementById('promoRow').style.display = 'none';
+    const el = document.getElementById('promoApplied');
+    el.style.display = 'flex';
+    el.innerHTML = `<span>${escapeHtml(code)} applied — ${escapeHtml(discountPct)}% off</span><button onclick="removePromo()" aria-label="Remove promo code">&times;</button>`;
   }
 
   // Dumpies and cans are only sold as six-packs (packSize 6).
@@ -150,7 +160,7 @@
         subtotal += p.retailSingleZAR * qty;
       }
     });
-    return subtotal;
+    return roundCurrency(subtotal);
   }
 
   async function loadCart() {
@@ -169,9 +179,7 @@
         const data = await r.json();
         if (data.valid) {
           appliedPromo = { code: data.code, discountPct: data.discountPct };
-          document.getElementById('promoRow').style.display = 'none';
-          document.getElementById('promoApplied').style.display = 'flex';
-          document.getElementById('promoApplied').innerHTML = `<span>${data.code} applied — ${data.discountPct}% off</span><button onclick="removePromo()">&times;</button>`;
+          showAppliedPromo(data.code, data.discountPct);
         } else {
           localStorage.removeItem('ekoyini_promo_code');
         }
@@ -211,6 +219,8 @@
       if (!p) return;
 
       const caseUnitPrice = p.retailCaseZAR / p.unitsPerCase;
+      // A product with an empty name used to crash the whole cart render.
+      const firstLetter = String(p.name || '?').charAt(0).toUpperCase();
 
       let itemTotal, priceBlock, qtyLabel;
       if (purchaseType === 'case') {
@@ -231,7 +241,7 @@
       const card = document.createElement('div');
       card.className = 'cart-item';
       card.innerHTML = `
-        <div class="cart-item-img">${escapeHtml(p.name[0].toUpperCase())}</div>
+        <div class="cart-item-img">${escapeHtml(firstLetter)}</div>
         <div class="cart-item-info">
           <h3>${escapeHtml(p.name)}</h3>
           <div class="ci-size">${escapeHtml(sizeLabel(p))}</div>
@@ -240,7 +250,7 @@
           ${priceBlock}
           <div class="qty-control">
             <button class="qty-btn" onclick="updateQty('${skuId}', -1)">−</button>
-            <span class="qty-val">${qtyLabel}</span>
+            <span class="qty-val">${escapeHtml(qtyLabel)}</span>
             <button class="qty-btn" onclick="updateQty('${skuId}', 1)">+</button>
             <button class="qty-btn remove-btn" onclick="removeItem('${skuId}')" aria-label="Remove ${escapeHtml(p.name)} from cart">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
@@ -255,9 +265,9 @@
   function renderSummary() {
     const summary = document.getElementById('summary');
     const subtotal = computeSubtotal();
-    const promoDiscount = appliedPromo ? subtotal * (appliedPromo.discountPct / 100) : 0;
+    const promoDiscount = appliedPromo ? roundCurrency(subtotal * (appliedPromo.discountPct / 100)) : 0;
     const delivery = deliveryFee(subtotal);
-    const total = subtotal - promoDiscount + delivery;
+    const total = roundCurrency(subtotal - promoDiscount + delivery);
     const hasItems = Object.keys(cart).length > 0;
     const belowMin = hasItems && subtotal < MIN_ORDER_SUBTOTAL;
 
@@ -267,7 +277,7 @@
         <span>Subtotal</span>
         <span>R${subtotal.toFixed(2)}</span>
       </div>
-      ${appliedPromo ? `<div class="summary-row"><span>Promo (${appliedPromo.code})</span><span>-R${promoDiscount.toFixed(2)}</span></div>` : ''}
+      ${appliedPromo ? `<div class="summary-row"><span>Promo (${escapeHtml(appliedPromo.code)})</span><span>-R${promoDiscount.toFixed(2)}</span></div>` : ''}
       <div class="summary-row">
         <span>Delivery <span style="font-size: 10px; color: var(--muted);">(free over R${FREE_DELIVERY_THRESHOLD})</span></span>
         <span>R${delivery.toFixed(2)}</span>
@@ -340,9 +350,7 @@
       }
       appliedPromo = { code: data.code, discountPct: data.discountPct };
       localStorage.setItem('ekoyini_promo_code', data.code);
-      document.getElementById('promoRow').style.display = 'none';
-      document.getElementById('promoApplied').style.display = 'flex';
-      document.getElementById('promoApplied').innerHTML = `<span>${data.code} applied — ${data.discountPct}% off</span><button onclick="removePromo()">&times;</button>`;
+      showAppliedPromo(data.code, data.discountPct);
       renderSummary();
       showToast(`${data.discountPct}% off applied`);
     } catch (err) {
