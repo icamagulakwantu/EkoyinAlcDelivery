@@ -10,6 +10,27 @@ const prisma = new PrismaClient();
 // — without trusting the proxy, req.protocol always reports "http", which
 // would build broken (non-https) Yoco redirect URLs.
 app.set("trust proxy", true);
+app.disable("x-powered-by");
+
+// Set a conservative CSP so the app only runs from the expected origins.
+// Inline event handlers are still needed by the existing pages, so
+// 'unsafe-inline' remains enabled for the current app structure.
+app.use((req, res, next) => {
+  res.setHeader(
+    "Content-Security-Policy",
+    "default-src 'self'; " +
+      "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; " +
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+      "img-src 'self' data: https: blob:; " +
+      "font-src 'self' https://fonts.gstatic.com data:; " +
+      "connect-src 'self' https://*.supabase.co https://api.resend.com https://api.yoco.com https://world.openfoodfacts.org; " +
+      "frame-src https://pay.yoco.com; " +
+      "object-src 'none'; " +
+      "base-uri 'self'; " +
+      "form-action 'self';"
+  );
+  next();
+});
 
 const {
   createYocoCheckout,
@@ -25,6 +46,7 @@ const { sendOrderConfirmationEmail, sendAdminOrderAlertEmail, sendPaymentFailure
 
 app.use(express.static("public"));
 app.use("/admin", express.static("admin"));
+app.use(express.urlencoded({ extended: true }));
 // The verify callback stashes the raw bytes alongside normal JSON parsing —
 // needed for the Yoco webhook route, which must HMAC-verify against the
 // exact raw body, not a re-serialized version of the parsed object.
