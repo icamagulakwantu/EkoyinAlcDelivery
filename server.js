@@ -12,6 +12,8 @@ const prisma = new PrismaClient();
 // would build broken (non-https) Yoco redirect URLs. It's also required
 // for express-rate-limit to read the real client IP instead of Render's.
 app.set("trust proxy", true);
+// Don't advertise the framework to scanners.
+app.disable("x-powered-by");
 
 // ── Rate limiting ───────────────────────────────────────────────────────────────
 // Order codes unlock public tracking (including a driver's live location),
@@ -57,6 +59,26 @@ const locationLimiter = rateLimit({
   legacyHeaders: false,
   message: { error: "Too many location updates — please wait a moment" },
 });
+// driverActionLimiter: confirm-pickup / confirm-delivered. A driver taps
+// these a handful of times per order; anything more is someone guessing.
+const driverActionLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many attempts — please wait a few minutes and try again" },
+});
+
+// Constant-time token check, status rules and input limits live in
+// lib/order-rules.js so they can be unit-tested without a database.
+const {
+  driverTokenMatches,
+  canTransition,
+  MAX_NAME_LENGTH,
+  MAX_ADDRESS_LENGTH,
+  hasControlChars,
+  normalizeSaPhone,
+} = require("./lib/order-rules.js");
 
 const {
   createYocoCheckout,
@@ -377,7 +399,7 @@ app.post("/api/promo/validate", promoLimiter, async (req, res) => {
 //      Both thresholds can be tuned on Render without a code change:
 //        COD_MIN_DELIVERED_ORDERS (default 2)
 //        COD_MIN_ACCOUNT_AGE_MONTHS (default 0)
-//   2. This order's amount — must clear R300 and is always capped at
+//   2. This order's amount — must be at least R300 and is always capped at
 //      R1500 so a driver is never holding more cash than that.
 //   3. Pattern deviation — flagged (not blocked) for the admin to glance
 //      at before dispatch.
@@ -428,8 +450,9 @@ async function assessCodEligibility({ userId, userCreatedAt, orderTotal, skuIds 
       error: `Cash on delivery isn't available for orders over R${COD_MAX_ORDER_TOTAL} — for our drivers' safety. Please pay by card or EFT, or reduce your order.`,
     };
   }
-  if (orderTotal <= COD_MIN_ORDER_TOTAL) {
-    return { eligible: false, error: `Cash on delivery requires an order over R${COD_MIN_ORDER_TOTAL}.` };
+  // R300 exactly qualifies, matching the R300 minimum order everywhere else.
+  if (orderTotal < COD_MIN_ORDER_TOTAL) {
+    return { eligible: false, error: `Cash on delivery requires an order of at least R${COD_MIN_ORDER_TOTAL}.` };
   }
 
   const accountAgeMonths = monthsSince(userCreatedAt);
@@ -483,16 +506,24 @@ async function estimateOrderTotal({ subtotal, coolerDiscount, quote }, promoCode
 // Pure computation only; no DB writes.
 // `location` and `priorityFee` feed the delivery quote (distance, surge,
 // priority, service fee), which is always calculated here on the server.
-async function validateAndPriceOrder({ address, items, customerPhone, paymentMethod, allowedPaymentMethods, location, priorityFee }) {
+async function validateAndPriceOrder({ address, items, customerName, customerPhone, paymentMethod, allowedPaymentMethods, location, priorityFee }) {
   if (!address || typeof address !== "string" || address.trim().length < 5) {
     return { error: "Please enter a valid delivery address" };
+  }
+  if (address.trim().length > MAX_ADDRESS_LENGTH) {
+    return { error: `Please keep the address under ${MAX_ADDRESS_LENGTH} characters — use the landmark box for extra directions` };
+  }
+  if (customerName != null && (typeof customerName !== "string" || customerName.trim().length > MAX_NAME_LENGTH)) {
+    return { error: `Please keep your name under ${MAX_NAME_LENGTH} characters` };
+  }
+  if (hasControlChars(address) || hasControlChars(customerName) || hasControlChars(location?.landmark)) {
+    return { error: "Your address, name or landmark contains characters we can't accept" };
   }
   if (!Array.isArray(items) || items.length === 0) {
     return { error: "items are required" };
   }
-  const digitsOnly = (customerPhone || "").replace(/\D/g, "");
-  if (digitsOnly.length < 9 || digitsOnly.length > 12) {
-    return { error: "Please enter a valid phone number" };
+  if (!normalizeSaPhone(customerPhone)) {
+    return { error: "Please enter a valid South African phone number, e.g. 072 123 4567" };
   }
   if (paymentMethod && !allowedPaymentMethods.has(paymentMethod)) {
     return { error: "Invalid payment method" };
@@ -667,6 +698,7 @@ app.post("/order", writeLimiter, requireUser, async (req, res) => {
     const priced = await validateAndPriceOrder({
       address,
       items,
+      customerName,
       customerPhone,
       paymentMethod,
       allowedPaymentMethods: DIRECT_PAYMENT_METHODS,
@@ -763,6 +795,7 @@ app.post("/order/checkout-session", writeLimiter, requireUser, async (req, res) 
     const priced = await validateAndPriceOrder({
       address,
       items,
+      customerName,
       customerPhone,
       paymentMethod: "card",
       allowedPaymentMethods: new Set(["card"]),
@@ -887,6 +920,7 @@ app.post("/webhooks/yoco", async (req, res) => {
     const priced = await validateAndPriceOrder({
       address: payload.address,
       items: payload.items,
+      customerName: payload.customerName,
       customerPhone: payload.customerPhone,
       paymentMethod: "card",
       allowedPaymentMethods: new Set(["card"]),
@@ -1028,6 +1062,15 @@ app.get("/orders", requireAdmin, async (req, res) => {
 app.patch("/order/:code/assign", requireAdmin, async (req, res) => {
   try {
     const { tavernId, driverName, driverPhone, driverVehicle } = req.body;
+    const current = await prisma.order.findUnique({ where: { code: req.params.code } });
+    if (!current) return res.status(404).json({ error: "Order not found" });
+    // Re-assigning a finished order would hand out a fresh, working driver link.
+    if (current.status === "DELIVERED" || current.status === "CANCELLED") {
+      return res.status(400).json({ error: `This order is already ${current.status.toLowerCase()}` });
+    }
+    if (!tavernId || !(await prisma.tavern.findUnique({ where: { id: tavernId } }))) {
+      return res.status(400).json({ error: "Please choose a valid tavern" });
+    }
     const driverShareToken = crypto.randomBytes(16).toString("hex");
     const order = await prisma.order.update({
       where: { code: req.params.code },
@@ -1076,7 +1119,7 @@ app.post("/order/:code/location", locationLimiter, async (req, res) => {
       return res.status(400).json({ error: "lat and lng are required" });
     }
     const order = await prisma.order.findUnique({ where: { code: req.params.code } });
-    if (!order || !order.driverShareToken || order.driverShareToken !== token) {
+    if (!driverTokenMatches(order, token)) {
       return res.status(403).json({ error: "Invalid or expired share link" });
     }
     if (order.status !== "DISPATCHED") {
@@ -1094,21 +1137,25 @@ app.post("/order/:code/location", locationLimiter, async (req, res) => {
 });
 
 // 🚚 DRIVER: CONFIRM PICKUP
-app.post("/order/:code/confirm-pickup", async (req, res) => {
+app.post("/order/:code/confirm-pickup", driverActionLimiter, async (req, res) => {
   try {
     const { token } = req.body;
     const order = await prisma.order.findUnique({ where: { code: req.params.code } });
-    if (!order || !order.driverShareToken || order.driverShareToken !== token) {
+    if (!driverTokenMatches(order, token)) {
       return res.status(403).json({ error: "Invalid or expired share link" });
     }
     if (order.status !== "PENDING") {
       return res.status(400).json({ error: "This order isn't ready for pickup yet" });
     }
-    const updated = await prisma.order.update({
-      where: { code: req.params.code },
+    if (!order.tavernId) {
+      return res.status(400).json({ error: "This order has no tavern assigned yet — contact dispatch" });
+    }
+    const { count } = await prisma.order.updateMany({
+      where: { code: req.params.code, status: "PENDING" },
       data: { status: "DISPATCHED" },
     });
-    res.json({ ok: true, status: updated.status });
+    if (count === 0) return res.status(409).json({ error: "This order was just updated — refresh the page" });
+    res.json({ ok: true, status: "DISPATCHED" });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to confirm pickup" });
@@ -1116,21 +1163,23 @@ app.post("/order/:code/confirm-pickup", async (req, res) => {
 });
 
 // 🏁 DRIVER: CONFIRM DELIVERED
-app.post("/order/:code/confirm-delivered", async (req, res) => {
+app.post("/order/:code/confirm-delivered", driverActionLimiter, async (req, res) => {
   try {
     const { token } = req.body;
     const order = await prisma.order.findUnique({ where: { code: req.params.code } });
-    if (!order || !order.driverShareToken || order.driverShareToken !== token) {
+    if (!driverTokenMatches(order, token)) {
       return res.status(403).json({ error: "Invalid or expired share link" });
     }
     if (order.status !== "DISPATCHED") {
       return res.status(400).json({ error: "This order isn't out for delivery" });
     }
-    const updated = await prisma.order.update({
-      where: { code: req.params.code },
-      data: { status: "DELIVERED" },
+    // Clearing the token makes the driver link dead once the job is done.
+    const { count } = await prisma.order.updateMany({
+      where: { code: req.params.code, status: "DISPATCHED" },
+      data: { status: "DELIVERED", driverShareToken: null },
     });
-    res.json({ ok: true, status: updated.status });
+    if (count === 0) return res.status(409).json({ error: "This order was just updated — refresh the page" });
+    res.json({ ok: true, status: "DELIVERED" });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to confirm delivery" });
@@ -1149,22 +1198,41 @@ app.patch("/order/:code/status", requireAdmin, async (req, res) => {
     if (!ADMIN_SETTABLE_STATUSES.has(status)) {
       return res.status(400).json({ error: "Invalid status" });
     }
-    const order = await prisma.order.update({
-      where: { code: req.params.code },
-      data: { status },
+    const current = await prisma.order.findUnique({ where: { code: req.params.code } });
+    if (!current) return res.status(404).json({ error: "Order not found" });
+    if (!canTransition(current.status, status)) {
+      return res.status(400).json({ error: `An order that is ${current.status.toLowerCase()} can't be moved to ${status.toLowerCase()}` });
+    }
+    if (status === "DISPATCHED" && !current.tavernId) {
+      return res.status(400).json({ error: "Assign a tavern before dispatching this order" });
+    }
+    // Conditional update: if the status changed underneath us (driver tapped
+    // pickup, customer cancelled), nothing is written.
+    const { count } = await prisma.order.updateMany({
+      where: { code: req.params.code, status: current.status },
+      data: {
+        status,
+        // The driver link stops working once the order is finished.
+        ...(status === "DELIVERED" ? { driverShareToken: null } : {}),
+      },
     });
-    await logAdminAction(req, "UPDATE_STATUS", order.code, `status=${status}`);
+    if (count === 0) {
+      return res.status(409).json({ error: "This order was just updated by someone else — refresh and try again" });
+    }
+    const order = await prisma.order.findUnique({ where: { code: req.params.code } });
+    await logAdminAction(req, "UPDATE_STATUS", order.code, `${current.status} -> ${status}`);
     res.json(order);
   } catch (err) {
     console.error(err);
-    res.status(404).json({ error: "Order not found" });
+    res.status(500).json({ error: "Failed to update status" });
   }
 });
 
 // ── Order cancellation — shared by the customer-facing and admin routes.
-// Restores every line item's stock atomically in the same transaction that
-// sets status to CANCELLED, so a cancelled order never leaves stock
-// permanently (and silently) locked up.
+// Restores every line item's stock and the promo code's use atomically in
+// the same transaction that sets status to CANCELLED. The status flip is a
+// conditional updateMany, so two cancels racing each other can't both
+// restore stock: only the one that actually flips the status continues.
 async function cancelOrderTransaction(code, reason) {
   return prisma.$transaction(async (tx) => {
     const order = await tx.order.findUnique({ where: { code }, include: { items: true } });
@@ -1180,6 +1248,12 @@ async function cancelOrderTransaction(code, reason) {
       const err = new Error("ALREADY_DELIVERED");
       throw err;
     }
+    const { count } = await tx.order.updateMany({
+      where: { code, status: { notIn: ["CANCELLED", "DELIVERED"] } },
+      data: { status: "CANCELLED", cancelReason: reason || null, driverShareToken: null },
+    });
+    if (count === 0) throw new Error("ALREADY_CANCELLED");
+
     for (const item of order.items) {
       if (!item.skuId) continue;
       await tx.skuItem.update({
@@ -1187,10 +1261,13 @@ async function cancelOrderTransaction(code, reason) {
         data: { stock: { increment: item.quantity } },
       });
     }
-    return tx.order.update({
-      where: { code },
-      data: { status: "CANCELLED", cancelReason: reason || null },
-    });
+    if (order.promoCode) {
+      await tx.promoCode.updateMany({
+        where: { code: order.promoCode, usedCount: { gt: 0 } },
+        data: { usedCount: { decrement: 1 } },
+      });
+    }
+    return tx.order.findUnique({ where: { code } });
   });
 }
 
