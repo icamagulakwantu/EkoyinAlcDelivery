@@ -15,7 +15,7 @@
     .promo-code-row { display: flex; gap: 8px; padding: 0 12px 12px; }
     .promo-code-row input { flex: 1; background: var(--card); border: 1px solid var(--border); padding: 10px; border-radius: 8px; color: var(--white); font-size: 13px; }
     .promo-code-row button { background: var(--surface); border: 1px solid var(--border); color: var(--muted); padding: 10px 14px; border-radius: 8px; font-size: 12px; cursor: pointer; }
-    .promo-applied { display: flex; align-items: center; justify-content: space-between; margin: -4px 12px 12px; padding: 8px 12px; background: var(--green-glow); color: var(--green-light); border: 1px solid rgba(127, 243, 164, 0.2); border-radius: 8px; }
+    .promo-applied { display: flex; align-items: center; justify-content: space-between; margin: -4px 12px 12px; padding: 8px 12px; background: var(--green-glow); color: var(--green-light); border: 1px solid var(--border); border-radius: 8px; font-size: 12px; }
     .promo-applied button { background: none; border: none; color: inherit; font-size: 16px; line-height: 1; cursor: pointer; padding: 0 2px; }
     .purchase-options { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
     .purchase-type-btn { background: var(--card); border: 1px solid var(--border); color: var(--white); padding: 12px; border-radius: 8px; font-size: 13px; cursor: pointer; transition: all 0.2s; }
@@ -113,9 +113,17 @@
   <script>
   renderNavAuth();
 
-  // Delivery fee comes from pricing.js — the same function the server uses
-  // to charge, so the cart can't promise a different number than checkout.
   const { deliveryFee, FREE_DELIVERY_THRESHOLD } = EkoyiniPricing;
+
+  function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[char]));
+  }
 
   let cart = EkoyiniCart.get();
   let products = [];
@@ -159,7 +167,7 @@
           appliedPromo = { code: data.code, discountPct: data.discountPct };
           document.getElementById('promoRow').style.display = 'none';
           document.getElementById('promoApplied').style.display = 'flex';
-          document.getElementById('promoApplied').innerHTML = `<span>${data.code} applied — ${data.discountPct}% off</span><button onclick="removePromo()">&times;</button>`;
+          document.getElementById('promoApplied').innerHTML = `<span>${escapeHtml(data.code)} applied — ${escapeHtml(data.discountPct)}% off</span><button onclick="removePromo()">&times;</button>`;
         } else {
           localStorage.removeItem('ekoyini_promo_code');
         }
@@ -199,6 +207,8 @@
       if (!p) return;
 
       const caseUnitPrice = p.retailCaseZAR / p.unitsPerCase;
+      const safeName = escapeHtml(p.name || '');
+      const firstLetter = escapeHtml(String(p.name || '').charAt(0).toUpperCase());
 
       let itemTotal, priceBlock, qtyLabel;
       if (purchaseType === 'case') {
@@ -219,19 +229,19 @@
       const card = document.createElement('div');
       card.className = 'cart-item';
       card.innerHTML = `
-        <div class="cart-item-img">${p.name[0].toUpperCase()}</div>
+        <div class="cart-item-img">${firstLetter}</div>
         <div class="cart-item-info">
-          <h3>${p.name}</h3>
-          <div class="ci-size">${p.bottleFormat}</div>
+          <h3>${safeName}</h3>
+          <div class="ci-size">${escapeHtml(p.bottleFormat || '')}</div>
         </div>
         <div class="cart-item-right">
           ${priceBlock}
           <div class="qty-control">
             <button class="qty-btn" onclick="updateQty('${skuId}', -1)">−</button>
-            <span class="qty-val">${qtyLabel}</span>
+            <span class="qty-val">${escapeHtml(String(qtyLabel))}</span>
             <button class="qty-btn" onclick="updateQty('${skuId}', 1)">+</button>
-            <button class="qty-btn remove-btn" onclick="removeItem('${skuId}')" aria-label="Remove ${p.name.replace(/\"/g, '&quot;')} from cart">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            <button class="qty-btn remove-btn" onclick="removeItem('${skuId}')" aria-label="Remove ${escapeHtml(String(p.name || ''))} from cart">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1.5 14h-11L5 6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/><path d="M8 6V4h8v2"/></svg>
             </button>
           </div>
         </div>
@@ -252,7 +262,7 @@
         <span>Subtotal</span>
         <span>R${subtotal.toFixed(2)}</span>
       </div>
-      ${appliedPromo ? `<div class="summary-row"><span>Promo (${appliedPromo.code})</span><span>-R${promoDiscount.toFixed(2)}</span></div>` : ''}
+      ${appliedPromo ? `<div class="summary-row"><span>Promo (${escapeHtml(appliedPromo.code)})</span><span>-R${promoDiscount.toFixed(2)}</span></div>` : ''}
       <div class="summary-row">
         <span>Delivery <span style="font-size: 10px; color: var(--muted);">(free over R${FREE_DELIVERY_THRESHOLD})</span></span>
         <span>R${delivery.toFixed(2)}</span>
@@ -325,7 +335,7 @@
       localStorage.setItem('ekoyini_promo_code', data.code);
       document.getElementById('promoRow').style.display = 'none';
       document.getElementById('promoApplied').style.display = 'flex';
-      document.getElementById('promoApplied').innerHTML = `<span>${data.code} applied — ${data.discountPct}% off</span><button onclick="removePromo()">&times;</button>`;
+      document.getElementById('promoApplied').innerHTML = `<span>${escapeHtml(data.code)} applied — ${escapeHtml(data.discountPct)}% off</span><button onclick="removePromo()">&times;</button>`;
       renderSummary();
       showToast(`${data.discountPct}% off applied`);
     } catch (err) {
