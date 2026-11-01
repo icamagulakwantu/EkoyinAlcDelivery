@@ -122,7 +122,7 @@
       </div>
       <div class="field-group">
         <label>Landmark / Directions (optional)</label>
-        <input type="text" id="landmark" maxlength="200" placeholder="e.g. Blue gate opposite the spaza, house no. 1234">
+        <input type="text" id="landmark" maxlength="200" placeholder="e.g. Blue gate opposite the spaza">
       </div>
       <div class="field-group">
         <label>Super Priority (optional)</label>
@@ -131,11 +131,11 @@
       </div>
       <div class="field-group">
         <label>Phone Number</label>
-        <input type="tel" id="phoneNumber" placeholder="e.g. +27 78 123 4567">
+        <input type="tel" id="phoneNumber" autocomplete="tel" placeholder="e.g. 072 123 4567">
       </div>
       <div class="field-group">
         <label>Name</label>
-        <input type="text" id="customerName" placeholder="Your name">
+        <input type="text" id="customerName" maxlength="80" autocomplete="name" placeholder="Your name">
       </div>
     </div>
 
@@ -523,8 +523,8 @@
     let reason = null;
     if (total > maxOrderTotal) {
       reason = `Not available over R${maxOrderTotal} — for our drivers' safety. Pay by card or EFT instead.`;
-    } else if (total <= minOrderTotal) {
-      reason = `Needs an order over R${minOrderTotal}.`;
+    } else if (total < minOrderTotal) {
+      reason = `Needs an order of at least R${minOrderTotal}.`;
     } else if (!trackRecordOk) {
       // The server writes this message so the rule can change on Render
       // (COD_MIN_DELIVERED_ORDERS) without touching this page.
