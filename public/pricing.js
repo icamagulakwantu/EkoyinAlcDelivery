@@ -18,6 +18,8 @@
     root.EkoyiniPricing = factory();
   }
 })(typeof self !== 'undefined' ? self : this, function () {
+  const roundCurrency = (value) => Math.round((Number(value) || 0) * 100) / 100;
+
   // Every category counts toward the Cooler Box — per the actual product,
   // a real cooler box is a bottle (any spirit/wine/champagne) plus two or
   // three carry packs plus ice and mixers, not a fixed subset of "high
@@ -45,5 +47,28 @@
     return subtotal > FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
   }
 
-  return { COOLER_ELIGIBLE, coolerDiscountPct, FREE_DELIVERY_THRESHOLD, DELIVERY_FEE, deliveryFee };
+  function computeDerivedTotals({ subtotal, coolerDiscount = 0, promoDiscount = 0 }) {
+    const safeSubtotal = roundCurrency(subtotal);
+    const safeCooler = roundCurrency(coolerDiscount);
+    const safePromo = roundCurrency(promoDiscount);
+    const delivery = roundCurrency(deliveryFee(safeSubtotal));
+    const total = roundCurrency(safeSubtotal - safeCooler - safePromo + delivery);
+    return {
+      subtotal: safeSubtotal,
+      coolerDiscount: safeCooler,
+      promoDiscount: safePromo,
+      delivery,
+      total,
+    };
+  }
+
+  return {
+    COOLER_ELIGIBLE,
+    coolerDiscountPct,
+    FREE_DELIVERY_THRESHOLD,
+    DELIVERY_FEE,
+    deliveryFee,
+    roundCurrency,
+    computeDerivedTotals,
+  };
 });
