@@ -1,4 +1,4 @@
-# Ekoyini — Deployment (Render)
+# Ekoyini — Deployment (Render + Supabase)
 
 ## 1. Push to your Git remote
 
@@ -28,46 +28,63 @@ postgresql://postgres.<project-ref>:<password>@aws-0-<region>.pooler.supabase.co
 ```
 
 Note the username changes to `postgres.<project-ref>` (not just `postgres`)
-and the host becomes the regional pooler, e.g. `aws-0-eu-central-1.pooler.supabase.com`
-for a project in Frankfurt. Session pooler mode (port 5432) behaves like a
-normal Postgres connection — no extra Prisma flags needed. (Supabase's
-*transaction* pooler on port 6543 also works but requires `?pgbouncer=true`
-on the connection string since PgBouncer's transaction mode doesn't support
-prepared statements, which Prisma uses by default.)
+and the host becomes the regional pooler. Session pooler mode (port 5432)
+behaves like a normal Postgres connection and also works for migrations.
+Do not use the transaction pooler (port 6543) for migrations.
 
-This only affects egress from hosts without IPv6 support (Render is one);
-it isn't a Supabase-specific quirk of this app.
+## 2. Create the Render web service
 
-## 2. Create the Render services
+The real database is **Supabase**. `render.yaml` describes only the web
+service; it no longer creates a Render Postgres database (the free one
+expires after about 30 days).
 
-`render.yaml` already describes both services (web service + Postgres) —
-if your Render account has Blueprint support, just point it at this repo
-and it will provision both automatically. Otherwise, by hand:
-
-### Web service
-
-- **New → Web Service**, connect this repo
-- **Build Command:** `npm install`
+- **New → Web Service** (or Blueprint), connect this repo
+- **Build Command:** `npm install && npx prisma generate && node scripts/migrate.js && node scripts/optimize-images.js && node prisma/sync-images.js`
 - **Start Command:** `node server.js`
 - **Health Check Path:** `/api/health`
+
+If you created the service by hand earlier, open Render → Settings → Build
+Command and paste the command above. An old command containing
+`prisma db push --accept-data-loss` can delete data and must be replaced.
+
+The service is on Render's free plan for now. It sleeps when idle, so a Yoco
+payment notice can time out. Move to a paid plan before enabling live card
+payments.
+
+### Database changes (migrations)
+
+Every database change is a committed file in `prisma/migrations/`.
+`scripts/migrate.js` runs `prisma migrate deploy` on each deploy, which only
+applies new files, once each, and never drops data on its own. If it fails,
+the deploy stops and the previous version keeps running.
+
+The first deploy after this change marks `0_init` (the database as it
+already is) as applied without running it. Nothing in the live database
+changes on that deploy.
+
+To add a change: edit `prisma/schema.prisma`, run `npm run migrate:new`
+against a development database, review the generated SQL, and commit it.
+Never use `prisma db push` against production.
+
+### Lock file
+
+`package-lock.json` is no longer ignored. Run `npm install` once locally and
+commit `package-lock.json` so every deploy installs the same versions.
 
 ### Environment variables (Render dashboard → Environment)
 
 | Variable | Value |
 |---|---|
-| `DATABASE_URL` | From your Supabase project (or Render Postgres, if you provisioned one instead) |
+| `DATABASE_URL` | Supabase **Session pooler** connection string (see above) |
 | `SUPABASE_URL` | Your Supabase project URL |
 | `SUPABASE_ANON_KEY` | Your Supabase anon/public key |
 | `ADMIN_EMAILS` | Comma-separated Supabase Auth emails allowed to use `/admin/admin.html` — the real, per-person admin boundary |
 | `ADMIN_API_TOKEN` | A long random string — fallback for scripts/curl and for bootstrapping before any admin account exists |
 | `PORT` | Set automatically by Render, no action needed |
-| `RESEND_API_KEY` | Optional, Phase 2 |
+| `RESEND_API_KEY` | Optional, order emails |
 
-`npm install` triggers `prisma generate` via the `postinstall` script — this
-is what fixed the earlier deploy bug where Render's `NODE_ENV=production`
-skipped `devDependencies` and `prisma generate` silently never ran (every DB
-call then 500'd). `prisma` now lives in `dependencies`, and `render.yaml`
-also runs `npx prisma generate` explicitly as a second safety net.
+`npm install` triggers `prisma generate` via the `postinstall` script, and
+`render.yaml` also runs `npx prisma generate` explicitly as a safety net.
 
 ## 3. Seed the production database
 
@@ -84,15 +101,14 @@ duplicating rows.
 ## 4. Point the frontend at your Supabase project
 
 `public/auth.js` has `SUPABASE_URL` / `SUPABASE_ANON_KEY` constants at the
-top — make sure these match your production Supabase project before (or
-right after) deploying. They're committed as placeholders; there's no
-frontend build step here to inject them from environment variables, so they
-need to be edited directly in the file.
+top — make sure these match your production Supabase project. There's no
+frontend build step to inject them, so they need to be edited directly.
 
 ## 5. Verify
 
 - `GET https://your-app.onrender.com/api/health` → `{"ok":true}`
 - `GET https://your-app.onrender.com/api/products` → 264 SKUs
+- Deploy log shows `[migrate]` lines and no errors
 - Full customer flow: sign up → shop → checkout → track
 - Admin dashboard reachable at `/admin/admin.html` — log in with a Supabase
   account whose email is in `ADMIN_EMAILS`

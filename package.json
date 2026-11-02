@@ -4,10 +4,11 @@
   "main": "server.js",
   "scripts": {
     "start": "node scripts/ensure-schema.js && node server.js",
-    "test": "node --test test/",
+    "test": "node --test",
     "postinstall": "prisma generate && node scripts/ensure-schema.js",
     "prisma:generate": "prisma generate",
-    "prisma:push": "prisma db push",
+    "migrate": "node scripts/migrate.js",
+    "migrate:new": "prisma migrate dev --create-only",
     "seed": "node prisma/seed.js",
     "enrich-images": "node scripts/enrich-images.js",
     "optimize-images": "node scripts/optimize-images.js",

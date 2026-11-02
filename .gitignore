@@ -1,6 +1,7 @@
 # Dependencies
 node_modules/
-package-lock.json
+# package-lock.json is committed on purpose so every deploy installs the
+# same versions (LAUNCH_CHECKLIST item 1.4).
 yarn.lock
 pnpm-lock.yaml
 
