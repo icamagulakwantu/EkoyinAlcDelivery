@@ -1,11 +1,10 @@
 // prisma/catalogue-update.js
 //
-// Applies the November 2026 SKU and pricing corrections. Product photography
-// is owned exclusively by prisma/sync-images.js, which uses local public/
-// assets and exact-format overrides. This updater must never replace those
-// local paths with external CDN URLs. Also runs at the end of `npm run seed`.
-
-// in lib/catalogue-2026-11.js:
+// Applies the November 2026 SKU and pricing corrections in
+// lib/catalogue-2026-11.js. Product photography is owned exclusively by
+// prisma/sync-images.js, which uses local public/ assets and exact-format
+// overrides. This updater must never replace those local paths with CDN URLs.
+// Also runs at the end of `npm run seed`.
 //   1. fixes wrong names and pack labels (rows are moved, never duplicated;
 //      an old-label copy of a row that already exists is removed);
 //   2. removes every 375ml product (past orders keep their item names and
