@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const { buildPhotoPlan, parseBrandPhotoMap } = require('../prisma/catalogue-photo-matching');
-const { FORMAT_PHOTO_MAP } = require('../prisma/catalogue-photo-config');
+const { FORMAT_PHOTO_MAP, UNPRICED_PRODUCTS } = require('../prisma/catalogue-photo-config');
 
 test('uses exact product and pack mapping when supplied', () => {
   const rows = [{id:'1',name:'Example',bottleFormat:'750ml Bottle'},{id:'2',name:'Example',bottleFormat:'Can (500ml)'}];
@@ -79,4 +79,12 @@ test('every exact pack-format photo mapping points to an existing local asset', 
   for (const [skuKey, imagePath] of Object.entries(FORMAT_PHOTO_MAP)) {
     assert.ok(fs.existsSync(path.join(__dirname, '..', 'public', imagePath)), `${skuKey}: missing ${imagePath}`);
   }
+});
+
+
+test('the intentional Budweiser price-coming-soon SKU has a verified local can image', () => {
+  const product = UNPRICED_PRODUCTS.find(item => item.name === 'Budweiser' && item.bottleFormat === 'Can (500ml)');
+  assert.ok(product);
+  assert.equal(product.listPriceZAR, undefined);
+  assert.ok(fs.existsSync(path.join(__dirname, '..', 'public', product.imageUrl)));
 });
