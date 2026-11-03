@@ -146,6 +146,10 @@ module.exports = { run };
 
 if (require.main === module) {
   require('dotenv').config();
+  if (!process.env.DATABASE_URL) {
+    console.warn('[catalogue] DATABASE_URL not set; catalogue preview skipped.');
+    process.exit(0);
+  }
   const { PrismaClient } = require('@prisma/client');
   const prisma = new PrismaClient();
   const dryRun = process.argv.includes('--dry-run');
