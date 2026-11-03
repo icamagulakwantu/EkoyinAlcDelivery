@@ -218,6 +218,7 @@ const BRAND_PHOTO_MAP = {
   'Wellington VO': '/images/brands/wellington-vo.png',
   'Wild Africa Cream Liqueur': '/images/brands/wild-africa-cream-liqueur.jpg',
   'Windhoek Draught': '/images/brands/windhoek-draught.png',
+  'Windhoek Lager': '/images/brands/windhoek-lager.png',
   'Windhoek Lager/Light': '/images/brands/windhoek-lager.png',
   'Wixworth Gin': '/images/brands/wixworth-gin.png',
   'Wyborowa Vodka': '/images/brands/wyborowa-vodka.png',
