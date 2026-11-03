@@ -1,6 +1,7 @@
 // Exact local packshot overrides. Keys are JSON.stringify([name, bottleFormat]).
 // Only add a mapping after confirming the image shows that exact product/format.
 const FORMAT_PHOTO_MAP = {
+  '["Strawberry Liqueur Apparently","750ml Bottle"]': '/images/brands/strawberry Liqueur .jpg',
   '["Seven Sisters Pinotage/Cabernet","750ml Bottle"]': '/images/brands/seven sisters Pinotage .jpg',
   '["Sambuca Apparently Blue/White","750ml Bottle"]': '/images/brands/blue sambuca.jpg',
   '["Peach Schnapps Apparently","750ml Bottle"]': '/images/brands/peach Schnapps relic.jpg',
@@ -12,7 +13,7 @@ const FORMAT_PHOTO_MAP = {
   '["Mofaya Original","Can (500ml)"]': '/images/brands/images (24).jpeg',
   '["Strawberry Liqueur (Butlers)","750ml Bottle"]': '/images/brands/strawberry Liqueur .jpg',
   '["Aquelle Sparkling Water","500ml"]': '/images/brands/aquelle sparkling 500ml.jpg',
-  '["Blue Curacao Generic","750ml Bottle"]': '/images/brands/generic Blue Curacao .jpg',
+  '["Blue Curacao Apparently","750ml Bottle"]': '/images/brands/generic Blue Curacao .jpg',
   '["Drambuie Honey/Scotch","750ml Bottle"]': '/images/brands/Drambuie.jpg',
   '["Ekoyini Crushed Ice","1kg"]': '/images/brands/crushed ice 1kg.jpg',
   '["Ekoyini Crushed Ice","2kg"]': '/images/brands/crushed ice 2kg.jpg',
