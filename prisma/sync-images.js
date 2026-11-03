@@ -10,7 +10,7 @@
 const fs = require('fs');
 const path = require('path');
 const { PrismaClient } = require('@prisma/client');
-const { buildPhotoPlan } = require('./catalogue-photo-matching');
+const { buildPhotoPlan, parseBrandPhotoMap } = require('./catalogue-photo-matching');
 
 const prisma = new PrismaClient();
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
@@ -41,16 +41,7 @@ const UNPRICED_PRODUCTS = [
 // single source of truth for normal brand-level photos.
 function loadBrandPhotoMap() {
   const source = fs.readFileSync(path.join(__dirname, 'seed.js'), 'utf-8');
-  const start = source.indexOf('const BRAND_PHOTO_MAP = {');
-  if (start === -1) return {};
-  const end = source.indexOf('\n};', start);
-  if (end === -1) throw new Error('Could not find the end of BRAND_PHOTO_MAP in prisma/seed.js');
-  const block = source.slice(start, end);
-  const map = {};
-  const entry = /^\s*'((?:[^'\\]|\\.)*)':\s*'([^']*)',?\s*$/gm;
-  let match;
-  while ((match = entry.exec(block))) map[match[1].replace(/\\'/g, "'")] = match[2];
-  return map;
+  return parseBrandPhotoMap(source);
 }
 
 function photoExists(urlPath) {
