@@ -7,6 +7,7 @@ const path = require('path');
 const { PrismaClient } = require('@prisma/client');
 const { buildPhotoPlan, parseBrandPhotoMap } = require('./catalogue-photo-matching');
 const { FORMAT_PHOTO_MAP } = require('./catalogue-photo-config');
+const C = require('../lib/catalogue-2026-11');
 
 const prisma = new PrismaClient();
 const ROOT = path.join(__dirname, '..');
@@ -74,10 +75,30 @@ async function main() {
     return { name: cells[nameIndex], bottleFormat: cells[formatIndex] };
   }).filter(row => row.name && row.bottleFormat);
 
+  // Build the expected post-correction SKU set from the supplier CSV:
+  // normalize founder-approved names/formats, retire 375ml, then add the
+  // three approved catalogue additions. This is the correct comparison after
+  // the structure-only update has been applied.
+  const expectedRows = [];
+  for (const sourceRow of csvRows) {
+    let name = sourceRow.name;
+    let bottleFormat = sourceRow.bottleFormat;
+    for (const fix of C.NAME_FIXES) if (name === fix.from) name = fix.to;
+    for (const fix of C.FORMAT_FIXES) {
+      if (bottleFormat === fix.from && (fix.name === null || fix.name === name)) bottleFormat = fix.to;
+    }
+    if (C.isRemovedSize(bottleFormat)) continue;
+    expectedRows.push({ name, bottleFormat });
+  }
+  for (const product of C.NEW_PRODUCTS) expectedRows.push({ name: product.name, bottleFormat: product.bottleFormat });
+
   const liveKeys = new Set(rows.map(row => pairKey(row.name, row.bottleFormat)));
   const csvKeys = new Set(csvRows.map(row => pairKey(row.name, row.bottleFormat)));
+  const expectedKeys = new Set(expectedRows.map(row => pairKey(row.name, row.bottleFormat)));
   const csvOnly = csvRows.filter(row => !liveKeys.has(pairKey(row.name, row.bottleFormat)));
   const dbOnly = rows.filter(row => !csvKeys.has(pairKey(row.name, row.bottleFormat)));
+  const expectedOnly = expectedRows.filter(row => !liveKeys.has(pairKey(row.name, row.bottleFormat)));
+  const unexpectedLive = rows.filter(row => !expectedKeys.has(pairKey(row.name, row.bottleFormat)));
 
   const pairCounts = new Map();
   for (const row of rows) {
@@ -108,7 +129,20 @@ async function main() {
     csvSkuRows: csvRows.length,
     distinctLiveProductNames: new Set(rows.map(row => row.name)).size,
     duplicateNameFormatPairs: duplicates,
-    reconciliation: { csvOnlyCount: csvOnly.length, csvOnly, databaseOnlyCount: dbOnly.length, databaseOnly: dbOnly.map(({ name, bottleFormat }) => ({ name, bottleFormat })) },
+    reconciliation: {
+      rawCsvVsLive: {
+        csvOnlyCount: csvOnly.length,
+        databaseOnlyCount: dbOnly.length,
+      },
+      correctedCatalogueVsLive: {
+        expectedSkuRows: expectedRows.length,
+        missingExpectedCount: expectedOnly.length,
+        missingExpected: expectedOnly,
+        unexpectedLiveCount: unexpectedLive.length,
+        unexpectedLive: unexpectedLive.map(({ name, bottleFormat }) => ({ name, bottleFormat })),
+      },
+      approvedNewProducts: C.NEW_PRODUCTS.map(({ name, bottleFormat }) => ({ name, bottleFormat })),
+    },
     orderHistory: {
       orders: orderCount,
       orderItems: orderItemCount,
