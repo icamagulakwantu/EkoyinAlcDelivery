@@ -1,15 +1,5 @@
 name,bottleFormat,expectedLocalFilename,notes
 Aljimardo Silver,750ml Bottle,aljimardo-silver-750ml.png,Confirm spelling and exact brand before replacing the current placeholder
-Aquelle Sparkling Water,500ml,aquelle-sparkling-water-500ml.png,Exact Aquelle sparkling-water pack
-Blue Curacao Generic,750ml Bottle,blue-curacao-generic-750ml.png,Generic product; do not use Butlers or Peddlers brand photos
-Drambuie Honey/Scotch,750ml Bottle,drambuie-honey-scotch-750ml.png,Exact Drambuie pack
-Ekoyini Crushed Ice,1kg,ekoyini-crushed-ice-1kg.png,Exact Ekoyini bag and weight
-Ekoyini Crushed Ice,2kg,ekoyini-crushed-ice-2kg.png,Exact Ekoyini bag and weight
-Ekoyini Ice Bag,1kg,ekoyini-ice-bag-1kg.png,Exact Ekoyini bag and weight
-Ekoyini Ice Bag,2kg,ekoyini-ice-bag-2kg.png,Exact Ekoyini bag and weight
-M'hudi Chenin Blanc,750ml Bottle,mhudi-chenin-blanc-750ml.png,Exact M'hudi wine bottle
-M'hudi Pinotage,750ml Bottle,mhudi-pinotage-750ml.png,Exact M'hudi wine bottle
-Maraschino Cherries (Syrup),350ml Jar,maraschino-cherries-syrup-350ml.png,Exact jar and label
 Mofaya Orange Ting,Can (500ml),mofaya-orange-ting-can-500ml.png,Exact flavour and can size
 Mofaya Original,Can (500ml),mofaya-original-can-500ml.png,Exact flavour and can size
 Peach Schnapps (Butlers),750ml Bottle,butlers-peach-schnapps-750ml.png,Butlers brand only; do not use Relic image
@@ -17,6 +7,3 @@ Peach Schnapps Generic,750ml Bottle,peach-schnapps-generic-750ml.png,Generic pro
 Sambuca Generic Blue/White,750ml Bottle,sambuca-generic-blue-white-750ml.png,Generic product; do not use Lupini branded image
 Seven Sisters Pinotage/Cabernet,750ml Bottle,seven-sisters-pinotage-cabernet-750ml.png,Exact blend and label
 Strawberry Liqueur Generic,750ml Bottle,strawberry-liqueur-generic-750ml.png,Generic product; do not use Butlers or Strawberry Lips images
-Valpre Natural Spring Water,500ml,valpre-natural-spring-water-500ml.png,Exact Valpre bottle
-Strettons Triple Berry,750ml Bottle,strettons-triple-berry-750ml.png,Exact Strettons Triple Berry bottle and label
-Strettons Ruby Orange,750ml Bottle,strettons-ruby-orange-750ml.png,Exact Strettons Ruby Orange bottle and label
