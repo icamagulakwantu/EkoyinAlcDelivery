@@ -1,8 +1,10 @@
 // prisma/catalogue-update.js
 //
-// Runs on every Render deploy, after prisma/sync-images.js (render.yaml), so
-// its pack-specific photos win over the by-name photo links. Also runs at
-// the end of `npm run seed`. Applies the November 2026 catalogue correction
+// Applies the November 2026 SKU and pricing corrections. Product photography
+// is owned exclusively by prisma/sync-images.js, which uses local public/
+// assets and exact-format overrides. This updater must never replace those
+// local paths with external CDN URLs. Also runs at the end of `npm run seed`.
+
 // in lib/catalogue-2026-11.js:
 //   1. fixes wrong names and pack labels (rows are moved, never duplicated;
 //      an old-label copy of a row that already exists is removed);
@@ -103,7 +105,7 @@ async function addNewProducts(prisma, rows, log) {
   }
 }
 
-async function applyPricesAndPhotos(prisma, rows, log) {
+async function applyPrices(prisma, rows, log) {
   const unpriced = [];
   for (const row of rows.values()) {
     const data = {};
@@ -117,8 +119,8 @@ async function applyPricesAndPhotos(prisma, rows, log) {
     } else {
       unpriced.push(`${row.name} ${row.bottleFormat}`);
     }
-    const photo = C.photoUrlFor(row.name, row.bottleFormat);
-    if (photo && row.imageUrl !== photo) data.imageUrl = photo;
+    // Do not set imageUrl here. prisma/sync-images.js owns all photo
+    // assignments and only writes verified local /images/ paths.
     if (Object.keys(data).length === 0) continue;
     await prisma.skuItem.update({ where: { id: row.id }, data });
     Object.assign(row, data);
@@ -134,7 +136,7 @@ async function run(prisma) {
   await fixLabels(prisma, rows, log);
   await removeSmallBottles(prisma, rows, log);
   await addNewProducts(prisma, rows, log);
-  const unpriced = await applyPricesAndPhotos(prisma, rows, log);
+  const unpriced = await applyPrices(prisma, rows, log);
   return { log, unpriced };
 }
 
