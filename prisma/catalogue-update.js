@@ -8,17 +8,19 @@
 //      an old-label copy of a row that already exists is removed);
 //   2. removes every 375ml product (past orders keep their item names and
 //      prices: OrderItem.skuId is set to null, nothing else changes);
-//   3. adds the few products the owner sent photos of, unpriced;
-//   4. sets tavern-level prices where a checked shop price exists;
+//   3. adds the few products the owner sent photos of;
+//   4. prices every product at retail + 25% (checked shop price when we have
+//      one, otherwise the product's list price);
 //   5. puts founder photos on the exact pack they show.
-// Every step writes fixed values, so re-running changes nothing.
+// Every step writes fixed values worked out from a base that never changes,
+// so re-running changes nothing and never adds 25% twice.
 // Never fails the deploy: errors are logged and the script exits normally.
 
 const C = require('../lib/catalogue-2026-11.js');
 
 const SELECT = {
   id: true, name: true, bottleFormat: true, category: true, productType: true,
-  supplierPortfolio: true, unitsPerCase: true, packSize: true,
+  supplierPortfolio: true, unitsPerCase: true, packSize: true, listPriceZAR: true,
   retailSingleZAR: true, retailCaseZAR: true, retailCaseDiscountPct: true, imageUrl: true,
 };
 
@@ -75,6 +77,7 @@ async function addNewProducts(prisma, rows, log) {
       log.push(`skip: no "${p.like}" row to copy for ${p.name}`);
       continue;
     }
+    const shop = C.shopPriceFor(p.name, p.bottleFormat);
     const created = await prisma.skuItem.create({
       data: {
         name: p.name,
@@ -84,8 +87,9 @@ async function addNewProducts(prisma, rows, log) {
         supplierPortfolio: like.supplierPortfolio,
         unitsPerCase: p.unitsPerCase,
         packSize: 1,
-        // No price yet: shown as "Price coming soon" and not orderable.
-        listPriceZAR: 0, supplierCaseDiscountPct: 0, supplierCasePriceZAR: 0,
+        // The retail shop price is the base; step 4 sets the selling price.
+        listPriceZAR: shop ? Math.round(shop.unit * 100) / 100 : 0,
+        supplierCaseDiscountPct: 0, supplierCasePriceZAR: 0,
         palletPackQty: 0, supplierPalletDiscountPct: 0, supplierPalletPriceZAR: 0,
         retailSingleZAR: 0,
         retailCaseDiscountPct: like.retailCaseDiscountPct,
@@ -95,7 +99,7 @@ async function addNewProducts(prisma, rows, log) {
       select: SELECT,
     });
     rows.set(key(created.name, created.bottleFormat), created);
-    log.push(`added (unpriced): ${p.name} ${p.bottleFormat}`);
+    log.push(`added: ${p.name} ${p.bottleFormat}`);
   }
 }
 
@@ -110,8 +114,8 @@ async function applyPricesAndPhotos(prisma, rows, log) {
         data.retailSingleZAR = single;
         data.retailCaseZAR = caseZAR;
       }
-    } else if (row.retailSingleZAR > 0) {
-      unpriced.push(`${row.name} ${row.bottleFormat} (R${row.retailSingleZAR})`);
+    } else {
+      unpriced.push(`${row.name} ${row.bottleFormat}`);
     }
     const photo = C.photoUrlFor(row.name, row.bottleFormat);
     if (photo && row.imageUrl !== photo) data.imageUrl = photo;
@@ -143,7 +147,7 @@ if (require.main === module) {
   run(prisma)
     .then(({ log, unpriced }) => {
       for (const line of log) console.log(`[catalogue] ${line}`);
-      console.log(`[catalogue] ${log.length} change(s). ${unpriced.length} product(s) still on their old price, waiting for a checked shop price.`);
+      console.log(`[catalogue] ${log.length} change(s). ${unpriced.length} product(s) with no price at all: ${unpriced.join('; ') || 'none'}.`);
     })
     .catch((err) => console.warn('[catalogue] Failed (deploy continues):', err.message))
     .finally(() => prisma.$disconnect());
