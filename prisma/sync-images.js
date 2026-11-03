@@ -103,8 +103,9 @@ async function addUnpricedProducts({ dryRun = false } = {}) {
 
 async function main() {
   const dryRun = process.argv.includes('--dry-run');
+  const includeUnpriced = process.argv.includes('--include-unpriced');
   await syncPhotos({ dryRun });
-  await addUnpricedProducts({ dryRun });
+  if (includeUnpriced) await addUnpricedProducts({ dryRun });
   console.log(`[sync-images] ${dryRun ? 'Dry run complete; no database rows were changed.' : 'Photo sync complete.'}`);
 }
 
