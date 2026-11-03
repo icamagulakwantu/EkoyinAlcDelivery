@@ -55,6 +55,15 @@ async function main() {
   const brandPhotoMap = parseBrandPhotoMap(seedSource);
   const photoPlan = buildPhotoPlan(rows, brandPhotoMap, FORMAT_PHOTO_MAP, photoExists);
 
+  const removed375Rows = rows.filter(row => row.bottleFormat.includes('375ml'));
+  const [orderCount, orderItemCount, orderItemsReferencing375ml] = await Promise.all([
+    prisma.order.count(),
+    prisma.orderItem.count(),
+    removed375Rows.length
+      ? prisma.orderItem.count({ where: { skuId: { in: removed375Rows.map(row => row.id) } } })
+      : Promise.resolve(0),
+  ]);
+
   const csv = fs.readFileSync(path.join(__dirname, 'data', 'skus.csv'), 'utf-8').trim().split(/\r?\n/);
   const headers = parseCsvLine(csv[0]);
   const nameIndex = headers.indexOf('name');
@@ -100,8 +109,14 @@ async function main() {
     distinctLiveProductNames: new Set(rows.map(row => row.name)).size,
     duplicateNameFormatPairs: duplicates,
     reconciliation: { csvOnlyCount: csvOnly.length, csvOnly, databaseOnlyCount: dbOnly.length, databaseOnly: dbOnly.map(({ name, bottleFormat }) => ({ name, bottleFormat })) },
+    orderHistory: {
+      orders: orderCount,
+      orderItems: orderItemCount,
+      orderItemsReferencing375mlCandidates: orderItemsReferencing375ml,
+      note: 'SKU retirement nulls only the optional skuId; OrderItem name, price and quantity snapshots remain.',
+    },
     packLabels: {
-      removed375mlCandidates: rows.filter(row => row.bottleFormat.includes('375ml')).length,
+      removed375mlCandidates: removed375Rows.length,
       dumpy340mlCandidates: rows.filter(row => row.bottleFormat === 'Dumpy (340ml)').length,
     },
     currentImageSources: imageHosts,
