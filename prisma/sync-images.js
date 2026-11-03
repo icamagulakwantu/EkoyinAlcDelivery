@@ -7,6 +7,8 @@
 // Only imageUrl is changed. Prices, stock, SKU IDs and order relationships
 // are never touched. Use --dry-run to inspect the plan without writing.
 
+require('dotenv').config();
+
 const fs = require('fs');
 const path = require('path');
 const { PrismaClient } = require('@prisma/client');
@@ -102,6 +104,10 @@ async function addUnpricedProducts({ dryRun = false } = {}) {
 }
 
 async function main() {
+  if (!process.env.DATABASE_URL) {
+    console.warn('[sync-images] DATABASE_URL not set; local photo sync skipped.');
+    return;
+  }
   const dryRun = process.argv.includes('--dry-run');
   const includeUnpriced = process.argv.includes('--include-unpriced');
   await syncPhotos({ dryRun });
