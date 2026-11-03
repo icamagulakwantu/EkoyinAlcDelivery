@@ -151,3 +151,20 @@ test('SKU structure-only dry-run does not preview or apply retail repricing', as
   assert.equal(result.log.some(line => line.startsWith('would update:')), false);
   assert.equal(JSON.stringify(prisma.db), before);
 });
+
+
+test('structure-only execution applies SKU corrections but never reprices existing products', async () => {
+  const prisma = fakePrisma([
+    { name: 'Hennessy VS', bottleFormat: '375ml Bottle', listPriceZAR: 340, retailSingleZAR: 340 },
+    { name: 'Heineken', bottleFormat: 'Dumpy (340ml)', listPriceZAR: 16, retailSingleZAR: 96, packSize: 6 },
+    { name: 'Strettons London Dry', bottleFormat: '750ml Bottle', listPriceZAR: 170, retailSingleZAR: 170 },
+  ]);
+
+  const result = await run(prisma, { structureOnly: true });
+  const heineken = prisma.db.find(row => row.name === 'Heineken');
+  assert.equal(result.structureOnly, true);
+  assert.equal(prisma.db.some(row => row.name === 'Hennessy VS' && row.bottleFormat === '375ml Bottle'), false);
+  assert.equal(heineken.bottleFormat, 'Dumpy (330ml)');
+  assert.equal(heineken.retailSingleZAR, 96, 'existing retail price is not changed by SKU structure work');
+  assert.equal(prisma.db.find(row => row.name === 'Strettons Triple Berry').retailSingleZAR, 0);
+});
