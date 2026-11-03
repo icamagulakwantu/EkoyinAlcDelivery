@@ -18,7 +18,11 @@
     "catalogue:photos:dry-run": "node prisma/sync-images.js --dry-run",
     "catalogue:photos:sync": "node prisma/sync-images.js",
     "catalogue:audit": "node prisma/audit-catalogue.js",
-    "catalogue:dry-run": "node prisma/catalogue-update.js --dry-run"
+    "catalogue:dry-run": "node prisma/catalogue-update.js --dry-run",
+    "catalogue:structure:dry-run": "node prisma/catalogue-update.js --dry-run --structure-only",
+    "catalogue:prices:dry-run": "node prisma/catalogue-update.js --dry-run --prices-only",
+    "catalogue:structure": "node prisma/catalogue-update.js --structure-only",
+    "catalogue:prices": "node prisma/catalogue-update.js --prices-only"
   },
   "prisma": {
     "seed": "node prisma/seed.js"
