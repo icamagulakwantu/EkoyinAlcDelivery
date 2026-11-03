@@ -128,15 +128,18 @@ async function applyPrices(prisma, rows, log, dryRun = false) {
   return unpriced;
 }
 
-async function run(prisma, { dryRun = false } = {}) {
+async function run(prisma, { dryRun = false, structureOnly = false, pricesOnly = false } = {}) {
+  if (structureOnly && pricesOnly) throw new Error('Choose either structureOnly or pricesOnly, not both.');
   const all = await prisma.skuItem.findMany({ select: SELECT });
   const rows = new Map(all.map((r) => [key(r.name, r.bottleFormat), r]));
   const log = [];
-  await fixLabels(prisma, rows, log, dryRun);
-  await removeSmallBottles(prisma, rows, log, dryRun);
-  await addNewProducts(prisma, rows, log, dryRun);
-  const unpriced = await applyPrices(prisma, rows, log, dryRun);
-  return { log, unpriced, dryRun };
+  if (!pricesOnly) {
+    await fixLabels(prisma, rows, log, dryRun);
+    await removeSmallBottles(prisma, rows, log, dryRun);
+    await addNewProducts(prisma, rows, log, dryRun);
+  }
+  const unpriced = structureOnly ? [] : await applyPrices(prisma, rows, log, dryRun);
+  return { log, unpriced, dryRun, structureOnly, pricesOnly };
 }
 
 module.exports = { run };
@@ -146,10 +149,12 @@ if (require.main === module) {
   const { PrismaClient } = require('@prisma/client');
   const prisma = new PrismaClient();
   const dryRun = process.argv.includes('--dry-run');
-  run(prisma, { dryRun })
+  const structureOnly = process.argv.includes('--structure-only');
+  const pricesOnly = process.argv.includes('--prices-only');
+  run(prisma, { dryRun, structureOnly, pricesOnly })
     .then(({ log, unpriced }) => {
       for (const line of log) console.log(`[catalogue] ${line}`);
-      console.log(`[catalogue] ${dryRun ? 'Dry run — no database rows were changed. ' : ''}${log.length} ${dryRun ? 'planned change(s)' : 'change(s)'}. ${unpriced.length} product(s) with no price at all: ${unpriced.join('; ') || 'none'}.`);
+      console.log(`[catalogue] ${dryRun ? 'Dry run — no database rows were changed. ' : ''}${structureOnly ? 'SKU structure only. ' : pricesOnly ? 'Pricing only. ' : ''}${log.length} ${dryRun ? 'planned change(s)' : 'change(s)'}. ${unpriced.length} product(s) with no price at all: ${unpriced.join('; ') || 'none'}.`);
     })
     .catch((err) => {
       console.error('[catalogue] Failed:', err);
