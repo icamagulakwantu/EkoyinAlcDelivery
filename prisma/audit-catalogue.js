@@ -6,7 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const { PrismaClient } = require('@prisma/client');
 const { buildPhotoPlan, parseBrandPhotoMap } = require('./catalogue-photo-matching');
-const { FORMAT_PHOTO_MAP } = require('./catalogue-photo-config');
+const { FORMAT_PHOTO_MAP, UNPRICED_PRODUCTS } = require('./catalogue-photo-config');
 const C = require('../lib/catalogue-2026-11');
 
 const prisma = new PrismaClient();
@@ -91,6 +91,7 @@ async function main() {
     expectedRows.push({ name, bottleFormat });
   }
   for (const product of C.NEW_PRODUCTS) expectedRows.push({ name: product.name, bottleFormat: product.bottleFormat });
+  for (const product of UNPRICED_PRODUCTS) expectedRows.push({ name: product.name, bottleFormat: product.bottleFormat });
 
   const liveKeys = new Set(rows.map(row => pairKey(row.name, row.bottleFormat)));
   const csvKeys = new Set(csvRows.map(row => pairKey(row.name, row.bottleFormat)));
@@ -102,10 +103,14 @@ async function main() {
 
   const priceMismatches = [];
   const unpricedRows = [];
+  const unexpectedUnpricedRows = [];
+  const intendedUnpricedKeys = new Set(UNPRICED_PRODUCTS.map(product => pairKey(product.name, product.bottleFormat)));
   for (const row of rows) {
     const expectedSingle = C.newSinglePrice(row);
     if (expectedSingle === null) {
-      unpricedRows.push({ name: row.name, bottleFormat: row.bottleFormat });
+      const unpriced = { name: row.name, bottleFormat: row.bottleFormat };
+      unpricedRows.push(unpriced);
+      if (!intendedUnpricedKeys.has(pairKey(row.name, row.bottleFormat))) unexpectedUnpricedRows.push(unpriced);
       continue;
     }
     const expectedCase = C.casePrice(expectedSingle, row.unitsPerCase, row.retailCaseDiscountPct);
@@ -180,6 +185,8 @@ async function main() {
       mismatches: priceMismatches,
       unpricedCount: unpricedRows.length,
       unpricedRows,
+      unexpectedUnpricedCount: unexpectedUnpricedRows.length,
+      unexpectedUnpricedRows,
     },
     currentImageSources: imageHosts,
     localPhotoPlan: {
