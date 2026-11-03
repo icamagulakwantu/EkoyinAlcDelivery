@@ -15,7 +15,7 @@
 //   5. puts founder photos on the exact pack they show.
 // Every step writes fixed values worked out from a base that never changes,
 // so re-running changes nothing and never adds 25% twice.
-// Never fails the deploy: errors are logged and the script exits normally.
+// A database error exits non-zero; never report a partial catalogue update as success.
 
 const C = require('../lib/catalogue-2026-11.js');
 
