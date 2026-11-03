@@ -1,5 +1,7 @@
 // Read-only catalogue reconciliation. This script never updates, creates,
 // renames or deletes database rows. Run with: npm run catalogue:audit
+require('dotenv').config();
+
 const fs = require('fs');
 const path = require('path');
 const { PrismaClient } = require('@prisma/client');
@@ -41,6 +43,10 @@ function pairKey(name, bottleFormat) {
 }
 
 async function main() {
+  if (!process.env.DATABASE_URL) {
+    console.warn('[catalogue:audit] DATABASE_URL not set; read-only audit skipped.');
+    return;
+  }
   const rows = await prisma.skuItem.findMany({
     select: { id: true, name: true, bottleFormat: true, imageUrl: true, listPriceZAR: true, retailSingleZAR: true },
     orderBy: [{ name: 'asc' }, { bottleFormat: 'asc' }],
