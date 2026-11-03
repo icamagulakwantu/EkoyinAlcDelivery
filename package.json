@@ -16,7 +16,8 @@
     "sync-images": "node prisma/sync-images.js",
     "ensure-schema": "node scripts/ensure-schema.js",
     "catalogue:photos:dry-run": "node prisma/sync-images.js --dry-run",
-    "catalogue:photos:sync": "node prisma/sync-images.js"
+    "catalogue:photos:sync": "node prisma/sync-images.js",
+    "catalogue:audit": "node prisma/audit-catalogue.js"
   },
   "prisma": {
     "seed": "node prisma/seed.js"
