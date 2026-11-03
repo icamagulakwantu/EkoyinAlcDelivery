@@ -10,6 +10,7 @@
 const fs = require('fs');
 const path = require('path');
 const { PrismaClient, Category } = require('@prisma/client');
+const { FORMAT_PHOTO_MAP } = require('./catalogue-photo-config');
 
 const prisma = new PrismaClient();
 
@@ -297,7 +298,7 @@ async function main() {
       retailCaseDiscountPct,
       retailCaseZAR,
 
-      imageUrl: BRAND_PHOTO_MAP[row.name] || CATEGORY_IMAGE_MAP[category] || CATEGORY_IMAGE_MAP.BEER,
+      imageUrl: FORMAT_PHOTO_MAP[JSON.stringify([row.name, row.bottleFormat])] || BRAND_PHOTO_MAP[row.name] || CATEGORY_IMAGE_MAP[category] || CATEGORY_IMAGE_MAP.BEER,
 
       // Brand story tags — see the comment on SkuItem.brandTags in
       // schema.prisma for what these mean and how strict the bar is.
