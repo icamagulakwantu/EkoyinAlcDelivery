@@ -49,7 +49,7 @@ async function main() {
     return;
   }
   const rows = await prisma.skuItem.findMany({
-    select: { id: true, name: true, bottleFormat: true, imageUrl: true, listPriceZAR: true, retailSingleZAR: true },
+    select: { id: true, name: true, bottleFormat: true, imageUrl: true, listPriceZAR: true, retailSingleZAR: true, retailCaseZAR: true, unitsPerCase: true, retailCaseDiscountPct: true, packSize: true },
     orderBy: [{ name: 'asc' }, { bottleFormat: 'asc' }],
   });
   const seedSource = fs.readFileSync(path.join(__dirname, 'seed.js'), 'utf-8');
@@ -99,6 +99,28 @@ async function main() {
   const dbOnly = rows.filter(row => !csvKeys.has(pairKey(row.name, row.bottleFormat)));
   const expectedOnly = expectedRows.filter(row => !liveKeys.has(pairKey(row.name, row.bottleFormat)));
   const unexpectedLive = rows.filter(row => !expectedKeys.has(pairKey(row.name, row.bottleFormat)));
+
+  const priceMismatches = [];
+  const unpricedRows = [];
+  for (const row of rows) {
+    const expectedSingle = C.newSinglePrice(row);
+    if (expectedSingle === null) {
+      unpricedRows.push({ name: row.name, bottleFormat: row.bottleFormat });
+      continue;
+    }
+    const expectedCase = C.casePrice(expectedSingle, row.unitsPerCase, row.retailCaseDiscountPct);
+    if (Math.abs(Number(row.retailSingleZAR) - expectedSingle) > 0.005 ||
+        Math.abs(Number(row.retailCaseZAR) - expectedCase) > 0.005) {
+      priceMismatches.push({
+        name: row.name,
+        bottleFormat: row.bottleFormat,
+        actualSingle: row.retailSingleZAR,
+        expectedSingle,
+        actualCase: row.retailCaseZAR,
+        expectedCase,
+      });
+    }
+  }
 
   const pairCounts = new Map();
   for (const row of rows) {
@@ -152,6 +174,12 @@ async function main() {
     packLabels: {
       removed375mlCandidates: removed375Rows.length,
       dumpy340mlCandidates: rows.filter(row => row.bottleFormat === 'Dumpy (340ml)').length,
+    },
+    priceIntegrity: {
+      mismatchCount: priceMismatches.length,
+      mismatches: priceMismatches,
+      unpricedCount: unpricedRows.length,
+      unpricedRows,
     },
     currentImageSources: imageHosts,
     localPhotoPlan: {
