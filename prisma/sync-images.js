@@ -13,23 +13,12 @@ const fs = require('fs');
 const path = require('path');
 const { PrismaClient } = require('@prisma/client');
 const { buildPhotoPlan, parseBrandPhotoMap } = require('./catalogue-photo-matching');
-const { FORMAT_PHOTO_MAP } = require('./catalogue-photo-config');
+const { FORMAT_PHOTO_MAP, UNPRICED_PRODUCTS } = require('./catalogue-photo-config');
 
 const prisma = new PrismaClient();
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
 
-const UNPRICED_PRODUCTS = [
-  {
-    name: 'Budweiser',
-    bottleFormat: 'Can (500ml)',
-    category: 'BEER',
-    productType: 'ALCOHOL',
-    supplierPortfolio: 'SAB',
-    unitsPerCase: 24,
-    retailCaseDiscountPct: 8,
-    imageUrl: '/images/brands/Budweiser-Beer-Can-500ml.webp',
-  },
-];
+
 
 // Read BRAND_PHOTO_MAP from seed.js so the existing catalogue remains the
 // single source of truth for normal brand-level photos.
@@ -115,7 +104,7 @@ async function main() {
     return;
   }
   const dryRun = process.argv.includes('--dry-run');
-  const includeUnpriced = process.argv.includes('--include-unpriced');
+  const includeUnpriced = process.argv.includes('--include-unpriced') || process.env.APPLY_UNPRICED_SKUS_ON_DEPLOY === 'true';
   await syncPhotos({ dryRun });
   if (includeUnpriced) await addUnpricedProducts({ dryRun });
   console.log(`[sync-images] ${dryRun ? 'Dry run complete; no database rows were changed.' : 'Photo sync complete.'}`);
