@@ -92,6 +92,7 @@ test('runner: fixes labels, removes 375ml, prices everything, and is repeatable'
   assert.equal(find('Strettons Triple Berry', '750ml Bottle').retailSingleZAR, 240);
   assert.equal(find('Strettons Ruby Orange', '750ml Bottle').retailSingleZAR, 240);
   assert.equal(find('Stella Artois', 'Quart (620ml)').retailSingleZAR, 35);
+  assert.equal(find('Strettons Triple Berry', '750ml Bottle').imageUrl, null); // local photo sync owns images
   assert.deepEqual(first.unpriced, []);
 
   const second = await run(prisma);
