@@ -12,7 +12,6 @@
 //   3. adds the few products the owner sent photos of;
 //   4. prices every product at retail + 25% (checked shop price when we have
 //      one, otherwise the product's list price);
-//   5. puts founder photos on the exact pack they show.
 // Every step writes fixed values worked out from a base that never changes,
 // so re-running changes nothing and never adds 25% twice.
 // A database error exits non-zero; never report a partial catalogue update as success.
