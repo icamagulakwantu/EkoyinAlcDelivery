@@ -18,6 +18,7 @@ const PUBLIC_DIR = path.join(__dirname, '..', 'public');
 // Add only after confirming the local asset depicts this exact pack format.
 const FORMAT_PHOTO_MAP = {
   '["Budweiser","Can (500ml)"]': '/images/brands/Budweiser-Beer-Can-500ml.webp',
+  '["Castle Lite","Dumpy (340ml)"]': '/images/brands/Castlelite340Mldumpies1.png',
 };
 
 const UNPRICED_PRODUCTS = [
