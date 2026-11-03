@@ -29,48 +29,48 @@ function key(name, bottleFormat) {
   return `${name}\u0000${bottleFormat}`;
 }
 
-async function moveRow(prisma, rows, row, data, log) {
+async function moveRow(prisma, rows, row, data, log, dryRun = false) {
   const name = data.name ?? row.name;
   const bottleFormat = data.bottleFormat ?? row.bottleFormat;
   if (rows.has(key(name, bottleFormat))) {
     // The corrected row already exists (e.g. `npm run seed` re-created the
     // old label from skus.csv). Drop the old-label duplicate; past orders
     // keep their item names and prices (OrderItem.skuId becomes null).
-    await prisma.skuItem.delete({ where: { id: row.id } });
+    if (!dryRun) await prisma.skuItem.delete({ where: { id: row.id } });
     rows.delete(key(row.name, row.bottleFormat));
-    log.push(`removed duplicate: ${row.name} ${row.bottleFormat} (kept ${name} ${bottleFormat})`);
+    log.push(`${dryRun ? 'would remove duplicate' : 'removed duplicate'}: ${row.name} ${row.bottleFormat} (kept ${name} ${bottleFormat})`);
     return;
   }
-  await prisma.skuItem.update({ where: { id: row.id }, data });
+  if (!dryRun) await prisma.skuItem.update({ where: { id: row.id }, data });
   rows.delete(key(row.name, row.bottleFormat));
   Object.assign(row, { name, bottleFormat });
   rows.set(key(name, bottleFormat), row);
-  log.push(`renamed: ${name} ${bottleFormat}`);
+  log.push(`${dryRun ? 'would rename' : 'renamed'}: ${name} ${bottleFormat}`);
 }
 
-async function fixLabels(prisma, rows, log) {
+async function fixLabels(prisma, rows, log, dryRun = false) {
   for (const fix of C.NAME_FIXES) {
     for (const row of [...rows.values()].filter((r) => r.name === fix.from)) {
-      await moveRow(prisma, rows, row, { name: fix.to }, log);
+      await moveRow(prisma, rows, row, { name: fix.to }, log, dryRun);
     }
   }
   for (const fix of C.FORMAT_FIXES) {
     const matches = [...rows.values()].filter(
       (r) => r.bottleFormat === fix.from && (fix.name === null || r.name === fix.name),
     );
-    for (const row of matches) await moveRow(prisma, rows, row, { bottleFormat: fix.to }, log);
+    for (const row of matches) await moveRow(prisma, rows, row, { bottleFormat: fix.to }, log, dryRun);
   }
 }
 
-async function removeSmallBottles(prisma, rows, log) {
+async function removeSmallBottles(prisma, rows, log, dryRun = false) {
   for (const row of [...rows.values()].filter((r) => C.isRemovedSize(r.bottleFormat))) {
-    await prisma.skuItem.delete({ where: { id: row.id } });
+    if (!dryRun) await prisma.skuItem.delete({ where: { id: row.id } });
     rows.delete(key(row.name, row.bottleFormat));
-    log.push(`removed: ${row.name} ${row.bottleFormat}`);
+    log.push(`${dryRun ? 'would remove' : 'removed'}: ${row.name} ${row.bottleFormat}`);
   }
 }
 
-async function addNewProducts(prisma, rows, log) {
+async function addNewProducts(prisma, rows, log, dryRun = false) {
   for (const p of C.NEW_PRODUCTS) {
     if (rows.has(key(p.name, p.bottleFormat))) continue;
     const like = [...rows.values()].find((r) => r.name === p.like);
@@ -79,33 +79,33 @@ async function addNewProducts(prisma, rows, log) {
       continue;
     }
     const shop = C.shopPriceFor(p.name, p.bottleFormat);
-    const created = await prisma.skuItem.create({
-      data: {
-        name: p.name,
-        bottleFormat: p.bottleFormat,
-        category: like.category,
-        productType: like.productType,
-        supplierPortfolio: like.supplierPortfolio,
-        unitsPerCase: p.unitsPerCase,
-        packSize: 1,
-        // The retail shop price is the base; step 4 sets the selling price.
-        listPriceZAR: shop ? Math.round(shop.unit * 100) / 100 : 0,
-        supplierCaseDiscountPct: 0, supplierCasePriceZAR: 0,
-        palletPackQty: 0, supplierPalletDiscountPct: 0, supplierPalletPriceZAR: 0,
-        retailSingleZAR: 0,
-        retailCaseDiscountPct: like.retailCaseDiscountPct,
-        retailCaseZAR: 0,
-        // Photos are filled later by the local /images/ synchroniser.
-        imageUrl: null,
-      },
-      select: SELECT,
-    });
+    const data = {
+      name: p.name,
+      bottleFormat: p.bottleFormat,
+      category: like.category,
+      productType: like.productType,
+      supplierPortfolio: like.supplierPortfolio,
+      unitsPerCase: p.unitsPerCase,
+      packSize: 1,
+      // The retail shop price is the base; step 4 sets the selling price.
+      listPriceZAR: shop ? Math.round(shop.unit * 100) / 100 : 0,
+      supplierCaseDiscountPct: 0, supplierCasePriceZAR: 0,
+      palletPackQty: 0, supplierPalletDiscountPct: 0, supplierPalletPriceZAR: 0,
+      retailSingleZAR: 0,
+      retailCaseDiscountPct: like.retailCaseDiscountPct,
+      retailCaseZAR: 0,
+      // Photos are filled later by the local /images/ synchroniser.
+      imageUrl: null,
+    };
+    const created = dryRun
+      ? { id: `dry-run:${p.name}:${p.bottleFormat}`, ...data }
+      : await prisma.skuItem.create({ data, select: SELECT });
     rows.set(key(created.name, created.bottleFormat), created);
-    log.push(`added: ${p.name} ${p.bottleFormat}`);
+    log.push(`${dryRun ? 'would add' : 'added'}: ${p.name} ${p.bottleFormat}`);
   }
 }
 
-async function applyPrices(prisma, rows, log) {
+async function applyPrices(prisma, rows, log, dryRun = false) {
   const unpriced = [];
   for (const row of rows.values()) {
     const data = {};
@@ -122,22 +122,22 @@ async function applyPrices(prisma, rows, log) {
     // Do not set imageUrl here. prisma/sync-images.js owns all photo
     // assignments and only writes verified local /images/ paths.
     if (Object.keys(data).length === 0) continue;
-    await prisma.skuItem.update({ where: { id: row.id }, data });
+    if (!dryRun) await prisma.skuItem.update({ where: { id: row.id }, data });
     Object.assign(row, data);
-    log.push(`updated: ${row.name} ${row.bottleFormat} ${JSON.stringify(data)}`);
+    log.push(`${dryRun ? 'would update' : 'updated'}: ${row.name} ${row.bottleFormat} ${JSON.stringify(data)}`);
   }
   return unpriced;
 }
 
-async function run(prisma) {
+async function run(prisma, { dryRun = false } = {}) {
   const all = await prisma.skuItem.findMany({ select: SELECT });
   const rows = new Map(all.map((r) => [key(r.name, r.bottleFormat), r]));
   const log = [];
-  await fixLabels(prisma, rows, log);
-  await removeSmallBottles(prisma, rows, log);
-  await addNewProducts(prisma, rows, log);
-  const unpriced = await applyPrices(prisma, rows, log);
-  return { log, unpriced };
+  await fixLabels(prisma, rows, log, dryRun);
+  await removeSmallBottles(prisma, rows, log, dryRun);
+  await addNewProducts(prisma, rows, log, dryRun);
+  const unpriced = await applyPrices(prisma, rows, log, dryRun);
+  return { log, unpriced, dryRun };
 }
 
 module.exports = { run };
@@ -146,11 +146,15 @@ if (require.main === module) {
   require('dotenv').config();
   const { PrismaClient } = require('@prisma/client');
   const prisma = new PrismaClient();
-  run(prisma)
+  const dryRun = process.argv.includes('--dry-run');
+  run(prisma, { dryRun })
     .then(({ log, unpriced }) => {
       for (const line of log) console.log(`[catalogue] ${line}`);
-      console.log(`[catalogue] ${log.length} change(s). ${unpriced.length} product(s) with no price at all: ${unpriced.join('; ') || 'none'}.`);
+      console.log(`[catalogue] ${dryRun ? 'Dry run — no database rows were changed. ' : ''}${log.length} ${dryRun ? 'planned change(s)' : 'change(s)'}. ${unpriced.length} product(s) with no price at all: ${unpriced.join('; ') || 'none'}.`);
     })
-    .catch((err) => console.warn('[catalogue] Failed (deploy continues):', err.message))
+    .catch((err) => {
+      console.error('[catalogue] Failed:', err);
+      process.exitCode = 1;
+    })
     .finally(() => prisma.$disconnect());
 }
