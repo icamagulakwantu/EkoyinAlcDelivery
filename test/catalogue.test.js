@@ -168,3 +168,23 @@ test('structure-only execution applies SKU corrections but never reprices existi
   assert.equal(heineken.retailSingleZAR, 96, 'existing retail price is not changed by SKU structure work');
   assert.equal(prisma.db.find(row => row.name === 'Strettons Triple Berry').retailSingleZAR, 0);
 });
+
+
+test('prices-only dry-run previews retail changes without changing SKU structure or data', async () => {
+  const prisma = fakePrisma([
+    { name: 'Heineken', bottleFormat: 'Dumpy (330ml)', listPriceZAR: 16, retailSingleZAR: 96, packSize: 6 },
+    { name: 'Hennessy VS', bottleFormat: '750ml Bottle', listPriceZAR: 528, retailSingleZAR: 528 },
+  ]);
+  const before = JSON.stringify(prisma.db);
+  prisma.skuItem.update = async () => { throw new Error('price dry-run called update'); };
+  prisma.skuItem.delete = async () => { throw new Error('price dry-run called delete'); };
+  prisma.skuItem.create = async () => { throw new Error('price dry-run called create'); };
+
+  const result = await run(prisma, { dryRun: true, pricesOnly: true });
+  assert.equal(result.pricesOnly, true);
+  assert.ok(result.log.some(line => line.startsWith('would update:')));
+  assert.equal(result.log.some(line => line.startsWith('would remove:')), false);
+  assert.equal(result.log.some(line => line.startsWith('would rename:')), false);
+  assert.equal(result.log.some(line => line.startsWith('would add:')), false);
+  assert.equal(JSON.stringify(prisma.db), before);
+});
