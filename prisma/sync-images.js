@@ -1,28 +1,25 @@
-// prisma/sync-images.js
+// Local catalogue photo sync. Pack-specific mappings always win. A general
+// brand photo is only assigned when that brand has one SKU format; multi-format
+// brands need an exact (name, bottleFormat) photo. This follows iCamagu's
+// format-specific matching and prevents bottle photos being reused on cans,
+// quarts and dumpies.
 //
-// Runs on every Render deploy (see render.yaml's buildCommand), right after
-// the database tables are in place. It does two small, safe things:
-//
-//  1. Points each product at its photo in public/images/brands, using the
-//     same name -> photo list that prisma/seed.js already holds. Only photos
-//     that really exist on disk are used, and ONLY imageUrl is touched —
-//     prices, stock and everything else stay exactly as they are.
-//  2. Adds products that have a photo but no price yet (see UNPRICED_PRODUCTS).
-//     They are created once with a price of 0, shown in the shop as
-//     "Price coming soon", and cannot be ordered until a real price is set.
-//     Re-running never overwrites a price that was filled in later.
-//
-// Never fails the deploy: any error is logged and the script exits normally.
+// Only imageUrl is changed. Prices, stock, IDs and order relationships remain
+// untouched. Errors fail visibly so a broken catalogue sync cannot silently pass.
 
 const fs = require('fs');
 const path = require('path');
 const { PrismaClient } = require('@prisma/client');
+const { resolvePhotoAssignments } = require('./catalogue-photo-matching');
 
 const prisma = new PrismaClient();
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
 
-// Products that have a photo but no price yet. Add a line here (and drop the
-// photo into public/images/brands) to list another "price coming soon" item.
+// Add only after confirming the local asset depicts this exact pack format.
+const FORMAT_PHOTO_MAP = {
+  '["Budweiser","Can (500ml)"]': '/images/brands/Budweiser-Beer-Can-500ml.webp',
+};
+
 const UNPRICED_PRODUCTS = [
   {
     name: 'Budweiser',
@@ -36,21 +33,17 @@ const UNPRICED_PRODUCTS = [
   },
 ];
 
-// Reads the BRAND_PHOTO_MAP block out of seed.js as plain text, so the photo
-// list lives in exactly one place.
+// Read BRAND_PHOTO_MAP from seed.js; it is a fallback for single-format SKUs.
 function loadBrandPhotoMap() {
   const source = fs.readFileSync(path.join(__dirname, 'seed.js'), 'utf-8');
   const start = source.indexOf('const BRAND_PHOTO_MAP = {');
   if (start === -1) return {};
   const end = source.indexOf('\n};', start);
   const block = source.slice(start, end);
-
   const map = {};
   const entry = /^\s*'((?:[^'\\]|\\.)*)':\s*'([^']*)',?\s*$/gm;
   let match;
-  while ((match = entry.exec(block))) {
-    map[match[1].replace(/\\'/g, "'")] = match[2];
-  }
+  while ((match = entry.exec(block))) map[match[1].replace(/\\'/g, "'")] = match[2];
   return map;
 }
 
@@ -59,14 +52,23 @@ function photoExists(urlPath) {
 }
 
 async function syncPhotos() {
-  const map = loadBrandPhotoMap();
+  const rows = await prisma.skuItem.findMany({ select: { id: true, name: true, bottleFormat: true } });
+  const assignments = resolvePhotoAssignments(rows, loadBrandPhotoMap(), FORMAT_PHOTO_MAP);
+  const counts = new Map();
+  for (const row of rows) counts.set(row.name, (counts.get(row.name) || 0) + 1);
+  const multiFormatCount = [...counts.values()].filter((count) => count > 1).length;
   let linked = 0;
-  for (const [name, urlPath] of Object.entries(map)) {
-    if (!photoExists(urlPath)) continue;
-    const { count } = await prisma.skuItem.updateMany({ where: { name }, data: { imageUrl: urlPath } });
-    linked += count;
+  let missing = 0;
+  for (const assignment of assignments) {
+    if (!photoExists(assignment.imageUrl)) {
+      missing++;
+      console.error(`[sync-images] Missing local asset: ${assignment.imageUrl} (${assignment.name}, ${assignment.bottleFormat})`);
+      continue;
+    }
+    await prisma.skuItem.update({ where: { id: assignment.id }, data: { imageUrl: assignment.imageUrl } });
+    linked++;
   }
-  console.log(`[sync-images] Linked photos on ${linked} product rows.`);
+  console.log(`[sync-images] Linked ${linked} local photo(s); ${missing} missing asset(s); ${multiFormatCount} multi-format brand(s) need exact pack photos.`);
 }
 
 async function addUnpricedProducts() {
@@ -77,28 +79,20 @@ async function addUnpricedProducts() {
       where: { name_bottleFormat: { name: p.name, bottleFormat: p.bottleFormat } },
     });
     if (existing) {
-      await prisma.skuItem.update({ where: { id: existing.id }, data: { imageUrl: p.imageUrl } });
+      if (existing.imageUrl !== p.imageUrl) {
+        await prisma.skuItem.update({ where: { id: existing.id }, data: { imageUrl: p.imageUrl } });
+      }
       continue;
     }
     await prisma.skuItem.create({
       data: {
-        name: p.name,
-        bottleFormat: p.bottleFormat,
-        category: p.category,
-        productType: p.productType,
-        supplierPortfolio: p.supplierPortfolio,
-        unitsPerCase: p.unitsPerCase,
-        // No price yet — everything money-related starts at 0.
-        listPriceZAR: 0,
-        supplierCaseDiscountPct: 0,
-        supplierCasePriceZAR: 0,
-        palletPackQty: 0,
-        supplierPalletDiscountPct: 0,
-        supplierPalletPriceZAR: 0,
-        retailSingleZAR: 0,
-        retailCaseDiscountPct: p.retailCaseDiscountPct,
-        retailCaseZAR: 0,
-        imageUrl: p.imageUrl,
+        name: p.name, bottleFormat: p.bottleFormat, category: p.category,
+        productType: p.productType, supplierPortfolio: p.supplierPortfolio,
+        unitsPerCase: p.unitsPerCase, listPriceZAR: 0,
+        supplierCaseDiscountPct: 0, supplierCasePriceZAR: 0,
+        palletPackQty: 0, supplierPalletDiscountPct: 0, supplierPalletPriceZAR: 0,
+        retailSingleZAR: 0, retailCaseDiscountPct: p.retailCaseDiscountPct,
+        retailCaseZAR: 0, imageUrl: p.imageUrl,
       },
     });
     added++;
@@ -111,8 +105,13 @@ async function main() {
   await addUnpricedProducts();
 }
 
-main()
-  .catch((err) => {
-    console.warn('[sync-images] Failed (deploy continues):', err.message);
-  })
-  .finally(() => prisma.$disconnect());
+if (require.main === module) {
+  main()
+    .catch((err) => {
+      console.error('[sync-images] Catalogue image sync failed:', err);
+      process.exitCode = 1;
+    })
+    .finally(() => prisma.$disconnect());
+}
+
+module.exports = { loadBrandPhotoMap, photoExists, syncPhotos, addUnpricedProducts };
