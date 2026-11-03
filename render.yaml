@@ -19,11 +19,10 @@ services:
     # which only applies the committed files in prisma/migrations/. It never
     # drops data, and a failure stops the deploy so the previous version keeps
     # running. (Replaces `prisma db push --accept-data-loss`.)
-    # Then: shrink product photos, link each product to its photo, and apply
-    # the catalogue correction (prices, 375ml removal, pack-specific photos).
-    # All three are safe to re-run; the catalogue step must stay last so its
-    # pack-specific photos win over the by-name links.
-    buildCommand: npm install && npx prisma generate && node scripts/migrate.js && node scripts/optimize-images.js && node prisma/sync-images.js && node prisma/catalogue-update.js
+    # Then: shrink product photos and link verified local images. SKU label
+    # corrections and retail repricing are deliberately kept out of deploys;
+    # preview them with `npm run catalogue:dry-run` and run only after review.
+    buildCommand: npm install && npx prisma generate && node scripts/migrate.js && node scripts/optimize-images.js && node prisma/sync-images.js
     startCommand: node server.js
     healthCheckPath: /api/health
     envVars:
