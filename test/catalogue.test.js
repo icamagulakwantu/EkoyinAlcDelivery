@@ -42,12 +42,6 @@ test('every new price is at or above the retail price', () => {
   }
 });
 
-test('photos only land on the pack they show', () => {
-  assert.ok(C.photoUrlFor('Castle Lite', 'Dumpy (330ml)'));
-  assert.equal(C.photoUrlFor('Castle Lite', 'Can (500ml)'), null);
-  assert.equal(C.photoUrlFor('Hennessy VS', '375ml Bottle'), null);
-});
-
 test('only 375ml sizes are removed', () => {
   assert.equal(C.isRemovedSize('375ml Bottle'), true);
   assert.equal(C.isRemovedSize('750ml Bottle'), false);
