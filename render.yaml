@@ -21,7 +21,8 @@ services:
     # running. (Replaces `prisma db push --accept-data-loss`.)
     # Then: shrink product photos and link verified local images. Postinstall
     # previews SKU structure by default; approved corrections can be applied
-    # with APPLY_CATALOGUE_STRUCTURE_ON_DEPLOY=true. Retail repricing stays manual.
+    # with APPLY_CATALOGUE_STRUCTURE_ON_DEPLOY=true. Prices are previewed;
+    # APPLY_CATALOGUE_PRICES_ON_DEPLOY=true is required to apply repricing.
     buildCommand: npm install && npx prisma generate && node scripts/migrate.js && node scripts/optimize-images.js && node prisma/sync-images.js
     startCommand: node server.js
     healthCheckPath: /api/health
