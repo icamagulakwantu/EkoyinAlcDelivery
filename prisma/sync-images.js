@@ -43,25 +43,31 @@ function photoExists(urlPath) {
 }
 
 async function syncPhotos({ dryRun = false } = {}) {
-  const rows = await prisma.skuItem.findMany({ select: { id: true, name: true, bottleFormat: true } });
+  const rows = await prisma.skuItem.findMany({ select: { id: true, name: true, bottleFormat: true, imageUrl: true } });
   const plan = buildPhotoPlan(rows, loadBrandPhotoMap(), FORMAT_PHOTO_MAP, photoExists);
-  let linked = 0;
+  let updated = 0;
+  let unchanged = 0;
+  const currentImages = new Map(rows.map(row => [row.id, row.imageUrl]));
   for (const assignment of plan.assignments) {
+    if (currentImages.get(assignment.id) === assignment.imageUrl) {
+      unchanged++;
+      continue;
+    }
     if (!dryRun) {
       await prisma.skuItem.update({
         where: { id: assignment.id },
         data: { imageUrl: assignment.imageUrl },
       });
     }
-    linked++;
+    updated++;
   }
 
   for (const missing of plan.missingAssets) {
     console.error(`[sync-images] Missing local asset: ${missing.imageUrl} (${missing.name}, ${missing.bottleFormat})`);
   }
-  console.log(`[sync-images] ${dryRun ? 'Would link' : 'Linked'} ${linked} photo(s): ${plan.assignments.filter(x => x.matchType === 'format').length} exact-format, ${plan.assignments.filter(x => x.matchType === 'brand').length} brand fallback.`);
+  console.log(`[sync-images] ${dryRun ? 'Would update' : 'Updated'} ${updated} photo(s); ${unchanged} already current. Plan: ${plan.assignments.filter(x => x.matchType === 'format').length} exact-format, ${plan.assignments.filter(x => x.matchType === 'brand').length} brand fallback.`);
   console.log(`[sync-images] ${plan.unmatched.length} SKU row(s) have no local mapped photo.`);
-  return { ...plan, linked, dryRun };
+  return { ...plan, updated, unchanged, dryRun };
 }
 
 async function addUnpricedProducts({ dryRun = false } = {}) {
