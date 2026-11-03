@@ -84,7 +84,8 @@ test('runner: fixes labels, removes 375ml, prices everything, and is repeatable'
 
   assert.equal(find('Hennessy VS', '375ml Bottle'), undefined);
   assert.equal(find('Hennessy VS', '750ml Bottle').retailSingleZAR, 620);
-  assert.match(find('Hennessy VS', '750ml Bottle').imageUrl, /hercules-cdn\.com/);
+  // Product photos are assigned separately by prisma/sync-images.js from local assets.
+  assert.equal(find('Hennessy VS', '750ml Bottle').imageUrl, null);
   const heineken = find('Heineken', 'Dumpy (330ml)');
   assert.equal(heineken.retailSingleZAR, 105);
   assert.equal(heineken.retailCaseZAR, 386.4); // 105 x 4 six-packs - 8%
