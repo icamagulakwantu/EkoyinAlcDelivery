@@ -1,21 +1,22 @@
-// Local catalogue photo sync. Pack-specific mappings always win. A general
-// brand photo is only assigned when that brand has one SKU format; multi-format
-// brands need an exact (name, bottleFormat) photo. This follows iCamagu's
-// format-specific matching and prevents bottle photos being reused on cans,
-// quarts and dumpies.
+// Local catalogue photo sync, following iCamagu's exact pattern:
+//   1. A brand photo is the default for all pack sizes of that product.
+//   2. A verified (name, bottleFormat) photo overrides the brand default.
+//   3. Every assigned path is checked on disk; if an exact file is missing,
+//      the valid brand default is used instead.
 //
-// Only imageUrl is changed. Prices, stock, IDs and order relationships remain
-// untouched. Errors fail visibly so a broken catalogue sync cannot silently pass.
+// Only imageUrl is changed. Prices, stock, SKU IDs and order relationships
+// are never touched. Use --dry-run to inspect the plan without writing.
 
 const fs = require('fs');
 const path = require('path');
 const { PrismaClient } = require('@prisma/client');
-const { resolvePhotoAssignments } = require('./catalogue-photo-matching');
+const { buildPhotoPlan } = require('./catalogue-photo-matching');
 
 const prisma = new PrismaClient();
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
 
-// Add only after confirming the local asset depicts this exact pack format.
+// Exact-format overrides are added only when the image is confirmed to show
+// the same product and the same pack format as the SKU.
 const FORMAT_PHOTO_MAP = {
   '["Budweiser","Can (500ml)"]': '/images/brands/Budweiser-Beer-Can-500ml.webp',
   '["Castle Lite","Dumpy (340ml)"]': '/images/brands/Castlelite340Mldumpies1.png',
@@ -36,12 +37,14 @@ const UNPRICED_PRODUCTS = [
   },
 ];
 
-// Read BRAND_PHOTO_MAP from seed.js; it is a fallback for single-format SKUs.
+// Read BRAND_PHOTO_MAP from seed.js so the existing catalogue remains the
+// single source of truth for normal brand-level photos.
 function loadBrandPhotoMap() {
   const source = fs.readFileSync(path.join(__dirname, 'seed.js'), 'utf-8');
   const start = source.indexOf('const BRAND_PHOTO_MAP = {');
   if (start === -1) return {};
   const end = source.indexOf('\n};', start);
+  if (end === -1) throw new Error('Could not find the end of BRAND_PHOTO_MAP in prisma/seed.js');
   const block = source.slice(start, end);
   const map = {};
   const entry = /^\s*'((?:[^'\\]|\\.)*)':\s*'([^']*)',?\s*$/gm;
@@ -54,58 +57,72 @@ function photoExists(urlPath) {
   return fs.existsSync(path.join(PUBLIC_DIR, decodeURIComponent(urlPath)));
 }
 
-async function syncPhotos() {
+async function syncPhotos({ dryRun = false } = {}) {
   const rows = await prisma.skuItem.findMany({ select: { id: true, name: true, bottleFormat: true } });
-  const assignments = resolvePhotoAssignments(rows, loadBrandPhotoMap(), FORMAT_PHOTO_MAP);
-  const counts = new Map();
-  for (const row of rows) counts.set(row.name, (counts.get(row.name) || 0) + 1);
-  const multiFormatCount = [...counts.values()].filter((count) => count > 1).length;
+  const plan = buildPhotoPlan(rows, loadBrandPhotoMap(), FORMAT_PHOTO_MAP, photoExists);
   let linked = 0;
-  let missing = 0;
-  for (const assignment of assignments) {
-    if (!photoExists(assignment.imageUrl)) {
-      missing++;
-      console.error(`[sync-images] Missing local asset: ${assignment.imageUrl} (${assignment.name}, ${assignment.bottleFormat})`);
-      continue;
+  for (const assignment of plan.assignments) {
+    if (!dryRun) {
+      await prisma.skuItem.update({
+        where: { id: assignment.id },
+        data: { imageUrl: assignment.imageUrl },
+      });
     }
-    await prisma.skuItem.update({ where: { id: assignment.id }, data: { imageUrl: assignment.imageUrl } });
     linked++;
   }
-  console.log(`[sync-images] Linked ${linked} local photo(s); ${missing} missing asset(s); ${multiFormatCount} multi-format brand(s) need exact pack photos.`);
+
+  for (const missing of plan.missingAssets) {
+    console.error(`[sync-images] Missing local asset: ${missing.imageUrl} (${missing.name}, ${missing.bottleFormat})`);
+  }
+  console.log(`[sync-images] ${dryRun ? 'Would link' : 'Linked'} ${linked} photo(s): ${plan.assignments.filter(x => x.matchType === 'format').length} exact-format, ${plan.assignments.filter(x => x.matchType === 'brand').length} brand fallback.`);
+  console.log(`[sync-images] ${plan.unmatched.length} SKU row(s) have no local mapped photo.`);
+  return { ...plan, linked, dryRun };
 }
 
-async function addUnpricedProducts() {
+async function addUnpricedProducts({ dryRun = false } = {}) {
   let added = 0;
+  let relinked = 0;
   for (const p of UNPRICED_PRODUCTS) {
-    if (!photoExists(p.imageUrl)) continue;
+    if (!photoExists(p.imageUrl)) {
+      console.error(`[sync-images] Cannot add ${p.name} ${p.bottleFormat}: local image is missing.`);
+      continue;
+    }
     const existing = await prisma.skuItem.findUnique({
       where: { name_bottleFormat: { name: p.name, bottleFormat: p.bottleFormat } },
     });
     if (existing) {
       if (existing.imageUrl !== p.imageUrl) {
-        await prisma.skuItem.update({ where: { id: existing.id }, data: { imageUrl: p.imageUrl } });
+        if (!dryRun) {
+          await prisma.skuItem.update({ where: { id: existing.id }, data: { imageUrl: p.imageUrl } });
+        }
+        relinked++;
       }
       continue;
     }
-    await prisma.skuItem.create({
-      data: {
-        name: p.name, bottleFormat: p.bottleFormat, category: p.category,
-        productType: p.productType, supplierPortfolio: p.supplierPortfolio,
-        unitsPerCase: p.unitsPerCase, listPriceZAR: 0,
-        supplierCaseDiscountPct: 0, supplierCasePriceZAR: 0,
-        palletPackQty: 0, supplierPalletDiscountPct: 0, supplierPalletPriceZAR: 0,
-        retailSingleZAR: 0, retailCaseDiscountPct: p.retailCaseDiscountPct,
-        retailCaseZAR: 0, imageUrl: p.imageUrl,
-      },
-    });
+    if (!dryRun) {
+      await prisma.skuItem.create({
+        data: {
+          name: p.name, bottleFormat: p.bottleFormat, category: p.category,
+          productType: p.productType, supplierPortfolio: p.supplierPortfolio,
+          unitsPerCase: p.unitsPerCase, listPriceZAR: 0,
+          supplierCaseDiscountPct: 0, supplierCasePriceZAR: 0,
+          palletPackQty: 0, supplierPalletDiscountPct: 0, supplierPalletPriceZAR: 0,
+          retailSingleZAR: 0, retailCaseDiscountPct: p.retailCaseDiscountPct,
+          retailCaseZAR: 0, imageUrl: p.imageUrl,
+        },
+      });
+    }
     added++;
   }
-  console.log(`[sync-images] Added ${added} "price coming soon" products.`);
+  console.log(`[sync-images] ${dryRun ? 'Would add' : 'Added'} ${added} unpriced product(s); ${dryRun ? 'would relink' : 'relinked'} ${relinked} existing product(s).`);
+  return { added, relinked, dryRun };
 }
 
 async function main() {
-  await syncPhotos();
-  await addUnpricedProducts();
+  const dryRun = process.argv.includes('--dry-run');
+  await syncPhotos({ dryRun });
+  await addUnpricedProducts({ dryRun });
+  console.log(`[sync-images] ${dryRun ? 'Dry run complete; no database rows were changed.' : 'Photo sync complete.'}`);
 }
 
 if (require.main === module) {
@@ -117,4 +134,11 @@ if (require.main === module) {
     .finally(() => prisma.$disconnect());
 }
 
-module.exports = { loadBrandPhotoMap, photoExists, syncPhotos, addUnpricedProducts };
+module.exports = {
+  FORMAT_PHOTO_MAP,
+  UNPRICED_PRODUCTS,
+  loadBrandPhotoMap,
+  photoExists,
+  syncPhotos,
+  addUnpricedProducts,
+};
