@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { buildPhotoPlan } = require('../prisma/catalogue-photo-matching');
+const { buildPhotoPlan, parseBrandPhotoMap } = require('../prisma/catalogue-photo-matching');
 
 test('uses exact product and pack mapping when supplied', () => {
   const rows = [{id:'1',name:'Example',bottleFormat:'750ml Bottle'},{id:'2',name:'Example',bottleFormat:'Can (500ml)'}];
@@ -52,4 +52,12 @@ test('reports a missing local brand asset instead of assigning a broken path', (
   assert.equal(plan.assignments.length,0);
   assert.equal(plan.missingAssets.length,1);
   assert.equal(plan.unmatched.length,1);
+});
+
+test('parses escaped apostrophes in the existing brand photo map', () => {
+  const source = "const BRAND_PHOTO_MAP = {\n  'Hunter\\'s Dry': '/images/brands/hunters-dry.png',\n  'Hennessy VS': '/images/brands/hennessy-vs.png',\n};";
+  assert.deepEqual(parseBrandPhotoMap(source), {
+    "Hunter's Dry": '/images/brands/hunters-dry.png',
+    'Hennessy VS': '/images/brands/hennessy-vs.png',
+  });
 });
