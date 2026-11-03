@@ -14,7 +14,9 @@
     "enrich-images": "node scripts/enrich-images.js",
     "optimize-images": "node scripts/optimize-images.js",
     "sync-images": "node prisma/sync-images.js",
-    "ensure-schema": "node scripts/ensure-schema.js"
+    "ensure-schema": "node scripts/ensure-schema.js",
+    "catalogue:photos:dry-run": "node prisma/sync-images.js --dry-run",
+    "catalogue:photos:sync": "node prisma/sync-images.js"
   },
   "prisma": {
     "seed": "node prisma/seed.js"
