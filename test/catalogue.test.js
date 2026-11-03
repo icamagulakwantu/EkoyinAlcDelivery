@@ -110,3 +110,23 @@ test('runner: an old-label duplicate is removed, not kept twice', async () => {
   assert.equal(prisma.db[0].retailSingleZAR, 105);
   assert.ok(log.some((l) => l.startsWith('removed duplicate:')));
 });
+
+
+test('dry-run previews catalogue changes without calling database write methods', async () => {
+  const prisma = fakePrisma([
+    { name: 'Hennessy VS', bottleFormat: '375ml Bottle', listPriceZAR: 340, retailSingleZAR: 340 },
+    { name: 'Heineken', bottleFormat: 'Dumpy (340ml)', listPriceZAR: 16, retailSingleZAR: 96, packSize: 6 },
+    { name: 'Strettons London Dry', bottleFormat: '750ml Bottle', listPriceZAR: 170, retailSingleZAR: 170 },
+  ]);
+  const before = JSON.stringify(prisma.db);
+  prisma.skuItem.update = async () => { throw new Error('dry-run called update'); };
+  prisma.skuItem.delete = async () => { throw new Error('dry-run called delete'); };
+  prisma.skuItem.create = async () => { throw new Error('dry-run called create'); };
+
+  const result = await run(prisma, { dryRun: true });
+  assert.equal(result.dryRun, true);
+  assert.ok(result.log.some(line => line.startsWith('would remove: Hennessy VS 375ml Bottle')));
+  assert.ok(result.log.some(line => line.startsWith('would rename: Heineken Dumpy (330ml)')));
+  assert.ok(result.log.some(line => line.startsWith('would add: Strettons Triple Berry')));
+  assert.equal(JSON.stringify(prisma.db), before, 'the original fake database remains unchanged');
+});
