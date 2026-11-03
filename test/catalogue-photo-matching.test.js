@@ -1,6 +1,9 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 const { buildPhotoPlan, parseBrandPhotoMap } = require('../prisma/catalogue-photo-matching');
+const { FORMAT_PHOTO_MAP } = require('../prisma/catalogue-photo-config');
 
 test('uses exact product and pack mapping when supplied', () => {
   const rows = [{id:'1',name:'Example',bottleFormat:'750ml Bottle'},{id:'2',name:'Example',bottleFormat:'Can (500ml)'}];
@@ -60,4 +63,20 @@ test('parses escaped apostrophes in the existing brand photo map', () => {
     "Hunter's Dry": '/images/brands/hunters-dry.png',
     'Hennessy VS': '/images/brands/hennessy-vs.png',
   });
+});
+
+
+test('every brand-level photo mapping points to an existing local asset', () => {
+  const seed = fs.readFileSync(path.join(__dirname, '..', 'prisma', 'seed.js'), 'utf8');
+  const map = parseBrandPhotoMap(seed);
+  assert.ok(Object.keys(map).length > 0);
+  for (const [name, imagePath] of Object.entries(map)) {
+    assert.ok(fs.existsSync(path.join(__dirname, '..', 'public', imagePath)), `${name}: missing ${imagePath}`);
+  }
+});
+
+test('every exact pack-format photo mapping points to an existing local asset', () => {
+  for (const [skuKey, imagePath] of Object.entries(FORMAT_PHOTO_MAP)) {
+    assert.ok(fs.existsSync(path.join(__dirname, '..', 'public', imagePath)), `${skuKey}: missing ${imagePath}`);
+  }
 });
