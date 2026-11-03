@@ -5,7 +5,7 @@
   "scripts": {
     "start": "node scripts/ensure-schema.js && node server.js",
     "test": "node --test",
-    "postinstall": "prisma generate && node scripts/ensure-schema.js && node prisma/audit-catalogue.js && node prisma/catalogue-update.js --dry-run --structure-only && node prisma/sync-images.js",
+    "postinstall": "prisma generate && node scripts/ensure-schema.js && node prisma/audit-catalogue.js && node scripts/run-catalogue-structure.js && node prisma/sync-images.js",
     "prisma:generate": "prisma generate",
     "migrate": "node scripts/migrate.js",
     "migrate:new": "prisma migrate dev --create-only",
