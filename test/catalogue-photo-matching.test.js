@@ -5,20 +5,28 @@ const { resolvePhotoAssignments } = require('../prisma/catalogue-photo-matching'
 test('uses exact product and pack mapping when supplied', () => {
   const rows = [{id:'1',name:'Example',bottleFormat:'750ml Bottle'},{id:'2',name:'Example',bottleFormat:'Can (500ml)'}];
   const exact = { [JSON.stringify(['Example','Can (500ml)'])]: '/images/example-can.png' };
-  assert.deepEqual(resolvePhotoAssignments(rows,{Example:'/images/example-bottle.png'},exact),[
-    {id:'2',name:'Example',bottleFormat:'Can (500ml)',imageUrl:'/images/example-can.png'}
-  ]);
+  const assigned = resolvePhotoAssignments(rows,{Example:'/images/example-bottle.png'},exact);
+  assert.equal(assigned.find(x=>x.id==='2').imageUrl,'/images/example-can.png');
+  assert.equal(assigned.find(x=>x.id==='2').matchType,'format');
+  assert.equal(assigned.find(x=>x.id==='1').imageUrl,'/images/example-bottle.png');
 });
-test('does not spread a brand photo across multiple pack formats', () => {
-  const rows=[{id:'1',name:'Example',bottleFormat:'750ml Bottle'},{id:'2',name:'Example',bottleFormat:'Can (500ml)'},{id:'3',name:'Example',bottleFormat:'Dumpy (330ml)'}];
-  assert.deepEqual(resolvePhotoAssignments(rows,{Example:'/images/example.png'}),[]);
+
+test('uses the brand photo as fallback for other pack formats, like iCamagu', () => {
+  const rows=[
+    {id:'1',name:'Example',bottleFormat:'750ml Bottle'},
+    {id:'2',name:'Example',bottleFormat:'Can (500ml)'},
+    {id:'3',name:'Example',bottleFormat:'Dumpy (330ml)'}
+  ];
+  const assigned=resolvePhotoAssignments(rows,{Example:'/images/example.png'});
+  assert.equal(assigned.length,3);
+  assert.ok(assigned.every(x=>x.imageUrl==='/images/example.png' && x.matchType==='brand'));
 });
-test('allows brand fallback for a single-format SKU', () => {
-  const rows=[{id:'1',name:'Example',bottleFormat:'750ml Bottle'}];
-  assert.deepEqual(resolvePhotoAssignments(rows,{Example:'/images/example.png'}),[
-    {id:'1',name:'Example',bottleFormat:'750ml Bottle',imageUrl:'/images/example.png'}
-  ]);
+
+test('does not assign an image when neither exact nor brand photo exists', () => {
+  const rows=[{id:'1',name:'Unknown',bottleFormat:'750ml Bottle'}];
+  assert.deepEqual(resolvePhotoAssignments(rows,{}),[]);
 });
+
 test('exact pack mapping takes priority over brand fallback', () => {
   const rows=[{id:'1',name:'Example',bottleFormat:'Can (500ml)'}];
   const exact={ [JSON.stringify(['Example','Can (500ml)'])]:'/images/can.png' };
