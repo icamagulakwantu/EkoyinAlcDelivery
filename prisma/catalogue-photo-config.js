@@ -1,6 +1,19 @@
 // Exact local packshot overrides. Keys are JSON.stringify([name, bottleFormat]).
 // Only add a mapping after confirming the image shows that exact product/format.
 const FORMAT_PHOTO_MAP = {
+  '["Aquelle Sparkling Water","500ml"]': '/images/brands/aquelle sparkling 500ml.jpg',
+  '["Blue Curacao Generic","750ml Bottle"]': '/images/brands/generic Blue Curacao .jpg',
+  '["Drambuie Honey/Scotch","750ml Bottle"]': '/images/brands/Drambuie.jpg',
+  '["Ekoyini Crushed Ice","1kg"]': '/images/brands/crushed ice 1kg.jpg',
+  '["Ekoyini Crushed Ice","2kg"]': '/images/brands/crushed ice 2kg.jpg',
+  '["Ekoyini Ice Bag","1kg"]': '/images/brands/ice 1kg.jpg',
+  '["Ekoyini Ice Bag","2kg"]': '/images/brands/ice 2kg.jpg',
+  '["M\'hudi Chenin Blanc","750ml Bottle"]': '/images/brands/mhudi chenin blanc.jpg',
+  '["M\'hudi Pinotage","750ml Bottle"]': '/images/brands/mhudi_pinotage_750_ml.jpg',
+  '["Maraschino Cherries (Syrup)","350ml Jar"]': '/images/brands/maraschino cherries 350ml.jpg',
+  '["Valpre Natural Spring Water","500ml"]': '/images/brands/valpre 500ml.jpg',
+  '["Strettons Triple Berry","750ml Bottle"]': '/images/brands/Strettons tripleberry.jpg',
+  '["Strettons Ruby Orange","750ml Bottle"]': '/images/brands/strettons ruby orange.jpg',
   '["Budweiser","Can (500ml)"]': '/images/brands/Budweiser-Beer-Can-500ml.webp',
   '["Windhoek Draught","Can (440ml)"]': '/images/brands/windhoek-draught-can.png',
   '["Bonaqua Still Water","500ml"]': '/images/brands/bonaqua-still-water.png',
