@@ -11,18 +11,10 @@ const fs = require('fs');
 const path = require('path');
 const { PrismaClient } = require('@prisma/client');
 const { buildPhotoPlan, parseBrandPhotoMap } = require('./catalogue-photo-matching');
+const { FORMAT_PHOTO_MAP } = require('./catalogue-photo-config');
 
 const prisma = new PrismaClient();
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
-
-// Exact-format overrides are added only when the image is confirmed to show
-// the same product and the same pack format as the SKU.
-const FORMAT_PHOTO_MAP = {
-  '["Budweiser","Can (500ml)"]': '/images/brands/Budweiser-Beer-Can-500ml.webp',
-  '["Castle Lite","Dumpy (340ml)"]': '/images/brands/Castlelite340Mldumpies1.png',
-  '["Windhoek Draught","Can (440ml)"]': '/images/brands/windhoek-draught-can.png',
-  '["Bonaqua Still Water","500ml"]': '/images/brands/bonaqua-still-water.png',
-};
 
 const UNPRICED_PRODUCTS = [
   {
