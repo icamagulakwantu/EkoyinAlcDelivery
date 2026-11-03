@@ -96,7 +96,8 @@ async function addNewProducts(prisma, rows, log) {
         retailSingleZAR: 0,
         retailCaseDiscountPct: like.retailCaseDiscountPct,
         retailCaseZAR: 0,
-        imageUrl: C.photoUrlFor(p.name, p.bottleFormat),
+        // Photos are filled later by the local /images/ synchroniser.
+        imageUrl: null,
       },
       select: SELECT,
     });
