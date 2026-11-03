@@ -1,6 +1,9 @@
 // Exact local packshot overrides. Keys are JSON.stringify([name, bottleFormat]).
 // Only add a mapping after confirming the image shows that exact product/format.
 const FORMAT_PHOTO_MAP = {
+  '["El Jimador Blanco/Reposado","750ml Bottle"]': '/images/brands/el jimador silver.jpg',
+  '["Mofaya Original","Can (500ml)"]': '/images/brands/images (24).jpeg',
+  '["Strawberry Liqueur (Butlers)","750ml Bottle"]': '/images/brands/strawberry Liqueur .jpg',
   '["Aquelle Sparkling Water","500ml"]': '/images/brands/aquelle sparkling 500ml.jpg',
   '["Blue Curacao Generic","750ml Bottle"]': '/images/brands/generic Blue Curacao .jpg',
   '["Drambuie Honey/Scotch","750ml Bottle"]': '/images/brands/Drambuie.jpg',
