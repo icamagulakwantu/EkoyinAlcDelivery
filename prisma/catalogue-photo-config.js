@@ -1,6 +1,13 @@
 // Exact local packshot overrides. Keys are JSON.stringify([name, bottleFormat]).
 // Only add a mapping after confirming the image shows that exact product/format.
 const FORMAT_PHOTO_MAP = {
+  '["Seven Sisters Pinotage/Cabernet","750ml Bottle"]': '/images/brands/seven sisters Pinotage .jpg',
+  '["Sambuca Apparently Blue/White","750ml Bottle"]': '/images/brands/blue sambuca.jpg',
+  '["Peach Schnapps Apparently","750ml Bottle"]': '/images/brands/peach Schnapps relic.jpg',
+  '["Peach Schnapps (Butlers)","750ml Bottle"]': '/images/brands/peach Schnapps relic.jpg',
+  '["Peach Schnapps (Relic)","750ml Bottle"]': '/images/brands/peach Schnapps relic.jpg',
+  '["Mofaya Orange Ting","Can (500ml)"]': '/images/brands/mofaya ting.jpg',
+  '["Aljimardo Silver","750ml Bottle"]': '/images/brands/el jimador silver.jpg',
   '["El Jimador Blanco/Reposado","750ml Bottle"]': '/images/brands/el jimador silver.jpg',
   '["Mofaya Original","Can (500ml)"]': '/images/brands/images (24).jpeg',
   '["Strawberry Liqueur (Butlers)","750ml Bottle"]': '/images/brands/strawberry Liqueur .jpg',
