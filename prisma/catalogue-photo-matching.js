@@ -32,7 +32,7 @@ function buildPhotoPlan(rows, brandPhotoMap = {}, formatPhotoMap = {}, assetExis
         continue;
       }
       missingAssets.push({ name: row.name, bottleFormat: row.bottleFormat, imageUrl: brand, matchType: 'brand' });
-    } else if (!exact && brand && !allowBrandFallback) {
+    } else if (brand && !allowBrandFallback) {
       missingAssets.push({ name: row.name, bottleFormat: row.bottleFormat, imageUrl: brand, matchType: 'unsafe-brand-fallback' });
     }
 
