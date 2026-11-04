@@ -7,7 +7,8 @@
 // Also runs at the end of `npm run seed`.
 //   1. fixes wrong names and pack labels (rows are moved, never duplicated;
 //      an old-label copy of a row that already exists is removed);
-//   2. removes every 375ml product (past orders keep their item names and
+//   2. removes 375ml spirit products only (beer, cider/RTD and wine packs
+//      remain; past orders keep their item names and
 //      prices: OrderItem.skuId is set to null, nothing else changes);
 //   3. adds the few products the owner sent photos of;
 //   4. prices every product at retail + 25% (checked shop price when we have
@@ -62,7 +63,7 @@ async function fixLabels(prisma, rows, log, dryRun = false) {
 }
 
 async function removeSmallBottles(prisma, rows, log, dryRun = false) {
-  for (const row of [...rows.values()].filter((r) => C.isRemovedSize(r.bottleFormat))) {
+  for (const row of [...rows.values()].filter((r) => C.isRemovedSize(r.bottleFormat, r.category))) {
     if (!dryRun) await prisma.skuItem.delete({ where: { id: row.id } });
     rows.delete(key(row.name, row.bottleFormat));
     log.push(`${dryRun ? 'would remove' : 'removed'}: ${row.name} ${row.bottleFormat}`);
