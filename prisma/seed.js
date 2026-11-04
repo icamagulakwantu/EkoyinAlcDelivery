@@ -303,7 +303,7 @@ async function main() {
     const isAlcohol = row.productType === 'ALCOHOL';
     const listPriceZAR = Number(row.singlePriceZAR) || 0; // source retail price per individual unit
     const sourceUnitsPerCase = parseInt(row.unitsPerCase, 10) || 1;
-    const packSize = isAlcohol && /^(Dumpy|Can)\\b/i.test(row.bottleFormat) ? 6 : 1;
+    const packSize = isAlcohol && (row.bottleFormat.startsWith('Dumpy') || row.bottleFormat.startsWith('Can')) ? 6 : 1;
     if (sourceUnitsPerCase % packSize !== 0) {
       throw new Error('Invalid case quantity for ' + row.name + ' ' + row.bottleFormat + ': ' + sourceUnitsPerCase + ' is not divisible by pack size ' + packSize);
     }
