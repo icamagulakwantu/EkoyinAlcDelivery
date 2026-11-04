@@ -45,13 +45,13 @@ function buildPhotoPlan(rows, brandPhotoMap = {}, formatPhotoMap = {}, assetExis
 function parseBrandPhotoMap(source) {
   const start = source.indexOf('const BRAND_PHOTO_MAP = {');
   if (start === -1) return {};
-  const end = source.indexOf('\\n};', start);
+  const end = source.indexOf('\n};', start);
   if (end === -1) throw new Error('Could not find the end of BRAND_PHOTO_MAP');
   const block = source.slice(start, end);
   const map = {};
-  const entry = /^\\s*'((?:[^'\\\\]|\\\\.)*)':\\s*'([^']*)',?\\s*$/gm;
+  const entry = /^\s*'((?:[^'\\]|\\.)*)':\s*'([^']*)',?\s*$/gm;
   let match;
-  while ((match = entry.exec(block))) map[match[1].replace(/\\\\'/g, "'")] = match[2];
+  while ((match = entry.exec(block))) map[match[1].replace(/\\'/g, "'")] = match[2];
   return map;
 }
 
