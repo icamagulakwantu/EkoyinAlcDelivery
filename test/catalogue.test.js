@@ -43,7 +43,7 @@ test('every new price is at or above the retail price', () => {
 });
 
 test('375ml is removed only for spirits, not beer, cider/RTD or wine', () => {
-  for (const category of ['BRANDY', 'WHISKY', 'COGNAC', 'GIN', 'VODKA', 'VODKA_PREMIUM', 'TEQUILA', 'TEQUILA_PREMIUM', 'LIQUEUR']) {
+  for (const category of ['BRANDY', 'WHISKY', 'COGNAC', 'GIN', 'VODKA', 'VODKA_PREMIUM', 'TEQUILA', 'TEQUILA_PREMIUM', 'LIQUEUR', 'RUM']) {
     assert.equal(C.isRemovedSize('375ml Bottle', category), true, `${category} 375ml`);
   }
   for (const category of ['BEER', 'CIDER_RTD', 'WINE', 'WINE_BOX', 'SPARKLING', 'CHAMPAGNE', 'MIXER', 'WATER']) {
