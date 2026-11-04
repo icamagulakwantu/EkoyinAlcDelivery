@@ -2,16 +2,26 @@
 // Only add a mapping after confirming the image shows that exact product/format.
 const FORMAT_PHOTO_MAP = {
   '["Amstel Lager","Can (330ml)"]': '/images/brands/amstel-lager-can.png',
-  '["Heineken","Can (330ml)"]': '/images/brands/heineken-can.png',
-  '["Heineken","Dumpy (340ml)"]': '/images/brands/heineken-dumpy.png',
+  '["Amstel Lager","Quart (750ml)"]': '/images/brands/amstel-lager.png',
+  '["Heineken","Can (500ml)"]': '/images/brands/heineken-can.png',
+  '["Heineken","Dumpy (330ml)"]': '/images/brands/heineken-dumpy.png',
+  '["Heineken","Quart (650ml)"]': '/images/brands/heineken.png',
   '["Black Label","Can (330ml)"]': '/images/brands/carling-black-label-can.png',
+  '["Black Label","Quart (750ml)"]': '/images/brands/carling-black-label.png',
   '["Castle Lager","Can (330ml)"]': '/images/brands/castle-lager-can.png',
-  '["Castle Lite","Can (330ml)"]': '/images/brands/castle-lite-can.png',
+  '["Castle Lager","Quart (750ml)"]': '/images/brands/castle-lager.png',
+  '["Castle Lite","Can (500ml)"]': '/images/brands/castle-lite-can.png',
+  '["Castle Lite","Quart (750ml)"]': '/images/brands/castle-lite.png',
   '["Castle Milk Stout","Can (330ml)"]': '/images/brands/castle-milk-stout-can.png',
+  '["Castle Milk Stout","Quart (750ml)"]': '/images/brands/castle-milk-stout.png',
   '["Corona","Can (330ml)"]': '/images/brands/corona-can.png',
-  '["Windhoek Lager/Light","Can (330ml)"]': '/images/brands/windhoek-lager-can.png',
-  '["Budweiser","Can (330ml)"]': '/images/brands/budweiser-can.png',
+  '["Corona","Dumpy (355ml)"]': '/images/brands/corona.png',
   '["Sol","Can (330ml)"]': '/images/brands/sol-can.png',
+  '["Sol","Dumpy (330ml)"]': '/images/brands/sol.png',
+  '["Windhoek Lager/Light","Can (330ml)"]': '/images/brands/windhoek-lager-can.png',
+  '["Windhoek Lager/Light","Quart (500ml)"]': '/images/brands/windhoek-lager.png',
+  '["Budweiser","Can (330ml)"]': '/images/brands/budweiser-can.png',
+  '["Budweiser","Dumpy (330ml)"]': '/images/brands/budweiser.png',
   '["Strawberry Liqueur Apparently","750ml Bottle"]': '/images/brands/strawberry Liqueur .jpg',
   '["Seven Sisters Pinotage/Cabernet","750ml Bottle"]': '/images/brands/seven sisters Pinotage .jpg',
   '["Sambuca Apparently Blue/White","750ml Bottle"]': '/images/brands/blue sambuca.jpg',
@@ -30,8 +40,8 @@ const FORMAT_PHOTO_MAP = {
   '["Ekoyini Crushed Ice","2kg"]': '/images/brands/crushed ice 2kg.jpg',
   '["Ekoyini Ice Bag","1kg"]': '/images/brands/ice 1kg.jpg',
   '["Ekoyini Ice Bag","2kg"]': '/images/brands/ice 2kg.jpg',
-  '["M\'hudi Chenin Blanc","750ml Bottle"]': '/images/brands/mhudi chenin blanc.jpg',
-  '["M\'hudi Pinotage","750ml Bottle"]': '/images/brands/mhudi_pinotage_750_ml.jpg',
+  '["M'hudi Chenin Blanc","750ml Bottle"]': '/images/brands/mhudi chenin blanc.jpg',
+  '["M'hudi Pinotage","750ml Bottle"]': '/images/brands/mhudi_pinotage_750_ml.jpg',
   '["Maraschino Cherries (Syrup)","350ml Jar"]': '/images/brands/maraschino cherries 350ml.jpg',
   '["Valpre Natural Spring Water","500ml"]': '/images/brands/valpre 500ml.jpg',
   '["Strettons Triple Berry","750ml Bottle"]': '/images/brands/Strettons tripleberry.jpg',
@@ -39,7 +49,7 @@ const FORMAT_PHOTO_MAP = {
   '["Budweiser","Can (500ml)"]': '/images/brands/Budweiser-Beer-Can-500ml.webp',
   '["Windhoek Draught","Can (440ml)"]': '/images/brands/windhoek-draught-can.png',
   '["Bonaqua Still Water","500ml"]': '/images/brands/bonaqua-still-water.png',
-};
+};;
 
 const UNPRICED_PRODUCTS = [
   {
