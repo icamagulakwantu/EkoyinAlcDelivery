@@ -42,10 +42,15 @@ test('every new price is at or above the retail price', () => {
   }
 });
 
-test('only 375ml sizes are removed', () => {
-  assert.equal(C.isRemovedSize('375ml Bottle'), true);
-  assert.equal(C.isRemovedSize('750ml Bottle'), false);
-  assert.equal(C.isRemovedSize('Can (500ml)'), false);
+test('375ml is removed only for spirits, not beer, cider/RTD or wine', () => {
+  for (const category of ['BRANDY', 'WHISKY', 'COGNAC', 'GIN', 'VODKA', 'VODKA_PREMIUM', 'TEQUILA', 'TEQUILA_PREMIUM', 'LIQUEUR']) {
+    assert.equal(C.isRemovedSize('375ml Bottle', category), true, `${category} 375ml`);
+  }
+  for (const category of ['BEER', 'CIDER_RTD', 'WINE', 'WINE_BOX', 'SPARKLING', 'CHAMPAGNE', 'MIXER', 'WATER']) {
+    assert.equal(C.isRemovedSize('375ml Bottle', category), false, `${category} 375ml must remain`);
+  }
+  assert.equal(C.isRemovedSize('750ml Bottle', 'WHISKY'), false);
+  assert.equal(C.isRemovedSize('Can (500ml)', 'VODKA'), false);
 });
 
 // Minimal stand-in for the Prisma client: just what the runner uses.
@@ -66,7 +71,8 @@ function fakePrisma(rows) {
 test('runner: fixes labels, removes 375ml, prices everything, and is repeatable', async () => {
   const prisma = fakePrisma([
     { name: 'Hennessy VS', bottleFormat: '750ml Bottle', listPriceZAR: 528, retailSingleZAR: 528 },
-    { name: 'Hennessy VS', bottleFormat: '375ml Bottle', listPriceZAR: 340, retailSingleZAR: 340 },
+    { name: 'Hennessy VS', bottleFormat: '375ml Bottle', category: 'COGNAC', listPriceZAR: 340, retailSingleZAR: 340 },
+    { name: 'Cider 375ml', bottleFormat: 'Dumpy (375ml)', category: 'CIDER_RTD', listPriceZAR: 12, retailSingleZAR: 12 },
     { name: 'Heineken', bottleFormat: 'Dumpy (340ml)', listPriceZAR: 16, retailSingleZAR: 96, packSize: 6, unitsPerCase: 4, retailCaseDiscountPct: 8 },
     { name: 'Windhoek Lager/Light', bottleFormat: 'Dumpy (340ml)', listPriceZAR: 16, retailSingleZAR: 96, packSize: 6 },
     { name: 'Stella Artois', bottleFormat: 'Dumpy (340ml)', listPriceZAR: 18, retailSingleZAR: 108, packSize: 6 },
@@ -77,6 +83,7 @@ test('runner: fixes labels, removes 375ml, prices everything, and is repeatable'
   const find = (n, f) => prisma.db.find((r) => r.name === n && r.bottleFormat === f);
 
   assert.equal(find('Hennessy VS', '375ml Bottle'), undefined);
+  assert.ok(find('Cider 375ml', 'Dumpy (375ml)'), '375ml cider must remain in the catalogue');
   assert.equal(find('Hennessy VS', '750ml Bottle').retailSingleZAR, 620);
   // Product photos are assigned separately by prisma/sync-images.js from local assets.
   assert.equal(find('Hennessy VS', '750ml Bottle').imageUrl, null);
