@@ -12,9 +12,10 @@ test('tavern rounding: rand under R50, R5 under R200, R10 above', () => {
   assert.equal(C.roundTavern('abc'), 0);
 });
 
-test('price = checked shop price + 25%, Hennessy VS pinned at R620', () => {
+test('25% uplift uses the higher of checked shop and iCamagu retail prices', () => {
   assert.equal(C.newSinglePrice({ name: 'Hennessy VS', bottleFormat: '750ml Bottle', packSize: 1, listPriceZAR: 400 }), 620);
-  assert.equal(C.newSinglePrice({ name: 'Johnnie Walker Red Label', bottleFormat: '750ml Bottle', packSize: 1, listPriceZAR: 269.73 }), 300);
+  assert.equal(C.newSinglePrice({ name: 'Johnnie Walker Red Label', bottleFormat: '750ml Bottle', packSize: 1, listPriceZAR: 269.73 }), 340);
+  assert.equal(C.newSinglePrice({ name: 'Klipdrift Export', bottleFormat: '750ml Bottle', packSize: 1, listPriceZAR: 189.99 }), 240);
 });
 
 test('no checked shop price: list (retail) price + 25%', () => {
