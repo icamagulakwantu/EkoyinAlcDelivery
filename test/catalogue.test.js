@@ -21,8 +21,8 @@ test('25% uplift uses the higher of checked shop and iCamagu retail prices', () 
 test('no checked shop price: list (retail) price + 25%', () => {
   // Bombay Sapphire R310 -> R387.50 -> R390
   assert.equal(C.newSinglePrice({ name: 'Bombay Sapphire', bottleFormat: '750ml Bottle', packSize: 1, listPriceZAR: 310 }), 390);
-  // Castle Lager dumpy R14 each, sold as a six-pack -> R105
-  assert.equal(C.newSinglePrice({ name: 'Castle Lager', bottleFormat: 'Dumpy (330ml)', packSize: 6, listPriceZAR: 14 }), 105);
+  // Checked shop retail is higher than the source R14 unit base; six-pack +25% -> R120
+  assert.equal(C.newSinglePrice({ name: 'Castle Lager', bottleFormat: 'Dumpy (330ml)', packSize: 6, listPriceZAR: 14 }), 120);
   // No base price at all: stays "Price coming soon"
   assert.equal(C.newSinglePrice({ name: 'Unknown', bottleFormat: '750ml Bottle', packSize: 1, listPriceZAR: 0 }), null);
 });
