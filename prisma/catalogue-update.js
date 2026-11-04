@@ -29,6 +29,13 @@ function key(name, bottleFormat) {
   return `${name}\u0000${bottleFormat}`;
 }
 
+async function deleteSkuPreservingOrderSnapshots(prisma, row) {
+  // The production FK is NO ACTION, not ON DELETE SET NULL. Preserve each
+  // order line's name, price and quantity snapshot before detaching the SKU.
+  await prisma.orderItem.updateMany({ where: { skuId: row.id }, data: { skuId: null } });
+  await prisma.skuItem.delete({ where: { id: row.id } });
+}
+
 async function moveRow(prisma, rows, row, data, log, dryRun = false) {
   const name = data.name ?? row.name;
   const bottleFormat = data.bottleFormat ?? row.bottleFormat;
@@ -36,7 +43,7 @@ async function moveRow(prisma, rows, row, data, log, dryRun = false) {
     // The corrected row already exists (e.g. `npm run seed` re-created the
     // old label from skus.csv). Drop the old-label duplicate; past orders
     // keep their item names and prices (OrderItem.skuId becomes null).
-    if (!dryRun) await prisma.skuItem.delete({ where: { id: row.id } });
+    if (!dryRun) await deleteSkuPreservingOrderSnapshots(prisma, row);
     rows.delete(key(row.name, row.bottleFormat));
     log.push(`${dryRun ? 'would remove duplicate' : 'removed duplicate'}: ${row.name} ${row.bottleFormat} (kept ${name} ${bottleFormat})`);
     return;
@@ -64,7 +71,7 @@ async function fixLabels(prisma, rows, log, dryRun = false) {
 
 async function removeSmallBottles(prisma, rows, log, dryRun = false) {
   for (const row of [...rows.values()].filter((r) => C.isRemovedSize(r.bottleFormat, r.category))) {
-    if (!dryRun) await prisma.skuItem.delete({ where: { id: row.id } });
+    if (!dryRun) await deleteSkuPreservingOrderSnapshots(prisma, row);
     rows.delete(key(row.name, row.bottleFormat));
     log.push(`${dryRun ? 'would remove' : 'removed'}: ${row.name} ${row.bottleFormat}`);
   }
@@ -143,7 +150,7 @@ async function run(prisma, { dryRun = false, structureOnly = false, pricesOnly =
   return { log, unpriced, dryRun, structureOnly, pricesOnly };
 }
 
-module.exports = { run };
+module.exports = { run, deleteSkuPreservingOrderSnapshots };
 
 if (require.main === module) {
   require('dotenv').config();
