@@ -1,6 +1,18 @@
 // Exact local packshot overrides. Keys are JSON.stringify([name, bottleFormat]).
 // Only add a mapping after confirming the image shows that exact product/format.
 const FORMAT_PHOTO_MAP = {
+  '["Amstel Lager","Can (500ml)"]': '/images/brands/amstel-lager-can.png',
+  '["Heineken","Can (500ml)"]': '/images/brands/heineken-can.png',
+  '["Heineken","Dumpy (340ml)"]': '/images/brands/heineken-dumpy.png',
+  '["Carling Black Label","Can (500ml)"]': '/images/brands/carling-black-label-can.png',
+  '["Castle Lager","Can (500ml)"]': '/images/brands/castle-lager-can.png',
+  '["Castle Lite","Can (500ml)"]': '/images/brands/castle-lite-can.png',
+  '["Castle Milk Stout","Can (500ml)"]': '/images/brands/castle-milk-stout-can.png',
+  '["Corona","Can (410ml)"]': '/images/brands/corona-can.png',
+  '["Windhoek Lager","Can (500ml)"]': '/images/brands/windhoek-lager-can.png',
+  '["Budweiser","Can (500ml)"]': '/images/brands/budweiser-can.png',
+  '["Sol","Can (500ml)"]': '/images/brands/sol-can.png',
+  '["Flying Fish Dry Apple","Can (500ml)"]': '/images/brands/flying-fish-dry-apple-can.png',
   '["Strawberry Liqueur Apparently","750ml Bottle"]': '/images/brands/strawberry Liqueur .jpg',
   '["Seven Sisters Pinotage/Cabernet","750ml Bottle"]': '/images/brands/seven sisters Pinotage .jpg',
   '["Sambuca Apparently Blue/White","750ml Bottle"]': '/images/brands/blue sambuca.jpg',
