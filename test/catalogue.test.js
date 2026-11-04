@@ -21,8 +21,8 @@ test('25% uplift uses the higher of checked shop and iCamagu retail prices', () 
 test('no checked shop price: list (retail) price + 25%', () => {
   // Bombay Sapphire R310 -> R387.50 -> R390
   assert.equal(C.newSinglePrice({ name: 'Bombay Sapphire', bottleFormat: '750ml Bottle', packSize: 1, listPriceZAR: 310 }), 390);
-  // Checked shop retail is higher than the source R14 unit base; six-pack +25% -> R120
-  assert.equal(C.newSinglePrice({ name: 'Castle Lager', bottleFormat: 'Dumpy (330ml)', packSize: 6, listPriceZAR: 14 }), 120);
+  // Castle Lager R14 each, sold as a six-pack -> R105
+  assert.equal(C.newSinglePrice({ name: 'Castle Lager', bottleFormat: 'Dumpy (330ml)', packSize: 6, listPriceZAR: 14 }), 105);
   // No base price at all: stays "Price coming soon"
   assert.equal(C.newSinglePrice({ name: 'Unknown', bottleFormat: '750ml Bottle', packSize: 1, listPriceZAR: 0 }), null);
 });
@@ -99,8 +99,8 @@ test('runner: fixes labels, removes 375ml, prices everything, and is repeatable'
   // Product photos are assigned separately by prisma/sync-images.js from local assets.
   assert.equal(find('Hennessy VS', '750ml Bottle').imageUrl, null);
   const heineken = find('Heineken', 'Dumpy (330ml)');
-  assert.equal(heineken.retailSingleZAR, 105);
-  assert.equal(heineken.retailCaseZAR, 386.4); // 105 x 4 six-packs - 8%
+  assert.equal(heineken.retailSingleZAR, 120);
+  assert.equal(heineken.retailCaseZAR, 441.6); // 120 x 4 six-packs - 8%
   // No checked price: list price + 25%
   assert.equal(find('Windhoek Lager', 'Dumpy (330ml)').retailSingleZAR, 120); // 16 x 6 x 1.25
   assert.equal(find('Stella Artois', 'Dumpy (330ml)').retailSingleZAR, 135); // 18 x 6 x 1.25
