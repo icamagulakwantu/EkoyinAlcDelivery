@@ -37,6 +37,8 @@ const CATEGORY_IMAGE_MAP = {
   CHAMPAGNE: 'https://images.unsplash.com/photo-1585553616435-2dc0a54e271d?auto=format&fit=crop&w=600&q=80',
   WATER: 'https://images.unsplash.com/photo-1560023907-5f339617ea30?auto=format&fit=crop&w=600&q=80',
   ICE: 'https://images.unsplash.com/photo-1478719059408-592965723cbc?auto=format&fit=crop&w=600&q=80',
+  RUM: '/images/brands/captain-morgan-spiced-gold.png',
+  ENERGY_DRINK: '/images/brands/extreme-energy-can.png',
 };
 
 // ── Strategy B: real per-product brand photos ─────────────────────────
@@ -244,16 +246,32 @@ const RETAIL_CASE_DISCOUNT_PCT = {
   WINE: 6, WINE_BOX: 6, SPARKLING: 6,
   BRANDY: 5, WHISKY: 5, GIN: 5, VODKA: 5, TEQUILA: 5, LIQUEUR: 5,
   COGNAC: 3, VODKA_PREMIUM: 3, TEQUILA_PREMIUM: 3, CHAMPAGNE: 3,
+  RUM: 5, ENERGY_DRINK: 8,
 };
+
+function parseCsvLine(line) {
+  const cells = [];
+  let value = '';
+  let quoted = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"' && quoted && line[i + 1] === '"') { value += '"'; i++; }
+    else if (ch === '"') quoted = !quoted;
+    else if (ch === ',' && !quoted) { cells.push(value.trim()); value = ''; }
+    else value += ch;
+  }
+  cells.push(value.trim());
+  return cells;
+}
 
 function parseCsv(filePath) {
   const raw = fs.readFileSync(filePath, 'utf-8').trim();
-  const [headerLine, ...lines] = raw.split('\n');
-  const headers = headerLine.split(',').map((h) => h.trim());
-  return lines.map((line) => {
-    const cells = line.split(',').map((c) => c.trim());
+  const [headerLine, ...lines] = raw.split(/\r?\n/);
+  const headers = parseCsvLine(headerLine);
+  return lines.filter(line => line.trim()).map(line => {
+    const cells = parseCsvLine(line);
     const row = {};
-    headers.forEach((h, i) => (row[h] = cells[i]));
+    headers.forEach((h, i) => { row[h] = cells[i] ?? ''; });
     return row;
   });
 }
@@ -277,10 +295,20 @@ async function main() {
       continue;
     }
 
-    const listPriceZAR = parseFloat(row.singlePriceZAR);
-    const unitsPerCase = parseInt(row.unitsPerCase, 10);
+    const listPriceZAR = Number(row.singlePriceZAR) || 0; // source retail price per individual unit
+    const sourceUnitsPerCase = parseInt(row.unitsPerCase, 10) || 1;
+    const packSize = /^(Dumpy|Can)\\b/i.test(row.bottleFormat) ? 6 : 1;
+    if (sourceUnitsPerCase % packSize !== 0) {
+      throw new Error('Invalid case quantity for ' + row.name + ' ' + row.bottleFormat + ': ' + sourceUnitsPerCase + ' is not divisible by pack size ' + packSize);
+    }
+    const unitsPerCase = sourceUnitsPerCase / packSize;
     const retailCaseDiscountPct = RETAIL_CASE_DISCOUNT_PCT[category] ?? 5;
-    const retailCaseZAR = round2(listPriceZAR * unitsPerCase * (1 - retailCaseDiscountPct / 100));
+    const retailSingleZAR = round2(listPriceZAR * packSize);
+    const retailCaseZAR = round2(retailSingleZAR * unitsPerCase * (1 - retailCaseDiscountPct / 100));
+    const photoCandidates = [FORMAT_PHOTO_MAP[JSON.stringify([row.name, row.bottleFormat])], BRAND_PHOTO_MAP[row.name]];
+    const localPhoto = photoCandidates.find(candidate => candidate && candidate.startsWith('/images/') &&
+      fs.existsSync(path.join(__dirname, '..', 'public', 'images', decodeURIComponent(candidate.slice('/images/'.length)))));
+    const imageUrl = localPhoto || (row.productType === 'ALCOHOL' ? null : CATEGORY_IMAGE_MAP[category] || CATEGORY_IMAGE_MAP.BEER);
 
     const data = {
       category,
@@ -295,11 +323,13 @@ async function main() {
       supplierPalletDiscountPct: parseFloat(row.palletDiscountPct),
       supplierPalletPriceZAR: parseFloat(row.palletPriceZAR),
 
-      retailSingleZAR: listPriceZAR,
+      packSize,
+      retailSingleZAR,
       retailCaseDiscountPct,
       retailCaseZAR,
 
-      imageUrl: FORMAT_PHOTO_MAP[JSON.stringify([row.name, row.bottleFormat])] || BRAND_PHOTO_MAP[row.name] || CATEGORY_IMAGE_MAP[category] || CATEGORY_IMAGE_MAP.BEER,
+      // Alcohol uses a verified local product image or no image; never a generic remote category photo.
+      imageUrl,
 
       // Brand story tags — see the comment on SkuItem.brandTags in
       // schema.prisma for what these mean and how strict the bar is.
@@ -318,6 +348,24 @@ async function main() {
   }
 
   console.log(`Catalog seeded: ${created} created, ${updated} updated.`);
+
+  // Optional source-of-truth reconciliation. This is explicitly gated because
+  // obsolete SKUs may still be referenced by historic OrderItem snapshots.
+  // Detach only the SKU FK; name, price and quantity snapshots remain intact.
+  if (process.env.APPLY_ALCOHOL_CATALOGUE_SYNC_ON_DEPLOY === 'true') {
+    const canonicalAlcoholKeys = new Set(rows.filter(row => row.productType === 'ALCOHOL').map(row => JSON.stringify([row.name, row.bottleFormat])));
+    const currentAlcohol = await prisma.skuItem.findMany({ where: { productType: 'ALCOHOL' }, select: { id: true, name: true, bottleFormat: true } });
+    const obsolete = currentAlcohol.filter(row => !canonicalAlcoholKeys.has(JSON.stringify([row.name, row.bottleFormat])));
+    let detachedOrderLines = 0;
+    for (const row of obsolete) {
+      const detached = await prisma.orderItem.updateMany({ where: { skuId: row.id }, data: { skuId: null } });
+      detachedOrderLines += detached.count;
+      await prisma.skuItem.delete({ where: { id: row.id } });
+    }
+    console.log(`Alcohol source sync removed ${obsolete.length} obsolete SKU(s) and detached ${detachedOrderLines} historic order line(s) without changing their snapshots.`);
+  } else {
+    console.log('Alcohol source sync is in preview mode; obsolete SKUs were not deleted.');
+  }
 
   // Seed the taverns admin-api.js's assign-order dropdown expects to find.
   const taverns = [
