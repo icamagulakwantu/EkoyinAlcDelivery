@@ -307,6 +307,13 @@ const FORMAT_PHOTO_MAP = {
   "[\"Windhoek Lager/Light\",\"Quart (500ml)\"]": "/images/brands/windhoek-lager.png",
   "[\"Wixworth Gin\",\"750ml Bottle\"]": "/images/brands/wixworth-gin.png",
   "[\"Wyborowa Vodka\",\"750ml Bottle\"]": "/images/brands/wyborowa-vodka.png",
+  "[\"Black Label\",\"Dumpy (330ml)\"]": "/images/brands/carling-black-label.png",
+  "[\"Castle Lager\",\"Dumpy (330ml)\"]": "/images/brands/castle-lager.png",
+  "[\"Castle Lite\",\"Dumpy (330ml)\"]": "/images/brands/castle-lite.png",
+  "[\"Flying Fish Chill\",\"Dumpy (330ml)\"]": "/images/brands/flying-fish-chill.png",
+  "[\"Hunter's Gold\",\"Dumpy (330ml)\"]": "/images/brands/hunters-gold.png",
+  "[\"Sol\",\"Dumpy (330ml)\"]": "/images/brands/sol.png",
+  "[\"Windhoek Lager\",\"Dumpy (330ml)\"]": "/images/brands/windhoek-lager.png",
 };
 
 const UNPRICED_PRODUCTS = [];
