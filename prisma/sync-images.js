@@ -36,6 +36,7 @@ async function syncPhotos({ dryRun = false } = {}) {
   const plan = buildPhotoPlan(rows, loadBrandPhotoMap(), FORMAT_PHOTO_MAP, photoExists);
   let updated = 0;
   let unchanged = 0;
+  let clearedUnsafeFallbacks = 0;
   const currentImages = new Map(rows.map(row => [row.id, row.imageUrl]));
   for (const assignment of plan.assignments) {
     if (currentImages.get(assignment.id) === assignment.imageUrl) {
@@ -51,12 +52,24 @@ async function syncPhotos({ dryRun = false } = {}) {
     updated++;
   }
 
-  for (const missing of plan.missingAssets) {
-    console.error(`[sync-images] Missing local asset: ${missing.imageUrl} (${missing.name}, ${missing.bottleFormat})`);
+  // If an older sync stored a brand photo on a multi-format SKU, clear only
+  // that known unsafe fallback when no exact packshot exists. The storefront
+  // then shows its neutral placeholder instead of a misleading pack format.
+  for (const missing of plan.missingAssets.filter(item => item.matchType === 'unsafe-brand-fallback')) {
+    const row = rows.find(item => item.name === missing.name && item.bottleFormat === missing.bottleFormat);
+    if (!row || currentImages.get(row.id) !== missing.imageUrl) continue;
+    if (!dryRun) {
+      await prisma.skuItem.update({ where: { id: row.id }, data: { imageUrl: null } });
+    }
+    clearedUnsafeFallbacks++;
   }
-  console.log(`[sync-images] ${dryRun ? 'Would update' : 'Updated'} ${updated} photo(s); ${unchanged} already current. Plan: ${plan.assignments.filter(x => x.matchType === 'format').length} exact-format, ${plan.assignments.filter(x => x.matchType === 'brand').length} brand fallback.`);
-  console.log(`[sync-images] ${plan.unmatched.length} SKU row(s) have no local mapped photo.`);
-  return { ...plan, updated, unchanged, dryRun };
+
+  for (const missing of plan.missingAssets) {
+    console.error(`[sync-images] Missing/unsafe local asset: ${missing.imageUrl} (${missing.name}, ${missing.bottleFormat})`);
+  }
+  console.log(`[sync-images] ${dryRun ? 'Would update' : 'Updated'} ${updated} photo(s); ${unchanged} already current; ${dryRun ? 'would clear' : 'cleared'} ${clearedUnsafeFallbacks} unsafe cross-format fallback(s).`);
+  console.log(`[sync-images] ${plan.unmatched.length} SKU row(s) have no verified exact-format photo.`);
+  return { ...plan, updated, unchanged, clearedUnsafeFallbacks, dryRun };
 }
 
 async function addUnpricedProducts({ dryRun = false } = {}) {
