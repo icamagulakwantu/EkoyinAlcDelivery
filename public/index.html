@@ -36,7 +36,7 @@
       <div class="ob-slide" data-slide="1">
         <div class="ob-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h20M12 2v20M20 16l-4-4 4-4M4 8l4 4-4 4M16 4l-4 4-4-4M8 20l4-4 4 4"/></svg></div>
         <h2>Build Your Cooler Box</h2>
-        <p>Beer, spirits, mixers, ice — bundle them up in Shop and get 5% off automatically once your cooler box reaches R750.</p>
+        <p>Beer, spirits, mixers, ice — bundle them up in Shop and get 5% off automatically once your cooler box reaches R1000 (8% over R2000), until 8pm.</p>
       </div>
       <div class="ob-slide" data-slide="2">
         <div class="ob-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></div>
@@ -143,7 +143,7 @@
           </div>
           <div class="mk-chip c1">
             <div class="mk-chip-ic save"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" x2="5" y1="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></div>
-            <div><b>Cooler Box savings</b><span><span class="js-cooler-pct">5%</span> off from R<span class="js-cooler-min">750</span>, automatically</span></div>
+            <div><b>Cooler Box savings</b><span><span class="js-cooler-pct">5%</span> off from R<span class="js-cooler-min">1000</span>, automatically (until 8pm)</span></div>
           </div>
         </div>
       </div>
@@ -201,7 +201,7 @@
         <div class="mk-reveal">
           <div class="mk-eyebrow">The Cooler Box</div>
           <h2 class="mk-h2" id="coolerTitle">Pack it full. <em>Pay less.</em></h2>
-          <p class="mk-lede">A bottle, a couple of carry packs, mixers and ice — that's a proper cooler box. Every drink you add counts, and once you pass R<span class="js-cooler-min">750</span> we take <span class="js-cooler-pct">5%</span> off automatically. No codes, no fine print.</p>
+          <p class="mk-lede">A bottle, a couple of carry packs, mixers and ice — that's a proper cooler box. Every drink you add counts, and once you pass R<span class="js-cooler-min">1000</span> we take <span class="js-cooler-pct">5%</span> off automatically. No codes, no fine print.</p>
           <div class="mk-cats" aria-label="Categories that count">
             <span class="mk-cat">Beer</span><span class="mk-cat">Cider &amp; RTDs</span><span class="mk-cat">Gin</span><span class="mk-cat">Whisky</span><span class="mk-cat">Brandy</span><span class="mk-cat">Cognac</span><span class="mk-cat">Vodka</span><span class="mk-cat">Tequila</span><span class="mk-cat">Wine</span><span class="mk-cat">Bubbly</span><span class="mk-cat">Mixers</span><span class="mk-cat">Ice</span>
           </div>
@@ -223,7 +223,7 @@
             <div class="mk-cooler-status" id="coolerDemoStatus" aria-live="polite">R0 so far</div>
           </div>
           <div class="mk-cooler-track"><div class="mk-cooler-fill" id="coolerDemoFill"></div></div>
-          <div class="mk-cooler-scale"><span>R0</span><span><b>R<span class="js-cooler-min">750</span></b> · <span class="js-cooler-pct">5%</span> off</span></div>
+          <div class="mk-cooler-scale"><span>R0</span><span><b>R<span class="js-cooler-min">1000</span></b> · <span class="js-cooler-pct">5%</span> off</span></div>
           <ul class="mk-cooler-items" id="coolerDemoItems">
             <li data-amount="380"><span class="ci-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 22h8"/><path d="M7 10h10"/><path d="M12 15v7"/><path d="M12 15a5 5 0 0 0 5-5c0-2-.5-4-2-8H9c-1.5 4-2 6-2 8a5 5 0 0 0 5 5Z"/></svg></span>One bottle — gin, whisky or brandy<span class="ci-tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span></li>
             <li data-amount="300"><span class="ci-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 11h1a3 3 0 0 1 0 6h-1"/><path d="M9 12v6"/><path d="M13 12v6"/><path d="M5 8v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8"/><path d="M4 8h14"/></svg></span>Two carry packs of beer or cider<span class="ci-tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span></li>
@@ -433,7 +433,7 @@
 
   // ── COOLER BOX COPY — read from pricing.js so the page can never
   // advertise a threshold the checkout doesn't honour. ──
-  const COOLER_MIN = (window.EkoyiniPricing && EkoyiniPricing.COOLER_MIN_SUBTOTAL) || 750;
+  const COOLER_MIN = (window.EkoyiniPricing && EkoyiniPricing.COOLER_MIN_SUBTOTAL) || 1000;
   const COOLER_PCT = (window.EkoyiniPricing && EkoyiniPricing.COOLER_DISCOUNT_PCT) || 0.05;
   document.querySelectorAll('.js-cooler-min').forEach(el => { el.textContent = COOLER_MIN; });
   document.querySelectorAll('.js-cooler-pct').forEach(el => { el.textContent = Math.round(COOLER_PCT * 100) + '%'; });

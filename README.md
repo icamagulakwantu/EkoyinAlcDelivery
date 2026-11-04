@@ -113,9 +113,20 @@ the full catalog:
 
 | Cooler Box subtotal | Discount |
 |---|---|
-| R600+ | 5% |
-| R1000+ | 10% |
-| R1500+ | 15% |
+| R1000 to R2000 | 5% |
+| Above R2000 | 8% |
+
+The Cooler Box discount is only given until 20:00 South African time (it
+returns at 04:00). There are no other discounts and no case discounts at
+checkout.
+
+### Fees (founder decisions, Nov 2026)
+- **No free delivery.** Every order pays the distance-based delivery fee.
+- **Service fee**, shown as its own line and saved in `Order.serviceFee`:
+  R50 (R300-R499), R65 (R500-R799), R80 (R800-R1200), R95 (R1201-R1599),
+  R110 (R1600+). The bands live in `SERVICE_FEE_BANDS` in `public/pricing.js`.
+- **Minimum order** R300 (before discounts).
+- Drivers receive 100% of the delivery, surge and priority fees.
 
 Shown live in `shop.html` via a shimmer progress bar and an 8-slot grid, and
 **applied server-side** on the eligible-items subtotal when the order is

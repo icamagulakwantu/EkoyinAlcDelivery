@@ -220,10 +220,10 @@ model Order {
   // Delivery fee breakdown saved at order time (older orders have nulls).
   // total already includes all of these.
   distanceKm  Float? // straight-line distance x 1.2 routing buffer
-  deliveryFee Float? // distance-based fee (0 when free delivery applies)
+  deliveryFee Float? // distance-based fee (always charged; no free delivery)
   surgeFee    Float? // peak / late-night surge, 100% to the driver
   priorityFee Float? // optional "Super Priority" the customer added
-  serviceFee  Float? // flat R10-R25 platform fee
+  serviceFee  Float? // platform fee, R50-R110 by order value
 
   total         Float
   items         OrderItem[]

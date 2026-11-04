@@ -179,7 +179,7 @@
     </div>
     <div class="cooler-progress-track"><div class="cooler-progress-fill" id="coolerFill" style="width:0%"></div></div>
     <div class="cooler-tier-labels">
-      <span id="coolerGoal">R750 · 5% off</span>
+      <span id="coolerGoal">R1000 · 5% off · 8% over R2000</span>
     </div>
     <div class="cooler-slots" id="coolerSlots"></div>
   </div>
@@ -237,7 +237,7 @@
 
   // Cooler Box rules — shared with server.js via pricing.js, see
   // that file for why (used to be copy-pasted separately in 3 places).
-  const { COOLER_ELIGIBLE, COOLER_MIN_SUBTOTAL, COOLER_DISCOUNT_PCT } = EkoyiniPricing;
+  const { COOLER_ELIGIBLE, COOLER_MIN_SUBTOTAL, COOLER_DISCOUNT_PCT, COOLER_TOP_SUBTOTAL, COOLER_TOP_DISCOUNT_PCT, coolerDiscountAvailable } = EkoyiniPricing;
 
   let cart = EkoyiniCart.get();
   let products = [];
@@ -614,7 +614,7 @@
   function scrollToCoolerBox() {
     const bar = document.getElementById('coolerBar');
     if (bar.style.display === 'none' || !bar.offsetParent) {
-      showToast(`Add any drink to start filling your Cooler Box — ${COOLER_DISCOUNT_PCT * 100}% off from R${COOLER_MIN_SUBTOTAL}`);
+      showToast(`Add any drink to start filling your Cooler Box — ${COOLER_DISCOUNT_PCT * 100}% off from R${COOLER_MIN_SUBTOTAL}, until 8pm`);
       return;
     }
     bar.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -641,12 +641,19 @@
     const pct = Math.min(100, (subtotal / COOLER_MIN_SUBTOTAL) * 100);
     document.getElementById('coolerFill').style.width = pct + '%';
 
-    const unlocked = subtotal >= COOLER_MIN_SUBTOTAL;
+    const open = coolerDiscountAvailable(new Date());
+    const unlocked = open && subtotal >= COOLER_MIN_SUBTOTAL;
     const goal = document.getElementById('coolerGoal');
     goal.classList.toggle('hit', unlocked);
-    goal.textContent = unlocked
-      ? `${COOLER_DISCOUNT_PCT * 100}% off unlocked`
-      : `R${(COOLER_MIN_SUBTOTAL - subtotal).toFixed(2)} more for ${COOLER_DISCOUNT_PCT * 100}% off (R${COOLER_MIN_SUBTOTAL})`;
+    if (!open) {
+      goal.textContent = 'Cooler Box discount is available until 8pm';
+    } else if (subtotal > COOLER_TOP_SUBTOTAL) {
+      goal.textContent = `${COOLER_TOP_DISCOUNT_PCT * 100}% off unlocked`;
+    } else if (unlocked) {
+      goal.textContent = `${COOLER_DISCOUNT_PCT * 100}% off unlocked · ${COOLER_TOP_DISCOUNT_PCT * 100}% over R${COOLER_TOP_SUBTOTAL}`;
+    } else {
+      goal.textContent = `R${(COOLER_MIN_SUBTOTAL - subtotal).toFixed(2)} more for ${COOLER_DISCOUNT_PCT * 100}% off (R${COOLER_MIN_SUBTOTAL}), until 8pm`;
+    }
 
     const slots = document.getElementById('coolerSlots');
     slots.innerHTML = '';

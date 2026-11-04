@@ -23,12 +23,32 @@
     'WINE', 'WINE_BOX', 'SPARKLING', 'CHAMPAGNE', 'WATER', 'ICE',
   ]);
 
-  // Negotiated with the supplier: a single flat 5% once the eligible
-  // subtotal (the physical cooler box itself is not counted) reaches R750.
-  const COOLER_MIN_SUBTOTAL = 750;
+  // Cooler Box discount (founder decision, Nov 2026): 5% once the eligible
+  // subtotal (the physical cooler box itself is not counted) reaches R1000,
+  // and 8% above R2000. It is only available until 20:00 South African time
+  // and comes back at 04:00, when the late-night window ends.
+  const COOLER_MIN_SUBTOTAL = 1000;
   const COOLER_DISCOUNT_PCT = 0.05;
+  const COOLER_TOP_SUBTOTAL = 2000; // above this amount the top tier applies
+  const COOLER_TOP_DISCOUNT_PCT = 0.08;
+  const COOLER_CUTOFF_HOUR = 20;
+  const COOLER_RESUME_HOUR = 4;
 
-  function coolerDiscountPct(coolerSubtotal) {
+  function saHourOf(now) {
+    return new Date(now.getTime() + SA_UTC_OFFSET_HOURS * 3600 * 1000).getUTCHours();
+  }
+
+  // True while the Cooler Box discount may be given (04:00 to 19:59 SA time).
+  function coolerDiscountAvailable(now) {
+    const hour = saHourOf(now || new Date());
+    return hour >= COOLER_RESUME_HOUR && hour < COOLER_CUTOFF_HOUR;
+  }
+
+  // `now` is the moment the order is priced. The server passes it in so the
+  // quote and the payment check use the same clock.
+  function coolerDiscountPct(coolerSubtotal, now) {
+    if (!coolerDiscountAvailable(now)) return 0;
+    if (coolerSubtotal > COOLER_TOP_SUBTOTAL) return COOLER_TOP_DISCOUNT_PCT;
     return coolerSubtotal >= COOLER_MIN_SUBTOTAL ? COOLER_DISCOUNT_PCT : 0;
   }
 
@@ -41,11 +61,19 @@
   //   1. Distance fee  — by straight-line distance x ROUTING_BUFFER
   //   2. Surge fee     — time of day (South African time), 100% to the driver
   //   3. Priority fee  — optional "Super Priority" the customer adds
-  //   4. Service fee   — flat R10-R25, based on distance and surge window
+  //   4. Service fee   — R50 to R110, rising with the order value
+  //
+  // There is no free delivery: every order pays the distance fee.
 
-  // Delivery is free once the (pre-discount) subtotal is above this. Only the
-  // distance fee is waived; surge, priority and service fees still apply.
-  const FREE_DELIVERY_THRESHOLD = 1000;
+  // Service fee bands, by pre-discount order value. Edit the numbers here;
+  // the server, checkout and cart all read this one table.
+  const SERVICE_FEE_BANDS = [
+    { upTo: 500, fee: 50 }, // R300 - R499
+    { upTo: 800, fee: 65 }, // R500 - R799
+    { upTo: 1201, fee: 80 }, // R800 - R1200
+    { upTo: 1600, fee: 95 }, // R1201 - R1599
+    { upTo: Infinity, fee: 110 }, // R1600 and above
+  ];
 
   // Straight-line distance is multiplied by this to account for real roads.
   const ROUTING_BUFFER = 1.2;
@@ -114,20 +142,19 @@
     return { key: null, fee: 0 };
   }
 
-  // R10 / R15 / R20 by distance band, +R5 inside a surge window (max R25).
-  function serviceFeeFor(distanceKm, surgeKey) {
-    let fee = 10;
-    if (distanceKm != null && distanceKm > 10) fee = 20;
-    else if (distanceKm != null && distanceKm > 5) fee = 15;
-    return fee + (surgeKey ? 5 : 0);
+  // Platform service fee for an order, by its pre-discount subtotal.
+  function serviceFeeFor(subtotal) {
+    const value = Number(subtotal);
+    const amount = Number.isFinite(value) ? value : 0;
+    return SERVICE_FEE_BANDS.find((band) => amount < band.upTo).fee;
   }
 
   function buildDeliveryQuote({ subtotal, distanceKm, priorityFee, now, surgesEnabled }) {
     const km = Number.isFinite(distanceKm) ? distanceKm : null;
     const surge = surgesEnabled === false ? { key: null, fee: 0 } : surgeWindow(now || new Date());
     const priority = PRIORITY_OPTIONS.includes(priorityFee) ? priorityFee : 0;
-    const deliveryFee = subtotal > FREE_DELIVERY_THRESHOLD ? 0 : distanceDeliveryFee(km);
-    const serviceFee = serviceFeeFor(km, surge.key);
+    const deliveryFee = distanceDeliveryFee(km);
+    const serviceFee = serviceFeeFor(subtotal);
     return {
       distanceKm: km,
       deliveryFee,
@@ -139,10 +166,10 @@
     };
   }
 
-  // Base delivery fee for a subtotal, ignoring distance. Used by the cart
-  // for a rough estimate only; checkout shows the real quote.
-  function deliveryFee(subtotal) {
-    return subtotal > FREE_DELIVERY_THRESHOLD ? 0 : BASE_DELIVERY_FEE;
+  // Base delivery fee, ignoring distance. Used by the cart for a rough
+  // estimate only (delivery is never free); checkout shows the real quote.
+  function deliveryFee() {
+    return BASE_DELIVERY_FEE;
   }
 
   return {
@@ -150,8 +177,12 @@
     COOLER_ELIGIBLE,
     COOLER_MIN_SUBTOTAL,
     COOLER_DISCOUNT_PCT,
+    COOLER_TOP_SUBTOTAL,
+    COOLER_TOP_DISCOUNT_PCT,
+    COOLER_CUTOFF_HOUR,
     coolerDiscountPct,
-    FREE_DELIVERY_THRESHOLD,
+    coolerDiscountAvailable,
+    SERVICE_FEE_BANDS,
     DELIVERY_FEE,
     deliveryFee,
     roundCurrency,

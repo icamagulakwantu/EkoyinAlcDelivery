@@ -479,7 +479,7 @@
     const distanceNote = q.distanceKm != null ? `<span class="sub-note">About ${q.distanceKm.toFixed(1)} km away</span>` : (quoteNeedsPin ? '<span class="sub-note">Pin your location for the exact fee</span>' : '');
     const surgeLabel = q.surgeKey === 'LATE_NIGHT' ? 'Late-night surge' : 'Peak-hours surge';
     return `
-      <div class="order-review-item"><span>Delivery${distanceNote}</span><span>${q.deliveryFee === 0 ? 'Free' : 'R' + q.deliveryFee.toFixed(2)}</span></div>
+      <div class="order-review-item"><span>Delivery${distanceNote}</span><span>R${q.deliveryFee.toFixed(2)}</span></div>
       ${q.surgeFee > 0 ? `<div class="order-review-item"><span>${surgeLabel}<span class="sub-note">Goes 100% to your driver</span></span><span>R${q.surgeFee.toFixed(2)}</span></div>` : ''}
       ${q.priorityFee > 0 ? `<div class="order-review-item"><span>Super Priority</span><span>R${q.priorityFee.toFixed(2)}</span></div>` : ''}
       <div class="order-review-item"><span>Service fee</span><span>R${q.serviceFee.toFixed(2)}</span></div>`;

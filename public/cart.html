@@ -118,7 +118,7 @@
   // Delivery fee and the minimum order come from pricing.js — the same file
   // the server uses to charge, so the cart can't promise a different number
   // than checkout.
-  const { deliveryFee, FREE_DELIVERY_THRESHOLD, MIN_ORDER_SUBTOTAL, roundCurrency } = EkoyiniPricing;
+  const { deliveryFee, serviceFeeFor, MIN_ORDER_SUBTOTAL, roundCurrency } = EkoyiniPricing;
 
   let cart = EkoyiniCart.get();
   let products = [];
@@ -266,9 +266,10 @@
     const summary = document.getElementById('summary');
     const subtotal = computeSubtotal();
     const promoDiscount = appliedPromo ? roundCurrency(subtotal * (appliedPromo.discountPct / 100)) : 0;
-    const delivery = deliveryFee(subtotal);
-    const total = roundCurrency(subtotal - promoDiscount + delivery);
     const hasItems = Object.keys(cart).length > 0;
+    const delivery = deliveryFee(subtotal);
+    const serviceFee = hasItems ? serviceFeeFor(subtotal) : 0;
+    const total = roundCurrency(subtotal - promoDiscount + delivery + serviceFee);
     const belowMin = hasItems && subtotal < MIN_ORDER_SUBTOTAL;
 
     summary.innerHTML = `
@@ -279,8 +280,12 @@
       </div>
       ${appliedPromo ? `<div class="summary-row"><span>Promo (${escapeHtml(appliedPromo.code)})</span><span>-R${promoDiscount.toFixed(2)}</span></div>` : ''}
       <div class="summary-row">
-        <span>Delivery <span style="font-size: 10px; color: var(--muted);">(free over R${FREE_DELIVERY_THRESHOLD})</span></span>
+        <span>Delivery <span style="font-size: 10px; color: var(--muted);">(from R${delivery.toFixed(0)}, by distance)</span></span>
         <span>R${delivery.toFixed(2)}</span>
+      </div>
+      <div class="summary-row">
+        <span>Service fee</span>
+        <span>R${serviceFee.toFixed(2)}</span>
       </div>
       <div class="summary-row total">
         <span>Total</span>

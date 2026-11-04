@@ -506,7 +506,8 @@ async function estimateOrderTotal({ subtotal, coolerDiscount, quote }, promoCode
 // Pure computation only; no DB writes.
 // `location` and `priorityFee` feed the delivery quote (distance, surge,
 // priority, service fee), which is always calculated here on the server.
-async function validateAndPriceOrder({ address, items, customerName, customerPhone, paymentMethod, allowedPaymentMethods, location, priorityFee }) {
+async function validateAndPriceOrder({ address, items, customerName, customerPhone, paymentMethod, allowedPaymentMethods, location, priorityFee, now }) {
+  const pricedAt = now instanceof Date && !Number.isNaN(now.getTime()) ? now : new Date();
   if (!address || typeof address !== "string" || address.trim().length < 5) {
     return { error: "Please enter a valid delivery address" };
   }
@@ -576,13 +577,14 @@ async function validateAndPriceOrder({ address, items, customerName, customerPho
     deliveryLat: pin.deliveryLat,
     deliveryLng: pin.deliveryLng,
     priorityFee,
+    now: pricedAt,
   });
   if (delivery.error) return { error: delivery.error };
   if (delivery.needsPin) {
     return { error: "Please pin your delivery location so we can work out your delivery fee" };
   }
 
-  const coolerDiscount = coolerSubtotal * coolerDiscountPct(coolerSubtotal);
+  const coolerDiscount = coolerSubtotal * coolerDiscountPct(coolerSubtotal, pricedAt);
   return { orderItems, stockNeeded, subtotal, coolerDiscount, quote: delivery.quote };
 }
 
@@ -926,6 +928,9 @@ app.post("/webhooks/yoco", async (req, res) => {
       allowedPaymentMethods: new Set(["card"]),
       location: { landmark: payload.landmark, deliveryLat: payload.deliveryLat, deliveryLng: payload.deliveryLng },
       priorityFee: payload.priorityFee,
+      // Price at the moment the customer was quoted, so the 20:00 Cooler Box
+      // cut-off and the surge window match the amount they paid.
+      now: pending.createdAt,
     });
     if (priced.error) throw new Error(priced.error);
 
