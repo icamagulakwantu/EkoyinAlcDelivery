@@ -1,6 +1,23 @@
 // Exact local packshot overrides. Keys are JSON.stringify([name, bottleFormat]).
 // Only add a mapping after confirming the image shows that exact product/format.
 const FORMAT_PHOTO_MAP = {
+  '["Breezer (Red/Watermelon)","Dumpy (275ml)"]': '/images/brands/breezer-watermelon.png',
+  '["Extreme Energy","Can (500ml)"]': '/images/brands/extreme-energy-can.png',
+  '["Flying Fish Chill","Can (330ml)"]': '/images/brands/flying-fish-chill-can.png',
+  '["Kopparberg Strawberry/Lime","Can (500ml)"]': '/images/brands/kopparberg-strawberry-lime-can.png',
+  '["Kopparberg Strawberry/Lime","Dumpy (500ml)"]': '/images/brands/kopparberg-strawberry-lime.png',
+  '["Lion Lager","Can (330ml)"]': '/images/brands/lion-lager-can.png',
+  '["Lion Lager","Quart (750ml)"]': '/images/brands/lion-lager.png',
+  '["Savanna Dry/Light","Can (330ml)"]': '/images/brands/savanna-dry-can.png',
+  '["Savanna Dry/Light","Quart (750ml)"]': '/images/brands/savanna-dry-quart.png',
+  '["Stella Artois","Can (330ml)"]': '/images/brands/stella-artois-can.png',
+  '["Stella Artois","Quart (620ml)"]': '/images/brands/stella-artois.png',
+  '["Strongbow Gold/Apple","Can (330ml)"]': '/images/brands/strongbow-gold-apple-can.png',
+  '["Strongbow Gold/Apple","Quart (750ml)"]': '/images/brands/strongbow-gold-apple.png',
+  '["Windhoek Draught","Can (440ml)"]': '/images/brands/windhoek-draught-can.png',
+  '["Windhoek Draught","Quart (440ml)"]': '/images/brands/windhoek-draught.png',
+  '["Windhoek Lager","Can (330ml)"]': '/images/brands/windhoek-lager-can.png',
+  '["Windhoek Lager","Quart (750ml)"]': '/images/brands/windhoek-lager.png',
   '["Amstel Lager","Can (330ml)"]': '/images/brands/amstel-lager-can.png',
   '["Amstel Lager","Quart (750ml)"]': '/images/brands/amstel-lager.png',
   '["Heineken","Can (500ml)"]': '/images/brands/heineken-can.png',
