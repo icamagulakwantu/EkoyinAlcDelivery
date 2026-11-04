@@ -27,6 +27,8 @@ enum Category {
   CHAMPAGNE
   WATER
   ICE
+  RUM
+  ENERGY_DRINK
 }
 
 enum OrderStatus {
