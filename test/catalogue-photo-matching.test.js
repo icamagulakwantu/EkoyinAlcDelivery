@@ -5,24 +5,27 @@ const path = require('node:path');
 const { buildPhotoPlan, parseBrandPhotoMap } = require('../prisma/catalogue-photo-matching');
 const { FORMAT_PHOTO_MAP, UNPRICED_PRODUCTS } = require('../prisma/catalogue-photo-config');
 
-test('uses exact product and pack mapping when supplied', () => {
-  const rows = [{id:'1',name:'Example',bottleFormat:'750ml Bottle'},{id:'2',name:'Example',bottleFormat:'Can (500ml)'}];
-  const exact = { [JSON.stringify(['Example','Can (500ml)'])]: '/images/example-can.png' };
+test('uses exact product and pack mapping and does not reuse a bottle image for a can', () => {
+  const rows = [{id:'1',name:'Example',bottleFormat:'750ml Bottle'},{id:'2',name:'Example',bottleFormat:'Can (330ml)'}];
+  const exact = { [JSON.stringify(['Example','Can (330ml)'])]: '/images/example-can.png' };
   const plan = buildPhotoPlan(rows,{Example:'/images/example-bottle.png'},exact,()=>true);
-  assert.equal(plan.assignments.find(x=>x.id==='2').imageUrl,'/images/example-can.png');
-  assert.equal(plan.assignments.find(x=>x.id==='2').matchType,'format');
-  assert.equal(plan.assignments.find(x=>x.id==='1').imageUrl,'/images/example-bottle.png');
+  assert.equal(plan.assignments.length,1);
+  assert.equal(plan.assignments[0].id,'2');
+  assert.equal(plan.assignments[0].imageUrl,'/images/example-can.png');
+  assert.equal(plan.assignments[0].matchType,'format');
+  assert.equal(plan.unmatched[0].id,'1');
 });
 
-test('uses the brand photo as fallback for other pack formats, like iCamagu', () => {
+test('does not use a single brand photo across multiple pack formats', () => {
   const rows=[
     {id:'1',name:'Example',bottleFormat:'750ml Bottle'},
-    {id:'2',name:'Example',bottleFormat:'Can (500ml)'},
-    {id:'3',name:'Example',bottleFormat:'Dumpy (330ml)'}
+    {id:'2',name:'Example',bottleFormat:'Can (330ml)'},
+    {id:'3',name:'Example',bottleFormat:'Dumpy (340ml)'}
   ];
   const plan=buildPhotoPlan(rows,{Example:'/images/example.png'},{},()=>true);
-  assert.equal(plan.assignments.length,3);
-  assert.ok(plan.assignments.every(x=>x.imageUrl==='/images/example.png' && x.matchType==='brand'));
+  assert.equal(plan.assignments.length,0);
+  assert.equal(plan.unmatched.length,3);
+  assert.equal(plan.missingAssets.length,3);
 });
 
 test('does not assign an image when neither exact nor brand photo exists', () => {
@@ -39,14 +42,13 @@ test('exact pack mapping takes priority over brand fallback', () => {
   assert.equal(plan.assignments[0].imageUrl,'/images/can.png');
 });
 
-test('falls back to the brand photo when an exact-format file is missing', () => {
-  const rows=[{id:'1',name:'Example',bottleFormat:'Can (500ml)'}];
-  const exact={ [JSON.stringify(['Example','Can (500ml)']) ]:'/images/missing-can.png' };
+test('does not fall back to a different pack image when an exact-format file is missing', () => {
+  const rows=[{id:'1',name:'Example',bottleFormat:'Can (330ml)'},{id:'2',name:'Example',bottleFormat:'750ml Bottle'}];
+  const exact={ [JSON.stringify(['Example','Can (330ml)']) ]:'/images/missing-can.png' };
   const plan=buildPhotoPlan(rows,{Example:'/images/bottle.png'},exact,path=>path==='/images/bottle.png');
-  assert.equal(plan.assignments.length,1);
-  assert.equal(plan.assignments[0].imageUrl,'/images/bottle.png');
-  assert.equal(plan.assignments[0].matchType,'brand');
-  assert.equal(plan.missingAssets.length,1);
+  assert.equal(plan.assignments.length,0);
+  assert.equal(plan.missingAssets.length,2);
+  assert.equal(plan.unmatched.length,2);
 });
 
 test('reports a missing local brand asset instead of assigning a broken path', () => {
