@@ -49,14 +49,14 @@ async function main() {
     return;
   }
   const rows = await prisma.skuItem.findMany({
-    select: { id: true, name: true, bottleFormat: true, imageUrl: true, listPriceZAR: true, retailSingleZAR: true, retailCaseZAR: true, unitsPerCase: true, retailCaseDiscountPct: true, packSize: true },
+    select: { id: true, name: true, category: true, bottleFormat: true, imageUrl: true, listPriceZAR: true, retailSingleZAR: true, retailCaseZAR: true, unitsPerCase: true, retailCaseDiscountPct: true, packSize: true },
     orderBy: [{ name: 'asc' }, { bottleFormat: 'asc' }],
   });
   const seedSource = fs.readFileSync(path.join(__dirname, 'seed.js'), 'utf-8');
   const brandPhotoMap = parseBrandPhotoMap(seedSource);
   const photoPlan = buildPhotoPlan(rows, brandPhotoMap, FORMAT_PHOTO_MAP, photoExists);
 
-  const removed375Rows = rows.filter(row => row.bottleFormat.includes('375ml'));
+  const removed375Rows = rows.filter(row => C.isRemovedSize(row.bottleFormat, row.category));
   const [orderCount, orderItemCount, orderItemsReferencing375ml] = await Promise.all([
     prisma.order.count(),
     prisma.orderItem.count(),
@@ -69,10 +69,11 @@ async function main() {
   const headers = parseCsvLine(csv[0]);
   const nameIndex = headers.indexOf('name');
   const formatIndex = headers.indexOf('bottleFormat');
-  if (nameIndex < 0 || formatIndex < 0) throw new Error('SKU CSV is missing name or bottleFormat columns');
+  const categoryIndex = headers.indexOf('category');
+  if (nameIndex < 0 || formatIndex < 0 || categoryIndex < 0) throw new Error('SKU CSV is missing name, category or bottleFormat columns');
   const csvRows = csv.slice(1).map(line => {
     const cells = parseCsvLine(line);
-    return { name: cells[nameIndex], bottleFormat: cells[formatIndex] };
+    return { name: cells[nameIndex], category: cells[categoryIndex], bottleFormat: cells[formatIndex] };
   }).filter(row => row.name && row.bottleFormat);
 
   // Build the expected post-correction SKU set from the supplier CSV:
@@ -87,7 +88,7 @@ async function main() {
     for (const fix of C.FORMAT_FIXES) {
       if (bottleFormat === fix.from && (fix.name === null || fix.name === name)) bottleFormat = fix.to;
     }
-    if (C.isRemovedSize(bottleFormat)) continue;
+    if (C.isRemovedSize(bottleFormat, sourceRow.category)) continue;
     expectedRows.push({ name, bottleFormat });
   }
   for (const product of C.NEW_PRODUCTS) expectedRows.push({ name: product.name, bottleFormat: product.bottleFormat });
