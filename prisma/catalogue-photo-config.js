@@ -309,17 +309,6 @@ const FORMAT_PHOTO_MAP = {
   "[\"Wyborowa Vodka\",\"750ml Bottle\"]": "/images/brands/wyborowa-vodka.png",
 };
 
-const UNPRICED_PRODUCTS = [
-  {
-    name: 'Budweiser',
-    bottleFormat: 'Can (500ml)',
-    category: 'BEER',
-    productType: 'ALCOHOL',
-    supplierPortfolio: 'SAB',
-    unitsPerCase: 24,
-    retailCaseDiscountPct: 8,
-    imageUrl: '/images/brands/Budweiser-Beer-Can-500ml.webp',
-  },
-];
+const UNPRICED_PRODUCTS = [];
 
 module.exports = { FORMAT_PHOTO_MAP, UNPRICED_PRODUCTS };
