@@ -106,7 +106,7 @@ async function main() {
   const unpricedRows = [];
   const unexpectedUnpricedRows = [];
   const intendedUnpricedKeys = new Set(UNPRICED_PRODUCTS.map(product => pairKey(product.name, product.bottleFormat)));
-  for (const row of rows) {
+  for (const row of rows.filter(row => row.productType === 'ALCOHOL')) {
     const expectedSingle = C.newSinglePrice(row);
     if (expectedSingle === null) {
       const unpriced = { name: row.name, bottleFormat: row.bottleFormat };
