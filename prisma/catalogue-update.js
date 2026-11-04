@@ -139,7 +139,11 @@ async function applyPrices(prisma, rows, log, dryRun = false) {
 async function run(prisma, { dryRun = false, structureOnly = false, pricesOnly = false } = {}) {
   if (structureOnly && pricesOnly) throw new Error('Choose either structureOnly or pricesOnly, not both.');
   const all = await prisma.skuItem.findMany({ select: SELECT });
-  const rows = new Map(all.map((r) => [key(r.name, r.bottleFormat), r]));
+  // This pricing pass is deliberately limited to alcohol: the Ekoyin task is
+  // an alcohol-only catalogue transfer and must not reprice water, ice, mixers
+  // or other target catalogue categories.
+  const priceRows = pricesOnly ? all.filter((r) => r.productType === 'ALCOHOL') : all;
+  const rows = new Map(priceRows.map((r) => [key(r.name, r.bottleFormat), r]));
   const log = [];
   if (!pricesOnly) {
     await fixLabels(prisma, rows, log, dryRun);
