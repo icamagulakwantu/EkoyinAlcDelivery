@@ -351,6 +351,7 @@ const FORMAT_PHOTO_MAP = {
   "[\"Ginger Liqueur (Butlers)\",\"750ml Bottle\"]": "/images/brands/ginger-liqueur-butlers-750ml-bottle.jpg",
   "[\"Strawberry Liqueur (Butlers)\",\"750ml Bottle\"]": "/images/brands/strawberry-liqueur-butlers-750ml-bottle.jpg",
   "[\"Triple Sec (Butlers)\",\"750ml Bottle\"]": "/images/brands/triple-sec-butlers-750ml-bottle.jpg",
+  "[\"Gordons Premium Pink\",\"750ml Bottle\"]": "/images/brands/gordons-pink-berry.png",
 };
 
 const UNPRICED_PRODUCTS = [];

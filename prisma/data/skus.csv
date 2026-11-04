@@ -72,14 +72,14 @@ Castle Milk Stout,BEER,Dumpy (330ml),25.95,24,0,372.48,0,0,0,SAB,ALCOHOL,
 Castle Milk Stout,BEER,Quart (750ml),38.65,12,0,325.92,0,0,0,SAB,ALCOHOL,
 Chambord Black Raspberry,LIQUEUR,500ml Bottle,414.72,12,0,4377.60,0,0,0,Global Premium Import,ALCOHOL,
 Cherry Kirsch Liqueur (Butlers),LIQUEUR,750ml Bottle,190.39,12,0,2419.20,0,0,0,Heineken SA,ALCOHOL,
-Chillers Punch Caribbean Chaos,CIDER_RTD,Can (500ml),23.98,24,0,372.48,0,0,0,Local Value Portfolio,ALCOHOL,
-Chillers Punch Caribbean Chaos,CIDER_RTD,Dumpy (500ml),25.98,24,0,325.92,0,0,0,Local Value Portfolio,ALCOHOL,
-Chillers Punch Milano Spritz,CIDER_RTD,Can (500ml),23.98,24,0,372.48,0,0,0,Local Value Portfolio,ALCOHOL,
-Chillers Punch Milano Spritz,CIDER_RTD,Dumpy (500ml),25.98,24,0,325.92,0,0,0,Local Value Portfolio,ALCOHOL,
-Chillers Punch Peach & Mango,CIDER_RTD,Can (500ml),23.98,24,0,372.48,0,0,0,Local Value Portfolio,ALCOHOL,
-Chillers Punch Peach & Mango,CIDER_RTD,Dumpy (500ml),25.98,24,0,325.92,0,0,0,Local Value Portfolio,ALCOHOL,
-Chillers Punch Tequila Sunrise (Zero Alcohol),CIDER_RTD,Can (500ml),23.98,24,0,372.48,0,0,0,Local Value Portfolio,ALCOHOL,
-Chillers Punch Tequila Sunrise (Zero Alcohol),CIDER_RTD,Dumpy (500ml),25.98,24,0,325.92,0,0,0,Local Value Portfolio,ALCOHOL,
+Chillers Punch Caribbean Chaos,CIDER_RTD,Can (500ml),23.98,24,0,372.48,0,0,0,Local Value Portfolio,ALCOHOL,BLACK_OWNED|CELEBRITY_BACKED
+Chillers Punch Caribbean Chaos,CIDER_RTD,Dumpy (500ml),25.98,24,0,325.92,0,0,0,Local Value Portfolio,ALCOHOL,BLACK_OWNED|CELEBRITY_BACKED
+Chillers Punch Milano Spritz,CIDER_RTD,Can (500ml),23.98,24,0,372.48,0,0,0,Local Value Portfolio,ALCOHOL,BLACK_OWNED|CELEBRITY_BACKED
+Chillers Punch Milano Spritz,CIDER_RTD,Dumpy (500ml),25.98,24,0,325.92,0,0,0,Local Value Portfolio,ALCOHOL,BLACK_OWNED|CELEBRITY_BACKED
+Chillers Punch Peach & Mango,CIDER_RTD,Can (500ml),23.98,24,0,372.48,0,0,0,Local Value Portfolio,ALCOHOL,BLACK_OWNED|CELEBRITY_BACKED
+Chillers Punch Peach & Mango,CIDER_RTD,Dumpy (500ml),25.98,24,0,325.92,0,0,0,Local Value Portfolio,ALCOHOL,BLACK_OWNED|CELEBRITY_BACKED
+Chillers Punch Tequila Sunrise (Zero Alcohol),CIDER_RTD,Can (500ml),23.98,24,0,372.48,0,0,0,Local Value Portfolio,ALCOHOL,BLACK_OWNED|CELEBRITY_BACKED
+Chillers Punch Tequila Sunrise (Zero Alcohol),CIDER_RTD,Dumpy (500ml),25.98,24,0,325.92,0,0,0,Local Value Portfolio,ALCOHOL,BLACK_OWNED|CELEBRITY_BACKED
 Chivas Regal 12 Year Old,WHISKY,750ml Bottle,550.76,12,0,4838.40,0,0,0,Pernod Ricard,ALCOHOL,
 Chivas Regal 15 Year Old,WHISKY,750ml Bottle,800.58,12,0,7833.60,0,0,0,Pernod Ricard,ALCOHOL,
 Ciroc Apple,VODKA_PREMIUM,750ml Bottle,589.61,12,0,5068.80,0,0,0,Diageo SA,ALCOHOL,
@@ -185,8 +185,8 @@ Kopparberg Strawberry & Lime,CIDER_RTD,Can (500ml),37.75,24,0,582.00,0,0,0,Heine
 Kopparberg Strawberry & Lime,CIDER_RTD,Dumpy (500ml),37.75,24,0,512.16,0,0,0,Heineken SA,ALCOHOL,
 Kopparberg Sweet Vintage Pear,CIDER_RTD,Can (500ml),37.75,24,0,582.00,0,0,0,,ALCOHOL,
 Krone Borealis Brut (MCC),SPARKLING,750ml Bottle,175.00,6,0,1197.00,0,0,0,Vinimark Portfolio,ALCOHOL,
-Kwande Gin Rooibos,GIN,750ml Bottle,359.76,12,0,3225.60,0,0,0,Local Craft,ALCOHOL,
-Kwande Gin Witty,GIN,750ml Bottle,359.76,12,0,3225.60,0,0,0,Local Craft,ALCOHOL,
+Kwande Gin Rooibos,GIN,750ml Bottle,359.76,12,0,3225.60,0,0,0,Local Craft,ALCOHOL,BLACK_OWNED
+Kwande Gin Witty,GIN,750ml Bottle,359.76,12,0,3225.60,0,0,0,Local Craft,ALCOHOL,BLACK_OWNED
 KWV 12 Year,BRANDY,750ml Bottle,319.00,12,0,3100.00,0,0,0,,ALCOHOL,
 Lime Cordial,MIXER,750ml Bottle,57.69,12,0,529.20,0,0,0,Tiger Brands (Roses),ALCOHOL,
 Lion Lager,BEER,Can (500ml),20.76,24,0,302.64,0,0,0,SAB,ALCOHOL,
@@ -311,3 +311,10 @@ Ekoyini Crushed Ice,ICE,1kg,22.00,10,2.0,215.60,40,5.0,8360.00,Ekoyini Essential
 Ekoyini Crushed Ice,ICE,2kg,38.00,10,2.0,372.40,40,5.0,14440.00,Ekoyini Essentials,NON_ALCOHOL,
 Mofaya Original,MIXER,Can (500ml),9.99,24,2.0,234.96,60,5.0,13666.32,Coca-Cola Beverages SA,NON_ALCOHOL,BLACK_OWNED
 Mofaya Orange Ting,MIXER,Can (500ml),9.99,24,2.0,234.96,60,5.0,13666.32,Coca-Cola Beverages SA,NON_ALCOHOL,BLACK_OWNED
+M'hudi Chenin Blanc,WINE,750ml Bottle,219.00,6,5.0,1248.30,100,10.0,118260.00,M'hudi Wines,ALCOHOL,BLACK_OWNED
+M'hudi Pinotage,WINE,750ml Bottle,209.00,6,5.0,1191.30,100,10.0,112860.00,M'hudi Wines,ALCOHOL,BLACK_OWNED
+Seven Sisters Pinotage/Cabernet,WINE,750ml Bottle,90.00,6,5.0,513.00,100,10.0,48600.00,Seven Sisters Vineyards,ALCOHOL,BLACK_OWNED|WOMEN_OWNED
+Aljimardo Silver,TEQUILA,750ml Bottle,200.00,12,4.0,2304.00,60,8.0,132480.00,Local Value Brand,ALCOHOL,
+Gordons Premium Pink,GIN,750ml Bottle,217.06,12,4.0,2500.53,60,8.0,143780.54,Diageo SA,ALCOHOL,
+Drambuie Honey/Scotch,LIQUEUR,750ml Bottle,320.00,12,4.0,3686.40,60,8.0,211968.00,Spirits SA Import,ALCOHOL,
+Guinness Foreign Extra,BEER,Can (440ml),26.00,24,3.0,605.28,84,7.0,48746.88,Diageo SA,ALCOHOL,
