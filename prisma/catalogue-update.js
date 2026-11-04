@@ -10,7 +10,7 @@
 //   2. removes 375ml spirit products only (beer, cider/RTD and wine packs
 //      remain; past orders keep their item names and
 //      prices: OrderItem.skuId is set to null, nothing else changes);
-//   3. adds the few products the owner sent photos of;
+//   3. does not invent or add SKUs outside the canonical iCamagu export;
 //   4. prices every product at retail + 25% (checked shop price when we have
 //      one, otherwise the product's list price);
 // Every step writes fixed values worked out from a base that never changes,
