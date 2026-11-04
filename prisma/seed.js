@@ -300,20 +300,23 @@ async function main() {
       continue;
     }
 
+    const isAlcohol = row.productType === 'ALCOHOL';
     const listPriceZAR = Number(row.singlePriceZAR) || 0; // source retail price per individual unit
     const sourceUnitsPerCase = parseInt(row.unitsPerCase, 10) || 1;
-    const packSize = /^(Dumpy|Can)\\b/i.test(row.bottleFormat) ? 6 : 1;
+    const packSize = isAlcohol && /^(Dumpy|Can)\\b/i.test(row.bottleFormat) ? 6 : 1;
     if (sourceUnitsPerCase % packSize !== 0) {
       throw new Error('Invalid case quantity for ' + row.name + ' ' + row.bottleFormat + ': ' + sourceUnitsPerCase + ' is not divisible by pack size ' + packSize);
     }
     const unitsPerCase = sourceUnitsPerCase / packSize;
     const retailCaseDiscountPct = RETAIL_CASE_DISCOUNT_PCT[category] ?? 5;
-    const retailSingleZAR = CataloguePricing.newSinglePrice({ name: row.name, bottleFormat: row.bottleFormat, packSize, listPriceZAR }) ?? 0;
+    const retailSingleZAR = isAlcohol
+      ? (CataloguePricing.newSinglePrice({ name: row.name, bottleFormat: row.bottleFormat, packSize, listPriceZAR }) ?? 0)
+      : listPriceZAR;
     const retailCaseZAR = round2(retailSingleZAR * unitsPerCase * (1 - retailCaseDiscountPct / 100));
     const photoCandidates = [FORMAT_PHOTO_MAP[JSON.stringify([row.name, row.bottleFormat])], BRAND_PHOTO_MAP[row.name]];
     const localPhoto = photoCandidates.find(candidate => candidate && candidate.startsWith('/images/') &&
       fs.existsSync(path.join(__dirname, '..', 'public', 'images', decodeURIComponent(candidate.slice('/images/'.length)))));
-    const imageUrl = localPhoto || (row.productType === 'ALCOHOL' ? null : CATEGORY_IMAGE_MAP[category] || CATEGORY_IMAGE_MAP.BEER);
+    const imageUrl = localPhoto || (isAlcohol ? null : CATEGORY_IMAGE_MAP[category] || CATEGORY_IMAGE_MAP.BEER);
 
     const data = {
       category,
@@ -328,7 +331,7 @@ async function main() {
       supplierPalletDiscountPct: parseFloat(row.palletDiscountPct),
       supplierPalletPriceZAR: parseFloat(row.palletPriceZAR),
 
-      packSize,
+      packSize: isAlcohol ? packSize : undefined,
       retailSingleZAR,
       retailCaseDiscountPct,
       retailCaseZAR,
