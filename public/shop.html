@@ -286,7 +286,14 @@
   // Brand story filters — a product must carry EVERY active tag (so
   // "Black Owned" + "Women Owned" together means both, not either).
   const BRAND_TAG_LABELS = { BLACK_OWNED: 'Black Owned', WOMEN_OWNED: 'Women Owned', CELEBRITY_BACKED: 'Celebrity Backed' };
-  let activeBrandFilters = new Set();
+  // shop.html?tag=BLACK_OWNED (from the homepage Brand Stories cards)
+  // pre-selects that filter. Unknown values are ignored.
+  let activeBrandFilters = new Set(
+    (params.get('tag') || '').split(',').map((t) => t.trim()).filter((t) => BRAND_TAG_LABELS[t])
+  );
+  activeBrandFilters.forEach((t) => {
+    document.querySelector(`.brand-filter-pill[data-tag="${t}"]`)?.classList.add('active');
+  });
 
   function toggleBrandFilter(tag) {
     if (activeBrandFilters.has(tag)) activeBrandFilters.delete(tag); else activeBrandFilters.add(tag);
