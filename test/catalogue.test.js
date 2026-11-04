@@ -158,7 +158,7 @@ test('SKU structure-only dry-run does not preview or apply retail repricing', as
   assert.equal(result.structureOnly, true);
   assert.ok(result.log.some(line => line.startsWith('would rename: Heineken Dumpy (330ml)')));
   assert.ok(result.log.some(line => line.startsWith('would remove: Hennessy VS 375ml Bottle')));
-  assert.ok(result.log.some(line => line.startsWith('would add: Strettons Triple Berry')));
+  assert.equal(result.log.some(line => line.startsWith('would add:')), false);
   assert.equal(result.log.some(line => line.startsWith('would update:')), false);
   assert.equal(JSON.stringify(prisma.db), before);
 });
