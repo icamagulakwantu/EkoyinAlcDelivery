@@ -79,7 +79,7 @@ function fakePrisma(rows, orderItems = []) {
 
 test('runner: fixes labels, removes 375ml, prices everything, and is repeatable', async () => {
   const prisma = fakePrisma([
-    { name: 'Hennessy VS', bottleFormat: '750ml Bottle', listPriceZAR: 528, retailSingleZAR: 528 },
+    { name: 'Hennessy VS', productType: 'ALCOHOL', bottleFormat: '750ml Bottle', listPriceZAR: 528, retailSingleZAR: 528 },
     { name: 'Hennessy VS', bottleFormat: '375ml Bottle', category: 'COGNAC', listPriceZAR: 340, retailSingleZAR: 340 },
     { name: 'Cider 375ml', bottleFormat: 'Dumpy (375ml)', category: 'CIDER_RTD', listPriceZAR: 12, retailSingleZAR: 12 },
     { name: 'Heineken', bottleFormat: 'Dumpy (340ml)', listPriceZAR: 16, retailSingleZAR: 96, packSize: 6, unitsPerCase: 4, retailCaseDiscountPct: 8 },
@@ -182,7 +182,7 @@ test('structure-only execution applies SKU corrections but never reprices existi
 
 test('prices-only dry-run previews retail changes without changing SKU structure or data', async () => {
   const prisma = fakePrisma([
-    { name: 'Heineken', bottleFormat: 'Dumpy (330ml)', listPriceZAR: 16, retailSingleZAR: 96, packSize: 6 },
+    { name: 'Heineken', productType: 'ALCOHOL', bottleFormat: 'Dumpy (330ml)', listPriceZAR: 16, retailSingleZAR: 96, packSize: 6 },
     { name: 'Hennessy VS', bottleFormat: '750ml Bottle', listPriceZAR: 528, retailSingleZAR: 528 },
   ]);
   const before = JSON.stringify(prisma.db);
@@ -197,4 +197,15 @@ test('prices-only dry-run previews retail changes without changing SKU structure
   assert.equal(result.log.some(line => line.startsWith('would rename:')), false);
   assert.equal(result.log.some(line => line.startsWith('would add:')), false);
   assert.equal(JSON.stringify(prisma.db), before);
+});
+
+
+test('prices-only run leaves non-alcohol target catalogue rows untouched', async () => {
+  const prisma = fakePrisma([
+    { name: 'Heineken', productType: 'ALCOHOL', bottleFormat: 'Dumpy (330ml)', listPriceZAR: 16, retailSingleZAR: 16, packSize: 1 },
+    { name: 'Aquelle Water', productType: 'NON_ALCOHOL', bottleFormat: '500ml', listPriceZAR: 10, retailSingleZAR: 10, packSize: 1 },
+  ]);
+  const result = await run(prisma, { dryRun: true, pricesOnly: true });
+  assert.ok(result.log.some(line => line.includes('Heineken')));
+  assert.equal(result.log.some(line => line.includes('Aquelle Water')), false);
 });
