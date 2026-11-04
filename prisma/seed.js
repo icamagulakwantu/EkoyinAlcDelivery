@@ -281,6 +281,10 @@ function round2(n) {
 }
 
 async function main() {
+  if (!process.env.DATABASE_URL) {
+    console.warn('[seed] DATABASE_URL not set; catalogue seed skipped.');
+    return;
+  }
   const csvPath = path.join(__dirname, 'data', 'skus.csv');
   const rows = parseCsv(csvPath);
   console.log(`Parsed ${rows.length} SKU rows from skus.csv`);
