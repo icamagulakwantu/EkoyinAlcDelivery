@@ -54,11 +54,19 @@ test('375ml is removed only for spirits, not beer, cider/RTD or wine', () => {
 });
 
 // Minimal stand-in for the Prisma client: just what the runner uses.
-function fakePrisma(rows) {
+function fakePrisma(rows, orderItems = []) {
   let next = 1;
   const db = rows.map((r) => ({ id: `r${next++}`, imageUrl: null, packSize: 1, listPriceZAR: 0, retailCaseZAR: 0, retailCaseDiscountPct: 5, unitsPerCase: 12, category: 'WHISKY', productType: 'ALCOHOL', supplierPortfolio: 'X', ...r }));
   return {
     db,
+    orderItems,
+    orderItem: {
+      updateMany: async ({ where, data }) => {
+        let count = 0;
+        for (const item of orderItems) if (item.skuId === where.skuId) { Object.assign(item, data); count++; }
+        return { count };
+      },
+    },
     skuItem: {
       findMany: async () => db.map((r) => ({ ...r })),
       update: async ({ where, data }) => Object.assign(db.find((r) => r.id === where.id), data),
@@ -78,11 +86,13 @@ test('runner: fixes labels, removes 375ml, prices everything, and is repeatable'
     { name: 'Stella Artois', bottleFormat: 'Dumpy (340ml)', listPriceZAR: 18, retailSingleZAR: 108, packSize: 6 },
     { name: 'Strettons London Dry', bottleFormat: '750ml Bottle', listPriceZAR: 170, retailSingleZAR: 170 },
     { name: 'Bombay Sapphire', bottleFormat: '750ml Bottle', listPriceZAR: 310, retailSingleZAR: 310 },
-  ]);
+  ], [{ id: 'oi1', skuId: 'r2', name: 'Hennessy VS 375ml', price: 340, quantity: 1 }]);
   const first = await run(prisma);
   const find = (n, f) => prisma.db.find((r) => r.name === n && r.bottleFormat === f);
 
   assert.equal(find('Hennessy VS', '375ml Bottle'), undefined);
+  assert.equal(prisma.orderItems[0].skuId, null, 'retired SKU must detach from order item');
+  assert.deepEqual({ name: prisma.orderItems[0].name, price: prisma.orderItems[0].price, quantity: prisma.orderItems[0].quantity }, { name: 'Hennessy VS 375ml', price: 340, quantity: 1 }, 'order snapshot must remain unchanged');
   assert.ok(find('Cider 375ml', 'Dumpy (375ml)'), '375ml cider must remain in the catalogue');
   assert.equal(find('Hennessy VS', '750ml Bottle').retailSingleZAR, 620);
   // Product photos are assigned separately by prisma/sync-images.js from local assets.
