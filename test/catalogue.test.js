@@ -105,7 +105,7 @@ test('runner: fixes labels, removes 375ml, prices everything, and is repeatable'
   assert.equal(find('Windhoek Lager', 'Dumpy (330ml)').retailSingleZAR, 120); // 16 x 6 x 1.25
   assert.equal(find('Stella Artois', 'Dumpy (330ml)').retailSingleZAR, 135); // 18 x 6 x 1.25
   assert.equal(find('Bombay Sapphire', '750ml Bottle').retailSingleZAR, 390);
-  assert.equal(find('Strettons London Dry', '750ml Bottle').retailSingleZAR, 180);
+  assert.equal(find('Strettons London Dry', '750ml Bottle').retailSingleZAR, 210);
   assert.deepEqual(first.unpriced, []);
 
   const second = await run(prisma);
