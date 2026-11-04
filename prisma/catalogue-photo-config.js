@@ -314,6 +314,8 @@ const FORMAT_PHOTO_MAP = {
   "[\"Hunter's Gold\",\"Dumpy (330ml)\"]": "/images/brands/hunters-gold.png",
   "[\"Sol\",\"Dumpy (330ml)\"]": "/images/brands/sol.png",
   "[\"Windhoek Lager\",\"Dumpy (330ml)\"]": "/images/brands/windhoek-lager.png",
+  "[\"Hunter's Iced Apple\",\"Can (440ml)\"]": "/images/brands/hunters-iced-apple-can.png",
+  "[\"Hunter's Iced Watermelon\",\"Can (440ml)\"]": "/images/brands/hunters-iced-watermelon-can.png",
 };
 
 const UNPRICED_PRODUCTS = [];
