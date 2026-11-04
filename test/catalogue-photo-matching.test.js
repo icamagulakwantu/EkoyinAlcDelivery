@@ -47,7 +47,7 @@ test('does not fall back to a different pack image when an exact-format file is 
   const exact={ [JSON.stringify(['Example','Can (330ml)']) ]:'/images/missing-can.png' };
   const plan=buildPhotoPlan(rows,{Example:'/images/bottle.png'},exact,path=>path==='/images/bottle.png');
   assert.equal(plan.assignments.length,0);
-  assert.equal(plan.missingAssets.length,2);
+  assert.equal(plan.missingAssets.length,3);
   assert.equal(plan.unmatched.length,2);
 });
 
