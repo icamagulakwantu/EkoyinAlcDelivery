@@ -84,10 +84,10 @@ model SkuItem {
   supplierPortfolio String
 
   // Supplier price sheet (cost/procurement reference — not shown to customers)
-  listPriceZAR              Float // supplier's single-unit price
+  listPriceZAR              Float // source retail unit price before Ekoyini's 25% markup
   unitsPerCase              Int
   supplierCaseDiscountPct   Float
-  supplierCasePriceZAR      Float
+  supplierCasePriceZAR      Float // source supplier case cost
   palletPackQty              Int
   supplierPalletDiscountPct Float
   supplierPalletPriceZAR    Float
