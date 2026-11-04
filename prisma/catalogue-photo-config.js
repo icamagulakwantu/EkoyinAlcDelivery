@@ -316,6 +316,15 @@ const FORMAT_PHOTO_MAP = {
   "[\"Windhoek Lager\",\"Dumpy (330ml)\"]": "/images/brands/windhoek-lager.png",
   "[\"Hunter's Iced Apple\",\"Can (440ml)\"]": "/images/brands/hunters-iced-apple-can.png",
   "[\"Hunter's Iced Watermelon\",\"Can (440ml)\"]": "/images/brands/hunters-iced-watermelon-can.png",
+  "[\"Amstel Lager\",\"Quart (750ml)\"]": "/images/brands/amstel-lager.png",
+  "[\"Castle Milk Stout\",\"Quart (750ml)\"]": "/images/brands/castle-milk-stout.png",
+  "[\"Flying Fish Lemon\",\"Quart (660ml)\"]": "/images/brands/flying-fish-lemon-apple.png",
+  "[\"Hansa Pilsener\",\"Quart (750ml)\"]": "/images/brands/hansa-pilsener.png",
+  "[\"Stella Artois\",\"Quart (620ml)\"]": "/images/brands/stella-artois.png",
+  "[\"Windhoek Draught\",\"Quart (750ml)\"]": "/images/brands/windhoek-draught.png",
+  "[\"Strettons Ruby Orange\",\"750ml Bottle\"]": "/images/brands/strettons ruby orange.jpg",
+  "[\"Strettons Triple Berry\",\"750ml Bottle\"]": "/images/brands/Strettons tripleberry.jpg",
+  "[\"Maraschino Cherries (Syrup)\",\"350ml Jar\"]": "/images/brands/maraschino cherries 350ml.jpg",
 };
 
 const UNPRICED_PRODUCTS = [];
