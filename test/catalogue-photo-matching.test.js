@@ -84,9 +84,6 @@ test('every exact pack-format photo mapping points to an existing local asset', 
 });
 
 
-test('the intentional Budweiser price-coming-soon SKU has a verified local can image', () => {
-  const product = UNPRICED_PRODUCTS.find(item => item.name === 'Budweiser' && item.bottleFormat === 'Can (500ml)');
-  assert.ok(product);
-  assert.equal(product.listPriceZAR, undefined);
-  assert.ok(fs.existsSync(path.join(__dirname, '..', 'public', product.imageUrl)));
+test('no extra unpriced SKUs override the canonical iCamagu catalogue', () => {
+  assert.deepEqual(UNPRICED_PRODUCTS, []);
 });
