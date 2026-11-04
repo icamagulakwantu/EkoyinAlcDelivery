@@ -66,6 +66,11 @@ const FORMAT_PHOTO_MAP = {
   '["Budweiser","Can (500ml)"]': '/images/brands/Budweiser-Beer-Can-500ml.webp',
   '["Windhoek Draught","Can (440ml)"]': '/images/brands/windhoek-draught-can.png',
   '["Bonaqua Still Water","500ml"]': '/images/brands/bonaqua-still-water.png',
+  "[\"Hunter's Dry/Gold\",\"Can (330ml)\"]": '/images/brands/hunters-dry-can.png',
+  "[\"Redd's Berry/Orig/Green\",\"Can (330ml)\"]": '/images/brands/redds-berry-can.png',
+  "[\"Redd's MXD Pine/Guarana\",\"Can (330ml)\"]": '/images/brands/redds-mxd-pine-can.png',
+  "[\"Smirnoff Spin/Storm\",\"Dumpy (250ml)\"]": '/images/brands/smirnoff-storm-citrus-dumpy.png',
+  "[\"Bernini Classic/Blush/Ruby\",\"Can (330ml)\"]": '/images/brands/bernini-classic-can.png',
 };
 
 const UNPRICED_PRODUCTS = [
