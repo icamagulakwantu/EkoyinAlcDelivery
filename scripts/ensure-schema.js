@@ -10,6 +10,9 @@
 require('dotenv').config();
 
 const STATEMENTS = [
+  // Keep Prisma's enum aligned with the live iCamagu alcohol catalogue.
+  `ALTER TYPE "Category" ADD VALUE IF NOT EXISTS 'RUM'`,
+  `ALTER TYPE "Category" ADD VALUE IF NOT EXISTS 'ENERGY_DRINK'`,
   `ALTER TABLE "Order" ADD COLUMN IF NOT EXISTS "hiddenByCustomer" BOOLEAN NOT NULL DEFAULT false`,
   `ALTER TABLE "SkuItem" ADD COLUMN IF NOT EXISTS "packSize" INTEGER NOT NULL DEFAULT 1`,
   `ALTER TABLE "SkuItem" ADD COLUMN IF NOT EXISTS "brandTags" TEXT[] NOT NULL DEFAULT '{}'`,
