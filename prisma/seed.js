@@ -2,8 +2,8 @@
 //
 // Run with: npm run seed  (or `npx prisma db seed`)
 //
-// Reads prisma/data/skus.csv (the supplier price sheet), computes Ekoyini's
-// retail pricing, assigns a Phase-1 category placeholder image, and upserts
+// Reads prisma/data/skus.csv (the canonical iCamagu alcohol SKU export),
+// applies Ekoyini's agreed retail +25% pricing, and upserts
 // every SKU into the database. Re-running this script is safe — it updates
 // existing rows by (name, bottleFormat) instead of duplicating them.
 
@@ -11,6 +11,7 @@ const fs = require('fs');
 const path = require('path');
 const { PrismaClient, Category } = require('@prisma/client');
 const { FORMAT_PHOTO_MAP } = require('./catalogue-photo-config');
+const CataloguePricing = require('../lib/catalogue-2026-11.js');
 
 const prisma = new PrismaClient();
 
@@ -307,7 +308,7 @@ async function main() {
     }
     const unitsPerCase = sourceUnitsPerCase / packSize;
     const retailCaseDiscountPct = RETAIL_CASE_DISCOUNT_PCT[category] ?? 5;
-    const retailSingleZAR = round2(listPriceZAR * packSize);
+    const retailSingleZAR = CataloguePricing.newSinglePrice({ name: row.name, bottleFormat: row.bottleFormat, packSize, listPriceZAR }) ?? 0;
     const retailCaseZAR = round2(retailSingleZAR * unitsPerCase * (1 - retailCaseDiscountPct / 100));
     const photoCandidates = [FORMAT_PHOTO_MAP[JSON.stringify([row.name, row.bottleFormat])], BRAND_PHOTO_MAP[row.name]];
     const localPhoto = photoCandidates.find(candidate => candidate && candidate.startsWith('/images/') &&
