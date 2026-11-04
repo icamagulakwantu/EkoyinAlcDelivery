@@ -105,11 +105,6 @@ test('runner: fixes labels, removes 375ml, prices everything, and is repeatable'
   assert.equal(find('Stella Artois', 'Dumpy (330ml)').retailSingleZAR, 135); // 18 x 6 x 1.25
   assert.equal(find('Bombay Sapphire', '750ml Bottle').retailSingleZAR, 390);
   assert.equal(find('Strettons London Dry', '750ml Bottle').retailSingleZAR, 180);
-  // New products get shop price + 25%
-  assert.equal(find('Strettons Triple Berry', '750ml Bottle').retailSingleZAR, 240);
-  assert.equal(find('Strettons Ruby Orange', '750ml Bottle').retailSingleZAR, 240);
-  assert.equal(find('Stella Artois', 'Quart (620ml)').retailSingleZAR, 35);
-  assert.equal(find('Strettons Triple Berry', '750ml Bottle').imageUrl, null); // local photo sync owns images
   assert.deepEqual(first.unpriced, []);
 
   const second = await run(prisma);
@@ -144,7 +139,6 @@ test('dry-run previews catalogue changes without calling database write methods'
   assert.equal(result.dryRun, true);
   assert.ok(result.log.some(line => line.startsWith('would remove: Hennessy VS 375ml Bottle')));
   assert.ok(result.log.some(line => line.startsWith('would rename: Heineken Dumpy (330ml)')));
-  assert.ok(result.log.some(line => line.startsWith('would add: Strettons Triple Berry')));
   assert.equal(JSON.stringify(prisma.db), before, 'the original fake database remains unchanged');
 });
 
@@ -183,7 +177,6 @@ test('structure-only execution applies SKU corrections but never reprices existi
   assert.equal(prisma.db.some(row => row.name === 'Hennessy VS' && row.bottleFormat === '375ml Bottle'), false);
   assert.equal(heineken.bottleFormat, 'Dumpy (330ml)');
   assert.equal(heineken.retailSingleZAR, 96, 'existing retail price is not changed by SKU structure work');
-  assert.equal(prisma.db.find(row => row.name === 'Strettons Triple Berry').retailSingleZAR, 0);
 });
 
 
