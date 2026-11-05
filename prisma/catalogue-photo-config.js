@@ -351,6 +351,8 @@ const FORMAT_PHOTO_MAP = {
   "[\"Tsitsikamma Sparkling Water\",\"500ml\"]": "/images/brands/tsitsikamma-sparkling-500ml.webp",
   "[\"Coca-Cola Original Taste Less Sugar\",\"2L\"]": "/images/brands/coca-cola-original-less-sugar-2l.webp",
   "[\"Liqui Fruit Cranberry Cooler\",\"1L\"]": "/images/brands/liqui-fruit-cranberry-cooler-1l.webp",
+  "[\"Red Bull Energy Drink\",\"Can (355ml)\"]": "/images/brands/red-bull-energy-drink-can-355ml.webp",
+  "[\"Appletiser Sparkling Apple Juice\",\"1L\"]": "/images/brands/appletiser-sparkling-apple-juice-1l.webp",
 };
 
 const UNPRICED_PRODUCTS = [];
