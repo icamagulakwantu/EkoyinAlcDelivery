@@ -104,7 +104,59 @@
       white-space: nowrap;
     }
   </style>
-  <link rel="stylesheet" href="premium.css">
+    <link rel="stylesheet" href="premium.css">
+  <style id="shop-polish">
+    /* SHOP POLISH (Nov 2026). Loaded after premium.css on purpose. Modelled on
+       Uber Eats / Instacart / Gopuff: borderless product tiles, soft tinted photo
+       stage, text under the tile, one dark round add button, floating cart bar. */
+    body .product-grid { gap: 22px 14px !important; padding: 0 16px !important; }
+    body .product-card { background: transparent !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; overflow: visible !important; }
+    body .product-card:hover { transform: none !important; box-shadow: none !important; }
+    body .product-card:active { transform: scale(0.985) !important; }
+    /* Photo stage: soft warm gradient + multiply blending, so the white background
+       baked into most packshots disappears instead of showing as a white square. */
+    body .product-img-box { border: 0 !important; border-radius: 22px; padding: 14px; overflow: hidden;
+      background: radial-gradient(120% 95% at 50% 28%, #ffffff 0%, #f9f3e6 52%, #efe6d1 100%);
+      box-shadow: inset 0 0 0 1px rgba(23, 20, 14, 0.05); }
+    body .product-img-box::after { content: ''; position: absolute; left: 24%; right: 24%; bottom: 9%; height: 7%; z-index: 0;
+      background: radial-gradient(ellipse at center, rgba(23, 20, 14, 0.16), rgba(23, 20, 14, 0) 70%); pointer-events: none; }
+    body .product-img-box img { position: relative; z-index: 1; mix-blend-mode: multiply; transition: transform .35s cubic-bezier(.2,.8,.2,1); }
+    body .product-card:hover .product-img-box img { transform: scale(1.04); }
+    body .fav-btn { top: 10px; right: 10px; width: 32px; height: 32px; background: rgba(255,255,255,0.92); box-shadow: 0 1px 4px rgba(23,20,14,0.12); }
+    body .stock-badge { top: 10px; left: 10px; border-radius: 999px; padding: 4px 9px; }
+    body .product-info { padding: 10px 2px 0 !important; gap: 2px; }
+    body .product-info h3 { font-size: 14px !important; font-weight: 600 !important; min-height: 2.6em; letter-spacing: -0.01em; }
+    body .product-size { background: none !important; border: 0 !important; padding: 0 !important; font-size: 12px !important; font-weight: 500 !important; color: var(--muted) !important; letter-spacing: 0; }
+    body .product-footer { padding-top: 8px !important; }
+    body .product-price { font-size: 17px !important; font-weight: 700 !important; }
+    body .add-btn { width: 38px !important; height: 38px !important; font-size: 22px !important; font-weight: 400 !important; line-height: 1;
+      background: #17140e !important; color: #fff !important; box-shadow: 0 3px 10px rgba(23,20,14,0.22) !important; }
+    body .add-btn:hover { background: #17140e !important; }
+    body .stepper-inline { background: #17140e !important; border-radius: 999px !important; padding: 4px 6px !important; gap: 4px; box-shadow: 0 3px 10px rgba(23,20,14,0.22); }
+    body .stepper-inline button { width: 28px !important; height: 28px !important; font-size: 18px !important; }
+    body .stepper-inline span { font-size: 13px !important; min-width: 18px !important; }
+    body .cat-section { margin-bottom: 8px; }
+    body .cat-section-header { border-top: 0 !important; padding: 26px 16px 14px !important; }
+    body .cat-section-header h2 { font-size: 24px !important; letter-spacing: -0.02em; }
+    body .cat-section-header .cat-count { background: none !important; border: 0 !important; font-size: 12px !important; padding: 0 !important; }
+    body .shop-search { border-radius: 999px !important; padding: 12px 18px !important; background: #fff; box-shadow: 0 1px 2px rgba(23,20,14,0.05), 0 6px 18px rgba(23,20,14,0.06); border-color: transparent !important; }
+    body .shop-search input { font-size: 14px !important; }
+    body .shop-hero { border-radius: 22px !important; }
+    body #shopPage { padding-bottom: 150px !important; }
+    /* Floating cart bar, shown once something is in the cart. */
+    .cart-fab { position: fixed; z-index: 60; left: 16px; right: 16px;
+      bottom: calc(var(--bottom-h, 64px) + 12px + env(safe-area-inset-bottom, 0px));
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      height: 54px; padding: 0 20px; border-radius: 999px; text-decoration: none;
+      background: #17140e; color: #fff; font-weight: 700; font-size: 15px;
+      box-shadow: 0 10px 30px rgba(23,20,14,0.35); animation: fab-in .28s cubic-bezier(.2,.8,.2,1); }
+    .cart-fab[hidden] { display: none; }
+    .cart-fab .cf-count { min-width: 26px; height: 26px; padding: 0 8px; border-radius: 999px; background: #ff4500; color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; }
+    .cart-fab .cf-label { flex: 1; text-align: center; }
+    .cart-fab .cf-total { font-variant-numeric: tabular-nums; }
+    @keyframes fab-in { from { transform: translateY(14px); opacity: 0; } to { transform: none; opacity: 1; } }
+    @media (min-width: 700px) { .cart-fab { left: 50%; right: auto; width: 420px; transform: translateX(-50%); animation: none; } }
+  </style>
 </head>
 <body>
   <!-- NAVBAR -->
@@ -186,6 +238,13 @@
 
   <!-- PRODUCT SECTIONS -->
   <div class="page" id="shopPage" style="padding-top:8px"></div>
+
+  <!-- FLOATING CART BAR -->
+  <a href="cart.html" class="cart-fab" id="cartFab" hidden aria-label="View cart">
+    <span class="cf-count" id="cfCount">0</span>
+    <span class="cf-label">View cart</span>
+    <span class="cf-total" id="cfTotal">R0.00</span>
+  </a>
 
   <!-- BOTTOM NAV -->
   <nav class="bottom-nav">
@@ -604,6 +663,21 @@
     const bn = document.getElementById('bnavCartCount');
     bn.textContent = count;
     bn.style.display = count > 0 ? 'flex' : 'none';
+    updateCartFab(count);
+  }
+
+  // Floating "View cart" bar: item count and running subtotal.
+  function updateCartFab(count) {
+    const fab = document.getElementById('cartFab');
+    if (!fab) return;
+    let total = 0;
+    Object.entries(cart).forEach(([id, qty]) => {
+      const p = products.find(x => x.id === id);
+      if (p && p.retailSingleZAR > 0) total += p.retailSingleZAR * qty;
+    });
+    document.getElementById('cfCount').textContent = count;
+    document.getElementById('cfTotal').textContent = fmtPrice(total);
+    fab.hidden = count <= 0;
   }
 
   // Tapping the "Cooler Box" badge on any category header jumps to the

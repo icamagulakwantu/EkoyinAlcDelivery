@@ -48,12 +48,8 @@ Breezer Watermelon,CIDER_RTD,Can (500ml),28.63,24,0,526.00,0,0,0,,ALCOHOL,
 Breezer Watermelon,CIDER_RTD,Dumpy (275ml),24.97,24,0,465.60,0,0,0,Martini Bacardi,ALCOHOL,
 Brutal Fruit Ruby Apple,CIDER_RTD,Can (500ml),25.95,24,0,419.04,0,0,0,SAB,ALCOHOL,
 Brutal Fruit Ruby Apple,CIDER_RTD,Dumpy (330ml),27.11,24,0,372.48,0,0,0,SAB,ALCOHOL,
-Brutal Fruit Ruby Apple,CIDER_RTD,Quart (750ml),39.97,12,0,407.40,0,0,0,SAB,ALCOHOL,
-Brutal Fruit Spritzer Ruby Apple,CIDER_RTD,Can (500ml),25.95,24,0,419.00,0,0,0,,ALCOHOL,
-Brutal Fruit Spritzer Strawberry Rouge,CIDER_RTD,Can (500ml),25.95,24,0,419.00,0,0,0,,ALCOHOL,
 Brutal Fruit Strawberry Rouge,CIDER_RTD,Can (500ml),25.95,24,0,419.04,0,0,0,SAB,ALCOHOL,
 Brutal Fruit Strawberry Rouge,CIDER_RTD,Dumpy (330ml),27.11,24,0,372.48,0,0,0,SAB,ALCOHOL,
-Brutal Fruit Strawberry Rouge,CIDER_RTD,Quart (750ml),39.97,12,0,407.40,0,0,0,SAB,ALCOHOL,
 Budweiser,BEER,Can (500ml),23.64,24,0,395.76,0,0,0,SAB,ALCOHOL,
 Budweiser,BEER,Dumpy (330ml),24.80,24,0,349.20,0,0,0,SAB,ALCOHOL,
 Cape Velvet Cream,LIQUEUR,750ml Bottle,219.24,12,0,1497.60,0,0,0,Distell Portfolio,ALCOHOL,
@@ -73,13 +69,9 @@ Castle Milk Stout,BEER,Quart (750ml),38.65,12,0,325.92,0,0,0,SAB,ALCOHOL,
 Chambord Black Raspberry,LIQUEUR,500ml Bottle,414.72,12,0,4377.60,0,0,0,Global Premium Import,ALCOHOL,
 Cherry Kirsch Liqueur (Butlers),LIQUEUR,750ml Bottle,190.39,12,0,2419.20,0,0,0,Heineken SA,ALCOHOL,
 Chillers Punch Caribbean Chaos,CIDER_RTD,Can (500ml),23.98,24,0,372.48,0,0,0,Local Value Portfolio,ALCOHOL,BLACK_OWNED|CELEBRITY_BACKED
-Chillers Punch Caribbean Chaos,CIDER_RTD,Dumpy (500ml),25.98,24,0,325.92,0,0,0,Local Value Portfolio,ALCOHOL,BLACK_OWNED|CELEBRITY_BACKED
 Chillers Punch Milano Spritz,CIDER_RTD,Can (500ml),23.98,24,0,372.48,0,0,0,Local Value Portfolio,ALCOHOL,BLACK_OWNED|CELEBRITY_BACKED
-Chillers Punch Milano Spritz,CIDER_RTD,Dumpy (500ml),25.98,24,0,325.92,0,0,0,Local Value Portfolio,ALCOHOL,BLACK_OWNED|CELEBRITY_BACKED
 Chillers Punch Peach & Mango,CIDER_RTD,Can (500ml),23.98,24,0,372.48,0,0,0,Local Value Portfolio,ALCOHOL,BLACK_OWNED|CELEBRITY_BACKED
-Chillers Punch Peach & Mango,CIDER_RTD,Dumpy (500ml),25.98,24,0,325.92,0,0,0,Local Value Portfolio,ALCOHOL,BLACK_OWNED|CELEBRITY_BACKED
 Chillers Punch Tequila Sunrise (Zero Alcohol),CIDER_RTD,Can (500ml),23.98,24,0,372.48,0,0,0,Local Value Portfolio,ALCOHOL,BLACK_OWNED|CELEBRITY_BACKED
-Chillers Punch Tequila Sunrise (Zero Alcohol),CIDER_RTD,Dumpy (500ml),25.98,24,0,325.92,0,0,0,Local Value Portfolio,ALCOHOL,BLACK_OWNED|CELEBRITY_BACKED
 Chivas Regal 12 Year Old,WHISKY,750ml Bottle,550.76,12,0,4838.40,0,0,0,Pernod Ricard,ALCOHOL,
 Chivas Regal 15 Year Old,WHISKY,750ml Bottle,800.58,12,0,7833.60,0,0,0,Pernod Ricard,ALCOHOL,
 Ciroc Apple,VODKA_PREMIUM,750ml Bottle,589.61,12,0,5068.80,0,0,0,Diageo SA,ALCOHOL,
@@ -108,8 +100,8 @@ Drostdy-Hof Claret Select,WINE_BOX,5 Litre Box,167.50,4,0,729.60,0,0,0,Heineken 
 El Jimador Blanco,TEQUILA,750ml Bottle,0.00,12,0,2764.80,0,0,0,Edward Snell & Co.,ALCOHOL,
 El Jimador Reposado,TEQUILA,750ml Bottle,0.00,12,0,2764.80,0,0,0,Edward Snell & Co.,ALCOHOL,
 Espresso/Coffee Liqueur (Butlers),LIQUEUR,750ml Bottle,178.85,12,0,2188.80,0,0,0,Heineken SA,ALCOHOL,
-Extreme Energy,ENERGY_DRINK,Can (500ml),21.49,24,0,395.76,0,0,0,Heineken SA,ALCOHOL,
-Extreme Energy,ENERGY_DRINK,Dumpy (500ml),23.98,24,0,349.20,0,0,0,Heineken SA,ALCOHOL,
+Extreme Energy,CIDER_RTD,Can (440ml),21.49,24,0,395.76,0,0,0,Heineken SA,ALCOHOL,
+Extreme Energy,CIDER_RTD,Dumpy (330ml),23.98,24,0,349.20,0,0,0,Heineken SA,ALCOHOL,
 Firstwatch Whisky,WHISKY,750ml Bottle,219.85,12,0,2016.00,0,0,0,Edward Snell & Co.,ALCOHOL,
 Flowstone African Bush Botanical,GIN,750ml Bottle,475.23,12,0,3571.20,0,0,0,Local Craft,ALCOHOL,
 Flying Fish Chill,CIDER_RTD,Can (500ml),21.49,24,0,395.76,0,0,0,SAB,ALCOHOL,
@@ -175,15 +167,15 @@ KEM Gin,GIN,750ml Bottle,360.20,12,0,2880.00,0,0,0,Local Craft,ALCOHOL,BLACK_OWN
 Klipdrift Export,BRANDY,750ml Bottle,189.99,12,0,2188.80,0,0,0,Heineken (Distell),ALCOHOL,
 Klipdrift Premium,BRANDY,750ml Bottle,259.00,12,0,2517.60,0,0,0,,ALCOHOL,
 Kola Tonic Cordial,MIXER,750ml Bottle,0.00,12,0,529.20,0,0,0,Tiger Brands (Roses),ALCOHOL,
-Kopparberg Mixed Fruit,CIDER_RTD,Can (500ml),37.75,24,0,582.00,0,0,0,Heineken SA,ALCOHOL,
-Kopparberg Mixed Fruit,CIDER_RTD,Dumpy (500ml),37.75,24,0,512.16,0,0,0,Heineken SA,ALCOHOL,
-Kopparberg Pear,CIDER_RTD,Can (500ml),37.75,24,0,582.00,0,0,0,Heineken SA,ALCOHOL,
-Kopparberg Pear,CIDER_RTD,Dumpy (500ml),37.75,24,0,512.16,0,0,0,Heineken SA,ALCOHOL,
-Kopparberg Raspberry,CIDER_RTD,Can (500ml),37.75,24,0,582.00,0,0,0,Heineken SA,ALCOHOL,
-Kopparberg Raspberry,CIDER_RTD,Dumpy (500ml),37.75,24,0,512.16,0,0,0,Heineken SA,ALCOHOL,
-Kopparberg Strawberry & Lime,CIDER_RTD,Can (500ml),37.75,24,0,582.00,0,0,0,Heineken SA,ALCOHOL,
-Kopparberg Strawberry & Lime,CIDER_RTD,Dumpy (500ml),37.75,24,0,512.16,0,0,0,Heineken SA,ALCOHOL,
-Kopparberg Sweet Vintage Pear,CIDER_RTD,Can (500ml),37.75,24,0,582.00,0,0,0,,ALCOHOL,
+Kopparberg Mixed Fruit,CIDER_RTD,Can (440ml),37.75,24,0,582.00,0,0,0,Heineken SA,ALCOHOL,
+Kopparberg Mixed Fruit,CIDER_RTD,Dumpy (330ml),37.75,24,0,512.16,0,0,0,Heineken SA,ALCOHOL,
+Kopparberg Pear,CIDER_RTD,Can (440ml),37.75,24,0,582.00,0,0,0,Heineken SA,ALCOHOL,
+Kopparberg Pear,CIDER_RTD,Dumpy (330ml),37.75,24,0,512.16,0,0,0,Heineken SA,ALCOHOL,
+Kopparberg Raspberry,CIDER_RTD,Can (440ml),37.75,24,0,582.00,0,0,0,Heineken SA,ALCOHOL,
+Kopparberg Raspberry,CIDER_RTD,Dumpy (330ml),37.75,24,0,512.16,0,0,0,Heineken SA,ALCOHOL,
+Kopparberg Strawberry & Lime,CIDER_RTD,Can (440ml),37.75,24,0,582.00,0,0,0,Heineken SA,ALCOHOL,
+Kopparberg Strawberry & Lime,CIDER_RTD,Dumpy (330ml),37.75,24,0,512.16,0,0,0,Heineken SA,ALCOHOL,
+Kopparberg Sweet Vintage Pear,CIDER_RTD,Can (440ml),37.75,24,0,582.00,0,0,0,,ALCOHOL,
 Krone Borealis Brut (MCC),SPARKLING,750ml Bottle,175.00,6,0,1197.00,0,0,0,Vinimark Portfolio,ALCOHOL,
 Kwande Gin Rooibos,GIN,750ml Bottle,359.76,12,0,3225.60,0,0,0,Local Craft,ALCOHOL,BLACK_OWNED
 Kwande Gin Witty,GIN,750ml Bottle,359.76,12,0,3225.60,0,0,0,Local Craft,ALCOHOL,BLACK_OWNED
@@ -231,9 +223,9 @@ Redd's Berry,CIDER_RTD,Dumpy (330ml),25.95,24,0,372.48,0,0,0,SAB,ALCOHOL,
 Redd's Dry,CIDER_RTD,Can (500ml),23.98,24,0,419.04,0,0,0,SAB,ALCOHOL,
 Redd's Dry,CIDER_RTD,Dumpy (330ml),25.95,24,0,372.48,0,0,0,SAB,ALCOHOL,
 Redd's MXD Guarana,CIDER_RTD,Can (500ml),23.98,24,0,419.04,0,0,0,SAB,ALCOHOL,
-Redd's MXD Guarana,CIDER_RTD,Dumpy (330ml),25.95,24,0,372.48,0,0,0,SAB,ALCOHOL,
+Redd's MXD Guarana,CIDER_RTD,Quart (660ml),30.83,12,0,369.99,0,0,0,SAB,ALCOHOL,
 Redd's MXD Pine,CIDER_RTD,Can (500ml),23.98,24,0,419.04,0,0,0,SAB,ALCOHOL,
-Redd's MXD Pine,CIDER_RTD,Dumpy (330ml),25.95,24,0,372.48,0,0,0,SAB,ALCOHOL,
+Redd's MXD Pine,CIDER_RTD,Quart (660ml),30.83,12,0,369.99,0,0,0,SAB,ALCOHOL,
 Redd's Original,CIDER_RTD,Can (500ml),23.98,24,0,419.04,0,0,0,SAB,ALCOHOL,
 Redd's Original,CIDER_RTD,Dumpy (330ml),25.95,24,0,372.48,0,0,0,SAB,ALCOHOL,
 Remy Martin 1738 Accord Royal,COGNAC,750ml Bottle,1099.27,12,0,13824.00,0,0,0,Remy Cointreau,ALCOHOL,
@@ -314,7 +306,5 @@ Mofaya Orange Ting,MIXER,Can (500ml),9.99,24,2.0,234.96,60,5.0,13666.32,Coca-Col
 M'hudi Chenin Blanc,WINE,750ml Bottle,219.00,6,5.0,1248.30,100,10.0,118260.00,M'hudi Wines,ALCOHOL,BLACK_OWNED
 M'hudi Pinotage,WINE,750ml Bottle,209.00,6,5.0,1191.30,100,10.0,112860.00,M'hudi Wines,ALCOHOL,BLACK_OWNED
 Seven Sisters Pinotage/Cabernet,WINE,750ml Bottle,90.00,6,5.0,513.00,100,10.0,48600.00,Seven Sisters Vineyards,ALCOHOL,BLACK_OWNED|WOMEN_OWNED
-Aljimardo Silver,TEQUILA,750ml Bottle,200.00,12,4.0,2304.00,60,8.0,132480.00,Local Value Brand,ALCOHOL,
-Gordons Premium Pink,GIN,750ml Bottle,217.06,12,4.0,2500.53,60,8.0,143780.54,Diageo SA,ALCOHOL,
 Drambuie Honey/Scotch,LIQUEUR,750ml Bottle,320.00,12,4.0,3686.40,60,8.0,211968.00,Spirits SA Import,ALCOHOL,
 Guinness Foreign Extra,BEER,Can (440ml),26.00,24,3.0,605.28,84,7.0,48746.88,Diageo SA,ALCOHOL,
