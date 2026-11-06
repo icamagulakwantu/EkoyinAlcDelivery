@@ -2,7 +2,7 @@
 //
 // Run with: npm run seed  (or `npx prisma db seed`)
 //
-// Reads prisma/data/skus.csv (the canonical iCamagu alcohol SKU export),
+// Reads prisma/data/skus.csv (the canonical Ekoyini 327-SKU master catalogue),
 // applies the founder-approved category markups (7% beer/cider/wine/RTD; 5% spirits/mixers/soft drinks/water/ice), and upserts
 // every SKU into the database. Re-running this script is safe — it updates
 // existing rows by (name, bottleFormat) instead of duplicating them.
@@ -303,15 +303,13 @@ async function main() {
     const isAlcohol = row.productType === 'ALCOHOL';
     const listPriceZAR = Number(row.singlePriceZAR) || 0; // source retail price per individual unit
     const sourceUnitsPerCase = parseInt(row.unitsPerCase, 10) || 1;
-    const packSize = isAlcohol && (row.bottleFormat.startsWith('Dumpy') || row.bottleFormat.startsWith('Can')) ? 6 : 1;
+    const packSize = (row.bottleFormat.startsWith('Dumpy') || row.bottleFormat.startsWith('Can')) ? 6 : 1;
     if (sourceUnitsPerCase % packSize !== 0) {
       throw new Error('Invalid case quantity for ' + row.name + ' ' + row.bottleFormat + ': ' + sourceUnitsPerCase + ' is not divisible by pack size ' + packSize);
     }
     const unitsPerCase = sourceUnitsPerCase / packSize;
     const retailCaseDiscountPct = RETAIL_CASE_DISCOUNT_PCT[category] ?? 5;
-    const retailSingleZAR = isAlcohol
-      ? (CataloguePricing.newSinglePrice({ name: row.name, bottleFormat: row.bottleFormat, packSize, listPriceZAR }) ?? 0)
-      : listPriceZAR;
+    const retailSingleZAR = CataloguePricing.newSinglePrice({ name: row.name, bottleFormat: row.bottleFormat, category, packSize, listPriceZAR }) ?? 0;
     const retailCaseZAR = round2(retailSingleZAR * unitsPerCase * (1 - retailCaseDiscountPct / 100));
     const photoCandidates = [FORMAT_PHOTO_MAP[JSON.stringify([row.name, row.bottleFormat])], BRAND_PHOTO_MAP[row.name]];
     const localPhoto = photoCandidates.find(candidate => candidate && candidate.startsWith('/images/') &&
