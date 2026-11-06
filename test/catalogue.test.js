@@ -28,8 +28,8 @@ test('founder-approved markups are 7% for beer/cider/wine and 5% for spirits and
 
 test('receipt-calibrated final customer prices take priority over legacy retail uplift', () => {
   assert.equal(C.newSinglePrice({ name: 'Hennessy VS', bottleFormat: '750ml Bottle', packSize: 1, listPriceZAR: 400 }), 682.5);
-  assert.equal(C.newSinglePrice({ name: 'Johnnie Walker Red Label', bottleFormat: '750ml Bottle', packSize: 1, listPriceZAR: 269.73 }), 315);
-  assert.equal(C.newSinglePrice({ name: 'Klipdrift Export', bottleFormat: '750ml Bottle', packSize: 1, listPriceZAR: 189.99 }), 252);
+  assert.equal(C.newSinglePrice({ name: 'Johnnie Walker Red Label', bottleFormat: '750ml Bottle', packSize: 1, listPriceZAR: 269.73 }), 293.99);
+  assert.equal(C.newSinglePrice({ name: 'Klipdrift Export', bottleFormat: '750ml Bottle', packSize: 1, listPriceZAR: 189.99 }), 209.99);
 });
 
 test('final customer prices override legacy list-price uplift when configured', () => {
@@ -113,10 +113,10 @@ test('runner: fixes labels, removes 375ml, prices everything, and is repeatable'
   // Product photos are assigned separately by prisma/sync-images.js from local assets.
   assert.equal(find('Hennessy VS', '750ml Bottle').imageUrl, null);
   const heineken = find('Heineken', 'Dumpy (330ml)');
-  assert.equal(heineken.retailSingleZAR, 112.35);
-  assert.equal(heineken.retailCaseZAR, 413.45); // 112.35 x 4 six-packs - 8%
+  assert.equal(heineken.retailSingleZAR, 117.7);
+  assert.equal(heineken.retailCaseZAR, 433.14); // 117.70 x 4 six-packs - 8%
   // Receipt-calibrated prices are used where configured.
-  assert.equal(find('Windhoek Lager', 'Dumpy (330ml)').retailSingleZAR, 208.65); // configured final customer price
+  assert.equal(find('Windhoek Lager', 'Dumpy (330ml)').retailSingleZAR, 208.65); // master workbook final customer price
   assert.equal(find('Stella Artois', 'Dumpy (330ml)').retailSingleZAR, 107.0); // configured final customer price
   assert.equal(find('Bombay Sapphire', '750ml Bottle').retailSingleZAR, 682.5);
   assert.deepEqual(first.unpriced, []);
