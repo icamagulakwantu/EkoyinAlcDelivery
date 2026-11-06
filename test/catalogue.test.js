@@ -25,7 +25,17 @@ test('canonical master workbook import contains 327 unique SKUs and preserves th
   assert.equal(categoryByName.get('Casamigos Blanco'), 'TEQUILA_PREMIUM');
   assert.equal(categoryByName.get('Don Julio Reposado'), 'TEQUILA_PREMIUM');
   assert.equal(C.FINAL_CUSTOMER_PRICES.length, 324);
+  const finalKeys = C.FINAL_CUSTOMER_PRICES.map(row => `${row.name}|${row.bottleFormat}`);
+  assert.equal(new Set(finalKeys).size, 324);
   assert.equal(C.PRICE_COMING_SOON.length, 3);
+  const uncovered = csv.slice(1).filter(line => {
+    const cells = line.split(',');
+    const name = cells[nameIndex];
+    const format = cells[formatIndex];
+    return C.finalPriceFor(name, format) == null &&
+      !C.PRICE_COMING_SOON.some(row => row.name === name && row.bottleFormat === format);
+  });
+  assert.deepEqual(uncovered, []);
   for (const row of C.PRICE_COMING_SOON) {
     assert.equal(C.newSinglePrice({ ...row, listPriceZAR: 999, packSize: 1, category: 'LIQUEUR' }), null);
   }
