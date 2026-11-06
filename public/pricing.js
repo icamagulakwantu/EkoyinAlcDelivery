@@ -61,19 +61,25 @@
   //   1. Distance fee  — by straight-line distance x ROUTING_BUFFER
   //   2. Surge fee     — time of day (South African time), 100% to the driver
   //   3. Priority fee  — optional "Super Priority" the customer adds
-  //   4. Service fee   — R50 to R110, rising with the order value
+  //   4. Care & Handling fee — 5% / 7% / 15% of subtotal (customer protection)
   //
   // There is no free delivery: every order pays the distance fee.
 
-  // Service fee bands, by pre-discount order value. Edit the numbers here;
-  // the server, checkout and cart all read this one table.
-  const SERVICE_FEE_BANDS = [
-    { upTo: 500, fee: 50 }, // R300 - R499
-    { upTo: 800, fee: 65 }, // R500 - R799
-    { upTo: 1201, fee: 80 }, // R800 - R1200
-    { upTo: 1600, fee: 95 }, // R1201 - R1599
-    { upTo: Infinity, fee: 110 }, // R1600 and above
+  // Care & Handling fee (formerly "service fee") — framed as a customer
+  // protection feature, not a crude charge. Percentage of pre-discount
+  // subtotal. Founder decision 6 Nov 2026:
+  //   ≤ R800  → 5%
+  //   R800–R2000 → 7%
+  //   > R2000 → 15%
+  // The fee covers order verification, tamper-check readiness, and platform
+  // care so the right products arrive sealed and correct.
+  const CARE_FEE_BANDS = [
+    { upTo: 800, pct: 0.05 },
+    { upTo: 2000, pct: 0.07 },
+    { upTo: Infinity, pct: 0.15 },
   ];
+  // Kept for backwards compatibility with any code still reading the old name.
+  const SERVICE_FEE_BANDS = CARE_FEE_BANDS;
 
   // Straight-line distance is multiplied by this to account for real roads.
   const ROUTING_BUFFER = 1.2;
@@ -142,11 +148,17 @@
     return { key: null, fee: 0 };
   }
 
-  // Platform service fee for an order, by its pre-discount subtotal.
-  function serviceFeeFor(subtotal) {
+  // Care & Handling fee for an order, by its pre-discount subtotal.
+  // Returns a rand amount (percentage of subtotal, rounded to cents).
+  function careFeeFor(subtotal) {
     const value = Number(subtotal);
     const amount = Number.isFinite(value) ? value : 0;
-    return SERVICE_FEE_BANDS.find((band) => amount < band.upTo).fee;
+    const band = CARE_FEE_BANDS.find((b) => amount < b.upTo) || CARE_FEE_BANDS[CARE_FEE_BANDS.length - 1];
+    return round2(amount * band.pct);
+  }
+  // Alias so existing callers keep working during the rename.
+  function serviceFeeFor(subtotal) {
+    return careFeeFor(subtotal);
   }
 
   function buildDeliveryQuote({ subtotal, distanceKm, priorityFee, now, surgesEnabled }) {
@@ -154,15 +166,16 @@
     const surge = surgesEnabled === false ? { key: null, fee: 0 } : surgeWindow(now || new Date());
     const priority = PRIORITY_OPTIONS.includes(priorityFee) ? priorityFee : 0;
     const deliveryFee = distanceDeliveryFee(km);
-    const serviceFee = serviceFeeFor(subtotal);
+    const careFee = careFeeFor(subtotal);
     return {
       distanceKm: km,
       deliveryFee,
       surgeKey: surge.key,
       surgeFee: surge.fee,
       priorityFee: priority,
-      serviceFee,
-      total: round2(deliveryFee + surge.fee + priority + serviceFee),
+      serviceFee: careFee,   // legacy key
+      careFee,               // preferred key
+      total: round2(deliveryFee + surge.fee + priority + careFee),
     };
   }
 
@@ -182,6 +195,7 @@
     COOLER_CUTOFF_HOUR,
     coolerDiscountPct,
     coolerDiscountAvailable,
+    CARE_FEE_BANDS,
     SERVICE_FEE_BANDS,
     DELIVERY_FEE,
     deliveryFee,
@@ -192,6 +206,7 @@
     routedDistanceKm,
     distanceDeliveryFee,
     surgeWindow,
+    careFeeFor,
     serviceFeeFor,
     buildDeliveryQuote,
   };
