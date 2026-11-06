@@ -12,6 +12,20 @@ test('tavern rounding: rand under R50, R5 under R200, R10 above', () => {
   assert.equal(C.roundTavern('abc'), 0);
 });
 
+test('founder-approved markups are 7% for beer/cider/wine and 5% for spirits and non-alcohol categories', () => {
+  assert.equal(C.markupRateForCategory('BEER'), 0.07);
+  assert.equal(C.markupRateForCategory('CIDER_RTD'), 0.07);
+  assert.equal(C.markupRateForCategory('WINE_BOX'), 0.07);
+  for (const category of ['WHISKY', 'BRANDY', 'COGNAC', 'GIN', 'VODKA', 'TEQUILA', 'LIQUEUR', 'RUM', 'MIXER', 'ENERGY_DRINK', 'WATER', 'ICE']) {
+    assert.equal(C.markupRateForCategory(category), 0.05, category);
+  }
+  assert.equal(C.tavernPrice(100, 1, 'BEER'), 107);
+  assert.equal(C.tavernPrice(100, 1, 'WHISKY'), 105);
+  assert.equal(C.tavernPrice(100, 6, 'BEER'), 642);
+  assert.equal(C.newSinglePrice({ name: 'Unlisted Beer', bottleFormat: 'Can (500ml)', category: 'BEER', packSize: 6, listPriceZAR: 100 }), 642);
+  assert.equal(C.newSinglePrice({ name: 'Unlisted Whisky', bottleFormat: '750ml Bottle', category: 'WHISKY', packSize: 1, listPriceZAR: 100 }), 105);
+});
+
 test('receipt-calibrated final customer prices take priority over legacy retail uplift', () => {
   assert.equal(C.newSinglePrice({ name: 'Hennessy VS', bottleFormat: '750ml Bottle', packSize: 1, listPriceZAR: 400 }), 682.5);
   assert.equal(C.newSinglePrice({ name: 'Johnnie Walker Red Label', bottleFormat: '750ml Bottle', packSize: 1, listPriceZAR: 269.73 }), 315);
@@ -39,7 +53,7 @@ test('every new price is at or above the retail price', () => {
     assert.ok(ours >= p.unit * pack, `${p.name} ${p.bottleFormat}: R${ours} < shop`);
   }
   for (const list of [9.99, 14, 46.05, 169.99, 5500]) {
-    assert.ok(C.tavernPrice(list) >= list * 1.2, `list R${list}`);
+    assert.ok(C.tavernPrice(list) >= list * 1.05, `list R${list}`);
   }
 });
 
