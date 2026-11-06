@@ -11,10 +11,10 @@
 //      remain; past orders keep their item names and
 //      prices: OrderItem.skuId is set to null, nothing else changes);
 //   3. does not invent or add SKUs outside the canonical iCamagu export;
-//   4. prices every product at retail + 25% (checked shop price when we have
-//      one, otherwise the product's list price);
+//   4. applies the founder-approved category markup once to an unmarked-up
+//      base: 7% beer/cider/wine/RTD; 5% spirits/mixers/soft drinks/water/ice;
 // Every step writes fixed values worked out from a base that never changes,
-// so re-running changes nothing and never adds 25% twice.
+// so re-running changes nothing and never stacks the markup twice.
 // A database error exits non-zero; never report a partial catalogue update as success.
 
 const C = require('../lib/catalogue-2026-11.js');
