@@ -355,22 +355,23 @@ async function main() {
 
   console.log(`Catalog seeded: ${created} created, ${updated} updated.`);
 
-  // Optional source-of-truth reconciliation. This is explicitly gated because
+  // Optional source-of-truth reconciliation. It is explicitly gated because
   // obsolete SKUs may still be referenced by historic OrderItem snapshots.
-  // Detach only the SKU FK; name, price and quantity snapshots remain intact.
+  // The master workbook is the complete 327-row catalogue, including non-alcohol
+  // drinks, mixers, water and ice. Detach only the SKU FK; order snapshots remain.
   if (process.env.APPLY_ALCOHOL_CATALOGUE_SYNC_ON_DEPLOY === 'true') {
-    const canonicalAlcoholKeys = new Set(rows.filter(row => row.productType === 'ALCOHOL').map(row => JSON.stringify([row.name, row.bottleFormat])));
-    const currentAlcohol = await prisma.skuItem.findMany({ where: { productType: 'ALCOHOL' }, select: { id: true, name: true, bottleFormat: true } });
-    const obsolete = currentAlcohol.filter(row => !canonicalAlcoholKeys.has(JSON.stringify([row.name, row.bottleFormat])));
+    const canonicalSkuKeys = new Set(rows.map(row => JSON.stringify([row.name, row.bottleFormat])));
+    const currentSkus = await prisma.skuItem.findMany({ select: { id: true, name: true, bottleFormat: true } });
+    const obsolete = currentSkus.filter(row => !canonicalSkuKeys.has(JSON.stringify([row.name, row.bottleFormat])));
     let detachedOrderLines = 0;
     for (const row of obsolete) {
       const detached = await prisma.orderItem.updateMany({ where: { skuId: row.id }, data: { skuId: null } });
       detachedOrderLines += detached.count;
       await prisma.skuItem.delete({ where: { id: row.id } });
     }
-    console.log(`Alcohol source sync removed ${obsolete.length} obsolete SKU(s) and detached ${detachedOrderLines} historic order line(s) without changing their snapshots.`);
+    console.log(`Master catalogue sync removed ${obsolete.length} obsolete SKU(s) and detached ${detachedOrderLines} historic order line(s) without changing their snapshots.`);
   } else {
-    console.log('Alcohol source sync is in preview mode; obsolete SKUs were not deleted.');
+    console.log('Master catalogue sync is in preview mode; obsolete SKUs were not deleted.');
   }
 
   // Seed the taverns admin-api.js's assign-order dropdown expects to find.
