@@ -1,8 +1,27 @@
 // test/catalogue.test.js — run with `node --test`
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
 const C = require('../lib/catalogue-2026-11.js');
 const { run } = require('../prisma/catalogue-update.js');
+
+test('canonical master workbook import contains 327 unique SKUs and preserves the three unpriced entries', () => {
+  const csv = fs.readFileSync(require.resolve('../prisma/data/skus.csv'), 'utf8').trim().split(/\\r?\\n/);
+  const header = csv[0].split(',');
+  const nameIndex = header.indexOf('name');
+  const formatIndex = header.indexOf('bottleFormat');
+  const keys = csv.slice(1).map(line => {
+    const cells = line.split(',');
+    return `${cells[nameIndex]}|${cells[formatIndex]}`;
+  });
+  assert.equal(keys.length, 327);
+  assert.equal(new Set(keys).size, 327);
+  assert.equal(C.FINAL_CUSTOMER_PRICES.length, 324);
+  assert.equal(C.PRICE_COMING_SOON.length, 3);
+  for (const row of C.PRICE_COMING_SOON) {
+    assert.equal(C.newSinglePrice({ ...row, listPriceZAR: 999, packSize: 1, category: 'LIQUEUR' }), null);
+  }
+});
 
 test('tavern rounding: rand under R50, R5 under R200, R10 above', () => {
   assert.equal(C.roundTavern(26.6), 27);
