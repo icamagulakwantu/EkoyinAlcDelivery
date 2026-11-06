@@ -16,6 +16,14 @@ test('canonical master workbook import contains 327 unique SKUs and preserves th
   });
   assert.equal(keys.length, 327);
   assert.equal(new Set(keys).size, 327);
+  const categoryByName = new Map(csv.slice(1).map(line => {
+    const cells = line.split(',');
+    return [cells[nameIndex], cells[header.indexOf('category')]];
+  }));
+  assert.equal(categoryByName.get('Ciroc Original Premium'), 'VODKA_PREMIUM');
+  assert.equal(categoryByName.get('Belvedere Pure Vodka'), 'VODKA_PREMIUM');
+  assert.equal(categoryByName.get('Casamigos Blanco'), 'TEQUILA_PREMIUM');
+  assert.equal(categoryByName.get('Don Julio Reposado'), 'TEQUILA_PREMIUM');
   assert.equal(C.FINAL_CUSTOMER_PRICES.length, 324);
   assert.equal(C.PRICE_COMING_SOON.length, 3);
   for (const row of C.PRICE_COMING_SOON) {
