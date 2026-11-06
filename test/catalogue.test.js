@@ -214,12 +214,13 @@ test('prices-only dry-run previews retail changes without changing SKU structure
 });
 
 
-test('prices-only run leaves non-alcohol target catalogue rows untouched', async () => {
+test('prices-only run applies the category markup to alcohol and non-alcohol master-catalogue rows', async () => {
   const prisma = fakePrisma([
     { name: 'Heineken', productType: 'ALCOHOL', bottleFormat: 'Dumpy (330ml)', listPriceZAR: 16, retailSingleZAR: 16, packSize: 1 },
     { name: 'Aquelle Water', productType: 'NON_ALCOHOL', bottleFormat: '500ml', listPriceZAR: 10, retailSingleZAR: 10, packSize: 1 },
   ]);
   const result = await run(prisma, { dryRun: true, pricesOnly: true });
   assert.ok(result.log.some(line => line.includes('Heineken')));
-  assert.equal(result.log.some(line => line.includes('Aquelle Water')), false);
+  assert.ok(result.log.some(line => line.includes('Aquelle Water')));
+  assert.equal(prisma.db.find(row => row.name === 'Aquelle Water').retailSingleZAR, 10.5);
 });
