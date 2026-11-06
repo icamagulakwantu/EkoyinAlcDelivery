@@ -166,7 +166,13 @@
   async function loadCart() {
     try {
       const res = await fetch('/api/products');
+      if (!res.ok) throw new Error('Catalogue request failed');
       products = await res.json();
+      const reconciled = EkoyiniCart.reconcile(products);
+      cart = reconciled.cart;
+      if (reconciled.removed) {
+        showToast('Some saved items are no longer available. Your cart has been refreshed.', 4000);
+      }
       renderCart();
 
       const savedCode = localStorage.getItem('ekoyini_promo_code');
