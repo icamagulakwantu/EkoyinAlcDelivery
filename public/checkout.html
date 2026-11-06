@@ -181,6 +181,22 @@
       </div>
     </div>
 
+
+    <!-- SAFETY STICKERS (spirits only) -->
+    <div class="checkout-section" id="safetyStickerSection" style="display:none;">
+      <h2>Safety Seal</h2>
+      <p style="font-size:12px;color:var(--muted);margin:0 0 12px;">
+        Optional tamper-proof stickers for spirits. Helps keep your order sealed and protected from the tavern to your door.
+      </p>
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px;">
+        <input type="checkbox" id="safetyStickerCheck" onchange="onSafetyStickerChange()" style="width:16px;height:16px;">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--white);">Add Safety Seals — R10</div>
+          <div style="font-size:11px;color:var(--muted);">One set of tamper-proof stickers for spirit bottles on this order</div>
+        </div>
+      </label>
+    </div>
+
     <!-- PAYMENT METHOD -->
     <div class="checkout-section">
       <h2>Payment Method</h2>
@@ -191,11 +207,11 @@
           <div class="p-desc" id="codPaymentDesc">Pay the driver when they arrive</div>
         </div>
       </div>
-      <div class="payment-option disabled" id="cardPaymentOption" data-method="card">
-        <input type="radio" name="payment" value="card" id="cardPaymentRadio" disabled>
+      <div class="payment-option" id="cardPaymentOption" data-method="card" onclick="selectPayment('card')">
+        <input type="radio" name="payment" value="card" id="cardPaymentRadio">
         <div>
-          <div class="p-label">Debit/Credit Card</div>
-          <div class="p-desc" id="cardPaymentDesc">Coming soon — not available yet</div>
+          <div class="p-label">Debit / Credit Card</div>
+          <div class="p-desc" id="cardPaymentDesc">Secure card payment via Yoco</div>
         </div>
       </div>
       <div class="payment-option" data-method="eft" onclick="selectPayment('eft')">
@@ -255,6 +271,36 @@
   const checkoutData = JSON.parse(localStorage.getItem('ekoyini_checkout_data') || '{}');
   let products = [];
   let selectedPayment = 'cod';
+  let safetySticker = false;
+  const SAFETY_STICKER_PRICE = 10;
+
+  function onSafetyStickerChange() {
+    const cb = document.getElementById('safetyStickerCheck');
+    safetySticker = !!(cb && cb.checked);
+    renderOrderReview();
+  }
+
+  function cartHasSpirits() {
+    const SPIRIT_CATS = new Set(['BRANDY','WHISKY','COGNAC','GIN','VODKA','VODKA_PREMIUM','TEQUILA','TEQUILA_PREMIUM','LIQUEUR','RUM']);
+    if (!Array.isArray(cart) || !Array.isArray(products)) return false;
+    return cart.some(item => {
+      const p = products.find(x => x.id === item.productId || x.id === item.id || x.name === item.name);
+      return p && SPIRIT_CATS.has(String(p.category || '').toUpperCase());
+    });
+  }
+
+  function updateSafetyStickerVisibility() {
+    const sec = document.getElementById('safetyStickerSection');
+    if (!sec) return;
+    const show = cartHasSpirits();
+    sec.style.display = show ? 'block' : 'none';
+    if (!show) {
+      safetySticker = false;
+      const cb = document.getElementById('safetyStickerCheck');
+      if (cb) cb.checked = false;
+    }
+  }
+
   let appliedPromo = null; // { code, discountPct }
   let deliveryPin = null; // { lat, lng, accuracy } — set by pinMyLocation()
   let priorityFee = 0; // Super Priority add-on chosen by the customer
@@ -417,6 +463,7 @@
         if (data.error) return;
         codEligibility = data;
         updateCodAvailability(computeTotals().total);
+        updateSafetyStickerVisibility();
       }).catch(() => {});
       document.getElementById('deliveryAddress').value = checkoutData.address || '';
       // Best-effort prefill from the account email's local part (e.g.
@@ -489,8 +536,9 @@
     const promoDiscount = appliedPromo ? (subtotal - coolerDiscount) * (appliedPromo.discountPct / 100) : 0;
     // Until the server's quote arrives, fall back to the base delivery fee.
     const delivery = deliveryQuote ? deliveryQuote.total : deliveryFee(subtotal);
-    const total = subtotal - coolerDiscount - promoDiscount + delivery;
-    return { lines, subtotal, coolerDiscount, promoDiscount, delivery, total };
+    const sticker = safetySticker ? SAFETY_STICKER_PRICE : 0;
+    const total = subtotal - coolerDiscount - promoDiscount + delivery + sticker;
+    return { lines, subtotal, coolerDiscount, promoDiscount, delivery, sticker, total };
   }
 
   // One row per fee part, so the customer sees what they are paying for.
@@ -505,12 +553,12 @@
       <div class="order-review-item"><span>Delivery${distanceNote}</span><span>R${q.deliveryFee.toFixed(2)}</span></div>
       ${q.surgeFee > 0 ? `<div class="order-review-item"><span>${surgeLabel}<span class="sub-note">Goes 100% to your driver</span></span><span>R${q.surgeFee.toFixed(2)}</span></div>` : ''}
       ${q.priorityFee > 0 ? `<div class="order-review-item"><span>Super Priority</span><span>R${q.priorityFee.toFixed(2)}</span></div>` : ''}
-      <div class="order-review-item"><span>Service fee</span><span>R${q.serviceFee.toFixed(2)}</span></div>`;
+      <div class="order-review-item"><span>Care &amp; Handling</span><span>R${(q.careFee || q.serviceFee).toFixed(2)}</span></div>`;
   }
 
   function renderOrderReview() {
     const review = document.getElementById('orderReview');
-    const { lines, subtotal, coolerDiscount, promoDiscount, delivery, total } = computeTotals();
+    const { lines, subtotal, coolerDiscount, promoDiscount, delivery, sticker = 0, total } = computeTotals();
 
     review.innerHTML = lines.map(l => `
       <div class="order-review-item">
@@ -524,6 +572,7 @@
       ${coolerDiscount > 0 ? `<div class="order-review-item"><span>Cooler Box discount</span><span>-R${coolerDiscount.toFixed(2)}</span></div>` : ''}
       ${appliedPromo ? `<div class="order-review-item"><span>Promo (${escapeHtml(appliedPromo.code)})</span><span>-R${promoDiscount.toFixed(2)}</span></div>` : ''}
       ${deliveryRowsHTML(delivery)}
+      ${sticker ? `<div class="order-review-item"><span>Safety Seal stickers</span><span>R${sticker.toFixed(2)}</span></div>` : ''}
       <div class="order-review-total"><span>Total</span><span>R${total.toFixed(2)}</span></div>`;
     review.appendChild(totals);
     updateCodAvailability(total);
