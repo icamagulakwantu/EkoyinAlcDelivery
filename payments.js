@@ -1,15 +1,11 @@
 // ═══════════════════════════════════════════════
 // EKOYINI — Card payments via Yoco Online Checkout
 //
-// ⚠ BUILT AGAINST PUBLIC DOCS, NOT YET VERIFIED AGAINST A LIVE YOCO
-// ACCOUNT. Field names for createCheckout/getCheckout are taken from
-// Yoco's public developer docs (developer.yoco.com); the webhook payload
-// shape is inferred from Yoco's public "Standard Webhooks"-style signing
-// (same scheme Svix uses). The webhook handler is written defensively —
-// it tries several reasonable field paths for the checkout id and always
-// re-fetches the checkout from Yoco's API before trusting anything. Test
-// with a real Yoco sandbox checkout before relying on this for real
-// orders, and check server logs on the first few real webhook deliveries.
+// Checked against Yoco's developer docs (Nov 2026): POST /api/checkouts, the
+// payment.succeeded event (checkout id in payload.metadata.checkoutId) and
+// Standard Webhooks signing. The webhook still re-fetches the checkout from
+// Yoco's API before trusting anything. Do one small real payment after
+// switching to live keys and check the server logs.
 // ═══════════════════════════════════════════════
 
 const crypto = require("crypto");
@@ -112,15 +108,27 @@ function verifyYocoWebhookSignature(headers, rawBody) {
     });
 }
 
-function extractCheckoutId(payload) {
-  return (
-    payload?.payload?.id ||
-    payload?.payload?.checkoutId ||
-    payload?.data?.id ||
-    payload?.data?.checkoutId ||
-    payload?.id ||
-    null
-  );
+// Yoco's Checkout API sends { id, type, createdDate, payload }. payload.id is
+// the PAYMENT id (p_...), not the checkout id: the checkout id is in
+// payload.metadata.checkoutId. Reading payload.id would never match one of our
+// PendingCheckout rows, so a customer could pay and no order would be created.
+function extractCheckoutId(event) {
+  return event?.payload?.metadata?.checkoutId || null;
+}
+
+// Only payment.succeeded creates an order. This webhook also receives
+// payment.failed, refund.* and every other payment on the Yoco account.
+function isPaymentSucceededEvent(event) {
+  return event?.type === "payment.succeeded";
+}
+
+// "live" or "test", from the secret key in use, so a test-mode event can never
+// create an order on a live key (or the other way round).
+function yocoKeyMode() {
+  const key = process.env.YOCO_SECRET_KEY || "";
+  if (key.startsWith("sk_live")) return "live";
+  if (key.startsWith("sk_test")) return "test";
+  return null;
 }
 
 module.exports = {
@@ -132,4 +140,6 @@ module.exports = {
   extractCurrency,
   verifyYocoWebhookSignature,
   extractCheckoutId,
+  isPaymentSucceededEvent,
+  yocoKeyMode,
 };

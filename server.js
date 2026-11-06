@@ -88,6 +88,8 @@ const {
   extractCurrency,
   verifyYocoWebhookSignature,
   extractCheckoutId,
+  isPaymentSucceededEvent,
+  yocoKeyMode,
   isYocoConfigured,
 } = require("./payments.js");
 const { sendOrderConfirmationEmail, sendAdminOrderAlertEmail, sendPaymentFailureAlertEmail, sendPaymentConfirmedEmail } = require("./emails.js");
@@ -882,10 +884,23 @@ app.post("/webhooks/yoco", async (req, res) => {
     return res.status(401).json({ error: "Invalid signature" });
   }
 
-  const checkoutId = extractCheckoutId(req.body);
+  // Only a successful payment can create an order. Everything else (failed
+  // payments, refunds, payments that did not come from this site) is
+  // acknowledged with 200 so Yoco does not keep retrying or disable the hook.
+  const event = req.body || {};
+  if (!isPaymentSucceededEvent(event)) return res.json({ received: true, ignored: event.type || "unknown" });
+
+  const eventMode = event?.payload?.mode;
+  const keyMode = yocoKeyMode();
+  if (eventMode && keyMode && eventMode !== keyMode) {
+    console.warn(`[yoco webhook] Ignoring a ${eventMode}-mode event: this server is using ${keyMode} keys`);
+    return res.json({ received: true, ignored: "mode mismatch" });
+  }
+
+  const checkoutId = extractCheckoutId(event);
   if (!checkoutId) {
-    console.error("[yoco webhook] Could not find a checkout id in payload:", JSON.stringify(req.body));
-    return res.status(400).json({ error: "No checkout id in payload" });
+    console.warn("[yoco webhook] payment.succeeded without a checkout id (not from this site?):", event?.payload?.id);
+    return res.json({ received: true, ignored: "no checkout id" });
   }
 
   // Ack fast — the work below is idempotent (guarded by PendingCheckout.status).
