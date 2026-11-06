@@ -329,7 +329,7 @@ async function main() {
       supplierPalletDiscountPct: parseFloat(row.palletDiscountPct),
       supplierPalletPriceZAR: parseFloat(row.palletPriceZAR),
 
-      packSize: isAlcohol ? packSize : undefined,
+      packSize,
       retailSingleZAR,
       retailCaseDiscountPct,
       retailCaseZAR,
