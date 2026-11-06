@@ -12,23 +12,23 @@ test('tavern rounding: rand under R50, R5 under R200, R10 above', () => {
   assert.equal(C.roundTavern('abc'), 0);
 });
 
-test('25% uplift uses the higher of checked shop and iCamagu retail prices', () => {
-  assert.equal(C.newSinglePrice({ name: 'Hennessy VS', bottleFormat: '750ml Bottle', packSize: 1, listPriceZAR: 400 }), 620);
-  assert.equal(C.newSinglePrice({ name: 'Johnnie Walker Red Label', bottleFormat: '750ml Bottle', packSize: 1, listPriceZAR: 269.73 }), 340);
-  assert.equal(C.newSinglePrice({ name: 'Klipdrift Export', bottleFormat: '750ml Bottle', packSize: 1, listPriceZAR: 189.99 }), 240);
+test('receipt-calibrated final customer prices take priority over legacy retail uplift', () => {
+  assert.equal(C.newSinglePrice({ name: 'Hennessy VS', bottleFormat: '750ml Bottle', packSize: 1, listPriceZAR: 400 }), 682.5);
+  assert.equal(C.newSinglePrice({ name: 'Johnnie Walker Red Label', bottleFormat: '750ml Bottle', packSize: 1, listPriceZAR: 269.73 }), 315);
+  assert.equal(C.newSinglePrice({ name: 'Klipdrift Export', bottleFormat: '750ml Bottle', packSize: 1, listPriceZAR: 189.99 }), 252);
 });
 
-test('no checked shop price: list (retail) price + 25%', () => {
-  // Bombay Sapphire R310 -> R387.50 -> R390
-  assert.equal(C.newSinglePrice({ name: 'Bombay Sapphire', bottleFormat: '750ml Bottle', packSize: 1, listPriceZAR: 310 }), 390);
-  // Castle Lager R14 each, sold as a six-pack -> R105
-  assert.equal(C.newSinglePrice({ name: 'Castle Lager', bottleFormat: 'Dumpy (330ml)', packSize: 6, listPriceZAR: 14 }), 105);
+test('final customer prices override legacy list-price uplift when configured', () => {
+  // Values are pinned by the 6 Nov receipt-calibrated customer price table.
+  assert.equal(C.newSinglePrice({ name: 'Bombay Sapphire', bottleFormat: '750ml Bottle', packSize: 1, listPriceZAR: 310 }), 682.5);
+
+  assert.equal(C.newSinglePrice({ name: 'Castle Lager', bottleFormat: 'Dumpy (330ml)', packSize: 6, listPriceZAR: 14 }), 187.25);
   // No base price at all: stays "Price coming soon"
   assert.equal(C.newSinglePrice({ name: 'Unknown', bottleFormat: '750ml Bottle', packSize: 1, listPriceZAR: 0 }), null);
 });
 
-test('six-pack rows are priced for the whole pack', () => {
-  // Heineken 24 x 330ml at R339.99 -> R85 per six, +25% -> R105
+test('six-pack rows use the configured receipt-calibrated pack price', () => {
+
   assert.equal(C.newSinglePrice({ name: 'Heineken', bottleFormat: 'Dumpy (330ml)', packSize: 6 }), 105);
 });
 
@@ -95,16 +95,16 @@ test('runner: fixes labels, removes 375ml, prices everything, and is repeatable'
   assert.equal(prisma.orderItems[0].skuId, null, 'retired SKU must detach from order item');
   assert.deepEqual({ name: prisma.orderItems[0].name, price: prisma.orderItems[0].price, quantity: prisma.orderItems[0].quantity }, { name: 'Hennessy VS 375ml', price: 340, quantity: 1 }, 'order snapshot must remain unchanged');
   assert.ok(find('Cider 375ml', 'Dumpy (375ml)'), '375ml cider must remain in the catalogue');
-  assert.equal(find('Hennessy VS', '750ml Bottle').retailSingleZAR, 620);
+  assert.equal(find('Hennessy VS', '750ml Bottle').retailSingleZAR, 682.5);
   // Product photos are assigned separately by prisma/sync-images.js from local assets.
   assert.equal(find('Hennessy VS', '750ml Bottle').imageUrl, null);
   const heineken = find('Heineken', 'Dumpy (330ml)');
-  assert.equal(heineken.retailSingleZAR, 120);
-  assert.equal(heineken.retailCaseZAR, 441.6); // 120 x 4 six-packs - 8%
+  assert.equal(heineken.retailSingleZAR, 112.35);
+  assert.equal(heineken.retailCaseZAR, 413.45); // 120 x 4 six-packs - 8%
   // No checked price: list price + 25%
   assert.equal(find('Windhoek Lager', 'Dumpy (330ml)').retailSingleZAR, 120); // 16 x 6 x 1.25
   assert.equal(find('Stella Artois', 'Dumpy (330ml)').retailSingleZAR, 135); // 18 x 6 x 1.25
-  assert.equal(find('Bombay Sapphire', '750ml Bottle').retailSingleZAR, 390);
+  assert.equal(find('Bombay Sapphire', '750ml Bottle').retailSingleZAR, 682.5);
   assert.deepEqual(first.unpriced, []);
 
   const second = await run(prisma);
@@ -119,7 +119,7 @@ test('runner: an old-label duplicate is removed, not kept twice', async () => {
   const { log } = await run(prisma);
   assert.equal(prisma.db.length, 1);
   assert.equal(prisma.db[0].bottleFormat, 'Dumpy (330ml)');
-  assert.equal(prisma.db[0].retailSingleZAR, 105);
+  assert.equal(prisma.db[0].retailSingleZAR, 187.25);
   assert.ok(log.some((l) => l.startsWith('removed duplicate:')));
 });
 
