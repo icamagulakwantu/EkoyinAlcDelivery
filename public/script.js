@@ -10,6 +10,22 @@ const EkoyiniCart = {
     localStorage.setItem('ekoyini_cart', JSON.stringify(cart));
     broadcastCartChange();
   },
+  // Reconcile device-stored cart IDs against the live catalogue. Catalogue
+  // refreshes can retire/recreate SKU rows while a customer's browser still
+  // has the previous IDs saved locally. Never submit those stale IDs.
+  reconcile(products) {
+    const validIds = new Set((Array.isArray(products) ? products : []).map(p => String(p.id)));
+    const saved = this.get();
+    const clean = {};
+    let removed = 0;
+    Object.entries(saved).forEach(([id, qty]) => {
+      const amount = Number(qty);
+      if (validIds.has(String(id)) && Number.isSafeInteger(amount) && amount > 0) clean[id] = amount;
+      else removed++;
+    });
+    if (removed) this.save(clean);
+    return { cart: clean, removed };
+  },
   count() { return Object.values(this.get()).reduce((a, b) => a + b, 0); },
   clear() {
     localStorage.removeItem('ekoyini_cart');
