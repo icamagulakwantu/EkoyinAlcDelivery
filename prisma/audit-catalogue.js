@@ -105,7 +105,10 @@ async function main() {
   const priceMismatches = [];
   const unpricedRows = [];
   const unexpectedUnpricedRows = [];
-  const intendedUnpricedKeys = new Set(UNPRICED_PRODUCTS.map(product => pairKey(product.name, product.bottleFormat)));
+  const intendedUnpricedKeys = new Set([
+    ...UNPRICED_PRODUCTS,
+    ...C.PRICE_COMING_SOON,
+  ].map(product => pairKey(product.name, product.bottleFormat)));
   for (const row of rows) {
     const expectedSingle = C.newSinglePrice(row);
     if (expectedSingle === null) {
