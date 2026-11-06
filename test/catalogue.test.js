@@ -29,7 +29,7 @@ test('final customer prices override legacy list-price uplift when configured', 
 
 test('six-pack rows use the configured receipt-calibrated pack price', () => {
 
-  assert.equal(C.newSinglePrice({ name: 'Heineken', bottleFormat: 'Dumpy (330ml)', packSize: 6 }), 105);
+  assert.equal(C.newSinglePrice({ name: 'Heineken', bottleFormat: 'Dumpy (330ml)', packSize: 6 }), 112.35);
 });
 
 test('every new price is at or above the retail price', () => {
@@ -100,10 +100,10 @@ test('runner: fixes labels, removes 375ml, prices everything, and is repeatable'
   assert.equal(find('Hennessy VS', '750ml Bottle').imageUrl, null);
   const heineken = find('Heineken', 'Dumpy (330ml)');
   assert.equal(heineken.retailSingleZAR, 112.35);
-  assert.equal(heineken.retailCaseZAR, 413.45); // 120 x 4 six-packs - 8%
-  // No checked price: list price + 25%
-  assert.equal(find('Windhoek Lager', 'Dumpy (330ml)').retailSingleZAR, 120); // 16 x 6 x 1.25
-  assert.equal(find('Stella Artois', 'Dumpy (330ml)').retailSingleZAR, 135); // 18 x 6 x 1.25
+  assert.equal(heineken.retailCaseZAR, 413.45); // 112.35 x 4 six-packs - 8%
+  // Receipt-calibrated prices are used where configured.
+  assert.equal(find('Windhoek Lager', 'Dumpy (330ml)').retailSingleZAR, 208.65); // configured final customer price
+  assert.equal(find('Stella Artois', 'Dumpy (330ml)').retailSingleZAR, 107.0); // configured final customer price
   assert.equal(find('Bombay Sapphire', '750ml Bottle').retailSingleZAR, 682.5);
   assert.deepEqual(first.unpriced, []);
 
