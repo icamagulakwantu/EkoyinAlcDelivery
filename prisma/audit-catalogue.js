@@ -84,7 +84,7 @@ async function main() {
   for (const sourceRow of csvRows) {
     let name = sourceRow.name;
     let bottleFormat = sourceRow.bottleFormat;
-    for (const fix of C.NAME_FIXES) if (name === fix.from) name = fix.to;
+    for (const fix of C.NAME_FIXES) if (name === fix.from && (!fix.bottleFormat || bottleFormat === fix.bottleFormat)) name = fix.to;
     for (const fix of C.FORMAT_FIXES) {
       if (bottleFormat === fix.from && (fix.name === null || fix.name === name)) bottleFormat = fix.to;
     }
