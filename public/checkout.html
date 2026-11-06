@@ -83,7 +83,14 @@
   </nav>
 
   <!-- PAGE -->
-  <div class="page">
+  <div class="page checkout-page">
+    <div class="checkout-progress" aria-label="Checkout progress">
+      <div class="checkout-progress-step is-complete"><span>1</span><small>Cart</small></div>
+      <div class="checkout-progress-line is-complete"></div>
+      <div class="checkout-progress-step is-current" aria-current="step"><span>2</span><small>Details</small></div>
+      <div class="checkout-progress-line"></div>
+      <div class="checkout-progress-step"><span>3</span><small>Confirm</small></div>
+    </div>
     <!-- ORDER REVIEW -->
     <div class="checkout-section">
       <h2>Order Review</h2>
@@ -383,7 +390,23 @@
 
     try {
       const res = await fetch('/api/products');
+      if (!res.ok) throw new Error('Catalogue request failed');
       products = await res.json();
+
+      // Use the current device cart as the source of truth, then reconcile
+      // it with live SKU IDs before the order payload can be built.
+      const reconciled = EkoyiniCart.reconcile(products);
+      checkoutData.cart = reconciled.cart;
+      localStorage.setItem('ekoyini_checkout_data', JSON.stringify(checkoutData));
+      if (reconciled.removed) {
+        showToast('Some saved items are no longer available. We refreshed your cart — please review it.', 4500);
+      }
+      if (!Object.keys(checkoutData.cart).length) {
+        showToast('Your saved items are no longer available. Please choose current products.');
+        setTimeout(() => { window.location.href = 'shop.html'; }, 1800);
+        return;
+      }
+
       renderOrderReview();
       refreshQuote();
 
