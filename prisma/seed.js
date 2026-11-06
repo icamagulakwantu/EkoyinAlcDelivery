@@ -3,7 +3,7 @@
 // Run with: npm run seed  (or `npx prisma db seed`)
 //
 // Reads prisma/data/skus.csv (the canonical iCamagu alcohol SKU export),
-// applies Ekoyini's agreed retail +25% pricing, and upserts
+// applies the founder-approved category markups (7% beer/cider/wine/RTD; 5% spirits/mixers/soft drinks/water/ice), and upserts
 // every SKU into the database. Re-running this script is safe — it updates
 // existing rows by (name, bottleFormat) instead of duplicating them.
 
