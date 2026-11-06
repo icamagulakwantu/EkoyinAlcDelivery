@@ -57,7 +57,7 @@ async function moveRow(prisma, rows, row, data, log, dryRun = false) {
 
 async function fixLabels(prisma, rows, log, dryRun = false) {
   for (const fix of C.NAME_FIXES) {
-    for (const row of [...rows.values()].filter((r) => r.name === fix.from)) {
+    for (const row of [...rows.values()].filter((r) => r.name === fix.from && (!fix.bottleFormat || r.bottleFormat === fix.bottleFormat))) {
       await moveRow(prisma, rows, row, { name: fix.to }, log, dryRun);
     }
   }
