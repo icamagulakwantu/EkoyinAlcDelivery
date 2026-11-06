@@ -2,6 +2,37 @@
 
 A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages in South African townships. Uses on-route e-hailing drivers instead of a dedicated fleet — faster, cheaper, and already trusted by riders.
 
+## Changelog — 6 November 2026 (Receipt calibration & Care fee)
+
+### Pricing
+- Full SKU list recalibrated from tavern invoices / Shoprite / Boxer / Spar receipts.
+- Key corrections: Savanna Dry 330ml 6-pack → R513.60, Hennessy VS → R682.50, Ponchos Tequila Coffee → R336, Skyy Vodka → R315, Bernini cans → R133.75, Brutal Fruit cans → R144.45, Corona Dumpy 355ml fixed exception at **R135**.
+- Smirnoff 1818 is **750ml only** (no 1L SKU).
+- Prices already include the 5% (spirits) / 7% (beer, cider, wine) app markup. No extra 1% applied for Yoco at this stage.
+- Source of truth: `FINAL_CUSTOMER_PRICES` in `lib/catalogue-2026-11.js`.
+
+### Care & Handling fee (replaces fixed “Service fee”)
+Framed as a customer-protection feature, not a crude charge.
+- ≤ R800 → **5%**
+- R800 – R2000 → **7%**
+- > R2000 → **15%**
+Implemented in `public/pricing.js` (`careFeeFor` / `CARE_FEE_BANDS`). UI label: **Care & Handling**.
+
+### Safety Seal stickers
+- Optional R10 add-on at checkout, **spirits only**.
+- Helps keep spirit bottles tamper-evident from tavern to door.
+- Shown only when the cart contains brandy / whisky / cognac / gin / vodka / tequila / liqueur / rum.
+
+### Card payments (Yoco)
+- Checkout card option unlocked in the UI (“Secure card payment via Yoco”).
+- Still gated server-side by `isYocoConfigured()` (requires `YOCO_SECRET_KEY` + webhook secret on Render).
+- Once env vars are set on the live Render service, card payments go live without a further code change.
+
+### Notes for operators
+- After deploy, re-run the catalogue price sync script (or `npm run seed` on a staging DB) so `SkuItem` rows pick up the new `FINAL_CUSTOMER_PRICES`.
+- Revoke the temporary GitHub PAT used for this push once confirmed.
+
+
 ---
 
 ## 🎯 Architecture Overview
