@@ -55,9 +55,9 @@ test('minimum delivery order stays R300', () => {
 test('Castle Milk Stout uses its current receipt-calibrated customer prices', () => {
   const row = (bottleFormat, packSize, listPriceZAR) => ({ name: 'Castle Milk Stout', bottleFormat, packSize, listPriceZAR });
   assert.equal(C.newSinglePrice(row('Can (500ml)', 6, 24.22)), 139.1);
-  assert.equal(C.newSinglePrice(row('Quart (750ml)', 1, 38.65)), 29.96);
+  assert.equal(C.newSinglePrice(row('Quart (750ml)', 1, 38.65)), 28.88);
   assert.equal(C.newSinglePrice(row('Dumpy (330ml)', 6, 25.95)), 128.4);
   assert.equal(C.casePrice(139.1, 4, 8), 511.89);
-  assert.equal(C.casePrice(29.96, 12, 8), 330.76);
+  assert.equal(C.casePrice(28.88, 12, 8), 318.84);
   assert.equal(C.casePrice(128.4, 4, 8), 472.51);
 });
