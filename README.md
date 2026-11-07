@@ -4,6 +4,14 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 7 Nov 2026: master prices live, build fixed
+- **Why prices were not live:** every deploy from 20:38 on 6 Nov failed at `npm install` (postinstall runs `node --test`). `lib/catalogue-2026-11.js` exported `roundTavern` without defining it, so loading the module threw and the catalogue tests crashed. It is now defined (legacy rounding only; final workbook prices are never rounded with it).
+- **Prices now live:** all 327 master SKUs. 324 carry a final customer price (7% markup on beer, cider/RTD and wine; 5% on spirits, liqueurs, mixers, water and ice, applied to the receipt or market base). Strettons Ruby Orange, Strettons Triple Berry and Sambuca Lupini Blue are still "Price coming soon" because the master workbook has no price for them.
+- **Tests aligned with the newer price data:** Johnnie Walker Red R408.29, Klipdrift Export R251.99, Heineken dumpy R117.70, Castle Milk Stout quart R28.88 (case R318.84).
+- **Photos:** the catalogue renames (Corona Extra, Carling Black Label, Bacardi Breezer, Sol NRB, quarts 750ml to 660ml, Savanna NRB) had left about 30 products without a picture. Each new name now points at the photo of the row it replaced.
+- **Removed by the master-catalogue sync (not in the workbook):** Mofaya Orange Ting, Mofaya Original, Grenadine Syrup Cordial, Kola Tonic Cordial.
+
+
 ### Pricing
 - Full SKU list recalibrated from tavern invoices / Shoprite / Boxer / Spar receipts.
 - Key corrections: Savanna Dry 330ml 6-pack → R513.60, Hennessy VS → R682.50, Ponchos Tequila Coffee → R336, Skyy Vodka → R315, Bernini cans → R133.75, Brutal Fruit cans → R144.45, Corona Dumpy 355ml fixed exception at **R135**.
