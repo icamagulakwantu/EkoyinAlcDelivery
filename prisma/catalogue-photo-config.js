@@ -377,6 +377,11 @@ const FORMAT_PHOTO_MAP = {
   "[\"Strongbow Red Berries\",\"Quart (660ml)\"]": "/images/brands/strongbow-red-berries.png",
   "[\"Windhoek Draught\",\"Quart (660ml)\"]": "/images/brands/windhoek-draught-quart-750ml.jpg",
   "[\"Windhoek Lager\",\"Quart (660ml)\"]": "/images/brands/windhoek-lager.png",
+  "[\"Guinness Foreign Extra\",\"Can (440ml)\"]": "/images/brands/guinness-foreign-extra-can-440ml.webp",
+  "[\"Belgravia Gin & Tonic\",\"Can (500ml)\"]": "/images/brands/belgravia-gin-tonic-can-500ml.webp",
+  "[\"Smirnoff 1818 Vodka\",\"750ml Bottle\"]": "/images/brands/smirnoff-1818-vodka-750ml.webp",
+  "[\"Bug Booster\",\"20ml Shot Bottle\"]": "/images/brands/bug-booster-20ml-shot.webp",
+  "[\"Robertson Chapel Dry Red\",\"1.5L Bottle\"]": "/images/brands/robertson-chapel-dry-red-1-5l.webp",
 };
 
 const UNPRICED_PRODUCTS = [];

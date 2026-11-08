@@ -4,6 +4,10 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 8 Nov 2026: photos for the last five products
+- Added the founder's photos for the five products that still had none: Guinness Foreign Extra can (440ml), Belgravia Gin & Tonic can, Smirnoff 1818 Vodka 750ml, Bug Booster 20ml shot and Robertson Chapel Dry Red 1.5L. Each is a small WebP in `public/images/brands` mapped to its exact product in `prisma/catalogue-photo-config.js`.
+- Every product in the catalogue now has a photo. Bug Booster's photo shows the box of 15 next to the single bottle, because that is the picture supplied.
+
 ### 7 Nov 2026 (later): founder corrections
 - **Three SKUs priced** (they were "Price coming soon"): Strettons Ruby Orange R220.50, Strettons Triple Berry R220.50 and Sambuca Lupini Blue R357.00, the same as their sibling flavours. No SKU is "Price coming soon" any more (`PRICE_COMING_SOON` is empty).
 - **Back to the founder's list price:** Johnnie Walker Red Label R315.00, Klipdrift Export R252.00, Castle Milk Stout quart R29.96. Only **Heineken dumpy stays at R117.70** (list was R112.35).
