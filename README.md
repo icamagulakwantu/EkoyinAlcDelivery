@@ -4,6 +4,20 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 8 Nov 2026 (later): UI, UX and logic upgrade
+**Bugs fixed**
+- **Safety Seal never showed and was never charged.** The checkout code referenced a variable that didn't exist, so the section stayed hidden; and even when ticked, the server ignored it, so the total on screen could differ from the amount charged. It is now charged by the server (R10, only if the order has a spirit), saved as `Order.safetySealFee` (migration `20261108120000_add_safety_seal_fee` + `ensure-schema.js`) and shown on the admin order card.
+- **Card payment could be picked when Yoco is not set up**, and the order then failed. It now shows "Coming soon" until `/api/payment-config` says card is live, and becomes the default once it is.
+- **Cart and checkout disagreed on the total.** The cart ignored the Cooler Box discount and the peak-hours fee, labelled Care & Handling as "Service fee", and checked promo codes against a different amount. Cart, checkout and server now use one function, `priceOrder()` in `public/pricing.js`; on the local test the checkout total and the charged total matched to the cent.
+- Toasts were cut off on phones (no line wrap); a corrupted saved cart could break every page; malformed requests returned an HTML error page; the home greeting used the phone's clock instead of SA time; the "copy order code" button failed outside https; EFT orders were told "a driver is on the way" before payment.
+
+**UX upgrades (modelled on Uber Eats / Instacart / Checkers Sixty60 / Gopuff)**
+- Cart: product photos, Singles / Full cases switch showing the saving, progress bars for the R300 minimum and the next Cooler Box tier, Undo after removing an item, collapsible promo field, clear bill, and a sticky "Go to checkout · total" bar.
+- Checkout: no bottom nav (one job), numbered steps, the address can be edited here, name and phone remembered on the device, inline field errors (it scrolls to the first one), long baskets collapse to 4 lines, a sticky "Place order · total" bar with a loading state, and a basket under R300 goes back to the cart.
+- Shop: the search and category bar stay pinned while you scroll and follow the section on screen; categories have readable names ("Cider & RTDs", not "CIDER RTD"); search ignores case, accents and apostrophes and matches every word ("bains" finds Bain's); out-of-stock items go last; accessible buttons and labels.
+- Order confirmation shows the total, EFT instructions for EFT orders, and copy works everywhere.
+- New shared `public/app.css` (loaded last on customer pages); service-worker cache bumped to `v3` so installed apps pick up the new files.
+
 ### 8 Nov 2026: photos for the last five products
 - Added the founder's photos for the five products that still had none: Guinness Foreign Extra can (440ml), Belgravia Gin & Tonic can, Smirnoff 1818 Vodka 750ml, Bug Booster 20ml shot and Robertson Chapel Dry Red 1.5L. Each is a small WebP in `public/images/brands` mapped to its exact product in `prisma/catalogue-photo-config.js`.
 - Every product in the catalogue now has a photo. Bug Booster's photo shows the box of 15 next to the single bottle, because that is the picture supplied.

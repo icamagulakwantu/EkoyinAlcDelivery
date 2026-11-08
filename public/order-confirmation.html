@@ -134,6 +134,7 @@
     .action-btn.secondary:hover { border-color: var(--green-mid); }
   </style>
   <link rel="stylesheet" href="premium.css">
+  <link rel="stylesheet" href="app.css">
 </head>
 <body>
   <!-- NAVBAR -->
@@ -164,8 +165,12 @@
           <circle cx="12" cy="12" r="10"/><path d="M8 12.5l2.5 2.5L16 9.5"/>
         </svg>
       </div>
-      <h1>Order Confirmed!</h1>
-      <p>Your order has been placed successfully.<br>A driver will be matched within 5–10 minutes.</p>
+      <h1 id="confirmTitle">Order confirmed!</h1>
+      <p id="confirmLead">Your order is in. A driver will be matched within 5–10 minutes.</p>
+      <div class="confirm-total" id="confirmTotal" hidden></div>
+      <div class="confirm-pay-note" id="eftNote" hidden>
+        <strong>Next: pay by EFT.</strong> Our team will WhatsApp or call you with the banking details. Use your order code below as the payment reference — we pack and dispatch as soon as the payment reflects.
+      </div>
 
       <!-- ORDER CODE -->
       <div class="order-code-box">
@@ -183,7 +188,7 @@
         <h3>What happens next?</h3>
         <div class="step">
           <div class="step-num">1</div>
-          <div class="step-text">Driver assigned within 5–10 min. You'll get their name and vehicle details, and can follow your order status any time on Track.</div>
+          <div class="step-text" id="step1Text">Driver assigned within 5–10 min. You'll get their name and vehicle details, and can follow your order status any time on Track.</div>
         </div>
         <div class="step">
           <div class="step-num">2</div>
@@ -242,6 +247,21 @@
   let orderCode = params.get('code') || 'EKO-?????';
   const pendingId = params.get('pending');
 
+  // EFT orders wait for the transfer before a driver is matched — say so.
+  const method = params.get('method');
+  const paidTotal = Number(params.get('total'));
+  if (Number.isFinite(paidTotal) && paidTotal > 0) {
+    const el = document.getElementById('confirmTotal');
+    el.hidden = false;
+    el.innerHTML = `Order total <b>${formatRand(paidTotal)}</b>${method === 'cod' ? ' · pay the driver in cash' : ''}`;
+  }
+  if (method === 'eft') {
+    document.getElementById('confirmTitle').textContent = 'Order received!';
+    document.getElementById('confirmLead').textContent = "We've saved your order and reserved your drinks.";
+    document.getElementById('eftNote').hidden = false;
+    document.getElementById('step1Text').textContent = "Once your EFT reflects, we match a driver within 5–10 min. You'll see their name and vehicle on Track.";
+  }
+
   if (pendingId) {
     document.getElementById('confirmedState').style.display = 'none';
     document.getElementById('pendingState').style.display = 'block';
@@ -285,10 +305,19 @@
     }
   }
 
+  // Clipboard API needs a secure context; fall back to a hidden textarea.
   function copyCode() {
-    navigator.clipboard.writeText(orderCode).then(() => {
-      showToast('Order code copied!');
-    });
+    const done = () => showToast('Order code copied');
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(orderCode).then(done).catch(fallback);
+    } else fallback();
+    function fallback() {
+      const ta = Object.assign(document.createElement('textarea'), { value: orderCode });
+      ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); done(); } catch { showToast('Long-press the code to copy it'); }
+      ta.remove();
+    }
   }
 
   function goToTrack() {
@@ -299,12 +328,7 @@
     window.location.href = 'shop.html';
   }
 
-  function showToast(msg) {
-    const t = document.getElementById('toastEl');
-    t.textContent = msg;
-    t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 1800);
-  }
+
   </script>
 </body>
 </html>

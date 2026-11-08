@@ -225,6 +225,11 @@ function renderOrderCard(order) {
                         <span>${formatRand(item.price * item.quantity)}</span>
                     </div>
                 `).join('')}
+                ${order.safetySealFee > 0 ? `
+                    <div class="item-row">
+                        <span><strong>Safety Seal stickers</strong> — seal the spirit bottles</span>
+                        <span>${formatRand(order.safetySealFee)}</span>
+                    </div>` : ''}
                 <div class="total-row">
                     <span>Total</span>
                     <span>${formatRand(order.total)}</span>

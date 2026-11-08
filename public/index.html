@@ -21,6 +21,7 @@
   <link rel="preconnect" href="https://hercules-cdn.com">
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="premium.css">
+  <link rel="stylesheet" href="app.css">
   <link rel="stylesheet" href="home.css">
 </head>
 <body>
@@ -625,7 +626,7 @@
   window.addEventListener('ekoyini:cart-updated', updateBadges);
   updateBadges();
 
-  const h = new Date().getHours();
+  const h = saHour();
   document.getElementById('greetLabel').textContent = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
 
   let allTaverns = [];

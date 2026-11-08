@@ -223,7 +223,8 @@ model Order {
   deliveryFee Float? // distance-based fee (always charged; no free delivery)
   surgeFee    Float? // peak / late-night surge, 100% to the driver
   priorityFee Float? // optional "Super Priority" the customer added
-  serviceFee  Float? // platform fee, R50-R110 by order value
+  serviceFee  Float? // Care & Handling fee, 5% / 7% / 15% of subtotal
+  safetySealFee Float? // optional R10 tamper-evident seals (spirits only)
 
   total         Float
   items         OrderItem[]
