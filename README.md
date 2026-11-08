@@ -4,6 +4,20 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 8 Nov 2026 (night): prices corrected, lower Care & Handling fee, card payments
+**Prices.** The founder flagged prices like the Amstel quart at R47.08. A full SKU check found 195 rows off the shelf, almost all too high: quarts at R47, beer six-packs at R165–R210 (shelf ~R90–R120), Monin at R367.50, Glenfiddich 12 at R1081.50. One was too low: Ciroc Original at R378 (shelf R599.99). Every corrected row is now **regular shelf price of the same pack + 7% (beer, cider/RTD, wine) or 5% (spirits, liqueurs, mixers, energy drinks, water)**, the founder's existing rule.
+- Data: `lib/price-corrections-2026-11-08.js` (applied before the older list). Review sheet: `prisma/data/price-corrections-2026-11-08.csv` (was / now / shelf price / source).
+- 62 rows use a shelf price seen on a retailer listing or already recorded in `SHOP_PRICES`; the rest are marked **estimate** (same brand's other packs or the same price tier) and are worth checking on the shelf.
+- Unchanged on purpose (founder-fixed): Johnnie Walker Red R315, Klipdrift Export R252, Castle Milk Stout quart R29.96, Heineken dumpy R117.70, Hennessy VS R682.50, Corona dumpy R135, Bernini cans R133.75, Brutal Fruit cans R144.45, Sambuca Lupini R357.
+- Applied on deploy by `scripts/run-catalogue-prices.js` (Render has `APPLY_CATALOGUE_PRICES_ON_DEPLOY=true`). Order history keeps its own price snapshots.
+
+**Care & Handling fee.** Was 5% / 7% / 15% by subtotal band (a R2001 order paid about R160 more than a R1999 one). Now **5% of the items, minimum R15, maximum R75**: industry-style (delivery apps charge roughly 10–15% with a minimum and a cap) but lower, and it never jumps.
+
+**Card payments (Yoco).**
+- Checkout now offers "Card, Apple Pay or Google Pay" first and selects it by default; it is only greyed out if the server reports Yoco is not configured.
+- A paid card checkout no longer depends on Yoco's webhook arriving. While the customer waits on the confirmation page, the server asks Yoco directly and creates the order once paid. Webhook and status check share one function and claim the checkout atomically (`PENDING → PROCESSING`), so an order is never created twice. A failed Yoco lookup leaves the checkout open to retry. Tested with a stand-in Yoco: payment with no webhook, ten simultaneous status checks (one order), and an unpaid checkout that is paid later.
+- `YOCO_API_BASE` can be overridden for local testing only; production uses Yoco's API.
+
 ### 8 Nov 2026 (evening): full project handoff in CLAUDE.md
 - `CLAUDE.md` now holds the founder's complete handoff: catalogue rules, fee decisions, Yoco notes, open work and working rules. A "changed since this handoff" section at the top records what the UI/UX upgrade below already finished (cart/checkout restyle, R10 Safety Seal, Care & Handling bands, cache `v3`), so later sessions don't redo or undo it. No code changes.
 

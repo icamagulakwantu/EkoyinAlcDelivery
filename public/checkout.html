@@ -152,16 +152,16 @@
     <!-- 3. PAYMENT -->
     <section class="checkout-section" aria-labelledby="hPay">
       <h2 id="hPay"><span class="h-num">3</span>Payment</h2>
-      <div class="payment-option disabled" id="cardPaymentOption" data-method="card">
-        <input type="radio" name="payment" value="card" id="cardPaymentRadio" disabled>
+      <div class="payment-option selected" id="cardPaymentOption" data-method="card">
+        <input type="radio" name="payment" value="card" id="cardPaymentRadio" checked>
         <div>
-          <div class="p-label">Debit / credit card</div>
-          <div class="p-desc" id="cardPaymentDesc">Secure card payment via Yoco</div>
+          <div class="p-label">Card, Apple Pay or Google Pay</div>
+          <div class="p-desc" id="cardPaymentDesc">Secure payment via Yoco. Your order goes straight to packing.</div>
         </div>
-        <span class="p-badge" id="cardBadge">Coming soon</span>
+        <span class="p-badge" id="cardBadge">Fastest</span>
       </div>
-      <div class="payment-option selected" data-method="eft" id="eftPaymentOption">
-        <input type="radio" name="payment" value="eft" id="eftPaymentRadio" checked>
+      <div class="payment-option" data-method="eft" id="eftPaymentOption">
+        <input type="radio" name="payment" value="eft" id="eftPaymentRadio">
         <div>
           <div class="p-label">EFT bank transfer</div>
           <div class="p-desc">We confirm your payment, then dispatch. Use your order code as the reference.</div>
@@ -248,8 +248,9 @@
 
   let products = [];
   let byId = new Map();
-  let selectedPayment = 'eft';
-  let cardEnabled = false;
+  // Card (Yoco) is the default: paid up front, nothing for the driver to collect.
+  let selectedPayment = 'card';
+  let cardEnabled = true;
   let codEligibility = null;
   let safetySeal = false;
   let appliedPromo = null;   // { code, discountPct }
@@ -651,11 +652,16 @@
     document.getElementById('phoneNumber').value = contact.phone || '';
     renderPriorityOptions();
 
+    // Card stays on unless the server says Yoco isn't set up. A failed
+    // lookup (slow network, server waking up) never hides it; the server
+    // still checks before taking a payment.
     fetch('/api/payment-config').then((r) => r.json()).then((cfg) => {
-      cardEnabled = !!cfg.cardEnabled;
-      document.getElementById('cardBadge').hidden = cardEnabled;
-      setPaymentEnabled('card', cardEnabled);
-      if (cardEnabled && selectedPayment === 'eft') selectPayment('card');
+      if (cfg && cfg.cardEnabled === false) {
+        cardEnabled = false;
+        setPaymentEnabled('card', false);
+        document.getElementById('cardPaymentDesc').textContent = 'Card payments are paused right now. Please use EFT.';
+        document.getElementById('cardBadge').hidden = true;
+      }
     }).catch(() => {});
 
     try {

@@ -70,10 +70,10 @@ test('receipt-calibrated final customer prices take priority over legacy retail 
 });
 
 test('final customer prices override legacy list-price uplift when configured', () => {
-  // Values are pinned by the 6 Nov receipt-calibrated customer price table.
-  assert.equal(C.newSinglePrice({ name: 'Bombay Sapphire', bottleFormat: '750ml Bottle', packSize: 1, listPriceZAR: 310 }), 682.5);
+  // Values are pinned by the 8 Nov shelf-price correction (shelf + markup).
+  assert.equal(C.newSinglePrice({ name: 'Bombay Sapphire', bottleFormat: '750ml Bottle', packSize: 1, listPriceZAR: 310 }), 398.99);
 
-  assert.equal(C.newSinglePrice({ name: 'Castle Lager', bottleFormat: 'Dumpy (330ml)', packSize: 6, listPriceZAR: 14 }), 187.25);
+  assert.equal(C.newSinglePrice({ name: 'Castle Lager', bottleFormat: 'Dumpy (330ml)', packSize: 6, listPriceZAR: 14 }), 96.29);
   // No base price at all: stays "Price coming soon"
   assert.equal(C.newSinglePrice({ name: 'Unknown', bottleFormat: '750ml Bottle', packSize: 1, listPriceZAR: 0 }), null);
 });
@@ -154,9 +154,9 @@ test('runner: fixes labels, removes 375ml, prices everything, and is repeatable'
   assert.equal(heineken.retailSingleZAR, 117.7);
   assert.equal(heineken.retailCaseZAR, 433.14); // 117.70 x 4 six-packs - 8%
   // Receipt-calibrated prices are used where configured.
-  assert.equal(find('Windhoek Lager', 'Dumpy (330ml)').retailSingleZAR, 208.65); // master workbook final customer price
+  assert.equal(find('Windhoek Lager', 'Dumpy (330ml)').retailSingleZAR, 112.34); // 8 Nov shelf correction: R104.99 + 7%
   assert.equal(find('Stella Artois', 'Dumpy (330ml)').retailSingleZAR, 107.0); // configured final customer price
-  assert.equal(find('Bombay Sapphire', '750ml Bottle').retailSingleZAR, 682.5);
+  assert.equal(find('Bombay Sapphire', '750ml Bottle').retailSingleZAR, 398.99);
   assert.deepEqual(first.unpriced, []);
 
   const second = await run(prisma);
@@ -171,7 +171,7 @@ test('runner: an old-label duplicate is removed, not kept twice', async () => {
   const { log } = await run(prisma);
   assert.equal(prisma.db.length, 1);
   assert.equal(prisma.db[0].bottleFormat, 'Dumpy (330ml)');
-  assert.equal(prisma.db[0].retailSingleZAR, 187.25);
+  assert.equal(prisma.db[0].retailSingleZAR, 96.29);
   assert.ok(log.some((l) => l.startsWith('removed duplicate:')));
 });
 

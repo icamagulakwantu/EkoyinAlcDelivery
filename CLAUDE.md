@@ -4,11 +4,12 @@
 These points replace anything older in the sections below.
 - **Cart and checkout are restyled** to the shop style (shared `public/app.css`, dark `#17140e` buttons, sticky total bars). Section 8 item 1 is done.
 - **The R10 tamper-proof Safety Seal is built**: spirits only, charged by the server, saved in `Order.safetySealFee`, shown on the admin order card.
-- **The service fee is "Care & Handling"**: 5% of subtotal up to R800, 7% up to R2000, 15% above (`CARE_FEE_BANDS` in `public/pricing.js`). The R50–R110 bands in section 5 are no longer the code.
+- **The service fee is "Care & Handling"**: 5% of the items, minimum R15, maximum R75 (`CARE_FEE_PCT/MIN/MAX` in `public/pricing.js`, founder decision 8 Nov). The R50–R110 and 5/7/15% bands are gone.
 - **One total calculation**: cart, checkout and server all use `priceOrder()` in `public/pricing.js`. Change fees there, not in page code.
-- **Card payment** stays disabled in checkout until `/api/payment-config` reports Yoco as configured.
-- **Service worker cache is `ekoyini-shell-v3`**. Bump it again when static pages change.
-- **Tests**: 53, including `test/order-pricing.test.js`.
+- **Card payment (Yoco) is the default** in checkout. Paid checkouts become orders via the webhook OR the confirmation-page status check (`completePaidCheckout` in `server.js`, atomic claim, never twice).
+- **Prices corrected 8 Nov**: `lib/price-corrections-2026-11-08.js` (shelf price + 7%/5%) overrides the older list; review sheet `prisma/data/price-corrections-2026-11-08.csv`. Rows marked estimate are worth checking on the shelf.
+- **Service worker cache is `ekoyini-shell-v4`**. Bump it again when static pages change.
+- **Tests**: 57, including `test/order-pricing.test.js` and `test/price-corrections.test.js`.
 
 ## 1. What this is
 Alcohol delivery app for Gqeberha townships (ride-along delivery). Founder: Thandu (Thanduxolo Makeleni), Ekoyini Group.
@@ -37,7 +38,7 @@ Stack: Node/Express 4, Prisma 5, Supabase Postgres, Yoco payments, vanilla HTML/
 
 ## 5. Fees and orders (founder decisions)
 - No free delivery. Minimum order R300.
-- Service fee (now "Care & Handling", see section 0) is its own line, saved in `Order.serviceFee`, included in the server total and the Yoco amount. On 7 Nov the founder asked about a lower start (15%?); confirm with him before changing the bands.
+- Service fee (now "Care & Handling", see section 0) is its own line, saved in `Order.serviceFee`, included in the server total and the Yoco amount. Decided 8 Nov: 5% of items, min R15, max R75.
 - Cooler Box discount: 5% from R1000, 8% above R2000, only until 20:00 SA time (comes back 04:00). No other discounts.
 - Drivers keep 100% of delivery, surge and priority fees. Dispatch stays manual (admin finds a driver, sends details by WhatsApp). One shared stock and one platform price (no per-tavern stock). Low commission while taverns are onboarded.
 - Yoco fee is 3.25% + R2.50 per transaction. The founder floated 6% / 8% markups to absorb it, then said the workbook prices already include 5% / 7%. Not applied. Ask before touching.
@@ -55,7 +56,7 @@ Stack: Node/Express 4, Prisma 5, Supabase Postgres, Yoco payments, vanilla HTML/
 
 ## 8. Open work (suggested order)
 1. ~~Restyle cart + checkout~~ (done 8 Nov).
-2. Confirm and finish the fee decisions in section 5 (Care & Handling bands; make fee bands editable in admin settings instead of hard-coded). The R10 seal is done.
+2. Fee decisions are done (Care & Handling 5%/R15/R75, R10 seal). Optional: make the fee editable in admin settings instead of hard-coded.
 3. Case reservations: customer-facing AND stock reservations (atomic, expiring, released on cancel). Needs a Prisma migration, so do it where tests can run.
 4. Driver pay: distance + load, configurable rates in settings, 100% of delivery/surge/priority fees, payout shown to admin before assigning a driver. Rand rates not decided yet.
 5. Dependency vulnerabilities (npm audit: 1 critical, 2 high, 1 moderate).
@@ -71,4 +72,4 @@ Stack: Node/Express 4, Prisma 5, Supabase Postgres, Yoco payments, vanilla HTML/
 - Do not touch the other Supabase projects. Do not delete order data. `OrderItem` snapshots name + price, so catalogue changes do not break history.
 - Commit trailer to use:
   `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>`
-- Verify on the LIVE site after each deploy (products API, a photo, a price). The service worker caches the shell (`ekoyini-shell-v3`), so bump the cache name when you change static pages.
+- Verify on the LIVE site after each deploy (products API, a photo, a price). The service worker caches the shell (`ekoyini-shell-v4`), so bump the cache name when you change static pages.

@@ -169,7 +169,7 @@ model PendingCheckout {
   yocoCheckoutId  String    @unique
   amountCents     Int
   payload         String // JSON-encoded: { address, items, customerName, customerPhone, promoCode, landmark, deliveryLat, deliveryLng, priorityFee }
-  status          String    @default("PENDING") // PENDING | COMPLETED | FAILED_NEEDS_REFUND
+  status          String    @default("PENDING") // PENDING | PROCESSING (claimed while creating the order) | COMPLETED | FAILED_NEEDS_REFUND
   orderCode       String? // set once the real Order is created
   failureReason   String?
   createdAt       DateTime  @default(now())
