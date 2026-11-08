@@ -11,7 +11,12 @@ const prisma = new PrismaClient();
 // — without trusting the proxy, req.protocol always reports "http", which
 // would build broken (non-https) Yoco redirect URLs. It's also required
 // for express-rate-limit to read the real client IP instead of Render's.
-app.set("trust proxy", true);
+// TRUST_PROXY_HOPS = how many proxies Render puts in front of the app. With
+// `true` (the default, unchanged) a client can put any IP in X-Forwarded-For
+// and dodge the per-IP rate limits. Once /admin/client-ip has shown the real
+// hop count on the live site, set TRUST_PROXY_HOPS on Render (usually 1).
+const trustProxyHops = parseInt(process.env.TRUST_PROXY_HOPS, 10);
+app.set("trust proxy", Number.isInteger(trustProxyHops) && trustProxyHops > 0 ? trustProxyHops : true);
 // Don't advertise the framework to scanners.
 app.disable("x-powered-by");
 
@@ -94,6 +99,16 @@ const {
 } = require("./payments.js");
 const { sendOrderConfirmationEmail, sendAdminOrderAlertEmail, sendPaymentFailureAlertEmail, sendPaymentConfirmedEmail } = require("./emails.js");
 
+// Basic browser security headers. A Content-Security-Policy is deliberately
+// not set yet (it could break the map and address lookup; add with testing).
+app.use((req, res, next) => {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "SAMEORIGIN");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.setHeader("Strict-Transport-Security", "max-age=15552000");
+  res.setHeader("Permissions-Policy", "geolocation=(self), camera=(), microphone=()");
+  next();
+});
 app.use(express.static("public"));
 app.use("/admin", express.static("admin"));
 // The verify callback stashes the raw bytes alongside normal JSON parsing —
@@ -1543,6 +1558,26 @@ app.use((err, req, res, next) => {
   if (err.type === "entity.too.large") return res.status(413).json({ error: "That request is too large" });
   console.error(err);
   res.status(500).json({ error: "Something went wrong — please try again" });
+});
+
+// Admin-only: shows what the proxy chain sends, to choose TRUST_PROXY_HOPS.
+app.get("/admin/client-ip", requireAdmin, (req, res) => {
+  res.json({
+    xForwardedFor: req.headers["x-forwarded-for"] || null,
+    trueClientIp: req.headers["true-client-ip"] || null,
+    cfConnectingIp: req.headers["cf-connecting-ip"] || null,
+    socketAddress: req.socket.remoteAddress,
+    reqIp: req.ip,
+    trustProxy: app.get("trust proxy"),
+  });
+});
+
+// Anything not matched above: a friendly page for people, JSON for code.
+app.use((req, res) => {
+  if (req.method === "GET" && !req.path.startsWith("/api/") && req.accepts(["html", "json"]) === "html") {
+    return res.status(404).sendFile("404.html", { root: "public" });
+  }
+  res.status(404).json({ error: "Not found" });
 });
 
 const PORT = process.env.PORT || 3000;

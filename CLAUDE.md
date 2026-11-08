@@ -8,7 +8,7 @@ These points replace anything older in the sections below.
 - **One total calculation**: cart, checkout and server all use `priceOrder()` in `public/pricing.js`. Change fees there, not in page code.
 - **Card payment (Yoco) is the default** in checkout. Paid checkouts become orders via the webhook OR the confirmation-page status check (`completePaidCheckout` in `server.js`, atomic claim, never twice).
 - **Prices corrected 8 Nov**: `lib/price-corrections-2026-11-08.js` (shelf price + 7%/5%) overrides the older list; review sheet `prisma/data/price-corrections-2026-11-08.csv`. Rows marked estimate are worth checking on the shelf.
-- **Service worker cache is `ekoyini-shell-v4`**. Bump it again when static pages change.
+- **Service worker cache is `ekoyini-shell-v5`**. Bump it again when static pages change.
 - **Tests**: 57, including `test/order-pricing.test.js` and `test/price-corrections.test.js`.
 
 ## 1. What this is
@@ -72,4 +72,4 @@ Stack: Node/Express 4, Prisma 5, Supabase Postgres, Yoco payments, vanilla HTML/
 - Do not touch the other Supabase projects. Do not delete order data. `OrderItem` snapshots name + price, so catalogue changes do not break history.
 - Commit trailer to use:
   `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>`
-- Verify on the LIVE site after each deploy (products API, a photo, a price). The service worker caches the shell (`ekoyini-shell-v4`), so bump the cache name when you change static pages.
+- Verify on the LIVE site after each deploy (products API, a photo, a price). The service worker caches the shell (`ekoyini-shell-v5`), so bump the cache name when you change static pages.

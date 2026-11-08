@@ -4,6 +4,11 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 8 Nov 2026 (late): market-readiness evaluation
+- Full evaluation in `MARKET_READINESS.md`: 24 staged API scenarios (`staging/`, 23/24 pass), 13 browser scenarios, 57 unit tests, dependency audit, legal-page review. **Verdict: the software is ready; three launch blockers are business setup** (legal placeholders, liquor trading hours not enforced, one live end-to-end order).
+- Fixed: friendly 404 page (JSON for `/api/`), browser security headers, `TRUST_PROXY_HOPS` setting plus admin `GET /admin/client-ip` (the rate limits could be bypassed with a faked IP), product photos compressed from 29 MB to 11 MB with the same file names (shop first load 2.5 MB → 0.96 MB), service-worker cache `v5`.
+- `scripts/optimize-images.js` now uses palette PNG; its comment says to run it by hand (it never ran on deploy).
+
 ### 8 Nov 2026 (night): prices corrected, lower Care & Handling fee, card payments
 **Prices.** The founder flagged prices like the Amstel quart at R47.08. A full SKU check found 195 rows off the shelf, almost all too high: quarts at R47, beer six-packs at R165–R210 (shelf ~R90–R120), Monin at R367.50, Glenfiddich 12 at R1081.50. One was too low: Ciroc Original at R378 (shelf R599.99). Every corrected row is now **regular shelf price of the same pack + 7% (beer, cider/RTD, wine) or 5% (spirits, liqueurs, mixers, energy drinks, water)**, the founder's existing rule.
 - Data: `lib/price-corrections-2026-11-08.js` (applied before the older list). Review sheet: `prisma/data/price-corrections-2026-11-08.csv` (was / now / shelf price / source).

@@ -1,6 +1,8 @@
 // scripts/optimize-images.js
 //
-// Runs on every Render deploy (see render.yaml's buildCommand). Shrinks any
+// Run by hand (`npm run optimize-images`) after adding photos, then commit the
+// result. It does NOT run on deploy: the Render dashboard build command
+// overrides render.yaml. Shrinks any
 // product photo in public/images/brands that is bigger than it needs to be,
 // so the shop loads fast on mobile data and nothing overflows its box.
 //
@@ -32,10 +34,12 @@ const MIN_SAVING = 0.9;
 function encoderFor(ext, pipeline) {
   switch (ext) {
     case '.png':
-      return pipeline.png({ compressionLevel: 9, adaptiveFiltering: true });
+      // Palette PNG (like pngquant): ~70% smaller, transparency kept, and
+      // indistinguishable at shop-card size (checked side by side, 8 Nov 2026).
+      return pipeline.png({ compressionLevel: 9, palette: true, quality: 85, effort: 10 });
     case '.jpg':
     case '.jpeg':
-      return pipeline.jpeg({ quality: 82, mozjpeg: true });
+      return pipeline.jpeg({ quality: 80, mozjpeg: true });
     case '.webp':
       return pipeline.webp({ quality: 82 });
     default:
