@@ -377,10 +377,6 @@ const FORMAT_PHOTO_MAP = {
   "[\"Strongbow Red Berries\",\"Quart (660ml)\"]": "/images/brands/strongbow-red-berries.png",
   "[\"Windhoek Draught\",\"Quart (660ml)\"]": "/images/brands/windhoek-draught-quart-750ml.jpg",
   "[\"Windhoek Lager\",\"Quart (660ml)\"]": "/images/brands/windhoek-lager.png",
-  "[\"Klipdrift Export Brandy\",\"1 Litre Bottle\"]": "/images/brands/klipdrift-export.png",
-  "[\"Jameson Irish Whisky\",\"1 Litre Bottle\"]": "/images/brands/jameson-original-irish.png",
-  "[\"Gordons London Dry Gin\",\"1 Litre Bottle\"]": "/images/brands/gordons-london-dry.jpg",
-  "[\"Carling Black Label\",\"750ml Quart Returnable Bottle Case (12 Pack)\"]": "/images/brands/carling-black-label.png",
 };
 
 const UNPRICED_PRODUCTS = [];

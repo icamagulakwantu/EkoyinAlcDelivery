@@ -4,6 +4,13 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 7 Nov 2026 (later): founder corrections
+- **Three SKUs priced** (they were "Price coming soon"): Strettons Ruby Orange R220.50, Strettons Triple Berry R220.50 and Sambuca Lupini Blue R357.00, the same as their sibling flavours. No SKU is "Price coming soon" any more (`PRICE_COMING_SOON` is empty).
+- **Back to the founder's list price:** Johnnie Walker Red Label R315.00, Klipdrift Export R252.00, Castle Milk Stout quart R29.96. Only **Heineken dumpy stays at R117.70** (list was R112.35).
+- **Removed, because the founder never added 1 litre bottles:** Klipdrift Export Brandy 1 Litre, Jameson Irish Whisky 1 Litre, Gordons London Dry Gin 1 Litre, Smirnoff 1818 Vodka 1 Litre and the Carling Black Label 12-pack case row. The 750ml versions stay (Carling Black Label is the 750ml quart; Breezer has no quarts).
+- **Four house products restored** (they are not in the master workbook, so they are kept in `skus.csv` and `FINAL_CUSTOMER_PRICES` on purpose so the catalogue sync does not delete them): Mofaya Original and Mofaya Orange Ting six-packs R62.94 (R9.99 a can x 6 + 5%), Grenadine Syrup Cordial R73.50 (base R70 + 5%) and Kola Tonic Cordial R47.25 (base R45 + 5%). Those four prices are estimates from the old Ekoyini bases.
+- The catalogue is now 322 master workbook SKUs + 4 house products = 326 rows, every one with a final price.
+
 ### 7 Nov 2026: master prices live, build fixed
 - **Why prices were not live:** every deploy from 20:38 on 6 Nov failed at `npm install` (postinstall runs `node --test`). `lib/catalogue-2026-11.js` exported `roundTavern` without defining it, so loading the module threw and the catalogue tests crashed. It is now defined (legacy rounding only; final workbook prices are never rounded with it).
 - **Prices now live:** all 327 master SKUs. 324 carry a final customer price (7% markup on beer, cider/RTD and wine; 5% on spirits, liqueurs, mixers, water and ice, applied to the receipt or market base). Strettons Ruby Orange, Strettons Triple Berry and Sambuca Lupini Blue are still "Price coming soon" because the master workbook has no price for them.

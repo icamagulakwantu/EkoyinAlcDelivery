@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const C = require('../lib/catalogue-2026-11.js');
 const { run } = require('../prisma/catalogue-update.js');
 
-test('canonical master workbook import contains 327 unique SKUs and preserves the three unpriced entries', () => {
+test('canonical catalogue: 322 master workbook SKUs plus 4 house products, every one priced', () => {
   const csv = fs.readFileSync(require.resolve('../prisma/data/skus.csv'), 'utf8').trim().split(/\r?\n/);
   const header = csv[0].split(',');
   const nameIndex = header.indexOf('name');
@@ -14,8 +14,8 @@ test('canonical master workbook import contains 327 unique SKUs and preserves th
     const cells = line.split(',');
     return `${cells[nameIndex]}|${cells[formatIndex]}`;
   });
-  assert.equal(keys.length, 327);
-  assert.equal(new Set(keys).size, 327);
+  assert.equal(keys.length, 326);
+  assert.equal(new Set(keys).size, 326);
   const categoryByName = new Map(csv.slice(1).map(line => {
     const cells = line.split(',');
     return [cells[nameIndex], cells[header.indexOf('category')]];
@@ -24,10 +24,10 @@ test('canonical master workbook import contains 327 unique SKUs and preserves th
   assert.equal(categoryByName.get('Belvedere Pure Vodka'), 'VODKA_PREMIUM');
   assert.equal(categoryByName.get('Casamigos Blanco'), 'TEQUILA_PREMIUM');
   assert.equal(categoryByName.get('Don Julio Reposado'), 'TEQUILA_PREMIUM');
-  assert.equal(C.FINAL_CUSTOMER_PRICES.length, 324);
+  assert.equal(C.FINAL_CUSTOMER_PRICES.length, 326);
   const finalKeys = C.FINAL_CUSTOMER_PRICES.map(row => `${row.name}|${row.bottleFormat}`);
-  assert.equal(new Set(finalKeys).size, 324);
-  assert.equal(C.PRICE_COMING_SOON.length, 3);
+  assert.equal(new Set(finalKeys).size, 326);
+  assert.equal(C.PRICE_COMING_SOON.length, 0);
   const uncovered = csv.slice(1).filter(line => {
     const cells = line.split(',');
     const name = cells[nameIndex];
@@ -65,8 +65,8 @@ test('founder-approved markups are 7% for beer/cider/wine and 5% for spirits and
 
 test('receipt-calibrated final customer prices take priority over legacy retail uplift', () => {
   assert.equal(C.newSinglePrice({ name: 'Hennessy VS', bottleFormat: '750ml Bottle', packSize: 1, listPriceZAR: 400 }), 682.5);
-  assert.equal(C.newSinglePrice({ name: 'Johnnie Walker Red Label', bottleFormat: '750ml Bottle', packSize: 1, listPriceZAR: 269.73 }), 408.29);
-  assert.equal(C.newSinglePrice({ name: 'Klipdrift Export', bottleFormat: '750ml Bottle', packSize: 1, listPriceZAR: 189.99 }), 251.99);
+  assert.equal(C.newSinglePrice({ name: 'Johnnie Walker Red Label', bottleFormat: '750ml Bottle', packSize: 1, listPriceZAR: 269.73 }), 315);
+  assert.equal(C.newSinglePrice({ name: 'Klipdrift Export', bottleFormat: '750ml Bottle', packSize: 1, listPriceZAR: 189.99 }), 252);
 });
 
 test('final customer prices override legacy list-price uplift when configured', () => {
