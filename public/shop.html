@@ -7,7 +7,9 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/images/brand/favicon-32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/images/brand/favicon-16.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/images/brand/favicon-180.png">
-  <title>Ekoyini — Shop</title>
+  <title>Shop drinks — Ekoyini</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#faf6ee">
   <link rel="stylesheet" href="style.css">
   <style>
     .cat-section { margin-bottom: 24px; }
@@ -105,6 +107,7 @@
     }
   </style>
     <link rel="stylesheet" href="premium.css">
+  <link rel="stylesheet" href="app.css">
   <style id="shop-polish">
     /* SHOP POLISH (Nov 2026). Loaded after premium.css on purpose. Modelled on
        Uber Eats / Instacart / Gopuff: borderless product tiles, soft tinted photo
@@ -161,7 +164,7 @@
 <body>
   <!-- NAVBAR -->
   <nav class="navbar">
-    <a href="index.html" class="back-arrow">
+    <a href="index.html" class="back-arrow" aria-label="Home">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><polyline points="15 18 9 12 15 6"/></svg>
     </a>
     <div class="logo">
@@ -170,7 +173,7 @@
     </div>
     <div style="display:flex; align-items:center; gap:10px;">
       <div id="navAuthSlot"></div>
-      <a href="cart.html" class="nav-icon-btn">
+      <a href="cart.html" class="nav-icon-btn" aria-label="Cart">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
           <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
           <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
@@ -185,18 +188,10 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
       <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
     </svg>
-    <input type="text" id="shopAddress" placeholder="Enter delivery address">
-    <button class="addr-save" onclick="saveAddress()">Save</button>
+    <input type="text" id="shopAddress" placeholder="Enter delivery address" autocomplete="street-address" aria-label="Delivery address" onkeydown="if(event.key==='Enter')saveAddress()">
+    <button type="button" class="addr-save" onclick="saveAddress()">Save</button>
   </div>
 
-  <!-- SEARCH -->
-  <div class="shop-search">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-    </svg>
-    <input type="text" id="shopSearch" placeholder="Search by name, e.g. Savanna, Klipdrift…">
-    <span class="search-clear" id="searchClear" onclick="clearSearch()">&times;</span>
-  </div>
 
   <!-- HERO AISLE BANNER -->
   <div class="shop-hero" id="shopHero">
@@ -208,20 +203,30 @@
     Sourced from taverns, bottle stores &amp; liquor outlets — in your township and beyond, wherever the best price is
   </div>
   <div class="pill-scroll" style="padding-top:8px;">
-    <div class="pill-tag" id="favToggle" onclick="toggleFavoritesOnly()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" style="vertical-align:-1px;margin-right:4px;"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>My Favorites
-    </div>
-    <div class="pill-tag brand-filter-pill" data-tag="BLACK_OWNED" onclick="toggleBrandFilter('BLACK_OWNED')">Black Owned</div>
-    <div class="pill-tag brand-filter-pill" data-tag="WOMEN_OWNED" onclick="toggleBrandFilter('WOMEN_OWNED')">Women Owned</div>
-    <div class="pill-tag brand-filter-pill" data-tag="CELEBRITY_BACKED" onclick="toggleBrandFilter('CELEBRITY_BACKED')">Celebrity Backed</div>
+    <button type="button" class="pill-tag" id="favToggle" aria-pressed="false" onclick="toggleFavoritesOnly()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" style="vertical-align:-1px;margin-right:4px;"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>Favourites
+    </button>
+    <button type="button" class="pill-tag brand-filter-pill" data-tag="BLACK_OWNED" aria-pressed="false" onclick="toggleBrandFilter('BLACK_OWNED')">Black-owned</button>
+    <button type="button" class="pill-tag brand-filter-pill" data-tag="WOMEN_OWNED" aria-pressed="false" onclick="toggleBrandFilter('WOMEN_OWNED')">Women-owned</button>
+    <button type="button" class="pill-tag brand-filter-pill" data-tag="CELEBRITY_BACKED" aria-pressed="false" onclick="toggleBrandFilter('CELEBRITY_BACKED')">Celebrity-backed</button>
   </div>
   <div class="collection-banner" id="collectionBanner" style="display:none;">
     <span id="collectionLabel"></span>
     <a href="shop.html">Show everything</a>
   </div>
 
-  <!-- CATEGORY PILLS -->
-  <div class="pill-scroll" id="catPills"></div>
+  <!-- STICKY SEARCH + CATEGORY PILLS (stays put while you scroll) -->
+  <div class="shop-sticky" id="shopSticky">
+    <form class="shop-search" role="search" onsubmit="event.preventDefault(); document.getElementById('shopSearch').blur();">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" aria-hidden="true">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input type="search" id="shopSearch" placeholder="Search drinks, e.g. Savanna, Klipdrift…" aria-label="Search drinks" enterkeyhint="search" autocomplete="off">
+      <button type="button" class="search-clear" id="searchClear" onclick="clearSearch()" aria-label="Clear search">&times;</button>
+    </form>
+    <div class="pill-scroll" id="catPills" role="tablist" aria-label="Categories" style="padding-top:8px;padding-bottom:4px"></div>
+  </div>
+  <div class="shop-result-count" id="resultCount" aria-live="polite"></div>
 
   <!-- COOLER BOX BUILDER -->
   <div class="cooler-bar" id="coolerBar" style="display:none;">
@@ -272,13 +277,13 @@
   </nav>
 
   <!-- PRICE DETAILS SHEET (read-only) -->
-  <div class="modal-overlay" id="priceModal">
+  <div class="modal-overlay" id="priceModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" onclick="if(event.target===this)closeModal()">
     <div class="modal-sheet">
       <div class="modal-handle"></div>
       <h3 id="modalTitle">Price Details</h3>
       <div id="priceDetailsBody"></div>
       <div class="modal-btns">
-        <button class="btn-cancel" onclick="closeModal()">Close</button>
+        <button type="button" class="btn-cancel" onclick="closeModal()">Close</button>
       </div>
     </div>
   </div>
@@ -351,18 +356,32 @@
     (params.get('tag') || '').split(',').map((t) => t.trim()).filter((t) => BRAND_TAG_LABELS[t])
   );
   activeBrandFilters.forEach((t) => {
-    document.querySelector(`.brand-filter-pill[data-tag="${t}"]`)?.classList.add('active');
+    const pill = document.querySelector(`.brand-filter-pill[data-tag="${t}"]`);
+    pill?.classList.add('active');
+    pill?.setAttribute('aria-pressed', 'true');
   });
 
   function toggleBrandFilter(tag) {
     if (activeBrandFilters.has(tag)) activeBrandFilters.delete(tag); else activeBrandFilters.add(tag);
-    document.querySelector(`.brand-filter-pill[data-tag="${tag}"]`).classList.toggle('active', activeBrandFilters.has(tag));
+    const pill = document.querySelector(`.brand-filter-pill[data-tag="${tag}"]`);
+    pill.classList.toggle('active', activeBrandFilters.has(tag));
+    pill.setAttribute('aria-pressed', String(activeBrandFilters.has(tag)));
     buildCatalog();
   }
   window.toggleBrandFilter = toggleBrandFilter;
 
+  // "bains" finds "Bain's", "jameson 750" finds the 750ml bottle: every
+  // word must appear in the name, type, size or category, ignoring case,
+  // accents and punctuation.
+  function normalise(text) {
+    return String(text || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[’'`.]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
+  }
+  function searchText(p) {
+    if (!p._search) p._search = normalise([p.name, p.productType, p.bottleFormat, categoryLabel(p.category)].join(' '));
+    return p._search;
+  }
   function getFilteredProducts() {
-    const q = searchQuery.toLowerCase();
+    const terms = normalise(searchQuery).split(' ').filter(Boolean);
     return products.filter((p) => {
       if (showFavoritesOnly && !EkoyiniFavorites.has(p.id)) return false;
       if (categoryFilter && !categoryFilter.has(p.category)) return false;
@@ -370,7 +389,10 @@
         const tags = p.brandTags || [];
         for (const t of activeBrandFilters) { if (!tags.includes(t)) return false; }
       }
-      if (q && !p.name.toLowerCase().includes(q) && !p.productType.toLowerCase().includes(q)) return false;
+      if (terms.length) {
+        const hay = searchText(p);
+        if (!terms.every((t) => hay.includes(t))) return false;
+      }
       return true;
     });
   }
@@ -470,12 +492,15 @@
   function toggleFavoritesOnly() {
     showFavoritesOnly = !showFavoritesOnly;
     document.getElementById('favToggle').classList.toggle('active', showFavoritesOnly);
+    document.getElementById('favToggle').setAttribute('aria-pressed', String(showFavoritesOnly));
     buildCatalog();
   }
 
   function toggleFavorite(id, btn) {
     const justAdded = EkoyiniFavorites.toggle(id);
     btn.classList.toggle('active', justAdded);
+    btn.setAttribute('aria-pressed', String(justAdded));
+    showToastTop(justAdded ? 'Saved to Favourites' : 'Removed from Favourites');
     btn.querySelector('svg').setAttribute('fill', justAdded ? 'currentColor' : 'none');
     if (showFavoritesOnly && !justAdded) buildCatalog();
   }
@@ -517,6 +542,7 @@
       const res = await fetch('/api/products');
       if (!res.ok) throw new Error('Bad response');
       products = await res.json();
+      cart = EkoyiniCart.reconcile(products).cart;
       buildCatalog();
       updateBadges();
       updateCoolerBox();
@@ -524,8 +550,8 @@
       console.error('Failed to load catalog:', err);
       document.getElementById('shopPage').innerHTML = `
         <div class="retry-state">
-          Failed to load products.
-          <div><button onclick="loadCatalog()">Retry</button></div>
+          We couldn't load the shelves — check your connection.
+          <div><button type="button" onclick="loadCatalog()">Try again</button></div>
         </div>`;
     }
   }
@@ -545,6 +571,11 @@
     }
 
     const filtered = getFilteredProducts();
+    const filtering = !!(searchQuery || showFavoritesOnly || activeBrandFilters.size || categoryFilter);
+    document.getElementById('resultCount').textContent = filtering && filtered.length
+      ? `${filtered.length} drink${filtered.length === 1 ? '' : 's'} found` : '';
+    // In-stock first within each category, so the shelf never leads with "Out of Stock".
+    filtered.sort((a, b) => (a.stock <= 0) - (b.stock <= 0));
     const byCategory = {};
     filtered.forEach(p => {
       if (!byCategory[p.category]) byCategory[p.category] = [];
@@ -558,18 +589,21 @@
           ? `No products currently match ${[...activeBrandFilters].map(t => BRAND_TAG_LABELS[t]).join(' + ')} — we only tag a brand once its story is actually verified, so this list grows as we source more.`
           : `No products match${searchQuery ? ` "${esc(searchQuery)}"` : ' this filter'}.`;
       page.innerHTML = `<div class="no-results">${noResultsMsg} <a href="shop.html" style="color:var(--terra-light);">Show everything</a></div>`;
+      if (sectionObserver) sectionObserver.disconnect();
       return;
     }
 
     let first = true;
     Object.entries(byCategory).forEach(([cat, items]) => {
-      const pill = document.createElement('div');
+      const pill = document.createElement('button');
+      pill.type = 'button';
       pill.className = 'pill-tag' + (first ? ' active' : '');
-      pill.textContent = cat.replace(/_/g, ' ');
+      pill.dataset.cat = cat;
+      pill.setAttribute('role', 'tab');
+      pill.textContent = categoryLabel(cat);
       pill.onclick = () => {
-        document.querySelectorAll('#catPills .pill-tag').forEach(p => p.classList.remove('active'));
-        pill.classList.add('active');
-        document.getElementById('sec-' + cat)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        setActivePill(cat);
+        scrollToSection(cat);
         setAisle(aisleIndexForCategory(cat));
       };
       pills.appendChild(pill);
@@ -578,8 +612,8 @@
       sec.className = 'cat-section';
       sec.id = 'sec-' + cat;
       sec.innerHTML = `<div class="cat-section-header">
-        <h2>${cat.replace(/_/g, ' ')}${COOLER_ELIGIBLE.has(cat) ? ' <span class="tag-terra" style="margin-left:6px;cursor:pointer;" onclick="scrollToCoolerBox()">Cooler Box</span>' : ''}</h2>
-        <span class="cat-count">${items.length} items</span>
+        <h2>${esc(categoryLabel(cat))}</h2>
+        <span class="cat-count">${items.length} item${items.length === 1 ? '' : 's'}</span>
       </div>`;
       const grid = document.createElement('div');
       grid.className = 'product-grid';
@@ -591,7 +625,7 @@
         card.id = 'card-' + p.id;
         const isFav = EkoyiniFavorites.has(p.id);
         card.innerHTML = `
-          <button class="fav-btn${isFav ? ' active' : ''}" onclick="toggleFavorite('${p.id}', this)">
+          <button type="button" class="fav-btn${isFav ? ' active' : ''}" aria-pressed="${isFav}" aria-label="Save ${esc(p.name)} to Favourites" onclick="toggleFavorite('${p.id}', this)">
             <svg viewBox="0 0 24 24" fill="${isFav ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
           </button>
           ${outOfStock ? '<div class="stock-badge">Out of Stock</div>' : ''}
@@ -618,7 +652,46 @@
     // search, or a brand filter) means the first section isn't BEER.
     const firstCat = Object.keys(byCategory)[0];
     if (firstCat) setAisle(aisleIndexForCategory(firstCat));
+    observeSections();
   }
+
+  // ── Category bar follows your scroll (scroll-spy) ──
+  let sectionObserver = null;
+  let spyPausedUntil = 0;
+  function setActivePill(cat) {
+    const pills = document.querySelectorAll('#catPills .pill-tag');
+    pills.forEach((p) => {
+      const on = p.dataset.cat === cat;
+      p.classList.toggle('active', on);
+      p.setAttribute('aria-selected', String(on));
+      if (on) p.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    });
+  }
+  function stickyOffset() {
+    const nav = document.querySelector('.navbar');
+    return (nav ? nav.offsetHeight : 60) + document.getElementById('shopSticky').offsetHeight + 8;
+  }
+  function scrollToSection(cat) {
+    const sec = document.getElementById('sec-' + cat);
+    if (!sec) return;
+    spyPausedUntil = Date.now() + 900; // don't let the spy fight the jump
+    window.scrollTo({ top: sec.getBoundingClientRect().top + window.scrollY - stickyOffset(), behavior: 'smooth' });
+  }
+  function observeSections() {
+    if (sectionObserver) sectionObserver.disconnect();
+    if (!('IntersectionObserver' in window)) return;
+    sectionObserver = new IntersectionObserver((entries) => {
+      if (Date.now() < spyPausedUntil) return;
+      const visible = entries.filter((e) => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
+      if (visible) setActivePill(visible.target.id.slice(4));
+    }, { rootMargin: `-${stickyOffset()}px 0px -60% 0px` });
+    document.querySelectorAll('.cat-section').forEach((s) => sectionObserver.observe(s));
+  }
+  // Shadow under the sticky bar only once it's actually stuck.
+  window.addEventListener('scroll', () => {
+    const bar = document.getElementById('shopSticky');
+    bar.classList.toggle('is-stuck', bar.getBoundingClientRect().top <= (document.querySelector('.navbar')?.offsetHeight || 60) + 1);
+  }, { passive: true });
 
   // Shared by the initial card render (inline, so the button paints on
   // first load — see the buildCatalog() comment on why it can't go
@@ -630,12 +703,12 @@
     if (qty > 0) {
       return `
         <div class="stepper-inline">
-          <button onclick="changeQty('${p.id}', -1)">−</button>
-          <span>${qty}</span>
-          <button onclick="changeQty('${p.id}', 1)">+</button>
+          <button type="button" aria-label="One less ${esc(p.name)}" onclick="changeQty('${p.id}', -1)">−</button>
+          <span aria-live="polite">${qty}</span>
+          <button type="button" aria-label="One more ${esc(p.name)}" onclick="changeQty('${p.id}', 1)">+</button>
         </div>`;
     }
-    return `<button class="add-btn" onclick="changeQty('${p.id}', 1)">+</button>`;
+    return `<button type="button" class="add-btn" aria-label="Add ${esc(p.name)} to cart" onclick="changeQty('${p.id}', 1)">+</button>`;
   }
 
   function renderQtyControl(id) {
@@ -654,7 +727,8 @@
     renderQtyControl(id);
     updateBadges();
     updateCoolerBox();
-    if (delta > 0) showToastTop('Added to cart');
+    if (delta > 0 && newQty === 1) showToastTop(`Added ${p ? p.name : ''} to cart`);
+    if (delta > 0 && navigator.vibrate) { try { navigator.vibrate(8); } catch {} }
   }
 
   function updateBadges() {
@@ -676,7 +750,7 @@
       if (p && p.retailSingleZAR > 0) total += p.retailSingleZAR * qty;
     });
     document.getElementById('cfCount').textContent = count;
-    document.getElementById('cfTotal').textContent = fmtPrice(total);
+    document.getElementById('cfTotal').textContent = formatRand(total);
     fab.hidden = count <= 0;
   }
 
@@ -726,7 +800,7 @@
     } else if (unlocked) {
       goal.textContent = `${COOLER_DISCOUNT_PCT * 100}% off unlocked · ${COOLER_TOP_DISCOUNT_PCT * 100}% over R${COOLER_TOP_SUBTOTAL}`;
     } else {
-      goal.textContent = `R${(COOLER_MIN_SUBTOTAL - subtotal).toFixed(2)} more for ${COOLER_DISCOUNT_PCT * 100}% off (R${COOLER_MIN_SUBTOTAL}), until 8pm`;
+      goal.textContent = `Add ${formatRand(COOLER_MIN_SUBTOTAL - subtotal)} for ${COOLER_DISCOUNT_PCT * 100}% off, until 8pm`;
     }
 
     const slots = document.getElementById('coolerSlots');
@@ -759,10 +833,15 @@
   }
 
   function closeModal() { document.getElementById('priceModal').classList.remove('open'); }
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
 
   function saveAddress() {
-    const v = document.getElementById('shopAddress').value.trim();
-    if (v) EkoyiniAddress.save(v);
+    const input = document.getElementById('shopAddress');
+    const v = input.value.trim();
+    if (v.length < 5) { showToast('Please enter your full street address'); input.focus(); return; }
+    EkoyiniAddress.save(v);
+    input.blur();
+    showToast('Delivery address saved');
   }
 
   // Live re-sync if the cart changes in another tab.

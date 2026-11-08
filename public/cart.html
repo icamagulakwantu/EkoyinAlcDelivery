@@ -7,103 +7,78 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/images/brand/favicon-32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/images/brand/favicon-16.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/images/brand/favicon-180.png">
-  <title>Ekoyini — Cart</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#faf6ee">
+  <title>Your cart — Ekoyini</title>
   <link rel="stylesheet" href="style.css">
-  <style>
-    .cart-empty { text-align: center; padding: 60px 20px; }
-    .cart-empty-icon { display: flex; justify-content: center; margin-bottom: 16px; opacity: 0.3; color: var(--muted); }
-    .promo-code-row { display: flex; gap: 8px; padding: 0 12px 12px; }
-    .promo-code-row input { flex: 1; background: var(--card); border: 1px solid var(--border); padding: 10px; border-radius: 8px; color: var(--white); font-size: 13px; }
-    .promo-code-row button { background: var(--surface); border: 1px solid var(--border); color: var(--muted); padding: 10px 14px; border-radius: 8px; font-size: 12px; cursor: pointer; }
-    .promo-applied { display: flex; align-items: center; justify-content: space-between; margin: -4px 12px 12px; padding: 8px 12px; background: var(--green-glow); color: var(--green-light); border: 1px solid rgba(127, 243, 164, 0.2); border-radius: 8px; }
-    .promo-applied button { background: none; border: none; color: inherit; font-size: 16px; line-height: 1; cursor: pointer; padding: 0 2px; }
-    .purchase-options { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
-    .purchase-type-btn { background: var(--card); border: 1px solid var(--border); color: var(--white); padding: 12px; border-radius: 8px; font-size: 13px; cursor: pointer; transition: all 0.2s; }
-    .purchase-type-btn.selected { background: var(--terra-light); border-color: var(--terra); }
-    .remove-btn { margin-left: 4px; color: var(--muted); border-color: transparent; background: transparent; }
-    .remove-btn:hover { color: var(--danger); border-color: var(--danger); background: rgba(214, 54, 42, 0.08); }
-    .cip-total { margin-bottom: 2px; }
-    .cip-compare { display: flex; align-items: baseline; gap: 6px; justify-content: flex-end; }
-    .cip-was { font-size: 10px; color: var(--faint); text-decoration: line-through; filter: blur(0.25px); opacity: 0.8; }
-    .cip-now { font-size: 11px; font-weight: 700; color: var(--green-light); }
-    .min-order-note { margin: 10px 0 0; padding: 10px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; line-height: 1.4; background: color-mix(in srgb, var(--danger) 12%, transparent); color: var(--danger); border: 1px solid color-mix(in srgb, var(--danger) 35%, transparent); }
-    .cta-btn.blocked { opacity: 0.5; }
-  </style>
   <link rel="stylesheet" href="premium.css">
+  <link rel="stylesheet" href="app.css">
+  <style>
+    .cart-title { font-family: var(--font-display); font-size: 18px; font-weight: 700; color: var(--white); }
+    .cart-skel { margin: 12px 16px 0; height: 88px; border-radius: 20px; background: linear-gradient(90deg, var(--surface) 0%, color-mix(in srgb, var(--white) 5%, var(--surface)) 50%, var(--surface) 100%); background-size: 200% 100%; animation: cs 1.2s infinite linear; }
+    @keyframes cs { to { background-position: -200% 0; } }
+  </style>
 </head>
 <body>
-  <nav class="navbar">
-    <a href="shop.html" class="back-arrow">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><polyline points="15 18 9 12 15 6"/></svg>
+  <nav class="navbar" aria-label="Main">
+    <a href="shop.html" class="back-arrow" aria-label="Back to shop">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
     </a>
-    <div class="logo">
-      <img src="images/brand/ekoyini-icon.png" alt="Ekoyini">
-      <div class="logo-text">Ekoyini</div>
-    </div>
+    <div class="cart-title" id="cartTitle">Your cart</div>
     <div id="navAuthSlot"></div>
   </nav>
 
-  <div class="address-bar">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
-    </svg>
-    <input type="text" id="cartAddress" placeholder="Delivery address" readonly>
-    <button class="addr-save" onclick="editAddress()">Edit</button>
-  </div>
+  <main class="page" id="cartRoot" aria-live="polite">
+    <div class="cart-skel"></div><div class="cart-skel"></div><div class="cart-skel"></div>
+  </main>
 
-  <div class="purchase-options">
-    <div style="font-size: 12px; color: var(--muted); padding: 0 4px;">Order as:</div>
-    <button class="purchase-type-btn selected" data-type="single" onclick="setPurchaseType('single')">Individual Bottles</button>
-    <button class="purchase-type-btn" data-type="case" onclick="setPurchaseType('case')">Cases (Get Discount)</button>
-  </div>
-
-  <div class="page">
-    <div id="cartPage"></div>
-
-    <div class="promo-code-row" id="promoRow">
-      <input type="text" id="promoInput" placeholder="Promo code">
-      <button onclick="applyPromo()" id="promoApplyBtn">Apply</button>
+  <!-- Sticky checkout bar -->
+  <div class="action-bar" id="actionBar" hidden>
+    <div class="action-bar-inner">
+      <div class="action-bar-note" id="actionNote" hidden></div>
+      <button type="button" class="action-btn-main" id="checkoutBtn" onclick="goToCheckout()">
+        <span class="ab-label" id="checkoutLabel">Go to checkout</span>
+        <span class="ab-total" id="checkoutTotal">R0.00</span>
+      </button>
     </div>
-    <div class="promo-applied" id="promoApplied" style="display:none;"></div>
-
-    <div class="order-summary" id="summary"></div>
-
-    <button class="cta-btn" id="checkoutBtn" onclick="goToCheckout()" style="margin-bottom: 20px;">Proceed to Checkout</button>
   </div>
 
-  <div class="toast" id="toastEl"></div>
+  <div class="toast" id="toastEl" role="status" aria-live="polite"></div>
 
-  <div class="modal-overlay" id="addressModal">
+  <div class="modal-overlay" id="addressModal" role="dialog" aria-modal="true" aria-labelledby="addrModalTitle">
     <div class="modal-sheet">
       <div class="modal-handle"></div>
-      <h3>Delivery Address</h3>
-      <input type="text" id="addressModalInput" placeholder="Enter your delivery address">
-      <div class="modal-btns">
-        <button class="btn-cancel" onclick="closeAddressModal()">Cancel</button>
-        <button class="btn-save" onclick="saveAddressModal()">Save</button>
-      </div>
+      <h3 id="addrModalTitle">Where should we deliver?</h3>
+      <form onsubmit="event.preventDefault(); saveAddressModal();">
+        <input type="text" id="addressModalInput" placeholder="e.g. 12 Vilakazi St, Orlando West" autocomplete="street-address" maxlength="300" enterkeyhint="done">
+        <div class="modal-btns">
+          <button type="button" class="btn-cancel" onclick="closeAddressModal()">Cancel</button>
+          <button type="submit" class="btn-save">Save address</button>
+        </div>
+      </form>
     </div>
   </div>
 
-  <nav class="bottom-nav">
+  <nav class="bottom-nav" aria-label="App">
     <a href="index.html" class="bnav-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
       Home
     </a>
     <a href="shop.html" class="bnav-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
       Shop
     </a>
-    <a href="cart.html" class="bnav-item active">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+    <a href="cart.html" class="bnav-item active" aria-current="page">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
       Cart
+      <span class="bnav-badge" id="bnavCartCount" style="display:none">0</span>
     </a>
     <a href="track.html" class="bnav-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
       Track
     </a>
     <a href="profile.html" class="bnav-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       Profile
     </a>
   </nav>
@@ -115,52 +90,58 @@
   <script>
   renderNavAuth();
 
-  // Delivery fee and the minimum order come from pricing.js — the same file
-  // the server uses to charge, so the cart can't promise a different number
-  // than checkout.
-  const { deliveryFee, serviceFeeFor, MIN_ORDER_SUBTOTAL, roundCurrency } = EkoyiniPricing;
+  // Every number on this page comes from pricing.js — the same file the
+  // server charges with — so the cart can't promise a different total.
+  const P = EkoyiniPricing;
 
   let cart = EkoyiniCart.get();
   let products = [];
+  let byId = new Map();
   let purchaseType = 'single';
-  let appliedPromo = null;
+  let appliedPromo = null;   // { code, discountPct }
+  let promoOpen = false;
+  // Peak / late-night fee in force right now (from the server, which also
+  // knows whether surges are switched on). Distance is only known at checkout.
+  let surge = { key: null, fee: 0 };
 
-  function escapeHtml(value) {
-    return String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  }
+  // Remember the shopper's choice of singles vs cases between visits.
+  try {
+    const saved = JSON.parse(localStorage.getItem('ekoyini_checkout_data') || '{}');
+    if (saved.purchaseType === 'case') purchaseType = 'case';
+  } catch {}
 
-  // Single place that renders the "code applied" chip, so the promo code
-  // (which comes back from the server but originates from user input) is
-  // always escaped.
-  function showAppliedPromo(code, discountPct) {
-    document.getElementById('promoRow').style.display = 'none';
-    const el = document.getElementById('promoApplied');
-    el.style.display = 'flex';
-    el.innerHTML = `<span>${escapeHtml(code)} applied — ${escapeHtml(discountPct)}% off</span><button onclick="removePromo()" aria-label="Remove promo code">&times;</button>`;
-  }
+  const ICON_MINUS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg>';
+  const ICON_PLUS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14M12 5v14"/></svg>';
+  const ICON_TRASH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
 
-  // Dumpies and cans are only sold as six-packs (packSize 6).
   function sizeLabel(p) {
     return p.packSize > 1 ? `${p.bottleFormat} · ${p.packSize}-pack` : p.bottleFormat;
   }
+  const casesOf = (qty, p) => Math.ceil(qty / p.unitsPerCase);
+  const hasCaseDeal = (p) => p.unitsPerCase > 1 && p.retailCaseZAR > 0;
 
-  function roundUpToCase(qty, unitsPerCase) {
-    return Math.ceil(qty / unitsPerCase) * unitsPerCase;
+  // One priced line per cart entry. Case mode buys whole cases (rounded up),
+  // exactly like the server does.
+  function cartLines() {
+    return Object.entries(cart).map(([id, qty]) => {
+      const p = byId.get(id);
+      if (!p) return null;
+      if (purchaseType === 'case' && hasCaseDeal(p)) {
+        const cases = casesOf(qty, p);
+        return { p, id, qty, cases, total: P.roundCurrency(p.retailCaseZAR * cases), category: p.category };
+      }
+      return { p, id, qty, cases: null, total: P.roundCurrency(p.retailSingleZAR * qty), category: p.category };
+    }).filter(Boolean);
   }
 
-  function computeSubtotal() {
-    let subtotal = 0;
-    Object.entries(cart).forEach(([skuId, qty]) => {
-      const p = products.find(x => x.id === skuId);
-      if (!p) return;
-      if (purchaseType === 'case') {
-        const numberOfCases = roundUpToCase(qty, p.unitsPerCase) / p.unitsPerCase;
-        subtotal += p.retailCaseZAR * numberOfCases;
-      } else {
-        subtotal += p.retailSingleZAR * qty;
-      }
-    });
-    return roundCurrency(subtotal);
+  function totals() {
+    const lines = cartLines();
+    const subtotal = P.roundCurrency(lines.reduce((s, l) => s + l.total, 0));
+    // Delivery is distance-based; the cart shows the 0–5 km fee plus the
+    // Care & Handling fee. Checkout replaces this with the real quote.
+    const deliveryTotal = lines.length ? P.BASE_DELIVERY_FEE + surge.fee + P.careFeeFor(subtotal) : 0;
+    const priced = P.priceOrder({ lines, promoPct: appliedPromo ? appliedPromo.discountPct : 0, deliveryTotal });
+    return { lines, ...priced, careFee: lines.length ? P.careFeeFor(subtotal) : 0 };
   }
 
   async function loadCart() {
@@ -168,264 +149,334 @@
       const res = await fetch('/api/products');
       if (!res.ok) throw new Error('Catalogue request failed');
       products = await res.json();
+      byId = new Map(products.map((p) => [p.id, p]));
       const reconciled = EkoyiniCart.reconcile(products);
       cart = reconciled.cart;
-      if (reconciled.removed) {
-        showToast('Some saved items are no longer available. Your cart has been refreshed.', 4000);
-      }
-      renderCart();
+      if (reconciled.removed) showToast('Some saved items are no longer available, so we took them out of your cart.', 4500);
+      render();
+      loadSurge();
 
       const savedCode = localStorage.getItem('ekoyini_promo_code');
-      if (savedCode) {
-        const r = await fetch('/api/promo/validate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code: savedCode, subtotal: computeSubtotal() }),
-        });
-        const data = await r.json();
-        if (data.valid) {
-          appliedPromo = { code: data.code, discountPct: data.discountPct };
-          showAppliedPromo(data.code, data.discountPct);
-        } else {
-          localStorage.removeItem('ekoyini_promo_code');
-        }
-      }
-
-      renderSummary();
+      if (savedCode && Object.keys(cart).length) await validatePromo(savedCode, { silent: true });
     } catch (err) {
       console.error('Failed to load products:', err);
-      showToast('Failed to load products');
+      document.getElementById('cartRoot').innerHTML = `
+        <div class="empty">
+          <div class="empty-ic"><svg viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="10"/></svg></div>
+          <h2>We couldn't load your cart</h2>
+          <p>Check your connection and try again — your items are still saved on this phone.</p>
+          <button type="button" class="action-btn-main" onclick="loadCart()"><span>Try again</span></button>
+        </div>`;
     }
   }
 
-  function renderCart() {
-    const page = document.getElementById('cartPage');
-    const items = Object.entries(cart);
+  async function loadSurge() {
+    try {
+      const res = await fetch('/api/delivery-quote', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subtotal: totals().subtotal, priorityFee: 0 }),
+      });
+      const data = await res.json();
+      if (res.ok && data.quote) {
+        surge = { key: data.quote.surgeKey, fee: Number(data.quote.surgeFee) || 0 };
+        render();
+      }
+    } catch (err) { console.warn('Surge lookup failed; showing base delivery only', err); }
+  }
 
-    if (items.length === 0) {
-      page.innerHTML = `
-        <div class="cart-empty">
-          <div class="cart-empty-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="48" height="48">
-              <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
-              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
-            </svg>
-          </div>
-          <h3 style="color: var(--white); margin-bottom: 8px;">Your cart is empty</h3>
-          <p style="color: var(--muted); margin-bottom: 20px;">Start adding drinks to your cart</p>
-          <a href="shop.html" class="cta-btn">Browse Products</a>
+  function render() {
+    updateBadge();
+    const root = document.getElementById('cartRoot');
+    const t = totals();
+    const count = EkoyiniCart.count();
+    document.getElementById('cartTitle').textContent = count ? `Your cart (${count})` : 'Your cart';
+
+    if (!t.lines.length) {
+      document.body.classList.remove('has-action-bar');
+      document.getElementById('actionBar').hidden = true;
+      root.innerHTML = `
+        <div class="empty">
+          <div class="empty-ic"><svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></div>
+          <h2>Your cooler box is empty</h2>
+          <p>Cold beers, a bottle for the table, mixers and ice — fill it up and we'll catch a ride to your door.</p>
+          <a href="shop.html" class="action-btn-main"><span>Start shopping</span></a>
         </div>`;
       return;
     }
 
-    page.innerHTML = '';
+    const address = EkoyiniAddress.get();
+    const maxCaseSave = Math.max(0, ...t.lines.filter((l) => hasCaseDeal(l.p)).map((l) => Number(l.p.retailCaseDiscountPct) || 0));
+    const anyCaseDeal = t.lines.some((l) => hasCaseDeal(l.p));
 
-    items.forEach(([skuId, qty]) => {
-      const p = products.find(x => x.id === skuId);
-      if (!p) return;
+    root.innerHTML = `
+      <button type="button" class="addr-card${address ? '' : ' is-empty'}" onclick="editAddress()">
+        <span class="addr-ic"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span>
+        <span class="addr-text">
+          <span class="addr-label">Deliver to</span>
+          <span class="addr-value">${address ? escapeHtml(address) : 'Add your delivery address'}</span>
+        </span>
+        <span class="addr-change">${address ? 'Change' : 'Add'}</span>
+      </button>
 
-      const caseUnitPrice = p.retailCaseZAR / p.unitsPerCase;
-      // A product with an empty name used to crash the whole cart render.
-      const firstLetter = String(p.name || '?').charAt(0).toUpperCase();
+      ${anyCaseDeal ? `
+      <div class="segmented" role="group" aria-label="Buy as">
+        <button type="button" aria-pressed="${purchaseType === 'single'}" onclick="setPurchaseType('single')">Singles</button>
+        <button type="button" aria-pressed="${purchaseType === 'case'}" onclick="setPurchaseType('case')">Full cases${maxCaseSave > 0 ? `<small>save up to ${Math.round(maxCaseSave)}%</small>` : ''}</button>
+      </div>` : ''}
 
-      let itemTotal, priceBlock, qtyLabel;
-      if (purchaseType === 'case') {
-        const numberOfCases = roundUpToCase(qty, p.unitsPerCase) / p.unitsPerCase;
-        itemTotal = p.retailCaseZAR * numberOfCases;
-        priceBlock = `<div class="cart-item-price cip-total">R${itemTotal.toFixed(2)}</div>
-           <div class="cip-compare">
-             <span class="cip-was">R${p.retailSingleZAR.toFixed(2)} ea</span>
-             <span class="cip-now">R${caseUnitPrice.toFixed(2)} ea</span>
-           </div>`;
-        qtyLabel = `${numberOfCases} case${numberOfCases === 1 ? '' : 's'}`;
-      } else {
-        itemTotal = p.retailSingleZAR * qty;
-        priceBlock = `<div class="cart-item-price">R${itemTotal.toFixed(2)}</div>`;
-        qtyLabel = qty;
-      }
+      ${nudgesHTML(t)}
 
-      const card = document.createElement('div');
-      card.className = 'cart-item';
-      card.innerHTML = `
-        <div class="cart-item-img">${escapeHtml(firstLetter)}</div>
-        <div class="cart-item-info">
-          <h3>${escapeHtml(p.name)}</h3>
-          <div class="ci-size">${escapeHtml(sizeLabel(p))}</div>
-        </div>
-        <div class="cart-item-right">
-          ${priceBlock}
-          <div class="qty-control">
-            <button class="qty-btn" onclick="updateQty('${skuId}', -1)">−</button>
-            <span class="qty-val">${escapeHtml(qtyLabel)}</span>
-            <button class="qty-btn" onclick="updateQty('${skuId}', 1)">+</button>
-            <button class="qty-btn remove-btn" onclick="removeItem('${skuId}')" aria-label="Remove ${escapeHtml(p.name)} from cart">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-            </button>
-          </div>
-        </div>
-      `;
-      page.appendChild(card);
-    });
+      <div class="cart-list">
+        ${t.lines.map(lineHTML).join('')}
+        <a class="cart-more" href="shop.html">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14M12 5v14"/></svg>
+          Add more items
+        </a>
+      </div>
+
+      ${promoHTML()}
+      ${billHTML(t)}
+    `;
+    renderActionBar(t);
   }
 
-  function renderSummary() {
-    const summary = document.getElementById('summary');
-    const subtotal = computeSubtotal();
-    const promoDiscount = appliedPromo ? roundCurrency(subtotal * (appliedPromo.discountPct / 100)) : 0;
-    const hasItems = Object.keys(cart).length > 0;
-    const delivery = deliveryFee(subtotal);
-    const serviceFee = hasItems ? serviceFeeFor(subtotal) : 0;
-    const total = roundCurrency(subtotal - promoDiscount + delivery + serviceFee);
-    const belowMin = hasItems && subtotal < MIN_ORDER_SUBTOTAL;
+  function lineHTML(l) {
+    const p = l.p;
+    const letter = escapeHtml(String(p.name || '?').charAt(0).toUpperCase());
+    const img = p.imageUrl
+      ? `<img src="${escapeHtml(p.imageUrl)}" alt="" loading="lazy" decoding="async" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'${letter}'}))">`
+      : `<span>${letter}</span>`;
+    let price;
+    let qtyText;
+    if (l.cases != null) {
+      const perUnit = p.retailCaseZAR / p.unitsPerCase;
+      price = `${formatRand(l.total)} <s>${formatRand(p.retailSingleZAR * l.cases * p.unitsPerCase)}</s>
+        <div class="cl-save">${l.cases} case${l.cases === 1 ? '' : 's'} of ${p.unitsPerCase} · ${formatRand(perUnit)} each</div>`;
+      qtyText = `${l.cases}<span class="unit">case${l.cases === 1 ? '' : 's'}</span>`;
+    } else {
+      price = formatRand(l.total) + (l.qty > 1 ? ` <span class="cl-size" style="display:inline">· ${formatRand(p.retailSingleZAR)} each</span>` : '');
+      qtyText = String(l.qty);
+    }
+    const isLast = (l.cases != null ? l.cases : l.qty) <= 1;
+    const safeId = escapeHtml(l.id);
+    return `
+      <div class="cart-line">
+        <div class="cl-img">${img}</div>
+        <div class="cl-info">
+          <div class="cl-name">${escapeHtml(p.name)}</div>
+          <div class="cl-size">${escapeHtml(sizeLabel(p))}</div>
+          <div class="cl-price">${price}</div>
+        </div>
+        <div class="stepper">
+          <button type="button" onclick="updateQty('${safeId}', -1)" aria-label="${isLast ? 'Remove' : 'Fewer'} ${escapeHtml(p.name)}">${isLast ? ICON_TRASH : ICON_MINUS}</button>
+          <output aria-live="polite">${qtyText}</output>
+          <button type="button" onclick="updateQty('${safeId}', 1)" aria-label="More ${escapeHtml(p.name)}">${ICON_PLUS}</button>
+        </div>
+      </div>`;
+  }
 
-    summary.innerHTML = `
-      ${belowMin ? `<div class="min-order-note">Orders under R${MIN_ORDER_SUBTOTAL} don't qualify for delivery. Add R${(MIN_ORDER_SUBTOTAL - subtotal).toFixed(2)} more to check out.</div>` : ''}
-      <div class="summary-row">
-        <span>Subtotal</span>
-        <span>R${subtotal.toFixed(2)}</span>
-      </div>
-      ${appliedPromo ? `<div class="summary-row"><span>Promo (${escapeHtml(appliedPromo.code)})</span><span>-R${promoDiscount.toFixed(2)}</span></div>` : ''}
-      <div class="summary-row">
-        <span>Delivery <span style="font-size: 10px; color: var(--muted);">(from R${delivery.toFixed(0)}, by distance)</span></span>
-        <span>R${delivery.toFixed(2)}</span>
-      </div>
-      <div class="summary-row">
-        <span>Service fee</span>
-        <span>R${serviceFee.toFixed(2)}</span>
-      </div>
-      <div class="summary-row total">
-        <span>Total</span>
-        <span class="amount">R${total.toFixed(2)}</span>
-      </div>
-      <div style="font-size:10px;color:var(--muted);padding-top:6px;">Estimated — Cooler Box and promo discounts are finalized at checkout.</div>`;
+  // Two nudges, the way top delivery apps do it: what's needed to check out
+  // at all, then what's needed for the next saving.
+  function nudgesHTML(t) {
+    let html = '';
+    if (t.subtotal < P.MIN_ORDER_SUBTOTAL) {
+      const pct = Math.min(100, (t.subtotal / P.MIN_ORDER_SUBTOTAL) * 100);
+      html += `<div class="nudge">
+        <div class="nudge-row"><span>Add <b>${formatRand(P.MIN_ORDER_SUBTOTAL - t.subtotal)}</b> to reach the R${P.MIN_ORDER_SUBTOTAL} delivery minimum</span></div>
+        <div class="nudge-track"><div class="nudge-fill" style="width:${pct}%"></div></div>
+      </div>`;
+    }
+    const nudge = P.coolerNudge(t.coolerSubtotal);
+    if (nudge) {
+      const now = nudge.current ? `<span class="nudge-tag">${Math.round(nudge.current * 100)}% off unlocked</span>` : `<span class="nudge-tag">Cooler Box</span>`;
+      html += `<div class="nudge${nudge.current ? ' is-done' : ''}">
+        <div class="nudge-row"><span>Add <b>${formatRand(nudge.needed)}</b> for <b>${Math.round(nudge.pct * 100)}% off</b> your Cooler Box</span>${now}</div>
+        <div class="nudge-track"><div class="nudge-fill" style="width:${Math.min(100, nudge.progress * 100)}%"></div></div>
+      </div>`;
+    } else if (t.coolerDiscount > 0) {
+      html += `<div class="nudge is-done"><div class="nudge-row"><span>Cooler Box maxed out — <b>${Math.round(t.coolerPct * 100)}% off</b> applied</span><span class="nudge-tag">−${formatRand(t.coolerDiscount)}</span></div></div>`;
+    } else if (!P.coolerDiscountAvailable(new Date())) {
+      html += `<div class="nudge"><div class="nudge-row"><span>Cooler Box savings are back at 4am — they run until 8pm daily.</span></div></div>`;
+    }
+    return html;
+  }
 
-    document.getElementById('checkoutBtn').classList.toggle('blocked', belowMin);
+  function promoHTML() {
+    if (appliedPromo) {
+      return `<div class="promo-chip"><span>${escapeHtml(appliedPromo.code)} · ${escapeHtml(appliedPromo.discountPct)}% off</span><button type="button" onclick="removePromo()">Remove</button></div>`;
+    }
+    if (!promoOpen) return `<button type="button" class="promo-toggle" onclick="openPromo()">Have a promo code?</button>`;
+    return `<form class="promo-box" onsubmit="event.preventDefault(); applyPromo();">
+      <input type="text" id="promoInput" placeholder="Enter code" autocomplete="off" autocapitalize="characters" maxlength="20" aria-label="Promo code">
+      <button type="submit" id="promoApplyBtn">Apply</button>
+    </form>`;
+  }
+
+  function billHTML(t) {
+    const saved = t.coolerDiscount + t.promoDiscount;
+    return `<section class="bill" aria-label="Order summary">
+      <h2>Summary</h2>
+      <div class="bill-row"><span>Items</span><span>${formatRand(t.subtotal)}</span></div>
+      ${t.coolerDiscount > 0 ? `<div class="bill-row is-saving"><span>Cooler Box (${Math.round(t.coolerPct * 100)}% off)<small>Until 8pm today</small></span><span>−${formatRand(t.coolerDiscount)}</span></div>` : ''}
+      ${appliedPromo ? `<div class="bill-row is-saving"><span>Promo ${escapeHtml(appliedPromo.code)}</span><span>−${formatRand(t.promoDiscount)}</span></div>` : ''}
+      <div class="bill-row"><span>Delivery<small>From R${P.BASE_DELIVERY_FEE} · exact fee at checkout</small></span><span>${formatRand(P.BASE_DELIVERY_FEE)}</span></div>
+      ${surge.fee > 0 ? `<div class="bill-row"><span>${surge.key === 'LATE_NIGHT' ? 'Late-night fee' : 'Peak-hours fee'}<small>Goes 100% to your driver</small></span><span>${formatRand(surge.fee)}</span></div>` : ''}
+      <div class="bill-row"><span>Care &amp; Handling<small>Order checks so it arrives sealed and correct</small></span><span>${formatRand(t.careFee)}</span></div>
+      <div class="bill-row is-total"><span>Estimated total</span><span>${formatRand(t.total)}</span></div>
+      ${saved > 0 ? `<div class="bill-savings">You're saving ${formatRand(saved)} on this order</div>` : ''}
+      <div class="bill-note">Your exact delivery fee (by distance) and any extras are confirmed at checkout before you pay.</div>
+    </section>`;
+  }
+
+  function renderActionBar(t) {
+    const bar = document.getElementById('actionBar');
+    bar.hidden = false;
+    document.body.classList.add('has-action-bar');
+    const below = t.subtotal < P.MIN_ORDER_SUBTOTAL;
+    const btn = document.getElementById('checkoutBtn');
+    btn.classList.toggle('is-blocked', below);
+    btn.setAttribute('aria-disabled', String(below));
+    document.getElementById('checkoutLabel').textContent = below ? `Add ${formatRand(P.MIN_ORDER_SUBTOTAL - t.subtotal)} more` : 'Go to checkout';
+    document.getElementById('checkoutTotal').textContent = formatRand(t.total);
+  }
+
+  function updateBadge() {
+    const count = EkoyiniCart.count();
+    const b = document.getElementById('bnavCartCount');
+    b.textContent = count;
+    b.style.display = count > 0 ? 'flex' : 'none';
   }
 
   function setPurchaseType(type) {
-    purchaseType = type;
-    document.querySelectorAll('.purchase-type-btn').forEach(b => b.classList.remove('selected'));
-    document.querySelector(`[data-type="${type}"]`).classList.add('selected');
-
-    if (type === 'case') {
-      Object.keys(cart).forEach(skuId => {
-        const p = products.find(x => x.id === skuId);
-        if (!p) return;
-        cart[skuId] = roundUpToCase(cart[skuId], p.unitsPerCase);
-      });
-      EkoyiniCart.save(cart);
-    }
-
-    renderCart();
-    renderSummary();
+    purchaseType = type === 'case' ? 'case' : 'single';
+    render();
   }
 
-  function updateQty(skuId, delta) {
-    const p = products.find(x => x.id === skuId);
-    const step = (purchaseType === 'case' && p) ? p.unitsPerCase * (delta > 0 ? 1 : -1) : delta;
-    const newQty = (cart[skuId] || 0) + step;
-    if (newQty <= 0) {
-      delete cart[skuId];
+  // In case mode the stepper moves a whole case at a time.
+  function updateQty(id, delta) {
+    const p = byId.get(id);
+    if (!p) return;
+    const current = cart[id] || 0;
+    let next;
+    if (purchaseType === 'case' && hasCaseDeal(p)) {
+      next = (casesOf(current, p) + delta) * p.unitsPerCase;
     } else {
-      cart[skuId] = newQty;
+      next = current + delta;
     }
+    if (next <= 0) return removeItem(id);
+    if (p.stock > 0 && next > p.stock) {
+      showToast(`Only ${p.stock} left of ${p.name}`);
+      return;
+    }
+    cart[id] = next;
     EkoyiniCart.save(cart);
-    renderCart();
-    renderSummary();
+    render();
   }
 
-  function removeItem(skuId) {
-    delete cart[skuId];
+  function removeItem(id) {
+    const p = byId.get(id);
+    const before = cart[id];
+    delete cart[id];
     EkoyiniCart.save(cart);
-    renderCart();
-    renderSummary();
+    render();
+    showToast(`Removed ${p ? p.name : 'item'}`, 4500, {
+      label: 'Undo',
+      onClick: () => { cart[id] = before; EkoyiniCart.save(cart); render(); },
+    });
   }
-  window.removeItem = removeItem;
+
+  function openPromo() {
+    promoOpen = true;
+    render();
+    document.getElementById('promoInput')?.focus();
+  }
+
+  // Validated against the amount after the Cooler Box discount — the same
+  // base checkout and the server use.
+  async function validatePromo(code, { silent } = {}) {
+    const t = totals();
+    const res = await fetch('/api/promo/validate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code, subtotal: t.subtotal - t.coolerDiscount }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!data.valid) {
+      if (silent) localStorage.removeItem('ekoyini_promo_code');
+      else showToast(data.error || "That code isn't valid");
+      return false;
+    }
+    appliedPromo = { code: data.code, discountPct: data.discountPct };
+    localStorage.setItem('ekoyini_promo_code', data.code);
+    render();
+    if (!silent) showToast(`${data.discountPct}% off applied`);
+    return true;
+  }
 
   async function applyPromo() {
-    const code = document.getElementById('promoInput').value.trim().toUpperCase();
-    if (!code) return;
+    const input = document.getElementById('promoInput');
+    const code = (input?.value || '').trim().toUpperCase();
+    if (!code) { input?.focus(); return; }
     const btn = document.getElementById('promoApplyBtn');
     btn.disabled = true;
     btn.textContent = 'Checking…';
     try {
-      const res = await fetch('/api/promo/validate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code, subtotal: computeSubtotal() }),
-      });
-      const data = await res.json();
-      if (!data.valid) {
-        showToast(data.error || 'Invalid promo code');
-        return;
-      }
-      appliedPromo = { code: data.code, discountPct: data.discountPct };
-      localStorage.setItem('ekoyini_promo_code', data.code);
-      showAppliedPromo(data.code, data.discountPct);
-      renderSummary();
-      showToast(`${data.discountPct}% off applied`);
+      await validatePromo(code);
     } catch (err) {
       console.error(err);
-      showToast('Failed to check promo code');
+      showToast("Couldn't check that code — try again");
     } finally {
-      btn.disabled = false;
-      btn.textContent = 'Apply';
+      if (btn.isConnected) { btn.disabled = false; btn.textContent = 'Apply'; }
     }
   }
 
   function removePromo() {
     appliedPromo = null;
+    promoOpen = false;
     localStorage.removeItem('ekoyini_promo_code');
-    document.getElementById('promoInput').value = '';
-    document.getElementById('promoRow').style.display = 'flex';
-    document.getElementById('promoApplied').style.display = 'none';
-    renderSummary();
+    render();
   }
-  window.removePromo = removePromo;
 
   function editAddress() {
     document.getElementById('addressModalInput').value = EkoyiniAddress.get();
     document.getElementById('addressModal').classList.add('open');
+    setTimeout(() => document.getElementById('addressModalInput').focus(), 50);
   }
-
   function closeAddressModal() {
     document.getElementById('addressModal').classList.remove('open');
   }
-
   function saveAddressModal() {
     const addr = document.getElementById('addressModalInput').value.trim();
-    if (!addr) { showToast('Please enter an address'); return; }
+    if (addr.length < 5) { showToast('Please enter your full street address'); return; }
     EkoyiniAddress.save(addr);
-    document.getElementById('cartAddress').value = addr;
     closeAddressModal();
+    render();
   }
-  window.closeAddressModal = closeAddressModal;
-  window.saveAddressModal = saveAddressModal;
+  document.getElementById('addressModal').addEventListener('click', (e) => {
+    if (e.target.id === 'addressModal') closeAddressModal();
+  });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeAddressModal(); });
 
   function goToCheckout() {
-    const addr = EkoyiniAddress.get();
-    if (!addr) {
-      showToast('Please enter a delivery address');
+    const t = totals();
+    if (!t.lines.length) return;
+    if (t.subtotal < P.MIN_ORDER_SUBTOTAL) {
+      showToast(`Orders start at R${P.MIN_ORDER_SUBTOTAL} — add ${formatRand(P.MIN_ORDER_SUBTOTAL - t.subtotal)} more`, 3500);
+      return;
+    }
+    const address = EkoyiniAddress.get();
+    if (!address) {
+      showToast('Add your delivery address first');
       editAddress();
       return;
     }
-    if (Object.keys(cart).length === 0) {
-      showToast('Your cart is empty');
-      return;
-    }
-    // The server enforces this too; blocking here saves the customer a failed checkout.
-    const subtotal = computeSubtotal();
-    if (subtotal < MIN_ORDER_SUBTOTAL) {
-      showToast(`Orders under R${MIN_ORDER_SUBTOTAL} don't qualify for delivery — add R${(MIN_ORDER_SUBTOTAL - subtotal).toFixed(2)} more`, 3500);
-      return;
-    }
-    localStorage.setItem('ekoyini_checkout_data', JSON.stringify({ cart, purchaseType, address: addr }));
+    localStorage.setItem('ekoyini_checkout_data', JSON.stringify({ cart, purchaseType, address }));
     window.location.href = 'checkout.html';
   }
 
-  window.addEventListener('ekoyini:cart-updated', () => { cart = EkoyiniCart.get(); renderCart(); renderSummary(); });
+  window.addEventListener('ekoyini:cart-updated', () => { cart = EkoyiniCart.get(); if (products.length) render(); });
 
-  document.getElementById('cartAddress').value = EkoyiniAddress.get();
   if (requireAgeGate()) loadCart();
   </script>
 </body>

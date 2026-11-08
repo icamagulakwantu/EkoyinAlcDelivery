@@ -194,16 +194,17 @@ async function logAdminAction(req, action, targetId, detail) {
 
 // ── Pricing — shared with the browser via public/pricing.js, so the cart,
 // checkout and server can never disagree on discounts or the delivery fee.
-const { COOLER_ELIGIBLE, coolerDiscountPct, MIN_ORDER_SUBTOTAL } = require("./public/pricing.js");
+const { COOLER_ELIGIBLE, coolerDiscountPct, MIN_ORDER_SUBTOTAL, safetySealFeeFor } = require("./public/pricing.js");
 const { createQuoter } = require("./lib/delivery-quote.js");
 
 // Works out the distance, surge, priority and service fees for an order.
 const quoteDelivery = createQuoter(prisma);
 
 // Shared total calculation (subtotal → minus Cooler Box and promo → plus the
-// whole delivery quote: delivery + surge + priority + service fee).
-function computeOrderTotal(subtotal, coolerDiscount, promoDiscount, deliveryTotal) {
-  return Math.round((subtotal - coolerDiscount - promoDiscount + deliveryTotal) * 100) / 100;
+// whole delivery quote: delivery + surge + priority + service fee → plus the
+// optional Safety Seal). Same order of operations as priceOrder() in pricing.js.
+function computeOrderTotal(subtotal, coolerDiscount, promoDiscount, deliveryTotal, safetySealFee = 0) {
+  return Math.round((subtotal - coolerDiscount - promoDiscount + deliveryTotal + safetySealFee) * 100) / 100;
 }
 
 function computePromoDiscount(subtotal, coolerDiscount, promo) {
@@ -495,20 +496,20 @@ async function assessCodEligibility({ userId, userCreatedAt, orderTotal, skuIds 
 
 // Mirrors the total calc inside createOrderTransaction without writing
 // anything — needed to check a COD order's amount before it's created.
-async function estimateOrderTotal({ subtotal, coolerDiscount, quote }, promoCode) {
+async function estimateOrderTotal({ subtotal, coolerDiscount, quote, safetySealFee }, promoCode) {
   let promo = null;
   if (promoCode) {
     const result = await checkPromoCode(promoCode, subtotal - coolerDiscount);
     promo = result.promo || null;
   }
-  return computeOrderTotal(subtotal, coolerDiscount, computePromoDiscount(subtotal, coolerDiscount, promo), quote.total);
+  return computeOrderTotal(subtotal, coolerDiscount, computePromoDiscount(subtotal, coolerDiscount, promo), quote.total, safetySealFee);
 }
 
 // ── Order pricing + validation — shared by COD/EFT and the card path.
 // Pure computation only; no DB writes.
 // `location` and `priorityFee` feed the delivery quote (distance, surge,
 // priority, service fee), which is always calculated here on the server.
-async function validateAndPriceOrder({ address, items, customerName, customerPhone, paymentMethod, allowedPaymentMethods, location, priorityFee, now }) {
+async function validateAndPriceOrder({ address, items, customerName, customerPhone, paymentMethod, allowedPaymentMethods, location, priorityFee, safetySeal, now }) {
   const pricedAt = now instanceof Date && !Number.isNaN(now.getTime()) ? now : new Date();
   if (!address || typeof address !== "string" || address.trim().length < 5) {
     return { error: "Please enter a valid delivery address" };
@@ -523,7 +524,10 @@ async function validateAndPriceOrder({ address, items, customerName, customerPho
     return { error: "Your address, name or landmark contains characters we can't accept" };
   }
   if (!Array.isArray(items) || items.length === 0) {
-    return { error: "items are required" };
+    return { error: "Your cart is empty" };
+  }
+  if (items.length > 100) {
+    return { error: "That's a lot of different products — please split it into two orders" };
   }
   if (!normalizeSaPhone(customerPhone)) {
     return { error: "Please enter a valid South African phone number, e.g. 072 123 4567" };
@@ -540,6 +544,7 @@ async function validateAndPriceOrder({ address, items, customerName, customerPho
   let coolerSubtotal = 0;
   const orderItems = [];
   const stockNeeded = []; // units are individual bottles (six-packs for dumpies/cans), not cases
+  const categories = [];
 
   for (const i of items) {
     const sku = skuMap.get(i.skuId);
@@ -560,6 +565,7 @@ async function validateAndPriceOrder({ address, items, customerName, customerPho
     const itemTotal = unitPrice * quantity;
     subtotal += itemTotal;
     if (COOLER_ELIGIBLE.has(sku.category)) coolerSubtotal += itemTotal;
+    categories.push(sku.category);
 
     orderItems.push({ skuId: sku.id, name: sku.name, price: unitPrice, quantity });
     stockNeeded.push({ skuId: sku.id, name: sku.name, units: quantity });
@@ -586,8 +592,12 @@ async function validateAndPriceOrder({ address, items, customerName, customerPho
     return { error: "Please pin your delivery location so we can work out your delivery fee" };
   }
 
-  const coolerDiscount = coolerSubtotal * coolerDiscountPct(coolerSubtotal, pricedAt);
-  return { orderItems, stockNeeded, subtotal, coolerDiscount, quote: delivery.quote };
+  subtotal = Math.round(subtotal * 100) / 100;
+  coolerSubtotal = Math.round(coolerSubtotal * 100) / 100;
+  const coolerDiscount = Math.round(coolerSubtotal * coolerDiscountPct(coolerSubtotal, pricedAt) * 100) / 100;
+  // Only charged when the order really contains a spirit.
+  const safetySealFee = safetySealFeeFor(safetySeal === true, categories);
+  return { orderItems, stockNeeded, subtotal, coolerDiscount, safetySealFee, quote: delivery.quote };
 }
 
 // Atomic write: stock decrement, promo redemption, and the Order row.
@@ -609,7 +619,7 @@ function generateOrderCode() {
 }
 
 async function createOrderTransaction({ userId, address, customerName, customerPhone, customerEmail, paymentMethod, promoCode, status, priced, codFlagged, codFlagReason, location }) {
-  const { orderItems, stockNeeded, subtotal, coolerDiscount, quote } = priced;
+  const { orderItems, stockNeeded, subtotal, coolerDiscount, quote, safetySealFee = 0 } = priced;
   const { landmark, deliveryLat, deliveryLng } = parseDeliveryLocation(location || {});
 
   let promo = null;
@@ -623,7 +633,7 @@ async function createOrderTransaction({ userId, address, customerName, customerP
     promo = result.promo;
   }
   const promoDiscount = computePromoDiscount(subtotal, coolerDiscount, promo);
-  const total = computeOrderTotal(subtotal, coolerDiscount, promoDiscount, quote.total);
+  const total = computeOrderTotal(subtotal, coolerDiscount, promoDiscount, quote.total, safetySealFee);
 
   return prisma.$transaction(async (tx) => {
     for (const need of stockNeeded) {
@@ -673,6 +683,7 @@ async function createOrderTransaction({ userId, address, customerName, customerP
             surgeFee: quote.surgeFee,
             priorityFee: quote.priorityFee,
             serviceFee: quote.serviceFee,
+            safetySealFee: safetySealFee || null,
             total,
             status: status || undefined, // undefined = schema default (PAYMENT_PENDING)
             codFlagged: !!codFlagged,
@@ -698,7 +709,7 @@ const DIRECT_PAYMENT_METHODS = new Set(["cod", "eft"]);
 // 📦 CREATE ORDER (customer, auth-gated) — COD/EFT only.
 app.post("/order", writeLimiter, requireUser, async (req, res) => {
   try {
-    const { address, items, customerName, customerPhone, paymentMethod, promoCode, landmark, deliveryLat, deliveryLng, priorityFee } = req.body;
+    const { address, items, customerName, customerPhone, paymentMethod, promoCode, landmark, deliveryLat, deliveryLng, priorityFee, safetySeal } = req.body || {};
     const priced = await validateAndPriceOrder({
       address,
       items,
@@ -708,6 +719,7 @@ app.post("/order", writeLimiter, requireUser, async (req, res) => {
       allowedPaymentMethods: DIRECT_PAYMENT_METHODS,
       location: { landmark, deliveryLat, deliveryLng },
       priorityFee,
+      safetySeal,
     });
     if (priced.error) return res.status(400).json({ error: priced.error });
 
@@ -795,7 +807,7 @@ function appBaseUrl(req) {
 app.post("/order/checkout-session", writeLimiter, requireUser, async (req, res) => {
   if (!isYocoConfigured()) return res.status(400).json({ error: "Card payment isn't available yet" });
   try {
-    const { address, items, customerName, customerPhone, promoCode, landmark, deliveryLat, deliveryLng, priorityFee } = req.body;
+    const { address, items, customerName, customerPhone, promoCode, landmark, deliveryLat, deliveryLng, priorityFee, safetySeal } = req.body || {};
     const priced = await validateAndPriceOrder({
       address,
       items,
@@ -805,6 +817,7 @@ app.post("/order/checkout-session", writeLimiter, requireUser, async (req, res) 
       allowedPaymentMethods: new Set(["card"]),
       location: { landmark, deliveryLat, deliveryLng },
       priorityFee,
+      safetySeal,
     });
     if (priced.error) return res.status(400).json({ error: priced.error });
 
@@ -815,7 +828,7 @@ app.post("/order/checkout-session", writeLimiter, requireUser, async (req, res) 
       promo = result.promo;
     }
     const promoDiscount = computePromoDiscount(priced.subtotal, priced.coolerDiscount, promo);
-    const total = computeOrderTotal(priced.subtotal, priced.coolerDiscount, promoDiscount, priced.quote.total);
+    const total = computeOrderTotal(priced.subtotal, priced.coolerDiscount, promoDiscount, priced.quote.total, priced.safetySealFee);
     const amountCents = Math.round(total * 100);
     const location = parseDeliveryLocation({ landmark, deliveryLat, deliveryLng });
 
@@ -825,7 +838,7 @@ app.post("/order/checkout-session", writeLimiter, requireUser, async (req, res) 
         userId: req.user.id,
         yocoCheckoutId: `pending-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
         amountCents,
-        payload: JSON.stringify({ address, items, customerName, customerPhone, promoCode: promoCode || null, customerEmail: req.user.email, priorityFee: priced.quote.priorityFee, ...location }),
+        payload: JSON.stringify({ address, items, customerName, customerPhone, promoCode: promoCode || null, customerEmail: req.user.email, priorityFee: priced.quote.priorityFee, safetySeal: priced.safetySealFee > 0, ...location }),
       },
     });
 
@@ -943,6 +956,7 @@ app.post("/webhooks/yoco", async (req, res) => {
       allowedPaymentMethods: new Set(["card"]),
       location: { landmark: payload.landmark, deliveryLat: payload.deliveryLat, deliveryLng: payload.deliveryLng },
       priorityFee: payload.priorityFee,
+      safetySeal: payload.safetySeal === true,
       // Price at the moment the customer was quoted, so the 20:00 Cooler Box
       // cut-off and the surge window match the amount they paid.
       now: pending.createdAt,
@@ -1477,6 +1491,16 @@ app.get("/admin/audit-log", requireAdmin, requireSuperAdmin, async (req, res) =>
 
 // Feature routes that live in their own files (driver reports, delivery fees, ...).
 require("./routes/index.js")(app, { prisma, requireUser, requireAdmin, requireSuperAdmin, writeLimiter, trackLimiter, logAdminAction, quoteDelivery });
+
+// Malformed JSON or an oversized body gets a clear JSON answer the pages can
+// show, instead of Express's default HTML error page.
+app.use((err, req, res, next) => {
+  if (res.headersSent) return next(err);
+  if (err.type === "entity.parse.failed") return res.status(400).json({ error: "We couldn't read that request — please refresh and try again" });
+  if (err.type === "entity.too.large") return res.status(413).json({ error: "That request is too large" });
+  console.error(err);
+  res.status(500).json({ error: "Something went wrong — please try again" });
+});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

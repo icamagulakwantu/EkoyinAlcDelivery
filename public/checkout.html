@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/images/brand/favicon-32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/images/brand/favicon-16.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/images/brand/favicon-180.png">
-  <title>Ekoyini — Checkout</title>
+  <title>Checkout — Ekoyini</title>
   <link rel="stylesheet" href="style.css">
   <style>
     .checkout-section { background: var(--card); border: 1px solid var(--border); border-radius: var(--r-md); margin: 12px; padding: 16px; }
@@ -68,22 +68,22 @@
     .trust-point svg { flex-shrink: 0; margin-top: 2px; }
   </style>
   <link rel="stylesheet" href="premium.css">
+  <link rel="stylesheet" href="app.css">
 </head>
-<body>
-  <!-- NAVBAR -->
-  <nav class="navbar">
-    <a href="cart.html" class="back-arrow">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><polyline points="15 18 9 12 15 6"/></svg>
+<body class="no-bottom-nav has-action-bar">
+  <!-- NAVBAR — no bottom nav on checkout: one job, no distractions -->
+  <nav class="navbar" aria-label="Checkout">
+    <a href="cart.html" class="back-arrow" aria-label="Back to cart">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
     </a>
     <div class="logo">
-      <img src="images/brand/ekoyini-icon.png" alt="Ekoyini">
-      <div class="logo-text">Ekoyini</div>
+      <img src="images/brand/ekoyini-icon.png" alt="">
+      <div class="logo-text">Checkout</div>
     </div>
     <div style="width: 38px;"></div>
   </nav>
 
-  <!-- PAGE -->
-  <div class="page checkout-page">
+  <main class="page checkout-page">
     <div class="checkout-progress" aria-label="Checkout progress">
       <div class="checkout-progress-step is-complete"><span>1</span><small>Cart</small></div>
       <div class="checkout-progress-line is-complete"></div>
@@ -91,225 +91,201 @@
       <div class="checkout-progress-line"></div>
       <div class="checkout-progress-step"><span>3</span><small>Confirm</small></div>
     </div>
-    <!-- ORDER REVIEW -->
-    <div class="checkout-section">
-      <h2>Order Review</h2>
-      <div class="order-review" id="orderReview"></div>
-      <div class="promo-code-row" id="promoRow">
-        <input type="text" id="promoInput" placeholder="Promo code">
-        <button type="button" onclick="applyPromo()" id="promoApplyBtn">Apply</button>
-      </div>
-      <div class="promo-applied" id="promoApplied" style="display:none;"></div>
-    </div>
 
-    <!-- DELIVERY DETAILS -->
-    <div class="checkout-section">
-      <h2>Delivery Details</h2>
+    <form id="checkoutForm" novalidate onsubmit="event.preventDefault(); submitOrder();">
+
+    <!-- 1. DELIVERY -->
+    <section class="checkout-section" aria-labelledby="hDelivery">
+      <h2 id="hDelivery"><span class="h-num">1</span>Delivery</h2>
       <div class="eta-note">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        Estimated delivery: 30–45 min after payment
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Arrives in about 30–45 min
       </div>
-      <div class="field-group">
-        <label>Address</label>
-        <input type="text" id="deliveryAddress" readonly placeholder="Loading...">
+      <div class="field-group" id="fgAddress">
+        <label for="deliveryAddress">Street address</label>
+        <input type="text" id="deliveryAddress" autocomplete="street-address" maxlength="300" placeholder="e.g. 12 Vilakazi St, Orlando West">
+        <div class="field-error">Please enter your full street address.</div>
       </div>
       <!-- GPS pin — township and new-development addresses are often hard to
            find from the street name alone, so the driver gets an exact Google
            Maps link. It is also how the delivery distance (and fee) is worked
            out, so it becomes required once stores have saved locations. -->
-      <div class="field-group">
-        <label id="pinLabel">Exact Location (optional)</label>
+      <div class="field-group" id="fgPin">
+        <label id="pinLabel">Exact location (optional)</label>
         <button type="button" class="pin-btn" id="pinBtn" onclick="pinMyLocation()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          <span id="pinBtnText">Pin my current location</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <span id="pinBtnText">Use my current location</span>
         </button>
         <div class="pin-status" id="pinStatus" style="display:none;"></div>
-        <div class="pin-required" id="pinRequired" style="display:none;">Pin your location so we can work out your delivery fee.</div>
-        <div class="field-hint">Only use this if you're at the delivery address right now. It helps your driver find you faster.</div>
+        <div class="field-error">Pin your location so we can work out your delivery fee.</div>
+        <div class="field-hint">Only if you're at the delivery address now — it takes your driver straight to your gate.</div>
       </div>
       <div class="field-group">
-        <label>Landmark / Directions (optional)</label>
+        <label for="landmark">Landmark or directions (optional)</label>
         <input type="text" id="landmark" maxlength="200" placeholder="e.g. Blue gate opposite the spaza">
       </div>
-      <div class="field-group">
+      <div class="field-group" style="margin-bottom:0">
         <label>Super Priority (optional)</label>
         <div class="priority-row" id="priorityRow"></div>
-        <div class="field-hint">Add a tip to the delivery fee to get your order picked up first. It goes toward getting a driver to you faster.</div>
+        <div class="field-hint">Get picked up first. It goes toward getting a driver to you faster.</div>
       </div>
-      <div class="field-group">
-        <label>Phone Number</label>
-        <input type="tel" id="phoneNumber" autocomplete="tel" placeholder="e.g. 072 123 4567">
-      </div>
-      <div class="field-group">
-        <label>Name</label>
-        <input type="text" id="customerName" maxlength="80" autocomplete="name" placeholder="Your name">
-      </div>
-    </div>
+    </section>
 
-    <!-- AGE VERIFICATION (COMPLIANCE) -->
-    <div class="checkout-section">
-      <h2>Age Verification</h2>
+    <!-- 2. CONTACT -->
+    <section class="checkout-section" aria-labelledby="hContact">
+      <h2 id="hContact"><span class="h-num">2</span>Your details</h2>
+      <div class="field-row">
+        <div class="field-group" id="fgName">
+          <label for="customerName">Name</label>
+          <input type="text" id="customerName" maxlength="80" autocomplete="name" placeholder="Your name">
+          <div class="field-error">Please enter your name.</div>
+        </div>
+        <div class="field-group" id="fgPhone">
+          <label for="phoneNumber">Phone</label>
+          <input type="tel" id="phoneNumber" autocomplete="tel" inputmode="tel" placeholder="072 123 4567">
+          <div class="field-error">Enter a valid SA number, e.g. 072 123 4567.</div>
+        </div>
+      </div>
+      <div class="field-hint" style="margin-top:-6px">Your driver calls this number if they can't find you.</div>
+    </section>
+
+    <!-- 3. PAYMENT -->
+    <section class="checkout-section" aria-labelledby="hPay">
+      <h2 id="hPay"><span class="h-num">3</span>Payment</h2>
+      <div class="payment-option disabled" id="cardPaymentOption" data-method="card">
+        <input type="radio" name="payment" value="card" id="cardPaymentRadio" disabled>
+        <div>
+          <div class="p-label">Debit / credit card</div>
+          <div class="p-desc" id="cardPaymentDesc">Secure card payment via Yoco</div>
+        </div>
+        <span class="p-badge" id="cardBadge">Coming soon</span>
+      </div>
+      <div class="payment-option selected" data-method="eft" id="eftPaymentOption">
+        <input type="radio" name="payment" value="eft" id="eftPaymentRadio" checked>
+        <div>
+          <div class="p-label">EFT bank transfer</div>
+          <div class="p-desc">We confirm your payment, then dispatch. Use your order code as the reference.</div>
+        </div>
+      </div>
+      <div class="payment-option disabled" id="codPaymentOption" data-method="cod">
+        <input type="radio" name="payment" value="cod" id="codPaymentRadio" disabled>
+        <div>
+          <div class="p-label">Cash on delivery</div>
+          <div class="p-desc" id="codPaymentDesc">Checking if this is available for you…</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SAFETY SEAL (spirits only) -->
+    <section class="checkout-section" id="safetyStickerSection" hidden>
+      <h2>Safety Seal</h2>
+      <label class="seal-option" for="safetyStickerCheck">
+        <input type="checkbox" id="safetyStickerCheck" onchange="onSafetyStickerChange()">
+        <div>
+          <b>Add tamper-proof seals — R<span id="sealPrice">10</span></b>
+          <span>Your spirit bottles are sealed at the tavern, so you know nothing was opened on the way.</span>
+        </div>
+      </label>
+    </section>
+
+    <!-- 4. REVIEW -->
+    <section class="checkout-section" aria-labelledby="hReview">
+      <h2 id="hReview"><span class="h-num">4</span>Review</h2>
+      <div class="order-review" id="orderReview"></div>
+      <div id="promoArea"></div>
+    </section>
+
+    <!-- AGE + TERMS (compliance) -->
+    <section class="checkout-section" aria-label="Age verification">
       <div class="age-gate-warning">
         <div class="agw-badge">18+</div>
-        <div class="agw-text"><strong style="color:#fff;">Alcohol &amp; Tobacco.</strong> You must be 18 or older to purchase. Sales to minors are illegal.</div>
+        <div class="agw-text"><strong style="color:#fff;">Alcohol &amp; tobacco.</strong> You must be 18 or older. Your driver checks ID at the door and won't hand over to anyone under 18.</div>
       </div>
-      <div class="checkbox-row">
+      <div class="checkbox-row" id="cbAge">
         <input type="checkbox" id="ageConfirm">
         <label for="ageConfirm">I confirm I am 18 years of age or older</label>
       </div>
-      <div class="checkbox-row">
+      <div class="checkbox-row" id="cbTerms" style="margin-bottom:0">
         <input type="checkbox" id="termsConfirm">
         <!-- Links open in a new tab so the customer doesn't lose their checkout. -->
-        <label for="termsConfirm">I agree to Ekoyini's <a href="terms.html" target="_blank" rel="noopener">Terms &amp; Conditions</a> and <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a></label>
+        <label for="termsConfirm">I agree to the <a href="terms.html" target="_blank" rel="noopener">Terms</a> and <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a></label>
       </div>
+    </section>
+
+    <div class="trust-mini">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>
+      <span>Your driver is an e-hailing partner (Uber, Bolt or similar) already active near you — vetted and rated by their own platform. Keep your order code: it's how you and our team identify your order.</span>
     </div>
+    </form>
+  </main>
 
-    <!-- WHO'S BRINGING YOUR ORDER (trust) -->
-    <div class="checkout-section">
-      <h2>Who's Bringing Your Order</h2>
-      <div class="trust-point">
-        <svg viewBox="0 0 24 24" fill="none" stroke="var(--gold-deep)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M20 6L9 17l-5-5"/></svg>
-        <span>Your driver is an e-hailing partner (Uber, Bolt, or similar) already active near you — vetted and rated by their own platform, not a random stranger.</span>
-      </div>
-      <div class="trust-point">
-        <svg viewBox="0 0 24 24" fill="none" stroke="var(--gold-deep)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M20 6L9 17l-5-5"/></svg>
-        <span>You've confirmed you're 18+ above — keep your ID handy in case your driver needs to check it at the door.</span>
-      </div>
-      <div class="trust-point">
-        <svg viewBox="0 0 24 24" fill="none" stroke="var(--gold-deep)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M20 6L9 17l-5-5"/></svg>
-        <span>Your order code (on the next screen) is yours to keep — it's how you and our team identify exactly which order is which.</span>
-      </div>
+  <!-- Sticky place-order bar -->
+  <div class="action-bar">
+    <div class="action-bar-inner">
+      <button type="submit" form="checkoutForm" class="action-btn-main" id="submitBtn">
+        <span class="ab-label" id="submitLabel">Place order</span>
+        <span class="ab-total" id="submitTotal">—</span>
+      </button>
     </div>
-
-
-    <!-- SAFETY STICKERS (spirits only) -->
-    <div class="checkout-section" id="safetyStickerSection" style="display:none;">
-      <h2>Safety Seal</h2>
-      <p style="font-size:12px;color:var(--muted);margin:0 0 12px;">
-        Optional tamper-proof stickers for spirits. Helps keep your order sealed and protected from the tavern to your door.
-      </p>
-      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px;">
-        <input type="checkbox" id="safetyStickerCheck" onchange="onSafetyStickerChange()" style="width:16px;height:16px;">
-        <div>
-          <div style="font-size:13px;font-weight:600;color:var(--white);">Add Safety Seals — R10</div>
-          <div style="font-size:11px;color:var(--muted);">One set of tamper-proof stickers for spirit bottles on this order</div>
-        </div>
-      </label>
-    </div>
-
-    <!-- PAYMENT METHOD -->
-    <div class="checkout-section">
-      <h2>Payment Method</h2>
-      <div class="payment-option selected" id="codPaymentOption" data-method="cod" onclick="selectPayment('cod')">
-        <input type="radio" name="payment" value="cod" id="codPaymentRadio" checked>
-        <div>
-          <div class="p-label">Pay on Delivery (COD)</div>
-          <div class="p-desc" id="codPaymentDesc">Pay the driver when they arrive</div>
-        </div>
-      </div>
-      <div class="payment-option" id="cardPaymentOption" data-method="card" onclick="selectPayment('card')">
-        <input type="radio" name="payment" value="card" id="cardPaymentRadio">
-        <div>
-          <div class="p-label">Debit / Credit Card</div>
-          <div class="p-desc" id="cardPaymentDesc">Secure card payment via Yoco</div>
-        </div>
-      </div>
-      <div class="payment-option" data-method="eft" onclick="selectPayment('eft')">
-        <input type="radio" name="payment" value="eft">
-        <div>
-          <div class="p-label">EFT Transfer</div>
-          <div class="p-desc">Bank transfer (manual confirmation)</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- SUBMIT BUTTON -->
-    <button class="cta-btn" onclick="submitOrder()" id="submitBtn" style="margin-bottom: 20px;">Place Order</button>
   </div>
 
-  <!-- BOTTOM NAV -->
-  <nav class="bottom-nav">
-    <a href="index.html" class="bnav-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-      Home
-    </a>
-    <a href="shop.html" class="bnav-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-      Shop
-    </a>
-    <a href="cart.html" class="bnav-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-      Cart
-    </a>
-    <a href="track.html" class="bnav-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-      Track
-    </a>
-    <a href="profile.html" class="bnav-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-      Profile
-    </a>
-  </nav>
-
-  <!-- TOAST -->
-  <div class="toast" id="toastEl"></div>
+  <div class="toast" id="toastEl" role="status" aria-live="polite"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="auth.js"></script>
   <script src="script.js"></script>
   <script src="pricing.js"></script>
   <script>
-  // Cooler Box tiers are shared with server.js via pricing.js. The delivery
-  // fee comes from the server (/api/delivery-quote). This page only previews:
-  // the server recomputes the real total and ignores anything sent from here.
-  const { COOLER_ELIGIBLE, coolerDiscountPct, deliveryFee, PRIORITY_OPTIONS } = EkoyiniPricing;
+  // Every amount here is a preview built with pricing.js. The server
+  // recomputes the real total with the same functions and ignores any
+  // amount sent from this page.
+  const P = EkoyiniPricing;
+  const { PRIORITY_OPTIONS, SAFETY_SEAL_FEE } = P;
+  document.getElementById('sealPrice').textContent = SAFETY_SEAL_FEE;
 
-  function escapeHtml(value) {
-    return String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  }
+  let checkoutData = {};
+  try { checkoutData = JSON.parse(localStorage.getItem('ekoyini_checkout_data') || '{}') || {}; } catch {}
 
-  const checkoutData = JSON.parse(localStorage.getItem('ekoyini_checkout_data') || '{}');
   let products = [];
-  let selectedPayment = 'cod';
-  let safetySticker = false;
-  const SAFETY_STICKER_PRICE = 10;
+  let byId = new Map();
+  let selectedPayment = 'eft';
+  let cardEnabled = false;
+  let codEligibility = null;
+  let safetySeal = false;
+  let appliedPromo = null;   // { code, discountPct }
+  let promoOpen = false;
+  let showAllItems = false;
+  let deliveryPin = null;    // { lat, lng, accuracy }
+  let priorityFee = 0;
+  let deliveryQuote = null;  // latest quote from the server
+  let quoteNeedsPin = false; // stores have locations but there's no pin yet
+  let submitting = false;
 
-  function onSafetyStickerChange() {
-    const cb = document.getElementById('safetyStickerCheck');
-    safetySticker = !!(cb && cb.checked);
-    renderOrderReview();
+  const hasCaseDeal = (p) => p.unitsPerCase > 1 && p.retailCaseZAR > 0;
+  const isCaseLine = (p) => checkoutData.purchaseType === 'case' && hasCaseDeal(p);
+
+  function cartLines() {
+    return Object.entries(checkoutData.cart || {}).map(([id, qty]) => {
+      const p = byId.get(id);
+      if (!p) return null;
+      if (isCaseLine(p)) {
+        const cases = Math.ceil(qty / p.unitsPerCase);
+        return { id, p, qtyLabel: `${cases} case${cases === 1 ? '' : 's'}`, units: cases * p.unitsPerCase, total: P.roundCurrency(p.retailCaseZAR * cases), category: p.category, purchaseType: 'case' };
+      }
+      return { id, p, qtyLabel: String(qty), units: qty, total: P.roundCurrency(p.retailSingleZAR * qty), category: p.category, purchaseType: 'single' };
+    }).filter(Boolean);
   }
 
-  function cartHasSpirits() {
-    const SPIRIT_CATS = new Set(['BRANDY','WHISKY','COGNAC','GIN','VODKA','VODKA_PREMIUM','TEQUILA','TEQUILA_PREMIUM','LIQUEUR','RUM']);
-    if (!Array.isArray(cart) || !Array.isArray(products)) return false;
-    return cart.some(item => {
-      const p = products.find(x => x.id === item.productId || x.id === item.id || x.name === item.name);
-      return p && SPIRIT_CATS.has(String(p.category || '').toUpperCase());
-    });
+  function computeTotals() {
+    const lines = cartLines();
+    const subtotal = P.roundCurrency(lines.reduce((s, l) => s + l.total, 0));
+    // Until the server's quote lands, preview the 0–5 km fee + Care & Handling.
+    const deliveryTotal = deliveryQuote ? deliveryQuote.total : P.BASE_DELIVERY_FEE + P.careFeeFor(subtotal);
+    return { lines, ...P.priceOrder({ lines, promoPct: appliedPromo ? appliedPromo.discountPct : 0, deliveryTotal, safetySeal }) };
   }
 
-  function updateSafetyStickerVisibility() {
-    const sec = document.getElementById('safetyStickerSection');
-    if (!sec) return;
-    const show = cartHasSpirits();
-    sec.style.display = show ? 'block' : 'none';
-    if (!show) {
-      safetySticker = false;
-      const cb = document.getElementById('safetyStickerCheck');
-      if (cb) cb.checked = false;
-    }
-  }
-
-  let appliedPromo = null; // { code, discountPct }
-  let deliveryPin = null; // { lat, lng, accuracy } — set by pinMyLocation()
-  let priorityFee = 0; // Super Priority add-on chosen by the customer
-  let deliveryQuote = null; // latest quote from the server
-  let quoteNeedsPin = false; // true when stores have locations but no pin yet
-
-  // ── Delivery quote ──
-  // Re-asked whenever the pin or priority changes. A counter drops answers
-  // that arrive out of order.
+  // ── Delivery quote ── re-asked whenever the pin or priority changes; a
+  // counter drops answers that arrive out of order.
   let quoteRequestId = 0;
   async function refreshQuote() {
     const requestId = ++quoteRequestId;
@@ -339,27 +315,24 @@
   }
 
   function renderPinRequirement() {
-    document.getElementById('pinRequired').style.display = quoteNeedsPin && !deliveryPin ? 'block' : 'none';
-    document.getElementById('pinLabel').textContent = quoteNeedsPin ? 'Exact Location (required)' : 'Exact Location (optional)';
+    document.getElementById('pinLabel').textContent = quoteNeedsPin ? 'Exact location (required)' : 'Exact location (optional)';
+    if (!quoteNeedsPin || deliveryPin) setError('fgPin', false);
   }
 
   function renderPriorityOptions() {
-    document.getElementById('priorityRow').innerHTML = PRIORITY_OPTIONS.map(amount => `
-      <button type="button" class="priority-chip${amount === priorityFee ? ' selected' : ''}" onclick="setPriority(${amount})">${amount === 0 ? 'None' : '+R' + amount}</button>`).join('');
+    document.getElementById('priorityRow').innerHTML = PRIORITY_OPTIONS.map((amount) => `
+      <button type="button" class="priority-chip${amount === priorityFee ? ' selected' : ''}" aria-pressed="${amount === priorityFee}" onclick="setPriority(${amount})">${amount === 0 ? 'Standard' : '+R' + amount}</button>`).join('');
   }
-
   function setPriority(amount) {
     priorityFee = amount;
     renderPriorityOptions();
     refreshQuote();
   }
-  window.setPriority = setPriority;
 
-  // ── GPS pin ──
-  // Asked only when the customer taps the button (never on page load).
+  // ── GPS pin — only asked when the customer taps the button ──
   function pinMyLocation() {
     if (!('geolocation' in navigator)) {
-      showToast('Location isn\'t available on this device — add a landmark instead');
+      showToast("Location isn't available on this device — add a landmark instead");
       return;
     }
     const btn = document.getElementById('pinBtn');
@@ -372,22 +345,20 @@
         btn.disabled = false;
         btn.classList.add('pinned');
         text.textContent = 'Location pinned';
+        setError('fgPin', false);
         renderPinStatus();
         refreshQuote();
       },
       (err) => {
         btn.disabled = false;
-        text.textContent = 'Pin my current location';
-        if (err.code === err.PERMISSION_DENIED) {
-          showToast('Location permission was blocked — allow it in your browser settings, or add a landmark instead');
-        } else {
-          showToast('Couldn\'t get your location — try again or add a landmark');
-        }
+        text.textContent = 'Use my current location';
+        showToast(err.code === err.PERMISSION_DENIED
+          ? 'Location is blocked — allow it in your browser settings, or add a landmark instead'
+          : "Couldn't get your location — try again or add a landmark");
       },
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
     );
   }
-  window.pinMyLocation = pinMyLocation;
 
   function renderPinStatus() {
     const status = document.getElementById('pinStatus');
@@ -396,346 +367,238 @@
     status.style.display = 'flex';
     status.innerHTML = `<span>Accurate to about ${escapeHtml(deliveryPin.accuracy)} m · <a href="${mapsUrl}" target="_blank" rel="noopener">Check on map</a></span><button type="button" onclick="clearPin()">Remove</button>`;
   }
-
   function clearPin() {
     deliveryPin = null;
     document.getElementById('pinBtn').classList.remove('pinned');
-    document.getElementById('pinBtnText').textContent = 'Pin my current location';
+    document.getElementById('pinBtnText').textContent = 'Use my current location';
     renderPinStatus();
     refreshQuote();
   }
-  window.clearPin = clearPin;
 
-  async function loadCheckout() {
-    // Auth gate — checkout requires a session.
-    const session = await requireAuth('checkout.html');
-    if (!session) return;
-
-    if (!checkoutData.cart || Object.keys(checkoutData.cart).length === 0) {
-      showToast('Your cart is empty');
-      setTimeout(() => { window.location.href = 'cart.html'; }, 1200);
-      return;
-    }
-
-    // If Yoco redirected back here after a failed/cancelled card payment.
-    if (new URLSearchParams(window.location.search).get('paymentFailed')) {
-      showToast('Card payment didn\'t go through — try again or choose another method');
-    }
-
-    renderPriorityOptions();
-
-    fetch('/api/payment-config').then(r => r.json()).then(cfg => {
-      if (cfg.cardEnabled) {
-        const opt = document.getElementById('cardPaymentOption');
-        opt.classList.remove('disabled');
-        opt.onclick = () => selectPayment('card');
-        document.getElementById('cardPaymentRadio').disabled = false;
-        document.getElementById('cardPaymentDesc').textContent = 'Secure checkout via Yoco';
-      }
-    }).catch(() => {});
-
-    try {
-      const res = await fetch('/api/products');
-      if (!res.ok) throw new Error('Catalogue request failed');
-      products = await res.json();
-
-      // Use the current device cart as the source of truth, then reconcile
-      // it with live SKU IDs before the order payload can be built.
-      const reconciled = EkoyiniCart.reconcile(products);
-      checkoutData.cart = reconciled.cart;
-      localStorage.setItem('ekoyini_checkout_data', JSON.stringify(checkoutData));
-      if (reconciled.removed) {
-        showToast('Some saved items are no longer available. We refreshed your cart — please review it.', 4500);
-      }
-      if (!Object.keys(checkoutData.cart).length) {
-        showToast('Your saved items are no longer available. Please choose current products.');
-        setTimeout(() => { window.location.href = 'shop.html'; }, 1800);
-        return;
-      }
-
-      renderOrderReview();
-      refreshQuote();
-
-      // Needs `products` loaded first — computeTotals() (called from
-      // renderOrderReview, below, via updateCodAvailability) can't price
-      // the cart without it.
-      authedFetch('/api/cod-eligibility').then(r => r.json()).then(data => {
-        if (data.error) return;
-        codEligibility = data;
-        updateCodAvailability(computeTotals().total);
-        updateSafetyStickerVisibility();
-      }).catch(() => {});
-      document.getElementById('deliveryAddress').value = checkoutData.address || '';
-      // Best-effort prefill from the account email's local part (e.g.
-      // "thandeka" from thandeka@gmail.com) — better than an empty field,
-      // and the customer can still edit it before placing the order.
-      const nameField = document.getElementById('customerName');
-      if (!nameField.value && session.user.email) {
-        nameField.value = session.user.email.split('@')[0];
-      }
-
-      const savedCode = localStorage.getItem('ekoyini_promo_code');
-      if (savedCode) {
-        const { subtotal, coolerDiscount } = computeTotals();
-        const r = await fetch('/api/promo/validate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code: savedCode, subtotal: subtotal - coolerDiscount }),
-        });
-        const data = await r.json();
-        if (data.valid) {
-          appliedPromo = { code: data.code, discountPct: data.discountPct };
-          showPromoApplied(data.code, data.discountPct);
-          renderOrderReview();
-        } else {
-          localStorage.removeItem('ekoyini_promo_code');
-        }
-      }
-    } catch (err) {
-      console.error('Failed to load products:', err);
-      showToast('Failed to load order');
+  // ── Safety Seal (spirits only — the server applies the same rule) ──
+  function onSafetyStickerChange() {
+    safetySeal = document.getElementById('safetyStickerCheck').checked;
+    renderOrderReview();
+  }
+  function updateSafetyStickerVisibility() {
+    const show = P.hasSpirits(cartLines().map((l) => l.category));
+    document.getElementById('safetyStickerSection').hidden = !show;
+    if (!show) {
+      safetySeal = false;
+      document.getElementById('safetyStickerCheck').checked = false;
     }
   }
 
-  // If the user signs out in another tab mid-checkout, bounce them to login.
-  window.addEventListener('ekoyini:auth-changed', async () => {
-    const session = await getSession();
-    if (!session) window.location.href = 'login.html?redirect=checkout.html';
-  });
-
-  // Same whole-case rounding as cart.html — the case-purchase amount is a
-  // discrete multiple of unitsPerCase, not a linear scale of raw qty.
-  function roundUpToCase(qty, unitsPerCase) {
-    return Math.ceil(qty / unitsPerCase) * unitsPerCase;
-  }
-
-  function computeTotals() {
-    const { cart, purchaseType } = checkoutData;
-    let subtotal = 0;
-    let coolerSubtotal = 0;
-    const lines = [];
-
-    Object.entries(cart || {}).forEach(([skuId, qty]) => {
-      const p = products.find(x => x.id === skuId);
-      if (!p) return;
-      let itemTotal, lineQty;
-      if (purchaseType === 'case') {
-        const numberOfCases = roundUpToCase(qty, p.unitsPerCase) / p.unitsPerCase;
-        itemTotal = p.retailCaseZAR * numberOfCases;
-        lineQty = `${numberOfCases} case${numberOfCases === 1 ? '' : 's'}`;
-      } else {
-        itemTotal = p.retailSingleZAR * qty;
-        lineQty = qty;
-      }
-      subtotal += itemTotal;
-      if (COOLER_ELIGIBLE.has(p.category)) coolerSubtotal += itemTotal;
-      lines.push({ name: p.name, qty: lineQty, itemTotal });
-    });
-
-    const coolerDiscount = coolerSubtotal * coolerDiscountPct(coolerSubtotal);
-    const promoDiscount = appliedPromo ? (subtotal - coolerDiscount) * (appliedPromo.discountPct / 100) : 0;
-    // Until the server's quote arrives, fall back to the base delivery fee.
-    const delivery = deliveryQuote ? deliveryQuote.total : deliveryFee(subtotal);
-    const sticker = safetySticker ? SAFETY_STICKER_PRICE : 0;
-    const total = subtotal - coolerDiscount - promoDiscount + delivery + sticker;
-    return { lines, subtotal, coolerDiscount, promoDiscount, delivery, sticker, total };
-  }
-
-  // One row per fee part, so the customer sees what they are paying for.
-  function deliveryRowsHTML(delivery) {
+  // ── Review + bill ──
+  function deliveryRowsHTML(t) {
     if (!deliveryQuote) {
-      return `<div class="order-review-item"><span>Delivery</span><span>R${delivery.toFixed(2)}</span></div>`;
+      return `<div class="bill-row"><span>Delivery &amp; Care<small>Working out your exact fee…</small></span><span>${formatRand(t.delivery)}</span></div>`;
     }
     const q = deliveryQuote;
-    const distanceNote = q.distanceKm != null ? `<span class="sub-note">About ${q.distanceKm.toFixed(1)} km away</span>` : (quoteNeedsPin ? '<span class="sub-note">Pin your location for the exact fee</span>' : '');
-    const surgeLabel = q.surgeKey === 'LATE_NIGHT' ? 'Late-night surge' : 'Peak-hours surge';
+    const distanceNote = q.distanceKm != null ? `<small>About ${q.distanceKm.toFixed(1)} km away</small>` : (quoteNeedsPin ? '<small>Pin your location for the exact fee</small>' : '');
+    const surgeLabel = q.surgeKey === 'LATE_NIGHT' ? 'Late-night fee' : 'Peak-hours fee';
     return `
-      <div class="order-review-item"><span>Delivery${distanceNote}</span><span>R${q.deliveryFee.toFixed(2)}</span></div>
-      ${q.surgeFee > 0 ? `<div class="order-review-item"><span>${surgeLabel}<span class="sub-note">Goes 100% to your driver</span></span><span>R${q.surgeFee.toFixed(2)}</span></div>` : ''}
-      ${q.priorityFee > 0 ? `<div class="order-review-item"><span>Super Priority</span><span>R${q.priorityFee.toFixed(2)}</span></div>` : ''}
-      <div class="order-review-item"><span>Care &amp; Handling</span><span>R${(q.careFee || q.serviceFee).toFixed(2)}</span></div>`;
+      <div class="bill-row"><span>Delivery${distanceNote}</span><span>${formatRand(q.deliveryFee)}</span></div>
+      ${q.surgeFee > 0 ? `<div class="bill-row"><span>${surgeLabel}<small>Goes 100% to your driver</small></span><span>${formatRand(q.surgeFee)}</span></div>` : ''}
+      ${q.priorityFee > 0 ? `<div class="bill-row"><span>Super Priority</span><span>${formatRand(q.priorityFee)}</span></div>` : ''}
+      <div class="bill-row"><span>Care &amp; Handling</span><span>${formatRand(q.careFee ?? q.serviceFee)}</span></div>`;
   }
 
   function renderOrderReview() {
-    const review = document.getElementById('orderReview');
-    const { lines, subtotal, coolerDiscount, promoDiscount, delivery, sticker = 0, total } = computeTotals();
-
-    review.innerHTML = lines.map(l => `
-      <div class="order-review-item">
-        <span>${escapeHtml(l.name)} × ${escapeHtml(l.qty)}</span>
-        <span>R${l.itemTotal.toFixed(2)}</span>
-      </div>`).join('');
-
-    const totals = document.createElement('div');
-    totals.innerHTML = `
-      <div class="order-review-item"><span>Subtotal</span><span>R${subtotal.toFixed(2)}</span></div>
-      ${coolerDiscount > 0 ? `<div class="order-review-item"><span>Cooler Box discount</span><span>-R${coolerDiscount.toFixed(2)}</span></div>` : ''}
-      ${appliedPromo ? `<div class="order-review-item"><span>Promo (${escapeHtml(appliedPromo.code)})</span><span>-R${promoDiscount.toFixed(2)}</span></div>` : ''}
-      ${deliveryRowsHTML(delivery)}
-      ${sticker ? `<div class="order-review-item"><span>Safety Seal stickers</span><span>R${sticker.toFixed(2)}</span></div>` : ''}
-      <div class="order-review-total"><span>Total</span><span>R${total.toFixed(2)}</span></div>`;
-    review.appendChild(totals);
-    updateCodAvailability(total);
+    const t = computeTotals();
+    const LIMIT = 4;
+    const shown = showAllItems ? t.lines : t.lines.slice(0, LIMIT);
+    const hidden = t.lines.length - shown.length;
+    document.getElementById('orderReview').innerHTML = `
+      <div class="review-items">
+        ${shown.map((l) => `<div class="bill-row"><span>${escapeHtml(l.p.name)} × ${escapeHtml(l.qtyLabel)}</span><span>${formatRand(l.total)}</span></div>`).join('')}
+        ${hidden > 0 ? `<button type="button" class="review-toggle" onclick="showAllItems=true;renderOrderReview()">Show ${hidden} more item${hidden === 1 ? '' : 's'}</button>` : ''}
+      </div>
+      <div class="bill-row is-total" style="font-size:14px;font-weight:600;padding:10px 0 6px"><span>Items</span><span>${formatRand(t.subtotal)}</span></div>
+      ${t.coolerDiscount > 0 ? `<div class="bill-row is-saving"><span>Cooler Box (${Math.round(t.coolerPct * 100)}% off)</span><span>−${formatRand(t.coolerDiscount)}</span></div>` : ''}
+      ${appliedPromo ? `<div class="bill-row is-saving"><span>Promo ${escapeHtml(appliedPromo.code)}</span><span>−${formatRand(t.promoDiscount)}</span></div>` : ''}
+      ${deliveryRowsHTML(t)}
+      ${t.safetySealFee ? `<div class="bill-row"><span>Safety Seal stickers</span><span>${formatRand(t.safetySealFee)}</span></div>` : ''}
+      <div class="bill-row is-total"><span>Total</span><span>${formatRand(t.total)}</span></div>`;
+    renderPromoArea();
+    updateCodAvailability(t.total);
+    renderSubmitBar(t.total);
   }
 
-  // COD availability depends on both this order's amount (checked live,
-  // client-side, against the same thresholds server.js enforces) and the
-  // account's track record (fetched once from /api/cod-eligibility, since
-  // that needs a DB lookup). Re-run any time the total changes — a promo
-  // code could drop an order from "eligible" to under the R300 floor.
-  let codEligibility = null;
+  function renderSubmitBar(total) {
+    document.getElementById('submitTotal').textContent = formatRand(total);
+    if (submitting) return;
+    document.getElementById('submitLabel').textContent = selectedPayment === 'card' ? 'Pay with card' : 'Place order';
+  }
+
+  // ── Payment ──
+  // COD depends on this order's amount (checked live against the same limits
+  // the server enforces) and the account's track record (one server lookup).
   function updateCodAvailability(total) {
-    const opt = document.getElementById('codPaymentOption');
-    const radio = document.getElementById('codPaymentRadio');
-    const desc = document.getElementById('codPaymentDesc');
     if (!codEligibility) return;
-
     const { trackRecordOk, trackRecordMessage, minOrderTotal, maxOrderTotal } = codEligibility;
-
     let reason = null;
-    if (total > maxOrderTotal) {
-      reason = `Not available over R${maxOrderTotal} — for our drivers' safety. Pay by card or EFT instead.`;
-    } else if (total < minOrderTotal) {
-      reason = `Needs an order of at least R${minOrderTotal}.`;
-    } else if (!trackRecordOk) {
-      // The server writes this message so the rule can change on Render
-      // (COD_MIN_DELIVERED_ORDERS) without touching this page.
-      reason = trackRecordMessage || 'Cash on delivery unlocks after a few delivered orders.';
-    }
+    if (total > maxOrderTotal) reason = `Not available over R${maxOrderTotal}, for our drivers' safety.`;
+    else if (total < minOrderTotal) reason = `Needs an order of at least R${minOrderTotal}.`;
+    else if (!trackRecordOk) reason = trackRecordMessage || 'Cash on delivery unlocks after a few delivered orders.';
+    setPaymentEnabled('cod', !reason);
+    document.getElementById('codPaymentDesc').textContent = reason || 'Pay the driver in cash when they arrive';
+  }
 
-    if (reason) {
-      opt.classList.add('disabled');
-      opt.onclick = null;
-      radio.disabled = true;
-      desc.textContent = reason;
-      if (selectedPayment === 'cod') selectPayment('eft');
-    } else {
-      opt.classList.remove('disabled');
-      opt.onclick = () => selectPayment('cod');
-      radio.disabled = false;
-      desc.textContent = 'Pay the driver when they arrive';
+  function setPaymentEnabled(method, enabled) {
+    const opt = document.querySelector(`.payment-option[data-method="${method}"]`);
+    opt.classList.toggle('disabled', !enabled);
+    opt.querySelector('input').disabled = !enabled;
+    if (!enabled && selectedPayment === method) selectPayment('eft');
+  }
+
+  function selectPayment(method) {
+    const opt = document.querySelector(`.payment-option[data-method="${method}"]`);
+    if (!opt || opt.classList.contains('disabled')) return;
+    selectedPayment = method;
+    document.querySelectorAll('.payment-option').forEach((o) => {
+      const on = o.dataset.method === method;
+      o.classList.toggle('selected', on);
+      o.querySelector('input').checked = on;
+    });
+    renderSubmitBar(computeTotals().total);
+  }
+  document.querySelectorAll('.payment-option').forEach((o) => {
+    o.addEventListener('click', () => selectPayment(o.dataset.method));
+  });
+
+  // ── Promo ──
+  function renderPromoArea() {
+    const area = document.getElementById('promoArea');
+    if (appliedPromo) {
+      area.innerHTML = `<div class="promo-chip" style="margin:10px 0 0"><span>${escapeHtml(appliedPromo.code)} · ${escapeHtml(appliedPromo.discountPct)}% off</span><button type="button" onclick="removePromo()">Remove</button></div>`;
+    } else if (!promoOpen) {
+      area.innerHTML = `<button type="button" class="promo-toggle" style="margin:10px 0 0" onclick="promoOpen=true;renderPromoArea();document.getElementById('promoInput').focus()">Have a promo code?</button>`;
+    } else if (!document.getElementById('promoInput')) {
+      area.innerHTML = `<div class="promo-box" style="margin:10px 0 0">
+        <input type="text" id="promoInput" placeholder="Enter code" autocomplete="off" autocapitalize="characters" maxlength="20" aria-label="Promo code" onkeydown="if(event.key==='Enter'){event.preventDefault();applyPromo();}">
+        <button type="button" id="promoApplyBtn" onclick="applyPromo()">Apply</button>
+      </div>`;
     }
+  }
+
+  async function validatePromo(code, { silent } = {}) {
+    const t = computeTotals();
+    const res = await fetch('/api/promo/validate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code, subtotal: t.subtotal - t.coolerDiscount }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!data.valid) {
+      if (silent) localStorage.removeItem('ekoyini_promo_code');
+      else showToast(data.error || "That code isn't valid");
+      return;
+    }
+    appliedPromo = { code: data.code, discountPct: data.discountPct };
+    localStorage.setItem('ekoyini_promo_code', data.code);
+    renderOrderReview();
+    if (!silent) showToast(`${data.discountPct}% off applied`);
   }
 
   async function applyPromo() {
-    const code = document.getElementById('promoInput').value.trim().toUpperCase();
+    const input = document.getElementById('promoInput');
+    const code = (input?.value || '').trim().toUpperCase();
     if (!code) return;
     const btn = document.getElementById('promoApplyBtn');
     btn.disabled = true;
     btn.textContent = 'Checking…';
-    try {
-      const { subtotal, coolerDiscount } = computeTotals();
-      const res = await fetch('/api/promo/validate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code, subtotal: subtotal - coolerDiscount }),
-      });
-      const data = await res.json();
-      if (!data.valid) {
-        showToast(data.error || 'Invalid promo code');
-        return;
-      }
-      appliedPromo = { code: data.code, discountPct: data.discountPct };
-      localStorage.setItem('ekoyini_promo_code', data.code);
-      showPromoApplied(data.code, data.discountPct);
-      renderOrderReview();
-      showToast(`${data.discountPct}% off applied`);
-    } catch (err) {
-      console.error(err);
-      showToast('Failed to check promo code');
-    } finally {
-      btn.disabled = false;
-      btn.textContent = 'Apply';
-    }
-  }
-
-  function showPromoApplied(code, pct) {
-    document.getElementById('promoRow').style.display = 'none';
-    const applied = document.getElementById('promoApplied');
-    applied.style.display = 'flex';
-    applied.innerHTML = `<span>${escapeHtml(code)} applied — ${escapeHtml(pct)}% off</span><button type="button" onclick="removePromo()">&times;</button>`;
+    try { await validatePromo(code); }
+    catch (err) { console.error(err); showToast("Couldn't check that code — try again"); }
+    finally { if (btn.isConnected) { btn.disabled = false; btn.textContent = 'Apply'; } }
   }
 
   function removePromo() {
     appliedPromo = null;
+    promoOpen = false;
     localStorage.removeItem('ekoyini_promo_code');
-    document.getElementById('promoInput').value = '';
-    document.getElementById('promoRow').style.display = 'flex';
-    document.getElementById('promoApplied').style.display = 'none';
     renderOrderReview();
   }
-  window.removePromo = removePromo;
-  window.applyPromo = applyPromo;
 
-  function selectPayment(method) {
-    selectedPayment = method;
-    document.querySelectorAll('.payment-option').forEach(p => p.classList.remove('selected'));
-    document.querySelector(`[data-method="${method}"]`).classList.add('selected');
+  // ── Validation: inline, all at once, scroll to the first problem ──
+  function setError(groupId, on) {
+    const g = document.getElementById(groupId);
+    if (g) g.classList.toggle('has-error', !!on);
+  }
+  function validate() {
+    const problems = [];
+    const address = document.getElementById('deliveryAddress').value.trim();
+    const name = document.getElementById('customerName').value.trim();
+    const phone = document.getElementById('phoneNumber').value.trim();
+    const checks = [
+      ['fgAddress', address.length < 5],
+      ['fgPin', quoteNeedsPin && !deliveryPin],
+      ['fgName', !name],
+      ['fgPhone', !isValidSaPhone(phone)],
+      ['cbAge', !document.getElementById('ageConfirm').checked],
+      ['cbTerms', !document.getElementById('termsConfirm').checked],
+    ];
+    checks.forEach(([id, bad]) => { setError(id, bad); if (bad) problems.push(id); });
+    if (problems.length) {
+      const first = document.getElementById(problems[0]);
+      first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const input = first.querySelector('input, button');
+      if (input && input.tagName === 'INPUT' && input.type !== 'checkbox') setTimeout(() => input.focus({ preventScroll: true }), 300);
+      const msg = { cbAge: 'Please confirm you are 18 or older', cbTerms: 'Please accept the Terms to continue', fgPin: 'Please pin your location' }[problems[0]];
+      showToast(msg || 'Please check the highlighted details');
+    }
+    return problems.length === 0;
+  }
+  // Clear an error as soon as the customer fixes it.
+  [['deliveryAddress', 'fgAddress'], ['customerName', 'fgName'], ['phoneNumber', 'fgPhone'], ['ageConfirm', 'cbAge'], ['termsConfirm', 'cbTerms']].forEach(([inputId, groupId]) => {
+    const el = document.getElementById(inputId);
+    el.addEventListener(el.type === 'checkbox' ? 'change' : 'input', () => setError(groupId, false));
+  });
+
+  function setBusy(on, label) {
+    submitting = on;
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = on;
+    btn.classList.toggle('is-busy', on);
+    document.getElementById('submitLabel').textContent = label || (selectedPayment === 'card' ? 'Pay with card' : 'Place order');
   }
 
   async function submitOrder() {
-    if (!document.getElementById('ageConfirm').checked) {
-      showToast('Please confirm you are 18+');
-      return;
-    }
-    if (!document.getElementById('termsConfirm').checked) {
-      showToast('Please accept Terms & Conditions');
-      return;
-    }
-    if (!document.getElementById('phoneNumber').value.trim()) {
-      showToast('Please enter your phone number');
-      return;
-    }
-    if (!document.getElementById('customerName').value.trim()) {
-      showToast('Please enter your name');
-      return;
-    }
-    // The server needs the pin to measure the distance for the delivery fee.
-    if (quoteNeedsPin && !deliveryPin) {
-      showToast('Please pin your location so we can work out your delivery fee');
-      document.getElementById('pinBtn').scrollIntoView({ behavior: 'smooth', block: 'center' });
-      return;
-    }
+    if (submitting) return;
+    if (!validate()) return;
 
-    const { cart, purchaseType, address } = checkoutData;
-    const items = Object.entries(cart || {}).map(([skuId, qty]) => {
-      const p = products.find(x => x.id === skuId);
-      const quantity = (purchaseType === 'case' && p) ? roundUpToCase(qty, p.unitsPerCase) : qty;
-      return { skuId, quantity, purchaseType };
-    });
+    const address = document.getElementById('deliveryAddress').value.trim();
+    const customerName = document.getElementById('customerName').value.trim();
+    const customerPhone = document.getElementById('phoneNumber').value.trim();
+    EkoyiniAddress.save(address);
+    EkoyiniContact.save({ name: customerName, phone: customerPhone });
 
-    const btn = document.getElementById('submitBtn');
-    btn.disabled = true;
-    btn.textContent = 'Placing order…';
-
+    const lines = cartLines();
     const orderPayload = {
       address,
-      items,
-      customerName: document.getElementById('customerName').value.trim(),
-      customerPhone: document.getElementById('phoneNumber').value.trim(),
+      items: lines.map((l) => ({ skuId: l.id, quantity: l.units, purchaseType: l.purchaseType })),
+      customerName,
+      customerPhone,
       promoCode: appliedPromo ? appliedPromo.code : null,
       landmark: document.getElementById('landmark').value.trim() || null,
       deliveryLat: deliveryPin ? deliveryPin.lat : null,
       deliveryLng: deliveryPin ? deliveryPin.lng : null,
       priorityFee,
+      safetySeal,
     };
 
+    setBusy(true, selectedPayment === 'card' ? 'Opening secure payment' : 'Placing your order');
     try {
       if (selectedPayment === 'card') {
-        // Card doesn't create an order yet — Yoco needs to confirm payment
-        // first (via webhook). Redirect to Yoco's hosted page; cart and
-        // checkout data stay put so an abandoned/failed payment doesn't
-        // lose the customer's cart.
+        // Card creates the order only after Yoco confirms payment (webhook).
+        // The cart stays put so an abandoned payment loses nothing.
         const res = await authedFetch('/order/checkout-session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(orderPayload),
         });
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          throw new Error(data.error || 'Could not start card checkout');
-        }
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || 'Could not start card payment');
         window.location.href = data.redirectUrl;
         return;
       }
@@ -745,30 +608,114 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...orderPayload, paymentMethod: selectedPayment }),
       });
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || 'Order submission failed');
-      }
-      const data = await res.json();
-      const orderCode = data.order?.code;
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'We couldn’t place your order');
+      const order = data.order || {};
 
       EkoyiniCart.clear();
       localStorage.removeItem('ekoyini_checkout_data');
       localStorage.removeItem('ekoyini_promo_code');
-      showToast('Order placed! Code: ' + orderCode);
-      setTimeout(() => {
-        window.location.href = `order-confirmation.html?code=${encodeURIComponent(orderCode)}`;
-      }, 1200);
+      const q = new URLSearchParams({ code: order.code || '', method: order.paymentMethod || selectedPayment, total: String(order.total ?? '') });
+      window.location.replace(`order-confirmation.html?${q}`);
     } catch (err) {
       console.error('Order submission error:', err);
-      showToast(err.message || 'Failed to submit order');
-      btn.disabled = false;
-      btn.textContent = 'Place Order';
+      showToast(err.message || 'Something went wrong — please try again', 5000);
+      setBusy(false);
+      // Prices or stock may have moved — refresh the quote so the total is current.
+      refreshQuote();
     }
   }
 
-  // Init
+  // ── Load ──
+  async function loadCheckout() {
+    const session = await requireAuth('checkout.html');
+    if (!session) return;
+
+    if (!checkoutData.cart || Object.keys(checkoutData.cart).length === 0) {
+      // Came straight here (e.g. from a bookmark) — use the live cart.
+      checkoutData = { cart: EkoyiniCart.get(), purchaseType: checkoutData.purchaseType || 'single', address: EkoyiniAddress.get() };
+      if (!Object.keys(checkoutData.cart).length) {
+        window.location.replace('cart.html');
+        return;
+      }
+    }
+
+    if (new URLSearchParams(window.location.search).get('paymentFailed')) {
+      showToast("Card payment didn't go through — try again or choose another method", 5000);
+    }
+
+    // Prefill: saved address, then remembered contact details.
+    const contact = EkoyiniContact.get();
+    document.getElementById('deliveryAddress').value = checkoutData.address || EkoyiniAddress.get();
+    document.getElementById('customerName').value = contact.name || '';
+    document.getElementById('phoneNumber').value = contact.phone || '';
+    renderPriorityOptions();
+
+    fetch('/api/payment-config').then((r) => r.json()).then((cfg) => {
+      cardEnabled = !!cfg.cardEnabled;
+      document.getElementById('cardBadge').hidden = cardEnabled;
+      setPaymentEnabled('card', cardEnabled);
+      if (cardEnabled && selectedPayment === 'eft') selectPayment('card');
+    }).catch(() => {});
+
+    try {
+      const res = await fetch('/api/products');
+      if (!res.ok) throw new Error('Catalogue request failed');
+      products = await res.json();
+      byId = new Map(products.map((p) => [p.id, p]));
+
+      // The device cart is the source of truth; drop retired SKU ids.
+      const reconciled = EkoyiniCart.reconcile(products);
+      checkoutData.cart = reconciled.cart;
+      localStorage.setItem('ekoyini_checkout_data', JSON.stringify(checkoutData));
+      if (!Object.keys(checkoutData.cart).length) {
+        showToast('Those items are no longer available — please pick current products.');
+        setTimeout(() => window.location.replace('shop.html'), 1800);
+        return;
+      }
+      if (reconciled.removed) showToast('Some items are no longer available, so we removed them. Please review your order.', 5000);
+
+      // Below the delivery minimum: the server would refuse it — say so now,
+      // not after the customer has filled in every field.
+      if (computeTotals().subtotal < P.MIN_ORDER_SUBTOTAL) {
+        window.location.replace('cart.html');
+        return;
+      }
+
+      updateSafetyStickerVisibility();
+      renderOrderReview();
+      refreshQuote();
+
+      authedFetch('/api/cod-eligibility').then((r) => r.json()).then((data) => {
+        if (data.error) return;
+        codEligibility = data;
+        updateCodAvailability(computeTotals().total);
+      }).catch(() => {});
+
+      const savedCode = localStorage.getItem('ekoyini_promo_code');
+      if (savedCode) await validatePromo(savedCode, { silent: true });
+    } catch (err) {
+      console.error('Failed to load checkout:', err);
+      showToast("We couldn't load your order — check your connection and refresh", 6000);
+    }
+  }
+
+  // Keep the order in step if the cart changes in another tab.
+  window.addEventListener('ekoyini:cart-updated', () => {
+    if (submitting || !products.length) return;
+    checkoutData.cart = EkoyiniCart.get();
+    if (!Object.keys(checkoutData.cart).length) { window.location.replace('cart.html'); return; }
+    updateSafetyStickerVisibility();
+    renderOrderReview();
+    refreshQuote();
+  });
+
+  // Signed out in another tab mid-checkout → back to login.
+  window.addEventListener('ekoyini:auth-changed', async () => {
+    const session = await getSession();
+    if (!session) window.location.href = 'login.html?redirect=checkout.html';
+  });
+
   loadCheckout();
   </script>
 </body>

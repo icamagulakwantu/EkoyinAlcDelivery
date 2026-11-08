@@ -140,7 +140,7 @@
 
   // Which surge window (if any) is active at this moment, on SA time.
   function surgeWindow(now) {
-    const saHour = new Date(now.getTime() + SA_UTC_OFFSET_HOURS * 3600 * 1000).getUTCHours();
+    const saHour = saHourOf(now);
     if (saHour >= LATE_NIGHT_START_HOUR || saHour < LATE_NIGHT_END_HOUR) {
       return { key: 'LATE_NIGHT', fee: LATE_NIGHT_SURGE_FEE };
     }
@@ -179,6 +179,62 @@
     };
   }
 
+  // ── Safety Seal (optional add-on, spirits only) ─────────────────
+  // One set of tamper-evident stickers per order. Only offered (and only
+  // ever charged) when the order contains at least one spirit.
+  const SAFETY_SEAL_FEE = 10;
+  const SPIRIT_CATEGORIES = new Set([
+    'BRANDY', 'WHISKY', 'COGNAC', 'GIN', 'VODKA', 'VODKA_PREMIUM',
+    'TEQUILA', 'TEQUILA_PREMIUM', 'LIQUEUR', 'RUM',
+  ]);
+  function hasSpirits(categories) {
+    return Array.from(categories || []).some((c) => SPIRIT_CATEGORIES.has(String(c || '').toUpperCase()));
+  }
+  function safetySealFeeFor(wanted, categories) {
+    return wanted === true && hasSpirits(categories) ? SAFETY_SEAL_FEE : 0;
+  }
+
+  // ── One order total, used by the cart, checkout and server ─────────
+  // lines: [{ category, total }] (line totals already priced).
+  // promoPct: 0-100. deliveryTotal: the whole delivery quote total
+  // (delivery + surge + priority + care fee). Order of operations:
+  //   subtotal -> minus Cooler Box -> minus promo (on what is left)
+  //   -> plus delivery quote -> plus Safety Seal.
+  function priceOrder({ lines, promoPct, deliveryTotal, safetySeal, now }) {
+    let subtotal = 0;
+    let coolerSubtotal = 0;
+    const categories = [];
+    (lines || []).forEach((l) => {
+      const t = Number(l.total) || 0;
+      subtotal += t;
+      if (COOLER_ELIGIBLE.has(l.category)) coolerSubtotal += t;
+      categories.push(l.category);
+    });
+    subtotal = round2(subtotal);
+    coolerSubtotal = round2(coolerSubtotal);
+    const coolerPct = coolerDiscountPct(coolerSubtotal, now);
+    const coolerDiscount = round2(coolerSubtotal * coolerPct);
+    const pct = Number(promoPct) > 0 ? Number(promoPct) : 0;
+    const promoDiscount = round2((subtotal - coolerDiscount) * (pct / 100));
+    const delivery = roundCurrency(deliveryTotal);
+    const safetySealFee = safetySealFeeFor(safetySeal, categories);
+    const total = round2(subtotal - coolerDiscount - promoDiscount + delivery + safetySealFee);
+    return { subtotal, coolerSubtotal, coolerPct, coolerDiscount, promoDiscount, delivery, safetySealFee, total };
+  }
+
+  // What the shopper still needs for the next Cooler Box tier, for nudges.
+  // Returns null when the top tier is already reached or the window is shut.
+  function coolerNudge(coolerSubtotal, now) {
+    if (!coolerDiscountAvailable(now)) return null;
+    if (coolerSubtotal < COOLER_MIN_SUBTOTAL) {
+      return { needed: round2(COOLER_MIN_SUBTOTAL - coolerSubtotal), pct: COOLER_DISCOUNT_PCT, progress: coolerSubtotal / COOLER_MIN_SUBTOTAL };
+    }
+    if (coolerSubtotal <= COOLER_TOP_SUBTOTAL) {
+      return { needed: round2(COOLER_TOP_SUBTOTAL - coolerSubtotal + 0.01), pct: COOLER_TOP_DISCOUNT_PCT, progress: coolerSubtotal / COOLER_TOP_SUBTOTAL, current: COOLER_DISCOUNT_PCT };
+    }
+    return null;
+  }
+
   // Base delivery fee, ignoring distance. Used by the cart for a rough
   // estimate only (delivery is never free); checkout shows the real quote.
   function deliveryFee() {
@@ -209,5 +265,12 @@
     careFeeFor,
     serviceFeeFor,
     buildDeliveryQuote,
+    SAFETY_SEAL_FEE,
+    SPIRIT_CATEGORIES,
+    hasSpirits,
+    safetySealFeeFor,
+    priceOrder,
+    coolerNudge,
+    BASE_DELIVERY_FEE,
   };
 });
