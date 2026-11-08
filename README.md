@@ -4,6 +4,9 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 8 Nov 2026 (evening): full project handoff in CLAUDE.md
+- `CLAUDE.md` now holds the founder's complete handoff: catalogue rules, fee decisions, Yoco notes, open work and working rules. A "changed since this handoff" section at the top records what the UI/UX upgrade below already finished (cart/checkout restyle, R10 Safety Seal, Care & Handling bands, cache `v3`), so later sessions don't redo or undo it. No code changes.
+
 ### 8 Nov 2026 (later): UI, UX and logic upgrade
 **Bugs fixed**
 - **Safety Seal never showed and was never charged.** The checkout code referenced a variable that didn't exist, so the section stayed hidden; and even when ticked, the server ignored it, so the total on screen could differ from the amount charged. It is now charged by the server (R10, only if the order has a spirit), saved as `Order.safetySealFee` (migration `20261108120000_add_safety_seal_fee` + `ensure-schema.js`) and shown on the admin order card.
