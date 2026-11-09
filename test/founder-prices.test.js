@@ -58,11 +58,11 @@ test('six-packs for beer, cider and RTD cans, dumpies and 500ml NRBs; cold drink
   assert.equal(C.packSizeFor('Schweppes Tonic Water', 'Can (200ml)', 'MIXER'), 6);
 });
 
-test('Monin syrups are R85; shelf categories are sensible', () => {
+test('Monin syrups stay R230 or more (founder: they are expensive); shelf categories are sensible', () => {
   const rows = fs.readFileSync(path.join(__dirname, '../prisma/data/skus.csv'), 'utf8').trim().split(/\r?\n/).slice(1).map((l) => l.split(','));
   const monin = rows.filter((r) => /^Monin /.test(r[0]));
   assert.ok(monin.length >= 13);
-  for (const r of monin) assert.equal(C.finalPriceFor(r[0], r[2]), 85, r[0]);
+  for (const r of monin) assert.ok(C.finalPriceFor(r[0], r[2]) >= 230, `${r[0]} R${C.finalPriceFor(r[0], r[2])}`);
   const cat = (name) => rows.find((r) => r[0] === name)[1];
   assert.equal(cat('Ponchos Tequila Coffee'), 'TEQUILA'); // with the other Ponchos
   assert.equal(cat('Mofaya Original'), 'ENERGY_DRINK');
