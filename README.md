@@ -6,6 +6,7 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ### 9 Nov 2026 (evening, fix): Monin syrups back to R230.99
 - The R85 Monin price was a misreading. The founder: Monin syrups are expensive and must all be R230 or more. Override removed; they are back at R230.99 (shelf R219.99 + 5%). A test now keeps every Monin syrup at R230 or more.
+- The Siba receipts of 4 Sep and 5 Nov 2026 (the ones behind the 6 Nov receipt calibration) are checked again: every item is at or above its Siba cost. Ten more items added to the never-below-Siba test (Amarula, Bug Booster, Gordons, Klipdrift Premium, KWV 12, Skyy, Corona dumpies, Extreme dumpies, Heineken dumpies, Robertson Chapel Dry Red 1.5L).
 
 ### 9 Nov 2026 (later): a sensible shop and SKU order
 Founder: "currently there's no order in the SKU list or shop".
