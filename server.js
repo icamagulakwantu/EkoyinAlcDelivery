@@ -248,6 +248,8 @@ async function logAdminAction(req, action, targetId, detail) {
 // ── Pricing — shared with the browser via public/pricing.js, so the cart,
 // checkout and server can never disagree on discounts or the delivery fee.
 const { COOLER_ELIGIBLE, coolerDiscountPct, MIN_ORDER_SUBTOTAL, safetySealFeeFor } = require("./public/pricing.js");
+// Shelf order (shared with the shop and admin): sensible sections, brands together.
+const { compareCatalogue } = require("./public/shelf-order.js");
 const { createQuoter } = require("./lib/delivery-quote.js");
 
 // Works out the distance, surge, priority and service fees for an order.
@@ -326,7 +328,7 @@ app.get("/api/products", async (req, res) => {
       select: PUBLIC_PRODUCT_FIELDS,
       orderBy: [{ category: "asc" }, { name: "asc" }],
     });
-    res.json(products);
+    res.json(products.sort(compareCatalogue));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to load products" });
@@ -1500,7 +1502,7 @@ app.get("/admin/products", requireAdmin, async (req, res) => {
       select: { id: true, name: true, category: true, bottleFormat: true, stock: true },
       orderBy: [{ category: "asc" }, { name: "asc" }],
     });
-    res.json(products);
+    res.json(products.sort(compareCatalogue));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to load products" });

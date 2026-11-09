@@ -669,7 +669,7 @@ function renderInventory() {
         <div class="inv-row${p.stock <= 0 ? ' zero-stock' : ''}">
             <div class="inv-row-info">
                 <div class="inv-row-name">${esc(p.name)}</div>
-                <div class="inv-row-meta">${esc(p.category.replace(/_/g, ' '))} · ${esc(p.bottleFormat)}</div>
+                <div class="inv-row-meta">${esc(typeof categoryLabel === 'function' ? categoryLabel(p.category) : p.category.replace(/_/g, ' '))} · ${esc(p.bottleFormat)}</div>
             </div>
             <div class="inv-row-stock">
                 <input type="number" min="0" id="stock-${esc(p.id)}" value="${esc(p.stock)}" ${canEdit ? '' : 'disabled'}>

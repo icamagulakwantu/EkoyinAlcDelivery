@@ -4,6 +4,17 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 9 Nov 2026 (later): a sensible shop and SKU order
+Founder: "currently there's no order in the SKU list or shop".
+- **One shelf order** in `public/shelf-order.js`, shared by the shop, `/api/products` and the admin stock list. Sections: Beer → Cider & RTDs → Brandy → Whisky → Cognac → Gin → Vodka → Premium Vodka → Rum → Tequila → Premium Tequila → Liqueurs → Wine → Boxed Wine → Sparkling → Champagne → Mixers & Cold Drinks → Energy Drinks → Water & Ice. Brands stay together; packs run can → dumpy → NRB → quart → bottle; sold-out items go last in the shop.
+- **Water and ice are one section** ("Water & Ice": still water, sparkling water, then ice).
+- **Mixers & Cold Drinks**: cold drinks first (Appletiser, Coke, Liqui Fruit, Schweppes), then cordials, Monin syrups, then bitters and cherries.
+- **Moved:** Ponchos Tequila Coffee from Liqueurs to Tequila (next to the other Ponchos); Mofaya Original and Orange Ting from Mixers to Energy Drinks (with Red Bull). Extreme stays in Cider & RTDs (it is alcoholic).
+- **Fixed flags:** Grenadine and Kola Tonic cordials were marked alcoholic; now non-alcoholic.
+- **Monin syrups R85** (were R230.99), founder price.
+- Rum and Energy Drinks had no aisle in the shop banner; now under Spirits and Mixers & Essentials.
+- Service worker cache `ekoyini-shell-v9`. Tests: 75 (new `test/shelf-order.test.js`). Checked in a phone-sized browser against a local copy of the deploy.
+
 ### 9 Nov 2026 (late night): founder prices, R130 can floor, six-packs only
 Founder decisions after comparing the app with his Siba receipts. New file `lib/founder-prices-2026-11-09.js`: final prices that win over every other list (`finalPriceFor` checks it first).
 - **Fixed prices:** Heineken dumpies 6-pack R145 (was R117.70), Castle Lite and Black Label cans 6-pack R130, Savanna Dry 500ml NRB **six-pack** R210 (was a single bottle), Appletiser 1L R45, Red Bull **single 250ml can** R30 (was a 355ml six-pack), Coca-Cola **500ml can** R20 (new product, single).

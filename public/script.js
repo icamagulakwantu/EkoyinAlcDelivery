@@ -157,7 +157,8 @@ const CATEGORY_LABELS = {
   GIN: 'Gin', VODKA: 'Vodka', VODKA_PREMIUM: 'Premium Vodka', TEQUILA: 'Tequila',
   TEQUILA_PREMIUM: 'Premium Tequila', LIQUEUR: 'Liqueurs', RUM: 'Rum', WINE: 'Wine',
   WINE_BOX: 'Boxed Wine', SPARKLING: 'Sparkling Wine', CHAMPAGNE: 'Champagne',
-  MIXER: 'Mixers', ENERGY_DRINK: 'Energy Drinks', WATER: 'Water', ICE: 'Ice',
+  MIXER: 'Mixers & Cold Drinks', ENERGY_DRINK: 'Energy Drinks', WATER: 'Water', ICE: 'Ice',
+  WATER_ICE: 'Water & Ice',
 };
 function categoryLabel(cat) {
   return CATEGORY_LABELS[cat] || String(cat || '').toLowerCase().replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
