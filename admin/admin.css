@@ -229,3 +229,19 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .resend-btn:disabled { opacity: .6; cursor: not-allowed; }
 
 @media (prefers-reduced-motion: reduce) { * { transition-duration: .01ms !important; animation-duration: .01ms !important; } }
+
+/* ── New-order alerts (order-alerts.js) ── */
+.order-alert-switch { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.order-alert-switch small { font-size: 11px; opacity: .7; max-width: 220px; }
+.alert-switch { border: 1px solid var(--border); background: var(--surface); color: inherit; border-radius: 999px; padding: 8px 14px; font-weight: 700; font-size: 13px; cursor: pointer; }
+.alert-switch.on { background: #1a6b3a; border-color: #1a6b3a; color: #fff; }
+#orderAlertBanner { position: fixed; z-index: 1000; left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); display: none; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 14px; background: #ff4500; color: #fff; box-shadow: 0 12px 30px rgba(0,0,0,.25); cursor: pointer; animation: oab-pulse 1.2s ease-in-out infinite; }
+#orderAlertBanner.show { display: flex; }
+#orderAlertBanner .oab-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+#orderAlertBanner strong { font-size: 15px; }
+#orderAlertBanner span { font-size: 13px; opacity: .95; }
+#orderAlertBanner .oab-close { background: rgba(255,255,255,.2); color: #fff; border: 0; border-radius: 999px; padding: 8px 12px; font-weight: 700; cursor: pointer; }
+@keyframes oab-pulse { 0%, 100% { box-shadow: 0 12px 30px rgba(255,69,0,.35); } 50% { box-shadow: 0 12px 40px rgba(255,69,0,.8); } }
+@media (min-width: 720px) { #orderAlertBanner { left: auto; width: 440px; } }
+.btn-post-job { background: #25d366 !important; color: #08311a !important; border-color: #25d366 !important; }
+@media (prefers-reduced-motion: reduce) { #orderAlertBanner { animation: none; } }

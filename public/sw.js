@@ -2,7 +2,7 @@
 // app shell loading on flaky township data. Deliberately NEVER caches
 // API, order, admin or webhook requests: prices, stock and order status
 // must always be live.
-const CACHE = 'ekoyini-shell-v5';
+const CACHE = 'ekoyini-shell-v6';
 const SHELL = ['/index.html', '/shop.html', '/cart.html', '/track.html', '/profile.html', '/style.css', '/premium.css', '/home.css', '/app.css', '/script.js', '/auth.js', '/pricing.js', '/images/brand/ekoyini-icon.png'];
 
 self.addEventListener('install', (e) => {
@@ -36,5 +36,16 @@ self.addEventListener('fetch', (e) => {
         return res;
       })
       .catch(() => caches.match(e.request).then((hit) => hit || caches.match('/index.html')))
+  );
+});
+
+// Tapping a new-order notification (admin dashboard) opens or focuses it.
+self.addEventListener('notificationclick', (e) => {
+  e.notification.close();
+  e.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
+      const open = list.find((c) => c.url.includes('/admin/'));
+      return open ? open.focus() : self.clients.openWindow('/admin/admin.html');
+    })
   );
 });

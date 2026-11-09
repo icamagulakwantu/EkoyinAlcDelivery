@@ -4,6 +4,15 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 9 Nov 2026: new orders now reach the dispatch team
+Before this, a new order only appeared on the admin dashboard if someone was looking at it. Nothing was sent anywhere.
+- **New-order alerts on the admin dashboard** (`admin/order-alerts.js`). Each dispatcher taps **"Turn on order alerts"** once per phone or computer. After that every new order gives a sound, a vibration, a phone notification, a banner (area, total, payment) and "(1) New order" in the tab title. While alerts are on the dashboard checks every 15 seconds, even in the background. If a paid order still has no driver after 3 minutes, it reminds everyone every 3 minutes. Works while the dashboard is open in a browser tab, including in the background; a closed browser gets the email instead.
+- **"Post job to drivers group"** button on every paid order without a driver. It opens WhatsApp's chat picker (and copies the text) with a job post for your Bolt drivers group: drop-off area, distance, load, the driver's fee (100% theirs), and cash to collect for COD. **No customer name, phone, street or pin**, because a whole group sees it (POPIA, customer safety). The driver who replies first is assigned with **Assign**, and the full job goes to them privately with **Send WhatsApp to Tavern & Driver**.
+- **New-order emails to the whole dispatch team**: set `ORDER_ALERT_EMAILS` on Render (comma-separated, no admin rights needed; falls back to `ADMIN_EMAILS`). Needs `RESEND_API_KEY`. The email shows area, payment, items and an "Open the dashboard" button.
+- Service-worker cache `v6`; the service worker opens the dashboard when a notification is tapped.
+
+**Setting up the 8 people:** each person signs up on the site with their email. A super admin adds them under **Admins → role Dispatcher**. Each person opens `/admin/admin.html` on their phone, logs in, taps **Turn on order alerts** and allows notifications.
+
 ### 8 Nov 2026 (late): market-readiness evaluation
 - Full evaluation in `MARKET_READINESS.md`: 24 staged API scenarios (`staging/`, 23/24 pass), 13 browser scenarios, 57 unit tests, dependency audit, legal-page review. **Verdict: the software is ready; three launch blockers are business setup** (legal placeholders, liquor trading hours not enforced, one live end-to-end order).
 - Fixed: friendly 404 page (JSON for `/api/`), browser security headers, `TRUST_PROXY_HOPS` setting plus admin `GET /admin/client-ip` (the rate limits could be bypassed with a faked IP), product photos compressed from 29 MB to 11 MB with the same file names (shop first load 2.5 MB → 0.96 MB), service-worker cache `v5`.
