@@ -4,6 +4,9 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 9 Nov 2026 (evening): ice bag photos
+- Founder's photos: Ice Bag 1kg (R20) = blue bag, Ice Bag 2kg (R35) = plain white bag. 1kg file renamed to `ice-bag-1kg-blue.jpg`; 2kg now `ice-bag-2kg-white.jpg` (was a branded "ICE" print bag). Prices unchanged.
+
 ### 9 Nov 2026 (evening): prices always use the HIGHEST retail price
 Founder rule restated: every price starts from the highest regular retail price of the same pack, never a crate/case divided down and never a promotion. 10 rows from the 8 Nov correction broke it and are raised (shelf base, then 5% or 7%):
 
