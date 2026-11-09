@@ -4,6 +4,23 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 9 Nov 2026 (night): a new home screen, built like a top-tier delivery app
+Founder: "nothing wow… I still don't feel like this is a top tier app." The old home page was a long brochure (8 phone screens, about 7,000px) with no products on it, so it took two taps to see anything to buy. The new home (`public/index.html` + `public/home-app.css`) works like Uber Eats, Sixty60 and Bolt Food:
+- **Top:** "Deliver to" address chip (tap to change) and a live greeting with the 30–45 min promise; a big search bar.
+- **Deals carousel** (swipe): Cooler Box (5%/8% with a live countdown to 8pm, or "back at 4am"), the R10 spirits Safety Seal, and Black-owned brands. Real product photos.
+- **Live Cooler Box card:** reads the real cart and says exactly how much more unlocks 5% or 8%.
+- **Shop by category:** 14 photo tiles (beer, ciders, whisky, brandy, cognac, gin, vodka, tequila, liqueurs, wine, bubbly, cold drinks, energy, water & ice).
+- **Popular right now** and **Top shelf** rails: real products, prices and pack sizes from `/api/products`, with a one-tap **+** that turns into a − 1 + stepper. Picked from the founder's Siba fast movers.
+- **Floating "View cart" bar** with item count and total, like the shop.
+- Occasion packs, brands with a story, "Why Ekoyini" (30–45 min, live tracking, Safety Seal + ID check, pay your way), a 3-line "How it works", the 18+ note and the footer.
+- Removed: the long ride-along explainer, the animated example cooler, the taverns list and the closing banner (the shared-stock model means customers don't pick a tavern).
+- Onboarding, age gate, install prompt and bottom nav are unchanged. Page is about 3,100px on a phone (was about 7,000px). Checked on a phone-sized and a desktop browser against a local copy of the deploy: no page errors, no sideways scroll, add-to-cart and the Cooler Box card work.
+- Service worker cache `ekoyini-shell-v10`.
+
+### 9 Nov 2026 (evening, fix): Monin syrups back to R230.99
+- The R85 Monin price was a misreading. The founder: Monin syrups are expensive and must all be R230 or more. Override removed; they are back at R230.99 (shelf R219.99 + 5%). A test now keeps every Monin syrup at R230 or more.
+- The Siba receipts of 4 Sep and 5 Nov 2026 (the ones behind the 6 Nov receipt calibration) are checked again: every item is at or above its Siba cost. Ten more items added to the never-below-Siba test (Amarula, Bug Booster, Gordons, Klipdrift Premium, KWV 12, Skyy, Corona dumpies, Extreme dumpies, Heineken dumpies, Robertson Chapel Dry Red 1.5L).
+
 ### 9 Nov 2026 (later): a sensible shop and SKU order
 Founder: "currently there's no order in the SKU list or shop".
 - **One shelf order** in `public/shelf-order.js`, shared by the shop, `/api/products` and the admin stock list. Sections: Beer → Cider & RTDs → Brandy → Whisky → Cognac → Gin → Vodka → Premium Vodka → Rum → Tequila → Premium Tequila → Liqueurs → Wine → Boxed Wine → Sparkling → Champagne → Mixers & Cold Drinks → Energy Drinks → Water & Ice. Brands stay together; packs run can → dumpy → NRB → quart → bottle; sold-out items go last in the shop.
@@ -11,7 +28,7 @@ Founder: "currently there's no order in the SKU list or shop".
 - **Mixers & Cold Drinks**: cold drinks first (Appletiser, Coke, Liqui Fruit, Schweppes), then cordials, Monin syrups, then bitters and cherries.
 - **Moved:** Ponchos Tequila Coffee from Liqueurs to Tequila (next to the other Ponchos); Mofaya Original and Orange Ting from Mixers to Energy Drinks (with Red Bull). Extreme stays in Cider & RTDs (it is alcoholic).
 - **Fixed flags:** Grenadine and Kola Tonic cordials were marked alcoholic; now non-alcoholic.
-- **Monin syrups R85** (were R230.99), founder price.
+- ~~Monin syrups R85~~ (reverted, see the fix entry above).
 - **Bonaqua Still 500ml photo**: the founder's single-bottle photo (from I-Camagu, `bonaqua-still-500ml.webp`, 3 KB) replaces a 24-bottle case photo; water is sold one bottle at a time.
 - Rum and Energy Drinks had no aisle in the shop banner; now under Spirits and Mixers & Essentials.
 - Service worker cache `ekoyini-shell-v9`. Tests: 75 (new `test/shelf-order.test.js`). Checked in a phone-sized browser against a local copy of the deploy.

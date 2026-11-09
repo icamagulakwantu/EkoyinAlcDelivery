@@ -88,7 +88,7 @@ test('premium brands are never cheaper than the value brands they sit above', ()
   }
 });
 
-// Founder's stock receipts from Siba (27 Sep and 9 Nov 2026). Siba is where
+// Founder's stock receipts from Siba (4 Sep, 27 Sep, 5 Nov and 9 Nov 2026). Siba is where
 // stock is bought, so the app must never sell below these prices.
 test('the app never sells below what the stock costs at Siba', () => {
   const siba = [
@@ -103,6 +103,12 @@ test('the app never sells below what the stock costs at Siba', () => {
     ['Hennessy VS', '750ml Bottle', 650], ['Olmeca Reposado', '750ml Bottle', 350],
     ['Ponchos Tequila Coffee', '750ml Bottle', 320], ['Tanqueray London Dry Export', '750ml Bottle', 360],
     ['Aquelle Still Water', '1.5L', 20],
+    // Siba receipts 4 Sep and 5 Nov 2026
+    ['Amarula Original Cream', '750ml Bottle', 190], ['Bug Booster', '20ml Shot Bottle', 20],
+    ['Gordons London Dry', '750ml Bottle', 190], ['Klipdrift Premium', '750ml Bottle', 260],
+    ['KWV 12 Year', '750ml Bottle', 480], ['Skyy Vodka Original', '750ml Bottle', 300],
+    ['Corona Extra', 'Dumpy (355ml)', 120], ['Extreme Energy', 'Dumpy (330ml)', 125],
+    ['Heineken', 'Dumpy (330ml)', 130], ['Robertson Chapel Dry Red', '1.5L Bottle', 105],
   ];
   for (const [name, format, cost] of siba) {
     const price = C.finalPriceFor(name, format);
