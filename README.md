@@ -12,6 +12,7 @@ Founder: "currently there's no order in the SKU list or shop".
 - **Moved:** Ponchos Tequila Coffee from Liqueurs to Tequila (next to the other Ponchos); Mofaya Original and Orange Ting from Mixers to Energy Drinks (with Red Bull). Extreme stays in Cider & RTDs (it is alcoholic).
 - **Fixed flags:** Grenadine and Kola Tonic cordials were marked alcoholic; now non-alcoholic.
 - **Monin syrups R85** (were R230.99), founder price.
+- **Bonaqua Still 500ml photo**: the founder's single-bottle photo (from I-Camagu, `bonaqua-still-500ml.webp`, 3 KB) replaces a 24-bottle case photo; water is sold one bottle at a time.
 - Rum and Energy Drinks had no aisle in the shop banner; now under Spirits and Mixers & Essentials.
 - Service worker cache `ekoyini-shell-v9`. Tests: 75 (new `test/shelf-order.test.js`). Checked in a phone-sized browser against a local copy of the deploy.
 
