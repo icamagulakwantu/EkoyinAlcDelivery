@@ -4,6 +4,14 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 9 Nov 2026 (later): security hardening
+- **Fixed on the live database (urgent, already applied):** 3 tables, `DriverReport` (driver names and phone numbers), `DeliverySettings` and `_prisma_migrations`, had no row level security. The public Supabase roles (`anon`, `authenticated`: the key in `public/auth.js`) could read AND change them, and the other 8 tables still had those grants. Row level security is now on for every table, and every grant to those roles is removed (now and for future tables). The app connects as the table owner and is unaffected. Supabase's security advisor no longer reports any errors.
+- **Same lock-down re-applied on every deploy** by `scripts/ensure-schema.js`, so a new table can never be left open.
+- **Admin API token:** only accepted when 32+ characters, compared in constant time, and 10 wrong guesses from one address lock it out for 15 minutes.
+- **Yoco webhooks:** validly signed messages older (or newer) than 5 minutes are rejected, so a captured webhook can't be replayed.
+- **Proxy count logging:** the first 20 requests after each start log how many entries are in `X-Forwarded-For` (counts only, never addresses), to set `TRUST_PROXY_HOPS` from the Render logs.
+- Tests: 58 (new replay test). Staged scenarios: 25 (new: admin token lock-out; replay now a hard check).
+
 ### 9 Nov 2026: new orders now reach the dispatch team
 Before this, a new order only appeared on the admin dashboard if someone was looking at it. Nothing was sent anywhere.
 - **New-order alerts on the admin dashboard** (`admin/order-alerts.js`). Each dispatcher taps **"Turn on order alerts"** once per phone or computer. After that every new order gives a sound, a vibration, a phone notification, a banner (area, total, payment) and "(1) New order" in the tab title. While alerts are on the dashboard checks every 15 seconds, even in the background. If a paid order still has no driver after 3 minutes, it reminds everyone every 3 minutes. Works while the dashboard is open in a browser tab, including in the background; a closed browser gets the email instead.

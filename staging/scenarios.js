@@ -11,7 +11,7 @@ const sql = (q) => execSync(`psql "${process.env.STAGING_DATABASE_URL}" -At -c $
 let ipN = 1;
 const freshIp = () => `10.9.${Math.floor(ipN / 250)}.${(ipN++ % 250) + 1}`;
 const H = (tok = 'test-token', extra = {}) => ({ 'Content-Type': 'application/json', Authorization: `Bearer ${tok}`, 'X-Forwarded-For': freshIp(), ...extra });
-const ADMIN = { 'Content-Type': 'application/json', 'x-admin-token': 'admintok', 'X-Forwarded-For': '10.200.0.1' };
+const ADMIN = { 'Content-Type': 'application/json', 'x-admin-token': process.env.STAGING_ADMIN_TOKEN || 'ekoyini-staging-admin-token-0123456789abcdef', 'X-Forwarded-For': '10.200.0.1' };
 async function call(method, path, { headers = H(), body } = {}) {
   const res = await fetch(B + path, { method, headers, body: body === undefined ? undefined : (typeof body === 'string' ? body : JSON.stringify(body)), redirect: 'manual' });
   const text = await res.text();
@@ -202,7 +202,7 @@ const base = { address: '12 Vilakazi St, Orlando West', customerName: 'Thandeka'
     check(row.startsWith('COMPLETED') && n === '1', `webhook delivered twice → one order (${row})`);
     const oldTs = '1600000000';
     const replay = await fetch(B + '/webhooks/yoco', { method: 'POST', headers: { 'Content-Type': 'application/json', 'webhook-id': 'm4', 'webhook-timestamp': oldTs, 'webhook-signature': sign('m4', oldTs) }, body });
-    note(`a validly signed message with a 2020 timestamp got HTTP ${replay.status} (no replay window; harmless today because processing is idempotent)`);
+    check(replay.status === 401, `a validly signed message from 2020 is rejected as a replay (${replay.status})`);
   });
 
   await scenario('3 Payments', '3.4', 'Cash on delivery: new account refused, trusted account allowed, cap R1500', async () => {
@@ -329,6 +329,12 @@ const base = { address: '12 Vilakazi St, Orlando West', customerName: 'Thandeka'
     check(!!h('x-frame-options') || /frame-ancestors/.test(h('content-security-policy') || ''), `clickjacking protection: ${h('x-frame-options')}`);
     check(!!h('strict-transport-security'), `HSTS: ${h('strict-transport-security')}`);
     check(!!h('referrer-policy'), `Referrer-Policy: ${h('referrer-policy')}`);
+  });
+
+  await scenario('6 Security', '6.4b', 'Admin API token: wrong guesses are locked out', async () => {
+    let last = 0;
+    for (let i = 0; i < 12; i++) last = (await call('GET', '/orders', { headers: { 'x-admin-token': 'guess-' + i, 'X-Forwarded-For': '192.0.2.77' } })).status;
+    check(last === 429, `after 10 wrong tokens: HTTP ${last}`);
   });
 
   await scenario('6 Security', '6.5', 'No secret keys committed to the repository', async () => {

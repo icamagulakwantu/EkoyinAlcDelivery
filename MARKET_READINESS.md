@@ -28,6 +28,7 @@ Ordering, pricing, payments, stock, the order lifecycle and security all pass.
 | Cash on delivery | ✅ Pass | New account refused with a clear reason, trusted account allowed, R1500 cap enforced |
 | Stock | ✅ Pass | Two customers racing for the last bottle → exactly one gets it. Stock never goes negative, cancelling restores it, sold-out items can't be ordered |
 | Order lifecycle | ✅ Pass | EFT → admin confirms → assign tavern + driver → wrong driver link refused → pickup → no customer cancel once dispatched → live location → delivered → rating (once, own order only). Public tracking hides phone numbers and the address |
+| Database exposure | ✅ Fixed 9 Nov | 3 tables were readable and writable by anyone with the public Supabase key. Locked down on the live database, and re-applied on every deploy by `ensure-schema.js` |
 | Admin security | ✅ Pass | Every admin endpoint refuses anonymous callers and customers |
 | Age verification | ✅ Pass | Under-18 blocked. Deep links (e.g. a shared shop link) send unverified visitors to the gate and back afterwards. Checkout requires the 18+ and Terms boxes |
 | Error handling | ✅ Pass (fixed today) | Malformed JSON and huge carts get clean errors. Unknown pages showed a bare "Cannot GET"; there is now a friendly 404 |

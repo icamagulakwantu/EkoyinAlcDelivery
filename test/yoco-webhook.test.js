@@ -53,3 +53,17 @@ test("webhook signature: valid passes, tampered or missing fails", () => {
   delete process.env.YOCO_WEBHOOK_SECRET;
   assert.equal(Y.verifyYocoWebhookSignature(headers, body), false);
 });
+
+test('webhook signature: a validly signed but old message is rejected (no replays)', () => {
+  const crypto = require('crypto');
+  const { verifyYocoWebhookSignature } = require('../payments.js');
+  const prev = process.env.YOCO_WEBHOOK_SECRET;
+  process.env.YOCO_WEBHOOK_SECRET = 'whsec_' + Buffer.from('replay-test-secret').toString('base64');
+  const body = '{"type":"payment.succeeded"}';
+  const sign = (id, ts) => 'v1,' + crypto.createHmac('sha256', Buffer.from('replay-test-secret')).update(`${id}.${ts}.${body}`).digest('base64');
+  const now = String(Math.floor(Date.now() / 1000));
+  const old = String(Math.floor(Date.now() / 1000) - 3600);
+  assert.equal(verifyYocoWebhookSignature({ 'webhook-id': 'a', 'webhook-timestamp': now, 'webhook-signature': sign('a', now) }, body), true);
+  assert.equal(verifyYocoWebhookSignature({ 'webhook-id': 'b', 'webhook-timestamp': old, 'webhook-signature': sign('b', old) }, body), false);
+  process.env.YOCO_WEBHOOK_SECRET = prev;
+});
