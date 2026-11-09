@@ -1121,6 +1121,7 @@ app.get("/api/order/:code/track", trackLimiter, async (req, res) => {
         code: true,
         status: true,
         paymentMethod: true,
+        total: true,
         createdAt: true,
         updatedAt: true,
         driverName: true,

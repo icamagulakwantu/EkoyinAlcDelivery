@@ -10,7 +10,7 @@ These points replace anything older in the sections below.
 - **Prices corrected 8 Nov**: `lib/price-corrections-2026-11-08.js` (shelf price + 7%/5%) overrides the older list; review sheet `prisma/data/price-corrections-2026-11-08.csv`. Rows marked estimate are worth checking on the shelf.
 - **Security (9 Nov)**: every public table has row level security and NO grants to `anon`/`authenticated` (the browser uses Supabase for login only). `ensure-schema.js` re-applies this on every deploy; never re-grant. Admin token needs 32+ chars; webhooks older than 5 min are rejected; set `TRUST_PROXY_HOPS` from the `[proxy]` log lines.
 - **Order alerts (9 Nov)**: `admin/order-alerts.js` (sound, notification, banner; dispatchers tap "Turn on order alerts"); "Post job to drivers group" button builds a WhatsApp job post with NO customer details; new-order emails go to `ORDER_ALERT_EMAILS` (fallback `ADMIN_EMAILS`). Step 2 (WhatsApp Business Platform + shared team inbox for one number across 8 people) is advised, not built.
-- **Service worker cache is `ekoyini-shell-v6`**. Bump it again when static pages change.
+- **Service worker cache is `ekoyini-shell-v7`**. Bump it again when static pages change.
 - **Tests**: 57, including `test/order-pricing.test.js` and `test/price-corrections.test.js`.
 
 ## 1. What this is
@@ -74,4 +74,4 @@ Stack: Node/Express 4, Prisma 5, Supabase Postgres, Yoco payments, vanilla HTML/
 - Do not touch the other Supabase projects. Do not delete order data. `OrderItem` snapshots name + price, so catalogue changes do not break history.
 - Commit trailer to use:
   `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>`
-- Verify on the LIVE site after each deploy (products API, a photo, a price). The service worker caches the shell (`ekoyini-shell-v6`), so bump the cache name when you change static pages.
+- Verify on the LIVE site after each deploy (products API, a photo, a price). The service worker caches the shell (`ekoyini-shell-v7`), so bump the cache name when you change static pages.

@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/images/brand/favicon-32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/images/brand/favicon-16.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/images/brand/favicon-180.png">
-  <title>Ekoyini — Profile</title>
+  <title>Your account — Ekoyini</title>
   <link rel="stylesheet" href="style.css">
   <style>
     .profile-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r-md); margin: 12px; padding: 20px; text-align: center; }
@@ -56,6 +56,28 @@
   </style>
   <link rel="stylesheet" href="premium.css">
   <link rel="stylesheet" href="app.css">
+  <style id="profile-polish">
+    /* Profile polish (Nov 2026): compact account row, active vs past orders,
+       one clear action per card, same tokens as cart/checkout. */
+    body .profile-card { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 14px; text-align: left; padding: 16px; border-radius: 20px; margin: 12px 16px; }
+    body .profile-avatar { width: 52px; height: 52px; font-size: 22px; margin: 0; background: #17140e; }
+    body .profile-card > div { min-width: 0; }
+    body .profile-email { font-size: 15px; font-weight: 700; color: var(--white); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    body .profile-since { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    body .logout-btn { margin: 0 !important; padding: 9px 14px !important; font-size: 13px !important; border-radius: 999px !important; }
+    .profile-links-row { display: flex; gap: 8px; margin: 0 16px 6px; overflow-x: auto; scrollbar-width: none; }
+    .profile-links-row a { flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; padding: 10px 14px; border-radius: 999px; background: var(--surface); border: 1px solid var(--border); color: var(--white); font-size: 13px; font-weight: 650; text-decoration: none; }
+    .order-group-title { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin: 18px 4px 8px; }
+    body .order-card { border-radius: 18px; padding: 14px 16px; }
+    body .order-card-code { font-size: 14px; color: var(--white); letter-spacing: .03em; }
+    body .order-card-status { border-radius: 999px; padding: 4px 10px; font-size: 11px; }
+    body .order-card-status.PENDING, body .order-card-status.PAYMENT_PENDING { background: color-mix(in srgb, var(--gold, #c9a227) 22%, transparent); color: var(--gold-deep); }
+    .order-card-items { font-size: 13px; color: var(--muted); margin: 2px 0 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    body .order-card-total { font-size: 16px; }
+    body .reorder-btn, body .track-btn { background: #17140e; color: #fff; border: 0; padding: 9px 16px; border-radius: 999px; font-size: 13px; font-weight: 700; text-decoration: none; cursor: pointer; }
+    body .cancel-order-btn, body .remove-order-btn, body .report-driver-btn { border: 0 !important; background: transparent !important; padding: 9px 6px !important; font-size: 13px !important; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+    .show-all-btn { display: block; width: 100%; margin: 4px 0 8px; padding: 12px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); color: var(--white); font-weight: 700; font-size: 14px; cursor: pointer; }
+  </style>
 </head>
 <body>
   <!-- NAVBAR -->
@@ -189,12 +211,19 @@
     page.innerHTML = `
       <div class="profile-card">
         <div class="profile-avatar">${escapeHtml(email[0] ? email[0].toUpperCase() : '?')}</div>
-        <div class="profile-email">${escapeHtml(email)}</div>
-        <div class="profile-since">Member since ${fmtDate(session.user.created_at)}</div>
-        <button class="logout-btn" id="logoutBtn">Log Out</button>
-        <div class="profile-links"><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a></div>
+        <div>
+          <div class="profile-email">${escapeHtml(email)}</div>
+          ${isValidDate(session.user.created_at) ? `<div class="profile-since">Member since ${fmtDate(session.user.created_at)}</div>` : ''}
+        </div>
+        <button class="logout-btn" id="logoutBtn">Log out</button>
       </div>
-      <div class="section-header"><h2>Your Orders</h2></div>
+      <div class="profile-links-row">
+        <a href="${supportWhatsAppUrl('Hi Ekoyini, I need help with my account.')}" target="_blank" rel="noopener">💬 Help on WhatsApp</a>
+        <a href="track.html">📍 Track an order</a>
+        <a href="terms.html">Terms</a>
+        <a href="privacy.html">Privacy</a>
+      </div>
+      <div class="section-header"><h2>Your orders</h2></div>
       <div class="order-list" id="orderList"><div class="empty-state">Loading orders…</div></div>
     `;
     document.getElementById('logoutBtn').onclick = async () => { await signOut(); showToast('Logged out'); };
@@ -204,6 +233,36 @@
   let myOrders = [];
   // Order codes the customer has already sent a driver report for.
   let reportedCodes = new Set();
+
+  const ACTIVE = new Set(['PAYMENT_PENDING', 'PENDING', 'DISPATCHED']);
+  const PAST_PAGE = 5;
+  let showAllPast = false;
+
+  function isValidDate(v) { return v && !Number.isNaN(new Date(v).getTime()); }
+
+  // "Castle Lager × 4, Gordons London Dry × 1 +2 more"
+  function itemSummary(o) {
+    const items = o.items || [];
+    const first = items.slice(0, 2).map((i) => `${i.name} × ${i.quantity}`).join(', ');
+    return items.length > 2 ? `${first} +${items.length - 2} more` : first;
+  }
+
+  function renderOrders(list) {
+    const active = myOrders.filter((o) => ACTIVE.has(o.status));
+    const past = myOrders.filter((o) => !ACTIVE.has(o.status));
+    const pastShown = showAllPast ? past : past.slice(0, PAST_PAGE);
+    list.innerHTML = `
+      ${active.length ? `<div class="order-group-title">Active</div>${active.map(renderOrderCard).join('')}` : ''}
+      ${past.length ? `<div class="order-group-title">Past orders</div>${pastShown.map(renderOrderCard).join('')}` : ''}
+      ${past.length > pastShown.length ? `<button type="button" class="show-all-btn" id="showAllPast">Show all ${past.length} past orders</button>` : ''}`;
+    // Delegated handlers instead of inline onclick with interpolated codes.
+    list.querySelectorAll('[data-reorder]').forEach((b) => { b.onclick = () => reorder(b.dataset.reorder); });
+    list.querySelectorAll('[data-cancel]').forEach((b) => { b.onclick = () => askCancel(b.dataset.cancel, b); });
+    list.querySelectorAll('[data-remove]').forEach((b) => { b.onclick = () => askRemove(b.dataset.remove, b); });
+    list.querySelectorAll('[data-report]').forEach((b) => { b.onclick = () => openReport(b.dataset.report); });
+    const more = document.getElementById('showAllPast');
+    if (more) more.onclick = () => { showAllPast = true; renderOrders(list); };
+  }
 
   function renderOrderCard(o) {
     const code = escapeHtml(o.code);
@@ -219,6 +278,7 @@
             <span class="order-card-code">${code}</span>
             <span class="order-card-status ${escapeHtml(o.status)}">${escapeHtml(STATUS_LABELS[o.status] || o.status)}</span>
           </div>
+          <div class="order-card-items">${escapeHtml(itemSummary(o))}</div>
           <div class="order-card-meta">${fmtDate(o.createdAt)} · ${itemCount} item${itemCount !== 1 ? 's' : ''}</div>
         </a>
         <div class="order-card-bottom">
@@ -229,7 +289,9 @@
               : `<button class="report-driver-btn" data-report="${code}">Report driver</button>`) : ''}
             ${canCancel ? `<button class="cancel-order-btn" data-cancel="${code}">Cancel</button>` : ''}
             ${canRemove ? `<button class="remove-order-btn" data-remove="${code}">Remove</button>` : ''}
-            <button class="reorder-btn" data-reorder="${code}">Reorder</button>
+            ${ACTIVE.has(o.status)
+              ? `<a class="track-btn" href="track.html?code=${encodeURIComponent(o.code)}">Track</a>`
+              : `<button class="reorder-btn" data-reorder="${code}">Reorder</button>`}
           </div>
         </div>
       </div>`;
@@ -257,12 +319,7 @@
         list.innerHTML = `<div class="empty-state">No orders yet — your first Ekoyini order will show up here.<br><br><a href="shop.html" class="cta-btn" style="display:inline-flex;align-items:center;justify-content:center;padding:0 28px;">Start shopping</a></div>`;
         return;
       }
-      list.innerHTML = myOrders.map(renderOrderCard).join('');
-      // Delegated handlers instead of inline onclick with interpolated codes.
-      list.querySelectorAll('[data-reorder]').forEach((b) => { b.onclick = () => reorder(b.dataset.reorder); });
-      list.querySelectorAll('[data-cancel]').forEach((b) => { b.onclick = () => askCancel(b.dataset.cancel, b); });
-      list.querySelectorAll('[data-remove]').forEach((b) => { b.onclick = () => askRemove(b.dataset.remove, b); });
-      list.querySelectorAll('[data-report]').forEach((b) => { b.onclick = () => openReport(b.dataset.report); });
+      renderOrders(list);
     } catch (err) {
       console.error(err);
       list.innerHTML = '<div class="empty-state">Failed to load orders. Pull down to refresh or try again later.</div>';
