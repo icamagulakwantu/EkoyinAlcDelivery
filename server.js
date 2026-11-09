@@ -17,6 +17,20 @@ const prisma = new PrismaClient();
 // hop count on the live site, set TRUST_PROXY_HOPS on Render (usually 1).
 const trustProxyHops = parseInt(process.env.TRUST_PROXY_HOPS, 10);
 app.set("trust proxy", Number.isInteger(trustProxyHops) && trustProxyHops > 0 ? trustProxyHops : true);
+
+// Logs how many addresses arrive in X-Forwarded-For on the first requests
+// after each start (counts only, never the addresses), so the right
+// TRUST_PROXY_HOPS can be read from the Render logs. With no client-supplied
+// header, the count equals the number of proxies in front of the app.
+let proxyLogsLeft = 20;
+app.use((req, res, next) => {
+  if (proxyLogsLeft > 0 && req.headers["x-forwarded-for"]) {
+    proxyLogsLeft--;
+    const n = String(req.headers["x-forwarded-for"]).split(",").filter((s) => s.trim()).length;
+    console.log(`[proxy] X-Forwarded-For entries: ${n} (cf-connecting-ip ${req.headers["cf-connecting-ip"] ? "present" : "absent"}, true-client-ip ${req.headers["true-client-ip"] ? "present" : "absent"})`);
+  }
+  next();
+});
 // Don't advertise the framework to scanners.
 app.disable("x-powered-by");
 
@@ -166,11 +180,35 @@ async function resolveAdminRole(email) {
   return record ? record.role : null;
 }
 
+// The shared ADMIN_API_TOKEN (for scripts) is only honoured when it is long
+// enough to be unguessable, is compared in constant time, and repeated wrong
+// guesses from one address are locked out for 15 minutes.
+const ADMIN_TOKEN_MIN_LENGTH = 32;
+const adminTokenFailures = new Map(); // ip -> { count, until }
+function adminTokenMatches(given) {
+  const expected = process.env.ADMIN_API_TOKEN || "";
+  if (expected.length < ADMIN_TOKEN_MIN_LENGTH || typeof given !== "string") return false;
+  const a = crypto.createHash("sha256").update(given).digest();
+  const b = crypto.createHash("sha256").update(expected).digest();
+  return crypto.timingSafeEqual(a, b);
+}
+
 async function requireAdmin(req, res, next) {
   const token = req.headers["x-admin-token"];
-  if (process.env.ADMIN_API_TOKEN && token === process.env.ADMIN_API_TOKEN) {
-    req.adminRole = "SUPER_ADMIN";
-    return next();
+  if (token !== undefined) {
+    const now = Date.now();
+    const f = adminTokenFailures.get(req.ip);
+    if (f && f.until > now && f.count >= 10) {
+      return res.status(429).json({ error: "Too many attempts — please wait 15 minutes" });
+    }
+    if (adminTokenMatches(token)) {
+      adminTokenFailures.delete(req.ip);
+      req.adminRole = "SUPER_ADMIN";
+      return next();
+    }
+    const next15 = { count: (f && f.until > now ? f.count : 0) + 1, until: now + 15 * 60 * 1000 };
+    adminTokenFailures.set(req.ip, next15);
+    if (adminTokenFailures.size > 5000) adminTokenFailures.clear(); // bound memory
   }
 
   const user = await verifySupabaseToken(req);

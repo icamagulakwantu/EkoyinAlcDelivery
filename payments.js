@@ -83,6 +83,8 @@ function extractCurrency(checkout) {
 // Yoco signs webhooks the same way Svix / "Standard Webhooks" does:
 //   signed_content = `${webhookId}.${webhookTimestamp}.${rawBody}`
 //   signature       = base64(HMAC-SHA256(secretBytes, signed_content))
+const WEBHOOK_TOLERANCE_SECONDS = 5 * 60;
+
 function verifyYocoWebhookSignature(headers, rawBody) {
   const secret = process.env.YOCO_WEBHOOK_SECRET;
   if (!secret) return false;
@@ -91,6 +93,11 @@ function verifyYocoWebhookSignature(headers, rawBody) {
   const timestamp = headers["webhook-timestamp"];
   const signatureHeader = headers["webhook-signature"];
   if (!id || !timestamp || !signatureHeader) return false;
+
+  // Reject messages older (or newer) than 5 minutes so a captured, validly
+  // signed webhook can't be replayed later. Standard Webhooks tolerance.
+  const sentAt = Number(timestamp);
+  if (!Number.isFinite(sentAt) || Math.abs(Date.now() / 1000 - sentAt) > WEBHOOK_TOLERANCE_SECONDS) return false;
 
   const secretBytes = Buffer.from(secret.replace(/^whsec_/, ""), "base64");
   const signedContent = `${id}.${timestamp}.${rawBody}`;

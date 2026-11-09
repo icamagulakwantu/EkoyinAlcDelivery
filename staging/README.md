@@ -19,7 +19,7 @@ APPLY_CATALOGUE_PRICES_ON_DEPLOY=true node scripts/run-catalogue-prices.js
 node staging/mock-yoco.js & node staging/mock-supabase.js &
 
 # 3. The app, pointed at the stand-ins
-SUPABASE_URL=http://localhost:54321 SUPABASE_ANON_KEY=x ADMIN_API_TOKEN=admintok \
+SUPABASE_URL=http://localhost:54321 SUPABASE_ANON_KEY=x ADMIN_API_TOKEN=ekoyini-staging-admin-token-0123456789abcdef \
 YOCO_SECRET_KEY=sk_test_x YOCO_WEBHOOK_SECRET=whsec_dGVzdHNlY3JldA== \
 YOCO_API_BASE=http://localhost:4010/api APP_BASE_URL=http://localhost:3000 \
 PORT=3000 node server.js &

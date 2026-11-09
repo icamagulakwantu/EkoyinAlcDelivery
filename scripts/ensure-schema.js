@@ -54,6 +54,25 @@ const STATEMENTS = [
      "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
    )`,
   `INSERT INTO "DeliverySettings" ("id") VALUES ('default') ON CONFLICT ("id") DO NOTHING`,
+  // Security (9 Nov 2026): the browser only uses Supabase for login, so the
+  // public Supabase roles (anon, authenticated: the key in public/auth.js)
+  // must not reach any table. Before this, DriverReport, DeliverySettings and
+  // _prisma_migrations were readable AND writable by anyone with that key.
+  // The app connects as the table owner, which row level security does not
+  // restrict. Re-applied on every deploy so new tables are covered too.
+  `DO $$
+   DECLARE t record;
+   BEGIN
+     IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
+       FOR t IN SELECT tablename FROM pg_tables WHERE schemaname = 'public' LOOP
+         EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', t.tablename);
+         EXECUTE format('REVOKE ALL ON public.%I FROM anon, authenticated', t.tablename);
+       END LOOP;
+       EXECUTE 'REVOKE ALL ON ALL SEQUENCES IN SCHEMA public FROM anon, authenticated';
+       EXECUTE 'ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE ALL ON TABLES FROM anon, authenticated';
+       EXECUTE 'ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE ALL ON SEQUENCES FROM anon, authenticated';
+     END IF;
+   END $$`,
 ];
 
 function safeDatabaseTarget(rawUrl) {
