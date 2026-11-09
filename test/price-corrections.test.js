@@ -44,7 +44,7 @@ test('founder-fixed prices are not overridden', () => {
   assert.equal(C.finalPriceFor('Johnnie Walker Red Label', '750ml Bottle'), 315);
   assert.equal(C.finalPriceFor('Klipdrift Export', '750ml Bottle'), 252);
   assert.equal(C.finalPriceFor('Castle Milk Stout', 'Quart (750ml)'), 29.96);
-  assert.equal(C.finalPriceFor('Heineken', 'Dumpy (330ml)'), 117.7);
+  assert.equal(C.finalPriceFor('Heineken', 'Dumpy (330ml)'), 145); // founder price 9 Nov 2026
   assert.equal(C.finalPriceFor('Hennessy VS', '750ml Bottle'), 682.5);
   assert.equal(C.finalPriceFor('Corona Extra', 'Dumpy (355ml)'), 135);
   assert.equal(C.finalPriceFor('Sambuca Lupini Blue', '750ml Bottle'), 357);

@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const C = require('../lib/catalogue-2026-11.js');
 const { run } = require('../prisma/catalogue-update.js');
 
-test('canonical catalogue: 322 master workbook SKUs plus 4 house products, every one priced', () => {
+test('canonical catalogue: 322 master workbook SKUs plus 5 house products, every one priced', () => {
   const csv = fs.readFileSync(require.resolve('../prisma/data/skus.csv'), 'utf8').trim().split(/\r?\n/);
   const header = csv[0].split(',');
   const nameIndex = header.indexOf('name');
@@ -14,8 +14,8 @@ test('canonical catalogue: 322 master workbook SKUs plus 4 house products, every
     const cells = line.split(',');
     return `${cells[nameIndex]}|${cells[formatIndex]}`;
   });
-  assert.equal(keys.length, 326);
-  assert.equal(new Set(keys).size, 326);
+  assert.equal(keys.length, 327);
+  assert.equal(new Set(keys).size, 327);
   const categoryByName = new Map(csv.slice(1).map(line => {
     const cells = line.split(',');
     return [cells[nameIndex], cells[header.indexOf('category')]];
@@ -24,9 +24,9 @@ test('canonical catalogue: 322 master workbook SKUs plus 4 house products, every
   assert.equal(categoryByName.get('Belvedere Pure Vodka'), 'VODKA_PREMIUM');
   assert.equal(categoryByName.get('Casamigos Blanco'), 'TEQUILA_PREMIUM');
   assert.equal(categoryByName.get('Don Julio Reposado'), 'TEQUILA_PREMIUM');
-  assert.equal(C.FINAL_CUSTOMER_PRICES.length, 326);
+  assert.equal(C.FINAL_CUSTOMER_PRICES.length, 327);
   const finalKeys = C.FINAL_CUSTOMER_PRICES.map(row => `${row.name}|${row.bottleFormat}`);
-  assert.equal(new Set(finalKeys).size, 326);
+  assert.equal(new Set(finalKeys).size, 327);
   assert.equal(C.PRICE_COMING_SOON.length, 0);
   const uncovered = csv.slice(1).filter(line => {
     const cells = line.split(',');
@@ -80,7 +80,7 @@ test('final customer prices override legacy list-price uplift when configured', 
 
 test('six-pack rows use the configured receipt-calibrated pack price', () => {
 
-  assert.equal(C.newSinglePrice({ name: 'Heineken', bottleFormat: 'Dumpy (330ml)', packSize: 6 }), 117.7);
+  assert.equal(C.newSinglePrice({ name: 'Heineken', bottleFormat: 'Dumpy (330ml)', packSize: 6 }), 145); // founder price 9 Nov 2026
 });
 
 test('every new price is at or above the retail price', () => {
@@ -151,8 +151,8 @@ test('runner: fixes labels, removes 375ml, prices everything, and is repeatable'
   // Product photos are assigned separately by prisma/sync-images.js from local assets.
   assert.equal(find('Hennessy VS', '750ml Bottle').imageUrl, null);
   const heineken = find('Heineken', 'Dumpy (330ml)');
-  assert.equal(heineken.retailSingleZAR, 117.7);
-  assert.equal(heineken.retailCaseZAR, 433.14); // 117.70 x 4 six-packs - 8%
+  assert.equal(heineken.retailSingleZAR, 145); // founder price 9 Nov 2026
+  assert.equal(heineken.retailCaseZAR, 533.6); // 145 x 4 six-packs - 8%
   // Receipt-calibrated prices are used where configured.
   assert.equal(find('Windhoek Lager', 'Dumpy (330ml)').retailSingleZAR, 112.34); // 8 Nov shelf correction: R104.99 + 7%
   assert.equal(find('Stella Artois', 'Dumpy (330ml)').retailSingleZAR, 107.0); // configured final customer price

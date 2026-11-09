@@ -4,6 +4,15 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 9 Nov 2026 (late night): founder prices, R130 can floor, six-packs only
+Founder decisions after comparing the app with his Siba receipts. New file `lib/founder-prices-2026-11-09.js`: final prices that win over every other list (`finalPriceFor` checks it first).
+- **Fixed prices:** Heineken dumpies 6-pack R145 (was R117.70), Castle Lite and Black Label cans 6-pack R130, Savanna Dry 500ml NRB **six-pack** R210 (was a single bottle), Appletiser 1L R45, Red Bull **single 250ml can** R30 (was a 355ml six-pack), Coca-Cola **500ml can** R20 (new product, single).
+- **R130 minimum for alcoholic can six-packs.** Corona and Savanna keep their own prices (the founder's exceptions); mixers and cold drinks are not covered. Raised: Lion, Castle Lager, Hansa, Milk Stout, Amstel, Budweiser, Sol, Stella, Windhoek, Heineken, Smirnoff Storm, Redd's, Strongbow, Hunter's, Flying Fish Chill and Belgravia cans.
+- **Strategic spirits at Siba cost + 14%** (instead of 15–28%): Jägermeister R410.40, Ponchos Coffee R364.80, Jameson R478.80, Jameson Select R684, Olmeca Reposado R399.
+- **What is sold as a six-pack:** beer, cider and RTD cans, dumpies and 500ml NRBs. Cold drinks, energy drinks, water and ice are sold loose (Mofaya and Schweppes cans keep their six-packs). Rule in `packSizeFor()`, used by the seed.
+- **Database (no Prisma migration):** `ensure-schema.js` renames the Red Bull row from `Can (355ml)` to `Can (250ml)` in place (same id, order history kept) and no longer turns loose cold-drink cans into six-packs. Catalogue is now 327 rows (322 workbook + 5 house products). Rehearsed on a local copy: deploying twice gives the same result.
+- Tests: 70 (new `test/founder-prices.test.js`).
+
 ### 9 Nov 2026 (night): never sell below the Siba stock price
 The founder's Siba receipts (27 Sep and 9 Nov) show what stock costs. Six rows were priced below cost and are raised to the Siba price + 7%:
 
