@@ -4,6 +4,11 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 9 Nov 2026 (evening): Castle Lite photos fixed
+- The Castle Lite quart and dumpy photos were swapped: the quart showed a short-neck dumpy and the dumpy showed the tall 660ml quart.
+- Files renamed to say what they show: `castle-lite-quart-660ml.jpg` (was `castle-lite-dumpy-330ml.jpg`) and `castle-lite-dumpy.png` (was the junk-named `Castlelite340Mldumpies1.png`). `FORMAT_PHOTO_MAP` updated; the deploy's photo sync updates the live products. Can photo unchanged.
+- Render settings set today (no code): `CF_ANALYTICS_TOKEN`, `MARKETING_LINK_SECRET`, `ORDER_ALERT_EMAILS`, `RESEND_FROM_EMAIL` (Ekoyini &lt;admin@ekoyini.co.za&gt;); `RESEND_API_KEY` added by the founder.
+
 ### 9 Nov 2026 (night): marketing opt-in, sales reports, visitor analytics
 **Database change:** new table `MarketingConsent` (migration `20261109120000_add_marketing_consent`, only adds a table). It is locked away from the public Supabase roles by the deploy lock-down like every other table.
 - **Marketing opt-in (POPIA s69):**
