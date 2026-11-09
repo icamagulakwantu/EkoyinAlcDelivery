@@ -1,10 +1,10 @@
 Product,Pack,Was (R),Now (R),Change,Shelf price used (R),Checked on shelf?,Source
 Amstel Lager,Can (500ml),171.20,117.69,-31%,109.99,estimate,Amstel cans R18.99 each (Shoprite); 6-pack estimate
 Amstel Lager,Dumpy (330ml),187.25,106.99,-43%,99.99,estimate,Amstel 330ml R16.99 each (Shoprite); 6-pack estimate
-Amstel Lager,Quart (660ml),47.08,23.19,-51%,21.67,yes,Checkers 12 x 660ml R259.99
+Amstel Lager,Quart (660ml),47.08,25.67,-45%,23.99,yes,"Checkers single 660ml R23.99 (9 Nov: single bottle, not crate / 12)"
 Carling Black Label,Can (500ml),123.05,112.34,-9%,104.99,yes,Shoprite 6 x 500ml R104.99
 Carling Black Label,Dumpy (330ml),128.40,96.29,-25%,89.99,yes,Checkers 6 x 340ml R89.99
-Carling Black Label,Quart (750ml),28.89,23.19,-20%,21.67,yes,Ultra Liquors 12 x 750ml R259.99 (SHOP_PRICES)
+Carling Black Label,Quart (750ml),28.89,23.53,-19%,21.99,yes,"Shoprite Liquor single 750ml R21.99 (9 Nov: single bottle, not crate / 12)"
 Budweiser,Can (500ml),187.25,117.69,-37%,109.99,estimate,Premium-lager can tier estimate
 Budweiser,Dumpy (330ml),197.95,106.99,-46%,99.99,estimate,Premium-lager dumpy tier estimate (Stella 6 x 330ml R99.99)
 Castle Lager,Can (500ml),171.20,101.64,-41%,94.99,yes,Checkers 6 x 500ml R94.99
@@ -20,7 +20,7 @@ Hansa Pilsener,Can (500ml),165.85,101.64,-39%,94.99,yes,Checkers 6 x 500ml R94.9
 Hansa Pilsener,Dumpy (330ml),176.55,90.94,-48%,84.99,estimate,Hansa 330ml R14.99 each (Shoprite); 6-pack estimate
 Hansa Pilsener,Quart (750ml),47.08,21.39,-55%,19.99,yes,Shoprite 750ml R19.99
 Heineken,Can (500ml),133.75,128.39,-4%,119.99,yes,Checkers 6 x 440ml R119.99 (closest can pack)
-Heineken,Quart (650ml),32.09,29.95,-7%,27.99,yes,Shoprite 650ml R27.99
+Heineken,Quart (650ml),32.09,32.09,0%,29.99,yes,Highest regular retail R29.99 (liquorprices.co.za; Shoprite R27.99)
 Lion Lager,Can (500ml),165.85,96.29,-42%,89.99,yes,Checkers 6 x 500ml R89.99
 Sol,Can (500ml),208.65,117.69,-44%,109.99,estimate,Import can tier estimate
 Sol,Quart (640ml),36.38,29.95,-18%,27.99,estimate,Same tier as Heineken 650ml R27.99
@@ -89,7 +89,7 @@ Strongbow Gold Apple,Dumpy (330ml),208.65,117.69,-44%,109.99,estimate,Cider 6 x 
 Strongbow Red Berries,Can (500ml),192.60,128.39,-33%,119.99,estimate,Cider can tier estimate
 Strongbow Red Berries,Dumpy (330ml),208.65,117.69,-44%,109.99,estimate,Cider 6 x 330ml tier estimate
 Commando Brandy,750ml Bottle,304.50,204.74,-33%,194.99,yes,Checkers 750ml R194.99
-Klipdrift Premium,750ml Bottle,304.49,293.99,-3%,279.99,estimate,Shelf estimate
+Klipdrift Premium,750ml Bottle,304.49,304.49,0%,289.99,yes,Highest regular retail R289.99 (liquorprices.co.za)
 Viceroy 5 Year Old,750ml Bottle,252.00,230.99,-8%,219.99,estimate,Shelf estimate
 Wellington VO,750ml Bottle,273.00,230.99,-15%,219.99,estimate,Shelf estimate
 Chivas Regal 12 Year Old,750ml Bottle,724.50,629.99,-13%,599.99,estimate,Shelf estimate
@@ -99,21 +99,21 @@ Glenfiddich 12 Year,750ml Bottle,1081.50,629.99,-42%,599.99,yes,Checkers Hyper /
 Jack Daniel's Old No.7,750ml Bottle,556.50,451.49,-19%,429.99,estimate,Shelf estimate
 Jack Daniel's Tennessee Honey,750ml Bottle,556.50,451.49,-19%,429.99,estimate,Same as Old No.7
 Jameson Caskmates,750ml Bottle,682.50,493.49,-28%,469.99,yes,Checkers and Shoprite R469.99
-Jameson Original Irish,750ml Bottle,477.75,419.99,-12%,399.99,yes,Checkers R399.99
-Jameson Select Reserve,750ml Bottle,693.00,619.49,-11%,589.99,yes,Checkers regular R589.99
+Jameson Original Irish,750ml Bottle,477.75,477.75,0%,455.00,yes,Highest regular retail R455 (liquorprices.co.za; Checkers R399.99)
+Jameson Select Reserve,750ml Bottle,693.00,693.00,0%,660.00,yes,Highest regular retail R660 (liquorprices.co.za; Checkers R589.99)
 Johnnie Walker Double Black,750ml Bottle,787.50,734.99,-7%,699.99,estimate,Shelf estimate
 Scottish Leader Original,750ml Bottle,357.00,283.49,-21%,269.99,yes,Shoprite R269.99
 The Glenlivet 12 Year,750ml Bottle,913.50,682.49,-25%,649.99,estimate,Shelf estimate
 Bisquit & Dubouche VS,750ml Bottle,640.50,514.50,-20%,490.00,yes,Ekoyini retail base R490 (SHOP_PRICES)
 Bisquit & Dubouche VSOP,750ml Bottle,1102.50,882.00,-20%,840.00,yes,Ekoyini retail base R840 (SHOP_PRICES)
 Courvoisier VSOP,750ml Bottle,1071.00,861.00,-20%,820.00,yes,Ekoyini retail base R820 (SHOP_PRICES)
-Hennessy VSOP,750ml Bottle,1144.50,1038.45,-9%,989.00,yes,Ultra Liquors 12 x 750ml R11868 (SHOP_PRICES)
+Hennessy VSOP,750ml Bottle,1144.50,1144.50,0%,1090.00,yes,"Highest regular retail R1,090 (liquorprices.co.za; Ultra Liquors case R989/bottle)"
 Honor VS,750ml Bottle,640.50,514.50,-20%,490.00,yes,Ultra Liquors R490 (SHOP_PRICES)
 Martell VS,750ml Bottle,724.50,577.49,-20%,549.99,estimate,Shelf estimate
 Bombay Sapphire,750ml Bottle,682.50,398.99,-42%,379.99,yes,Woolworths R329.99–R379.99 (higher used)
 Flowstone African Bush Botanical,750ml Bottle,619.50,472.49,-24%,449.99,estimate,Craft-gin tier estimate
 Gordons Pink Berry,750ml Bottle,283.50,227.91,-20%,217.06,yes,Ekoyini retail base R217.06 (SHOP_PRICES)
-Hendrick's Original,750ml Bottle,628.95,472.50,-25%,450.00,yes,Ekoyini retail base R450 (SHOP_PRICES)
+Hendrick's Original,750ml Bottle,628.95,628.95,0%,599.00,yes,Highest regular retail R599 (liquorprices.co.za; old Ekoyini list R450)
 Inverroche Amber,750ml Bottle,724.50,524.99,-28%,499.99,estimate,Craft-gin tier estimate
 Inverroche Classic,750ml Bottle,724.50,524.99,-28%,499.99,estimate,Craft-gin tier estimate
 Inverroche Verdant,750ml Bottle,724.50,524.99,-28%,499.99,estimate,Craft-gin tier estimate
@@ -156,12 +156,12 @@ Cointreau Orange Liqueur,750ml Bottle,693.00,471.45,-32%,449.00,yes,Norman Goodf
 Disaronno Amaretto Liqueur,750ml Bottle,546.00,451.49,-17%,429.99,estimate,Shelf estimate
 Frangelico Hazelnut Liqueur,750ml Bottle,336.00,273.00,-19%,260.00,yes,Ekoyini retail base R260 (SHOP_PRICES)
 Grand Marnier Cordon Rouge,750ml Bottle,913.50,682.49,-25%,649.99,estimate,Shelf estimate
-Jagermeister Herbal Liqueur,750ml Bottle,440.99,309.75,-30%,295.00,yes,Ultra Liquors R295 (SHOP_PRICES)
+Jagermeister Herbal Liqueur,750ml Bottle,440.99,440.99,0%,419.99,yes,Highest regular retail R419.99 (liquorprices.co.za; Ultra Liquors R295)
 Kahlua Coffee Liqueur,750ml Bottle,430.50,335.99,-22%,319.99,yes,Checkers R319.99
 Malibu Coconut Rum Liqueur,750ml Bottle,388.50,283.49,-27%,269.99,estimate,Shelf estimate
 Nachtmusik Chocolate Liqueur,750ml Bottle,283.50,209.99,-26%,199.99,estimate,Cream-liqueur tier estimate
 Peach Schnapps (Relic),750ml Bottle,273.00,215.25,-21%,205.00,yes,Ekoyini retail base R205 (SHOP_PRICES)
-Ponchos Tequila Coffee,750ml Bottle,409.49,336.00,-18%,320.00,yes,Founder receipt price R336 (6 Nov 2026 changelog)
+Ponchos Tequila Coffee,750ml Bottle,409.49,409.49,0%,389.99,yes,Highest regular retail R389.99 (liquorprices.co.za; founder receipt R336)
 Strawberry Lips,750ml Bottle,262.50,188.99,-28%,179.99,estimate,Shelf estimate
 Tequila Rose Cream Liqueur,750ml Bottle,430.50,314.99,-27%,299.99,estimate,Shelf estimate
 Tia Maria Coffee Liqueur,750ml Bottle,472.50,314.99,-33%,299.99,estimate,Same tier as Kahlua R319.99

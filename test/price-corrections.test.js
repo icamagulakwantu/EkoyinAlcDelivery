@@ -33,7 +33,7 @@ test('every correction is shelf price + the category markup, applied once', () =
 });
 
 test('the reported problem is fixed: quarts are quart-priced', () => {
-  assert.equal(C.finalPriceFor('Amstel Lager', 'Quart (660ml)'), 23.19);
+  assert.equal(C.finalPriceFor('Amstel Lager', 'Quart (660ml)'), 25.67); // single-bottle R23.99 + 7%
   assert.equal(C.finalPriceFor('Hansa Pilsener', 'Quart (750ml)'), 21.39);
   for (const p of PRICE_CORRECTIONS.filter((x) => /^Quart/.test(x.bottleFormat))) {
     assert.ok(p.fixed < 35, `${p.name} quart R${p.fixed}`);
@@ -48,4 +48,42 @@ test('founder-fixed prices are not overridden', () => {
   assert.equal(C.finalPriceFor('Hennessy VS', '750ml Bottle'), 682.5);
   assert.equal(C.finalPriceFor('Corona Extra', 'Dumpy (355ml)'), 135);
   assert.equal(C.finalPriceFor('Sambuca Lupini Blue', '750ml Bottle'), 357);
+});
+
+// Founder rule (9 Nov 2026): always base the price on the HIGHEST regular
+// retail price. A correction may never sit below a verified retail price
+// already on file for the same pack (e.g. Hennessy VSOP R1,090, not a
+// bulk-case R989).
+test('corrections never undercut a verified higher retail price on file', () => {
+  for (const c of PRICE_CORRECTIONS) {
+    const formats = new Set([c.bottleFormat]);
+    for (const f of C.FORMAT_FIXES) {
+      if (f.to === c.bottleFormat && (f.name === null || f.name === c.name)) formats.add(f.from);
+    }
+    for (const p of C.FINAL_CUSTOMER_PRICES) {
+      if (p.name !== c.name || !formats.has(p.bottleFormat) || !p.selectedBase) continue;
+      if (!/verified/i.test(p.status) || /not independently/i.test(p.status)) continue;
+      assert.ok(c.shelf >= p.selectedBase, `${c.name} ${c.bottleFormat}: base R${c.shelf} is below verified retail R${p.selectedBase}`);
+    }
+  }
+});
+
+test('premium brands are never cheaper than the value brands they sit above', () => {
+  const price = (n) => C.finalPriceFor(n, '750ml Bottle');
+  const above = [
+    ['Courvoisier VS', 'Honor VS'],
+    ['Hennessy VS', 'Honor VS'],
+    ['Martell VS', 'Honor VS'],
+    ['Courvoisier VSOP', 'Courvoisier VS'],
+    ['Hennessy VSOP', 'Hennessy VS'],
+    ['Hennessy XO', 'Hennessy VSOP'],
+    ['Remy Martin VSOP', 'Martell VS'],
+    ['Jameson Select Reserve', 'Jameson Original Irish'],
+    ['Johnnie Walker Black Label', 'Johnnie Walker Red Label'],
+    ['Chivas Regal 15 Year Old', 'Chivas Regal 12 Year Old'],
+  ];
+  for (const [hi, lo] of above) {
+    assert.ok(price(hi) > 0 && price(lo) > 0, `${hi} / ${lo} priced`);
+    assert.ok(price(hi) >= price(lo), `${hi} R${price(hi)} is cheaper than ${lo} R${price(lo)}`);
+  }
 });
