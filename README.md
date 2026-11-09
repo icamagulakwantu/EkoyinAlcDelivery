@@ -4,6 +4,33 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 9 Nov 2026 (evening): ice bag photos
+- Founder's photos: Ice Bag 1kg (R20) = blue bag, Ice Bag 2kg (R35) = plain white bag. 1kg file renamed to `ice-bag-1kg-blue.jpg`; 2kg now `ice-bag-2kg-white.jpg` (was a branded "ICE" print bag). Prices unchanged.
+
+### 9 Nov 2026 (evening): prices always use the HIGHEST retail price
+Founder rule restated: every price starts from the highest regular retail price of the same pack, never a crate/case divided down and never a promotion. 10 rows from the 8 Nov correction broke it and are raised (shelf base, then 5% or 7%):
+
+| Product | Was | Now | Base now |
+|---|---|---|---|
+| Hennessy VSOP | R1,038.45 | R1,144.50 | R1,090 (was a bulk-case R989) |
+| Hendrick's Gin | R472.50 | R628.95 | R599 |
+| Jägermeister | R309.75 | R440.99 | R419.99 |
+| Jameson Original | R419.99 | R477.75 | R455 |
+| Jameson Select Reserve | R619.49 | R693.00 | R660 |
+| Ponchos Tequila Coffee | R336.00 | R409.49 | R389.99 |
+| Klipdrift Premium | R293.99 | R304.49 | R289.99 |
+| Heineken quart | R29.95 | R32.09 | R29.99 |
+| Amstel quart | R23.19 | R25.67 | R23.99 single (was crate / 12) |
+| Black Label quart | R23.19 | R23.53 | R21.99 single (was crate / 12) |
+
+- Two new tests: a correction can never sit below a verified retail price already on file, and premium brands can never be cheaper than the value brands below them (Courvoisier VS ≥ Honor VS, Hennessy VSOP ≥ VS, JW Black ≥ Red, and more).
+- Review sheet `prisma/data/price-corrections-2026-11-08.csv` updated. 133 rows are still shelf estimates worth checking.
+
+### 9 Nov 2026 (evening): Castle Lite photos fixed
+- The Castle Lite quart and dumpy photos were swapped: the quart showed a short-neck dumpy and the dumpy showed the tall 660ml quart.
+- Files renamed to say what they show: `castle-lite-quart-660ml.jpg` (was `castle-lite-dumpy-330ml.jpg`) and `castle-lite-dumpy.png` (was the junk-named `Castlelite340Mldumpies1.png`). `FORMAT_PHOTO_MAP` updated; the deploy's photo sync updates the live products. Can photo unchanged.
+- Render settings set today (no code): `CF_ANALYTICS_TOKEN`, `MARKETING_LINK_SECRET`, `ORDER_ALERT_EMAILS`, `RESEND_FROM_EMAIL` (Ekoyini &lt;admin@ekoyini.co.za&gt;); `RESEND_API_KEY` added by the founder.
+
 ### 9 Nov 2026 (night): marketing opt-in, sales reports, visitor analytics
 **Database change:** new table `MarketingConsent` (migration `20261109120000_add_marketing_consent`, only adds a table). It is locked away from the public Supabase roles by the deploy lock-down like every other table.
 - **Marketing opt-in (POPIA s69):**
