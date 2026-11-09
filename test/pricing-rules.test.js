@@ -8,10 +8,14 @@ const C = require('../lib/catalogue-2026-11.js');
 // South Africa is UTC+2 all year, so 17:59Z is 19:59 and 18:00Z is 20:00 there.
 const at = (hhmmUtc) => new Date(`2026-11-04T${hhmmUtc}:00Z`);
 
-test('Care & Handling fee bands follow the current subtotal percentages', () => {
-  const cases = [[300, 15], [499.99, 25], [500, 25], [799.99, 40], [800, 56], [1200, 84], [1200.5, 84.04], [1201, 84.07], [1599.99, 112], [1600, 112], [5000, 750]];
+test('Care & Handling is 5% of items, at least R15 and at most R75, with no jumps', () => {
+  const cases = [[100, 15], [300, 15], [500, 25], [799.99, 40], [800, 40], [1200, 60], [1499.99, 75], [1500, 75], [1999.99, 75], [2001, 75], [5000, 75]];
   for (const [subtotal, fee] of cases) assert.equal(P.serviceFeeFor(subtotal), fee, `R${subtotal}`);
   assert.equal(P.serviceFeeFor('abc'), 0);
+  assert.equal(P.careFeeFor(0), 0);
+  // Never goes down as the basket grows.
+  let last = 0;
+  for (let r = 300; r <= 3000; r += 7) { const f = P.careFeeFor(r); assert.ok(f >= last, `R${r}`); last = f; }
 });
 
 test('there is no free delivery: a big order still pays the distance fee', () => {
@@ -19,8 +23,8 @@ test('there is no free delivery: a big order still pays the distance fee', () =>
   assert.equal(P.deliveryFee(5000), 40);
   const q = P.buildDeliveryQuote({ subtotal: 2500, distanceKm: 3, priorityFee: 0, now: at('08:00') });
   assert.equal(q.deliveryFee, 40);
-  assert.equal(q.serviceFee, 375);
-  assert.equal(q.total, 415);
+  assert.equal(q.serviceFee, 75); // capped
+  assert.equal(q.total, 115);
 });
 
 test('service fee no longer depends on distance or surge, and surge stays separate', () => {
@@ -52,12 +56,12 @@ test('minimum delivery order stays R300', () => {
   assert.equal(P.MIN_ORDER_SUBTOTAL, 300);
 });
 
-test('Castle Milk Stout uses its current receipt-calibrated customer prices', () => {
+test('Castle Milk Stout: shelf-corrected packs, founder-fixed quart', () => {
   const row = (bottleFormat, packSize, listPriceZAR) => ({ name: 'Castle Milk Stout', bottleFormat, packSize, listPriceZAR });
-  assert.equal(C.newSinglePrice(row('Can (500ml)', 6, 24.22)), 139.1);
-  assert.equal(C.newSinglePrice(row('Quart (750ml)', 1, 38.65)), 29.96);
-  assert.equal(C.newSinglePrice(row('Dumpy (330ml)', 6, 25.95)), 128.4);
-  assert.equal(C.casePrice(139.1, 4, 8), 511.89);
+  assert.equal(C.newSinglePrice(row('Can (500ml)', 6, 24.22)), 112.34); // Shoprite 6 x 500ml R104.99 + 7%
+  assert.equal(C.newSinglePrice(row('Quart (750ml)', 1, 38.65)), 29.96); // founder-fixed
+  assert.equal(C.newSinglePrice(row('Dumpy (330ml)', 6, 25.95)), 101.64); // R94.99 + 7%
+  assert.equal(C.casePrice(112.34, 4, 8), 413.41);
   assert.equal(C.casePrice(29.96, 12, 8), 330.76);
-  assert.equal(C.casePrice(128.4, 4, 8), 472.51);
+  assert.equal(C.casePrice(101.64, 4, 8), 374.04);
 });

@@ -65,14 +65,20 @@ let currentAdminRole = null;
 // used to stack a second, third... timer), and skip refreshes while the tab
 // is in the background so an idle dashboard doesn't keep hammering /orders.
 const REFRESH_INTERVAL_MS = 30000;
+// With order alerts on, check every 15s and keep checking while the tab is
+// in the background, so a new order rings even when dispatch is in WhatsApp.
+const ALERT_REFRESH_INTERVAL_MS = 15000;
 let refreshTimer = null;
 
 function startAutoRefresh() {
-    if (refreshTimer) return;
+    const alerting = window.EkoyiniOrderAlerts && window.EkoyiniOrderAlerts.alertsOn();
+    if (refreshTimer) clearInterval(refreshTimer);
     refreshTimer = setInterval(() => {
-        if (!document.hidden) loadOrders();
-    }, REFRESH_INTERVAL_MS);
+        const on = window.EkoyiniOrderAlerts && window.EkoyiniOrderAlerts.alertsOn();
+        if (on || !document.hidden) loadOrders();
+    }, alerting ? ALERT_REFRESH_INTERVAL_MS : REFRESH_INTERVAL_MS);
 }
+window.startAutoRefresh = startAutoRefresh;
 
 function stopAutoRefresh() {
     if (refreshTimer) clearInterval(refreshTimer);
@@ -169,6 +175,7 @@ async function loadOrders() {
 
     updateStats(allOrders);
     renderOrders();
+    if (window.EkoyiniOrderAlerts) window.EkoyiniOrderAlerts.onOrders(allOrders);
 }
 
 function renderOrders() {
@@ -259,6 +266,11 @@ function getActionButtons(order) {
     // automatically by the Yoco webhook, so neither ever needs this button.
     if (order.status === 'PAYMENT_PENDING' && order.paymentMethod === 'eft') {
         buttons += `<button class="btn btn-confirm-payment" onclick="confirmPayment('${code}')">Confirm Payment Received</button>`;
+    }
+    // Paid (or cash) orders without a driver: offer the job to the drivers'
+    // WhatsApp group first, then assign whoever accepts.
+    if (order.status === 'PENDING' && !order.driverName) {
+        buttons += `<button class="btn btn-post-job" onclick="postDriverJob('${code}')">Post job to drivers group</button>`;
     }
     if (order.status === 'PAYMENT_PENDING' || order.status === 'PENDING') {
         buttons += `<button class="btn btn-assign" onclick="openAssignModal('${code}')">Assign</button>`;
@@ -421,6 +433,42 @@ function sendDriverWhatsApp(orderCode, driverName, driverPhone, order) {
     const message = `*Ekoyini Delivery - ${orderCode}*\n\nHi ${driverName}!\n\n*Pickup:* ${tavern.name} (${tavern.area})\n*Deliver to:* ${order.address}\n${findIt}\n*Order:*\n${order.items.map(item => `${item.name} x${item.quantity}`).join('\n')}\n\n*Total:* ${formatRand(order.total)}\n*Order Code:* ${orderCode}\n${shareLink ? `\n*Open this link once you've collected the order — confirm pickup, then share your live location so the customer can track you:*\n${shareLink}\n` : ''}\n*Customer will give you this code.*\nThe same link also lets you mark it delivered once it's dropped off.`;
     window.open(`https://wa.me/${driverPhone}?text=${encodeURIComponent(message)}`, '_blank');
 }
+
+// Job post for the drivers' WhatsApp group. Deliberately NO customer name,
+// phone, street or pin: a group of drivers sees it (POPIA, customer safety).
+// The driver who accepts gets the full job privately via "Send WhatsApp to
+// Tavern & Driver" after you assign them.
+function driverJobText(order) {
+    const area = window.EkoyiniOrderAlerts ? window.EkoyiniOrderAlerts.areaOf(order) : 'area on acceptance';
+    const fee = (Number(order.deliveryFee) || 0) + (Number(order.surgeFee) || 0) + (Number(order.priorityFee) || 0);
+    const units = order.items.reduce((n, i) => n + (Number(i.quantity) || 0), 0);
+    const lines = [
+        `*Ekoyini job ${order.code}*`,
+        '',
+        `*Pickup:* ${order.tavern ? `${order.tavern.name} (${order.tavern.area})` : 'nearest Ekoyini tavern (confirmed when you accept)'}`,
+        `*Drop-off area:* ${area}`,
+        order.distanceKm != null ? `*Distance:* about ${Number(order.distanceKm).toFixed(1)} km` : null,
+        `*Load:* ${order.items.length} product${order.items.length === 1 ? '' : 's'}, ${units} unit${units === 1 ? '' : 's'}`,
+        fee > 0 ? `*Your fee:* ${formatRand(fee)} (100% yours)` : null,
+        order.priorityFee > 0 ? '*Super Priority:* customer paid to be first' : null,
+        order.paymentMethod === 'cod' ? `*Cash to collect:* ${formatRand(order.total)}` : '*Payment:* already paid, nothing to collect',
+        '',
+        'Reply *TAKE* to accept. First reply gets it; we then send you the pickup and the customer details privately.',
+        'Customer must be 18+: check ID at the door.',
+    ];
+    return lines.filter((l) => l !== null).join('\n');
+}
+
+function postDriverJob(orderCode) {
+    const order = allOrders.find((o) => o.code === orderCode);
+    if (!order) return;
+    const text = driverJobText(order);
+    // Copy as well, for pasting into WhatsApp Web or another app.
+    if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).catch(() => {});
+    // No phone number: WhatsApp opens its chat picker so you can choose the drivers group.
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+}
+window.postDriverJob = postDriverJob;
 
 function sendDispatchWhatsApp(orderCode) {
     const order = allOrders.find(o => o.code === orderCode);

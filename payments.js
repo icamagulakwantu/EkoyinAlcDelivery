@@ -10,7 +10,8 @@
 
 const crypto = require("crypto");
 
-const YOCO_API_BASE = "https://payments.yoco.com/api";
+// Overridable only for local testing against a stand-in; production uses Yoco.
+const YOCO_API_BASE = process.env.YOCO_API_BASE || "https://payments.yoco.com/api";
 
 function isYocoConfigured() {
   return !!process.env.YOCO_SECRET_KEY;

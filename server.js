@@ -11,7 +11,12 @@ const prisma = new PrismaClient();
 // — without trusting the proxy, req.protocol always reports "http", which
 // would build broken (non-https) Yoco redirect URLs. It's also required
 // for express-rate-limit to read the real client IP instead of Render's.
-app.set("trust proxy", true);
+// TRUST_PROXY_HOPS = how many proxies Render puts in front of the app. With
+// `true` (the default, unchanged) a client can put any IP in X-Forwarded-For
+// and dodge the per-IP rate limits. Once /admin/client-ip has shown the real
+// hop count on the live site, set TRUST_PROXY_HOPS on Render (usually 1).
+const trustProxyHops = parseInt(process.env.TRUST_PROXY_HOPS, 10);
+app.set("trust proxy", Number.isInteger(trustProxyHops) && trustProxyHops > 0 ? trustProxyHops : true);
 // Don't advertise the framework to scanners.
 app.disable("x-powered-by");
 
@@ -94,6 +99,16 @@ const {
 } = require("./payments.js");
 const { sendOrderConfirmationEmail, sendAdminOrderAlertEmail, sendPaymentFailureAlertEmail, sendPaymentConfirmedEmail } = require("./emails.js");
 
+// Basic browser security headers. A Content-Security-Policy is deliberately
+// not set yet (it could break the map and address lookup; add with testing).
+app.use((req, res, next) => {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "SAMEORIGIN");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.setHeader("Strict-Transport-Security", "max-age=15552000");
+  res.setHeader("Permissions-Policy", "geolocation=(self), camera=(), microphone=()");
+  next();
+});
 app.use(express.static("public"));
 app.use("/admin", express.static("admin"));
 // The verify callback stashes the raw bytes alongside normal JSON parsing —
@@ -865,12 +880,20 @@ app.post("/order/checkout-session", writeLimiter, requireUser, async (req, res) 
   }
 });
 
-// Polled by order-confirmation.html while waiting for the webhook.
+// Polled by order-confirmation.html while waiting for the payment to land.
 app.get("/api/checkout-session/:id/status", requireUser, async (req, res) => {
   try {
     const pending = await prisma.pendingCheckout.findUnique({ where: { id: req.params.id } });
     if (!pending || pending.userId !== req.user.id) return res.status(404).json({ error: "Not found" });
-    res.json({ status: pending.status, orderCode: pending.orderCode || null });
+    // Don't wait for the webhook alone: ask Yoco directly (at most every few
+    // seconds per checkout, since the page polls every 2s).
+    let status = pending.status;
+    const ageMs = Date.now() - new Date(pending.createdAt).getTime();
+    if ((status === "PENDING" || status === "PROCESSING") && ageMs > 5000 && isYocoConfigured()) {
+      status = await completePaidCheckout(pending, "status-poll");
+    }
+    const fresh = status === pending.status ? pending : await prisma.pendingCheckout.findUnique({ where: { id: pending.id } });
+    res.json({ status: fresh.status === "PROCESSING" ? "PENDING" : fresh.status, orderCode: fresh.orderCode || null });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to check status" });
@@ -916,7 +939,7 @@ app.post("/webhooks/yoco", async (req, res) => {
     return res.json({ received: true, ignored: "no checkout id" });
   }
 
-  // Ack fast — the work below is idempotent (guarded by PendingCheckout.status).
+  // Ack fast — the work below runs once (claimed atomically on PendingCheckout.status).
   res.json({ received: true });
 
   try {
@@ -925,12 +948,40 @@ app.post("/webhooks/yoco", async (req, res) => {
       console.error("[yoco webhook] No PendingCheckout for Yoco checkout:", checkoutId);
       return;
     }
-    if (pending.status !== "PENDING") return; // already handled
+    await completePaidCheckout(pending, "webhook");
+  } catch (err) {
+    console.error("[yoco webhook] Failed:", err);
+  }
+});
 
+// Turns a paid Yoco checkout into an Order. Used by the webhook AND by the
+// status poll on order-confirmation.html, so a payment still becomes an order
+// when Yoco's webhook is late or lost (e.g. the free Render plan was asleep).
+// Only one caller can win: the row is claimed by moving PENDING → PROCESSING
+// in a single conditional update, so the order is never created twice.
+// Returns the checkout's status afterwards.
+const PROCESSING_STALE_MS = 2 * 60 * 1000;
+async function completePaidCheckout(pending, via) {
+  if (pending.status === "COMPLETED" || pending.status === "FAILED_NEEDS_REFUND") return pending.status;
+  // A claim left behind by a crash mid-way is released after two minutes.
+  const staleBefore = new Date(Date.now() - PROCESSING_STALE_MS);
+  const claim = await prisma.pendingCheckout.updateMany({
+    where: {
+      id: pending.id,
+      OR: [{ status: "PENDING" }, { status: "PROCESSING", completedAt: { lt: staleBefore } }],
+    },
+    // completedAt doubles as the claim time while PROCESSING.
+    data: { status: "PROCESSING", completedAt: new Date() },
+  });
+  if (claim.count === 0) return "PROCESSING"; // someone else is on it
+
+  const release = () => prisma.pendingCheckout.update({ where: { id: pending.id }, data: { status: "PENDING", completedAt: null } });
+  const checkoutId = pending.yocoCheckoutId;
+  try {
     const checkout = await getYocoCheckout(checkoutId);
     if (!checkoutLooksPaid(checkout)) {
-      console.log(`[yoco webhook] Checkout ${checkoutId} not in a paid state yet:`, checkout.status || checkout.state);
-      return;
+      await release();
+      return "PENDING";
     }
 
     // The amount Yoco actually charged must match what we quoted, in ZAR.
@@ -941,9 +992,9 @@ app.post("/webhooks/yoco", async (req, res) => {
       const reason = paidCents == null
         ? `Could not read the paid amount from Yoco (expected R${(pending.amountCents / 100).toFixed(2)}). Check the Yoco dashboard before dispatching.`
         : `Paid R${(paidCents / 100).toFixed(2)} ${currency || ""} but the order total was R${(pending.amountCents / 100).toFixed(2)} ZAR.`;
-      console.error(`[yoco webhook] Amount check failed for ${checkoutId}: ${reason}`, checkout);
+      console.error(`[yoco ${via}] Amount check failed for ${checkoutId}: ${reason}`, checkout);
       await flagPaidCheckoutForReview(pending, reason);
-      return;
+      return "FAILED_NEEDS_REFUND";
     }
 
     const payload = JSON.parse(pending.payload);
@@ -980,23 +1031,30 @@ app.post("/webhooks/yoco", async (req, res) => {
       where: { id: pending.id },
       data: { status: "COMPLETED", orderCode: order.code, completedAt: new Date() },
     });
-    console.log(`[yoco webhook] Order ${order.code} created from checkout ${checkoutId}`);
+    console.log(`[yoco ${via}] Order ${order.code} created from checkout ${checkoutId}`);
 
     // Prices (or the surge window) can change between quoting and payment —
     // the customer has still paid the quoted amount, so keep the order but
     // tell the admins.
     if (Math.round(order.total * 100) !== pending.amountCents) {
-      console.warn(`[yoco webhook] Order ${order.code} total R${order.total} differs from paid R${pending.amountCents / 100}`);
+      console.warn(`[yoco ${via}] Order ${order.code} total R${order.total} differs from paid R${pending.amountCents / 100}`);
     }
 
     sendOrderConfirmationEmail(order, payload.customerEmail).catch((e) => console.error("[email] confirmation failed:", e));
     sendAdminOrderAlertEmail(order).catch((e) => console.error("[email] admin alert failed:", e));
+    return "COMPLETED";
   } catch (err) {
-    console.error("[yoco webhook] Failed to create order after payment:", err);
-    const pending = await prisma.pendingCheckout.findUnique({ where: { yocoCheckoutId: checkoutId } }).catch(() => null);
-    if (pending) await flagPaidCheckoutForReview(pending, err.message);
+    // A Yoco lookup that failed is not a failed payment: let the next
+    // webhook retry or status poll try again.
+    if (err && err.message === "Failed to look up checkout status") {
+      await release().catch(() => {});
+      return "PENDING";
+    }
+    console.error(`[yoco ${via}] Failed to create order after payment:`, err);
+    await flagPaidCheckoutForReview(pending, err.message);
+    return "FAILED_NEEDS_REFUND";
   }
-});
+}
 
 // 📜 CUSTOMER: MY ORDERS — orders the customer has removed from their own
 // list (hiddenByCustomer) are skipped here only. Admin /orders still sees all.
@@ -1500,6 +1558,26 @@ app.use((err, req, res, next) => {
   if (err.type === "entity.too.large") return res.status(413).json({ error: "That request is too large" });
   console.error(err);
   res.status(500).json({ error: "Something went wrong — please try again" });
+});
+
+// Admin-only: shows what the proxy chain sends, to choose TRUST_PROXY_HOPS.
+app.get("/admin/client-ip", requireAdmin, (req, res) => {
+  res.json({
+    xForwardedFor: req.headers["x-forwarded-for"] || null,
+    trueClientIp: req.headers["true-client-ip"] || null,
+    cfConnectingIp: req.headers["cf-connecting-ip"] || null,
+    socketAddress: req.socket.remoteAddress,
+    reqIp: req.ip,
+    trustProxy: app.get("trust proxy"),
+  });
+});
+
+// Anything not matched above: a friendly page for people, JSON for code.
+app.use((req, res) => {
+  if (req.method === "GET" && !req.path.startsWith("/api/") && req.accepts(["html", "json"]) === "html") {
+    return res.status(404).sendFile("404.html", { root: "public" });
+  }
+  res.status(404).json({ error: "Not found" });
 });
 
 const PORT = process.env.PORT || 3000;

@@ -46,6 +46,7 @@
   <!-- DASHBOARD (hidden behind authOverlay until PIN + OTP pass) -->
   <header class="admin-header">
     <h1><img src="/images/brand/ekoyini-icon.png" alt="Ekoyini">Ekoyini Dispatch</h1>
+    <div id="orderAlertSwitch" class="order-alert-switch"></div>
     <div class="header-stats">
       <div class="stat-box">
         <span class="stat-number" id="pendingCount">0</span>
@@ -162,8 +163,10 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/auth.js"></script>
+  <script src="order-alerts.js"></script>
   <script src="admin-api.js"></script>
   <script src="driver-reports.js"></script>
   <script src="delivery-settings.js"></script>
+  <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});</script>
 </body>
 </html>

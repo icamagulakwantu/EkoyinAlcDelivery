@@ -105,17 +105,32 @@ function adminEmailList() {
     .filter(Boolean);
 }
 
+// Who hears about new orders: ORDER_ALERT_EMAILS (the dispatch team, any
+// number of people, no admin rights needed), else the ADMIN_EMAILS list.
+function orderAlertEmailList() {
+  const team = (process.env.ORDER_ALERT_EMAILS || "").split(",").map((e) => e.trim()).filter(Boolean);
+  return team.length ? team : adminEmailList();
+}
+
+const PAYMENT_LABELS = { card: "Paid by card", cod: "Cash on delivery", eft: "EFT" };
+
 async function sendAdminOrderAlertEmail(order) {
-  const adminEmails = adminEmailList();
+  const adminEmails = orderAlertEmailList();
   if (adminEmails.length === 0) return;
+  const parts = String(order.address || "").split(",").map((p) => p.trim()).filter(Boolean);
+  const area = (parts.length > 1 ? parts[parts.length - 1] : "").replace(/^\d+[a-z]?\s+/i, "").trim();
+  const payment = order.status === "PAYMENT_PENDING" ? "EFT, waiting for payment" : (PAYMENT_LABELS[order.paymentMethod] || order.paymentMethod);
+  const dashboard = `${(process.env.APP_BASE_URL || "https://www.ekoyini.co.za").replace(/\/$/, "")}/admin/admin.html`;
   const html = wrapper(`
     <h1 style="font-size:16px;color:#222;margin:0 0 8px;">New order — ${escapeHtml(order.code)}</h1>
     <p style="font-size:13px;color:#555;">${escapeHtml(order.customerName || "N/A")} · ${escapeHtml(order.customerPhone || "N/A")}</p>
     <p style="font-size:13px;color:#555;">${escapeHtml(order.address)}</p>
-    <p style="font-size:13px;color:#555;">Total: <strong>R${order.total.toFixed(2)}</strong> · Payment: <strong>${escapeHtml((order.paymentMethod || "cod").toUpperCase())}</strong></p>
-    <p style="font-size:12px;color:#888;margin-top:16px;">Assign it from the admin dashboard.</p>
+    <p style="font-size:13px;color:#555;">Total: <strong>R${order.total.toFixed(2)}</strong> · <strong>${escapeHtml(payment)}</strong></p>
+    <p style="font-size:13px;color:#555;">${(order.items || []).map((i) => `${escapeHtml(i.name)} × ${Number(i.quantity)}`).join("<br>")}</p>
+    <p style="margin:18px 0 6px;"><a href="${dashboard}" style="background:#ff4500;color:#fff;text-decoration:none;padding:10px 16px;border-radius:999px;font-weight:700;font-size:13px;">Open the dashboard</a></p>
+    <p style="font-size:12px;color:#888;margin-top:12px;">Post it to the drivers group, then assign the driver who accepts.</p>
   `);
-  await sendEmail({ to: adminEmails, subject: `New order ${order.code} — R${order.total.toFixed(2)}`, html });
+  await sendEmail({ to: adminEmails, subject: `New order ${order.code}: R${order.total.toFixed(2)}, ${area || "see address"}, ${payment}`, html });
 }
 
 async function sendPaymentConfirmedEmail(order, customerEmail) {

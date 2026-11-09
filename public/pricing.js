@@ -61,24 +61,22 @@
   //   1. Distance fee  — by straight-line distance x ROUTING_BUFFER
   //   2. Surge fee     — time of day (South African time), 100% to the driver
   //   3. Priority fee  — optional "Super Priority" the customer adds
-  //   4. Care & Handling fee — 5% / 7% / 15% of subtotal (customer protection)
+  //   4. Care & Handling fee — 5% of items, min R15, max R75 (customer protection)
   //
   // There is no free delivery: every order pays the distance fee.
 
-  // Care & Handling fee (formerly "service fee") — framed as a customer
-  // protection feature, not a crude charge. Percentage of pre-discount
-  // subtotal. Founder decision 6 Nov 2026:
-  //   ≤ R800  → 5%
-  //   R800–R2000 → 7%
-  //   > R2000 → 15%
-  // The fee covers order verification, tamper-check readiness, and platform
-  // care so the right products arrive sealed and correct.
-  const CARE_FEE_BANDS = [
-    { upTo: 800, pct: 0.05 },
-    { upTo: 2000, pct: 0.07 },
-    { upTo: Infinity, pct: 0.15 },
-  ];
-  // Kept for backwards compatibility with any code still reading the old name.
+  // Care & Handling fee (formerly "service fee"), framed as customer
+  // protection: order checks so the right products arrive sealed and correct.
+  // Founder decision 8 Nov 2026: industry standard, but lower. Delivery apps
+  // usually charge 10–15% with a minimum and a cap; Ekoyini charges 5% of the
+  // items, at least R15 and never more than R75. One rate, no jumps between
+  // bands (the old 5% / 7% / 15% bands made a R2001 order pay R160 more than
+  // a R1999 one).
+  const CARE_FEE_PCT = 0.05;
+  const CARE_FEE_MIN = 15;
+  const CARE_FEE_MAX = 75;
+  // Kept for any older code that still reads the band list.
+  const CARE_FEE_BANDS = [{ upTo: Infinity, pct: CARE_FEE_PCT, min: CARE_FEE_MIN, max: CARE_FEE_MAX }];
   const SERVICE_FEE_BANDS = CARE_FEE_BANDS;
 
   // Straight-line distance is multiplied by this to account for real roads.
@@ -153,8 +151,8 @@
   function careFeeFor(subtotal) {
     const value = Number(subtotal);
     const amount = Number.isFinite(value) ? value : 0;
-    const band = CARE_FEE_BANDS.find((b) => amount < b.upTo) || CARE_FEE_BANDS[CARE_FEE_BANDS.length - 1];
-    return round2(amount * band.pct);
+    if (amount <= 0) return 0;
+    return round2(Math.min(CARE_FEE_MAX, Math.max(CARE_FEE_MIN, amount * CARE_FEE_PCT)));
   }
   // Alias so existing callers keep working during the rename.
   function serviceFeeFor(subtotal) {
@@ -252,6 +250,9 @@
     coolerDiscountPct,
     coolerDiscountAvailable,
     CARE_FEE_BANDS,
+    CARE_FEE_PCT,
+    CARE_FEE_MIN,
+    CARE_FEE_MAX,
     SERVICE_FEE_BANDS,
     DELIVERY_FEE,
     deliveryFee,

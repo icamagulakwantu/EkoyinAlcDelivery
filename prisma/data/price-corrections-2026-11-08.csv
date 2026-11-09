@@ -1,0 +1,196 @@
+Product,Pack,Was (R),Now (R),Change,Shelf price used (R),Checked on shelf?,Source
+Amstel Lager,Can (500ml),171.20,117.69,-31%,109.99,estimate,Amstel cans R18.99 each (Shoprite); 6-pack estimate
+Amstel Lager,Dumpy (330ml),187.25,106.99,-43%,99.99,estimate,Amstel 330ml R16.99 each (Shoprite); 6-pack estimate
+Amstel Lager,Quart (660ml),47.08,23.19,-51%,21.67,yes,Checkers 12 x 660ml R259.99
+Carling Black Label,Can (500ml),123.05,112.34,-9%,104.99,yes,Shoprite 6 x 500ml R104.99
+Carling Black Label,Dumpy (330ml),128.40,96.29,-25%,89.99,yes,Checkers 6 x 340ml R89.99
+Carling Black Label,Quart (750ml),28.89,23.19,-20%,21.67,yes,Ultra Liquors 12 x 750ml R259.99 (SHOP_PRICES)
+Budweiser,Can (500ml),187.25,117.69,-37%,109.99,estimate,Premium-lager can tier estimate
+Budweiser,Dumpy (330ml),197.95,106.99,-46%,99.99,estimate,Premium-lager dumpy tier estimate (Stella 6 x 330ml R99.99)
+Castle Lager,Can (500ml),171.20,101.64,-41%,94.99,yes,Checkers 6 x 500ml R94.99
+Castle Lager,Dumpy (330ml),187.25,96.29,-49%,89.99,estimate,Same tier as Black Label 6 x 340ml R89.99
+Castle Lite,Dumpy (330ml),197.95,106.99,-46%,99.99,estimate,Premium-lager dumpy tier estimate
+Castle Milk Stout,Can (500ml),139.10,112.34,-19%,104.99,yes,Shoprite and Checkers 6 x 500ml R104.99
+Castle Milk Stout,Dumpy (330ml),128.40,101.64,-21%,94.99,estimate,Castle Milk Stout 330ml R15.99 each (Shoprite); 6-pack estimate
+Corona Extra,Can (410ml),246.10,128.39,-48%,119.99,estimate,Import can tier estimate
+Guinness Draught Stout,Can (440ml),224.70,179.70,-20%,167.94,estimate,6 cans at R27.99 (SHOP_PRICES records R28 a can)
+Guinness Foreign Extra,325ml Bottle,32.10,25.68,-20%,24.00,yes,Ekoyini retail list base R24 (SHOP_PRICES)
+Guinness Foreign Extra,Can (440ml),208.65,149.79,-28%,139.99,estimate,Import stout can tier estimate
+Hansa Pilsener,Can (500ml),165.85,101.64,-39%,94.99,yes,Checkers 6 x 500ml R94.99
+Hansa Pilsener,Dumpy (330ml),176.55,90.94,-48%,84.99,estimate,Hansa 330ml R14.99 each (Shoprite); 6-pack estimate
+Hansa Pilsener,Quart (750ml),47.08,21.39,-55%,19.99,yes,Shoprite 750ml R19.99
+Heineken,Can (500ml),133.75,128.39,-4%,119.99,yes,Checkers 6 x 440ml R119.99 (closest can pack)
+Heineken,Quart (650ml),32.09,29.95,-7%,27.99,yes,Shoprite 650ml R27.99
+Lion Lager,Can (500ml),165.85,96.29,-42%,89.99,yes,Checkers 6 x 500ml R89.99
+Sol,Can (500ml),208.65,117.69,-44%,109.99,estimate,Import can tier estimate
+Sol,Quart (640ml),36.38,29.95,-18%,27.99,estimate,Same tier as Heineken 650ml R27.99
+Stella Artois,Can (500ml),208.65,117.69,-44%,109.99,estimate,Premium-lager can tier estimate
+Windhoek Draught,Can (440ml),117.70,123.04,+5%,114.99,yes,Shoprite 6 x 440ml R114.99
+Windhoek Lager,Can (500ml),197.95,123.04,-38%,114.99,yes,Checkers 6 x 440ml R114.99
+Windhoek Lager,Dumpy (330ml),208.65,112.34,-46%,104.99,estimate,Premium-lager dumpy tier estimate
+Bacardi Breezer Blackberry,Can (500ml),224.70,128.39,-43%,119.99,estimate,RTD can tier estimate
+Bacardi Breezer Blueberry,Can (500ml),224.70,128.39,-43%,119.99,estimate,RTD can tier estimate
+Bacardi Breezer Watermelon,Can (500ml),160.50,128.39,-20%,119.99,estimate,RTD can tier estimate
+Bacardi Breezer Blackberry,Dumpy (275ml),197.95,117.69,-41%,109.99,estimate,RTD 275ml tier estimate
+Bacardi Breezer Blueberry,Dumpy (275ml),197.95,117.69,-41%,109.99,estimate,RTD 275ml tier estimate
+Bacardi Breezer Watermelon,Dumpy (275ml),197.95,117.69,-41%,109.99,estimate,RTD 275ml tier estimate
+Belgravia Gin & Dark Cherry,Can (500ml),160.50,128.40,-20%,120.00,yes,Ultra Liquors 24 cans R479.99 (SHOP_PRICES)
+Belgravia Gin & Dry Lemon,Can (500ml),160.50,128.40,-20%,120.00,yes,Ultra Liquors 24 cans R479.99 (SHOP_PRICES)
+Belgravia Gin & Tonic,Can (500ml),160.50,128.40,-20%,120.00,yes,Ultra Liquors 24 cans R479.99 (SHOP_PRICES)
+Belgravia Gin & Dark Cherry,Dumpy (275ml),197.95,117.69,-41%,109.99,estimate,RTD 275ml tier estimate
+Belgravia Gin & Dry Lemon,Dumpy (275ml),197.95,117.69,-41%,109.99,estimate,RTD 275ml tier estimate
+Bernini Blush,Dumpy (275ml),165.85,117.69,-29%,109.99,estimate,RTD 275ml tier estimate
+Bernini Classic,Dumpy (275ml),165.85,117.69,-29%,109.99,estimate,RTD 275ml tier estimate
+Bernini Ruby Berry,Dumpy (275ml),165.85,117.69,-29%,109.99,estimate,RTD 275ml tier estimate
+Brutal Fruit Ruby Apple,Dumpy (330ml),214.00,117.69,-45%,109.99,estimate,Shoprite Brutal Fruit 6 x 500ml cans R119.99; bottle estimate
+Brutal Fruit Strawberry Rouge,Dumpy (330ml),214.00,117.69,-45%,109.99,estimate,Shoprite Brutal Fruit 6 x 500ml cans R119.99; bottle estimate
+Chillers Punch Peach & Mango,Can (500ml),192.60,133.75,-31%,125.00,estimate,Same as the other Chillers Punch flavours (R133.75)
+Chillers Punch Tequila Sunrise (Zero Alc),Can (500ml),192.60,133.75,-31%,125.00,estimate,Same as the other Chillers Punch flavours (R133.75)
+Flying Fish Chill,Can (500ml),171.20,128.39,-25%,119.99,estimate,Flying Fish Lemon 6 x 500ml R109.99 (Checkers) to Dry Apple R134.99
+Flying Fish Chill,Dumpy (330ml),192.60,112.34,-42%,104.99,estimate,Flavoured-beer 6 x 330ml tier (Hunter's R104.99)
+Flying Fish Dry Apple,Can (500ml),278.20,144.44,-48%,134.99,yes,Shoprite 6 x 500ml R134.99
+Flying Fish Dry Apple,Dumpy (330ml),192.60,112.34,-42%,104.99,estimate,Flavoured-beer 6 x 330ml tier (Hunter's R104.99)
+Flying Fish Dry Apple,Quart (660ml),64.20,26.74,-58%,24.99,estimate,Same as Flying Fish Lemon quart (R27.81)
+Flying Fish Lemon,Dumpy (330ml),192.60,112.34,-42%,104.99,estimate,Flavoured-beer 6 x 330ml tier (Hunter's R104.99)
+Hunter's Dry,Can (440ml),176.55,128.39,-27%,119.99,estimate,Cider can tier estimate
+Hunter's Dry,Dumpy (330ml),192.60,112.34,-42%,104.99,yes,Shoprite 6 x 330ml R104.99
+Hunter's Gold,Can (440ml),176.55,128.39,-27%,119.99,estimate,Cider can tier estimate
+Hunter's Gold,Dumpy (330ml),192.60,112.34,-42%,104.99,yes,Checkers 6 x 330ml R104.99
+Hunter's Iced Apple,Can (440ml),176.55,128.39,-27%,119.99,estimate,Cider can tier estimate
+Hunter's Iced Apple,Dumpy (330ml),192.60,112.34,-42%,104.99,estimate,Same as Hunter's Dry 6 x 330ml R104.99
+Hunter's Iced Watermelon,Can (440ml),176.55,128.39,-27%,119.99,estimate,Cider can tier estimate
+Hunter's Iced Watermelon,Dumpy (330ml),192.60,112.34,-42%,104.99,estimate,Same as Hunter's Dry 6 x 330ml R104.99
+Kopparberg Mixed Fruit,Can (440ml),299.60,192.60,-36%,180.00,estimate,Sold as 4 x 330ml in SA (~R30 each); 6-pack estimate
+Kopparberg Mixed Fruit,Dumpy (330ml),299.60,192.60,-36%,180.00,estimate,Sold as 4 x 330ml in SA (~R30 each); 6-pack estimate
+Kopparberg Pear,Can (440ml),299.60,192.60,-36%,180.00,estimate,Sold as 4 x 330ml in SA (~R30 each); 6-pack estimate
+Kopparberg Pear,Dumpy (330ml),299.60,192.60,-36%,180.00,estimate,Sold as 4 x 330ml in SA (~R30 each); 6-pack estimate
+Kopparberg Raspberry,Can (440ml),299.60,192.60,-36%,180.00,estimate,Sold as 4 x 330ml in SA (~R30 each); 6-pack estimate
+Kopparberg Raspberry,Dumpy (330ml),299.60,192.60,-36%,180.00,estimate,Sold as 4 x 330ml in SA (~R30 each); 6-pack estimate
+Kopparberg Strawberry & Lime,Can (440ml),299.60,192.60,-36%,180.00,estimate,Sold as 4 x 330ml in SA (~R30 each); 6-pack estimate
+Kopparberg Strawberry & Lime,Dumpy (330ml),299.60,192.60,-36%,180.00,estimate,Sold as 4 x 330ml in SA (~R30 each); 6-pack estimate
+Kopparberg Sweet Vintage Pear,Can (440ml),299.60,192.60,-36%,180.00,estimate,Sold as 4 x 330ml in SA (~R30 each); 6-pack estimate
+Redd's Berry,Can (500ml),192.60,128.39,-33%,119.99,estimate,Cider can tier estimate
+Redd's Berry,Dumpy (330ml),208.65,112.34,-46%,104.99,estimate,Cider 6 x 330ml tier (Hunter's R104.99)
+Redd's Dry,Can (500ml),192.60,128.39,-33%,119.99,estimate,Cider can tier estimate
+Redd's Dry,Dumpy (330ml),208.65,112.34,-46%,104.99,estimate,Cider 6 x 330ml tier (Hunter's R104.99)
+Redd's MXD Guarana,Can (500ml),192.60,128.39,-33%,119.99,estimate,Cider can tier estimate
+Redd's MXD Pine,Can (500ml),192.60,128.39,-33%,119.99,estimate,Cider can tier estimate
+Redd's Original,Can (500ml),192.60,128.39,-33%,119.99,estimate,Cider can tier estimate
+Redd's Original,Dumpy (330ml),208.65,112.34,-46%,104.99,estimate,Cider 6 x 330ml tier (Hunter's R104.99)
+Savanna Angry Lemon,Dumpy (330ml),224.70,133.74,-40%,124.99,estimate,Savanna Dry 6 x 330ml R119.99–R124.99
+Savanna Dry,Can (500ml),208.65,144.44,-31%,134.99,estimate,Savanna 500ml tier estimate
+Savanna Dry,NRB (500ml),53.50,26.74,-50%,24.99,estimate,Single 500ml bottle estimate
+Smirnoff Storm Citrus,Can (500ml),144.45,117.70,-19%,110.00,yes,Ultra Liquors 24 cans R439.99 (SHOP_PRICES)
+Smirnoff Storm Pine Twist,Can (500ml),144.45,117.70,-19%,110.00,yes,Ultra Liquors 24 cans R439.99 (SHOP_PRICES)
+Smirnoff Storm Citrus,Dumpy (250ml),192.60,106.99,-44%,99.99,estimate,RTD 250ml tier estimate
+Smirnoff Storm Pine Twist,Dumpy (250ml),192.60,106.99,-44%,99.99,estimate,RTD 250ml tier estimate
+Strongbow Gold Apple,Can (500ml),192.60,128.39,-33%,119.99,estimate,Cider can tier estimate
+Strongbow Gold Apple,Dumpy (330ml),208.65,117.69,-44%,109.99,estimate,Cider 6 x 330ml tier estimate
+Strongbow Red Berries,Can (500ml),192.60,128.39,-33%,119.99,estimate,Cider can tier estimate
+Strongbow Red Berries,Dumpy (330ml),208.65,117.69,-44%,109.99,estimate,Cider 6 x 330ml tier estimate
+Commando Brandy,750ml Bottle,304.50,204.74,-33%,194.99,yes,Checkers 750ml R194.99
+Klipdrift Premium,750ml Bottle,304.49,293.99,-3%,279.99,estimate,Shelf estimate
+Viceroy 5 Year Old,750ml Bottle,252.00,230.99,-8%,219.99,estimate,Shelf estimate
+Wellington VO,750ml Bottle,273.00,230.99,-15%,219.99,estimate,Shelf estimate
+Chivas Regal 12 Year Old,750ml Bottle,724.50,629.99,-13%,599.99,estimate,Shelf estimate
+Chivas Regal 15 Year Old,750ml Bottle,1050.00,944.99,-10%,899.99,estimate,Shelf estimate
+Firstwatch Whisky,750ml Bottle,283.50,209.99,-26%,199.99,estimate,Shelf estimate
+Glenfiddich 12 Year,750ml Bottle,1081.50,629.99,-42%,599.99,yes,Checkers Hyper / Pick n Pay R599.99
+Jack Daniel's Old No.7,750ml Bottle,556.50,451.49,-19%,429.99,estimate,Shelf estimate
+Jack Daniel's Tennessee Honey,750ml Bottle,556.50,451.49,-19%,429.99,estimate,Same as Old No.7
+Jameson Caskmates,750ml Bottle,682.50,493.49,-28%,469.99,yes,Checkers and Shoprite R469.99
+Jameson Original Irish,750ml Bottle,477.75,419.99,-12%,399.99,yes,Checkers R399.99
+Jameson Select Reserve,750ml Bottle,693.00,619.49,-11%,589.99,yes,Checkers regular R589.99
+Johnnie Walker Double Black,750ml Bottle,787.50,734.99,-7%,699.99,estimate,Shelf estimate
+Scottish Leader Original,750ml Bottle,357.00,283.49,-21%,269.99,yes,Shoprite R269.99
+The Glenlivet 12 Year,750ml Bottle,913.50,682.49,-25%,649.99,estimate,Shelf estimate
+Bisquit & Dubouche VS,750ml Bottle,640.50,514.50,-20%,490.00,yes,Ekoyini retail base R490 (SHOP_PRICES)
+Bisquit & Dubouche VSOP,750ml Bottle,1102.50,882.00,-20%,840.00,yes,Ekoyini retail base R840 (SHOP_PRICES)
+Courvoisier VSOP,750ml Bottle,1071.00,861.00,-20%,820.00,yes,Ekoyini retail base R820 (SHOP_PRICES)
+Hennessy VSOP,750ml Bottle,1144.50,1038.45,-9%,989.00,yes,Ultra Liquors 12 x 750ml R11868 (SHOP_PRICES)
+Honor VS,750ml Bottle,640.50,514.50,-20%,490.00,yes,Ultra Liquors R490 (SHOP_PRICES)
+Martell VS,750ml Bottle,724.50,577.49,-20%,549.99,estimate,Shelf estimate
+Bombay Sapphire,750ml Bottle,682.50,398.99,-42%,379.99,yes,Woolworths R329.99–R379.99 (higher used)
+Flowstone African Bush Botanical,750ml Bottle,619.50,472.49,-24%,449.99,estimate,Craft-gin tier estimate
+Gordons Pink Berry,750ml Bottle,283.50,227.91,-20%,217.06,yes,Ekoyini retail base R217.06 (SHOP_PRICES)
+Hendrick's Original,750ml Bottle,628.95,472.50,-25%,450.00,yes,Ekoyini retail base R450 (SHOP_PRICES)
+Inverroche Amber,750ml Bottle,724.50,524.99,-28%,499.99,estimate,Craft-gin tier estimate
+Inverroche Classic,750ml Bottle,724.50,524.99,-28%,499.99,estimate,Craft-gin tier estimate
+Inverroche Verdant,750ml Bottle,724.50,524.99,-28%,499.99,estimate,Craft-gin tier estimate
+Tanqueray Flor de Sevilla,750ml Bottle,472.50,378.00,-20%,360.00,yes,Ekoyini retail base R360 (SHOP_PRICES)
+Tanqueray No. TEN,750ml Bottle,871.50,682.49,-22%,649.99,estimate,Shelf estimate
+Absolut Citron,750ml Bottle,430.50,335.99,-22%,319.99,yes,Checkers R319.99 (all Absolut flavours)
+Absolut Lime,750ml Bottle,430.50,335.99,-22%,319.99,yes,Checkers R319.99
+Absolut Original Blue,750ml Bottle,472.50,335.99,-29%,319.99,yes,Checkers R319.99
+Absolut Watermelon,750ml Bottle,430.50,335.99,-22%,319.99,yes,Shoprite R319.99
+Count Pushkin Vodka,750ml Bottle,283.50,241.49,-15%,229.99,estimate,Shelf estimate
+Cruz Vintage Black Vodka,750ml Bottle,430.50,314.99,-27%,299.99,estimate,Shelf estimate
+Russian Bear Standard,750ml Bottle,283.50,241.49,-15%,229.99,estimate,Not above the Russian Bear flavours (R241.50)
+Smirnoff Infusions,750ml Bottle,367.50,241.49,-34%,229.99,estimate,Shelf estimate
+Smirnoff Red No. 21,750ml Bottle,367.50,293.99,-20%,279.99,estimate,Shelf estimate
+Wyborowa Vodka,750ml Bottle,388.50,314.99,-19%,299.99,estimate,Shelf estimate
+Ciroc Apple,750ml Bottle,777.00,629.99,-19%,599.99,estimate,Same as Ciroc Original
+Ciroc Mango,750ml Bottle,777.00,629.99,-19%,599.99,estimate,Same as Ciroc Original
+Ciroc Original Premium,750ml Bottle,378.00,629.99,+67%,599.99,yes,Checkers R599.99 (was under-priced at R378)
+Ciroc Pineapple,750ml Bottle,777.00,629.99,-19%,599.99,estimate,Same as Ciroc Original
+Grey Goose Luxury,750ml Bottle,1060.50,787.49,-26%,749.99,estimate,Shelf estimate
+Jose Cuervo Especial Silver,750ml Bottle,682.50,372.75,-45%,355.00,estimate,Same as Jose Cuervo Reposado (R372.75)
+Ponchos Blanco Tequila,750ml Bottle,525.00,367.49,-30%,349.99,estimate,Shelf estimate
+Ponchos Caramel Tequila,750ml Bottle,525.00,367.49,-30%,349.99,estimate,Shelf estimate
+Casamigos Reposado,750ml Bottle,1701.00,1259.99,-26%,1199.99,estimate,Shelf estimate
+Amarula Ethiopian Coffee,750ml Bottle,430.50,241.49,-44%,229.99,estimate,Amarula range tier estimate
+Amarula Raspberry Chocolate Cream,750ml Bottle,430.50,241.49,-44%,229.99,estimate,Amarula range tier estimate
+Banana Liqueur (Butlers),750ml Bottle,252.00,204.75,-19%,195.00,yes,Butlers range R2340 per 12 (SHOP_PRICES)
+Blue Curacao (Butlers),750ml Bottle,252.00,204.75,-19%,195.00,yes,Butlers range R2340 per 12 (SHOP_PRICES)
+Cherry Kirsch Liqueur (Butlers),750ml Bottle,252.00,204.75,-19%,195.00,yes,Butlers range R2340 per 12 (SHOP_PRICES)
+Espresso/Coffee Liqueur (Butlers),750ml Bottle,231.00,204.75,-11%,195.00,yes,Butlers range R2340 per 12 (SHOP_PRICES)
+Ginger Liqueur (Butlers),750ml Bottle,252.00,204.75,-19%,195.00,yes,Butlers range R2340 per 12 (SHOP_PRICES)
+Peppermint Liqueur (Butlers),750ml Bottle,231.00,204.75,-11%,195.00,yes,Butlers range R2340 per 12 (SHOP_PRICES)
+Strawberry Liqueur (Butlers),750ml Bottle,252.00,204.75,-19%,195.00,yes,Butlers range R2340 per 12 (SHOP_PRICES)
+Triple Sec (Butlers),750ml Bottle,252.00,204.75,-19%,195.00,yes,Ultra Liquors R2340 per 12 (SHOP_PRICES)
+Van Der Hum Tangerine (Butlers),750ml Bottle,283.50,204.75,-28%,195.00,yes,Butlers range R2340 per 12 (SHOP_PRICES)
+Blue Curacao (Peddler's),750ml Bottle,315.00,252.00,-20%,240.00,yes,Ekoyini retail base R240 (SHOP_PRICES)
+Triple Sec (Peddler's),750ml Bottle,315.00,252.00,-20%,240.00,yes,Ekoyini retail base R240 (SHOP_PRICES)
+Cape Velvet Cream,750ml Bottle,283.50,209.99,-26%,199.99,estimate,Cream-liqueur tier estimate
+Cointreau Orange Liqueur,750ml Bottle,693.00,471.45,-32%,449.00,yes,Norman Goodfellows R449 (PriceCheck)
+Disaronno Amaretto Liqueur,750ml Bottle,546.00,451.49,-17%,429.99,estimate,Shelf estimate
+Frangelico Hazelnut Liqueur,750ml Bottle,336.00,273.00,-19%,260.00,yes,Ekoyini retail base R260 (SHOP_PRICES)
+Grand Marnier Cordon Rouge,750ml Bottle,913.50,682.49,-25%,649.99,estimate,Shelf estimate
+Jagermeister Herbal Liqueur,750ml Bottle,440.99,309.75,-30%,295.00,yes,Ultra Liquors R295 (SHOP_PRICES)
+Kahlua Coffee Liqueur,750ml Bottle,430.50,335.99,-22%,319.99,yes,Checkers R319.99
+Malibu Coconut Rum Liqueur,750ml Bottle,388.50,283.49,-27%,269.99,estimate,Shelf estimate
+Nachtmusik Chocolate Liqueur,750ml Bottle,283.50,209.99,-26%,199.99,estimate,Cream-liqueur tier estimate
+Peach Schnapps (Relic),750ml Bottle,273.00,215.25,-21%,205.00,yes,Ekoyini retail base R205 (SHOP_PRICES)
+Ponchos Tequila Coffee,750ml Bottle,409.49,336.00,-18%,320.00,yes,Founder receipt price R336 (6 Nov 2026 changelog)
+Strawberry Lips,750ml Bottle,262.50,188.99,-28%,179.99,estimate,Shelf estimate
+Tequila Rose Cream Liqueur,750ml Bottle,430.50,314.99,-27%,299.99,estimate,Shelf estimate
+Tia Maria Coffee Liqueur,750ml Bottle,472.50,314.99,-33%,299.99,estimate,Same tier as Kahlua R319.99
+Angostura Aromatic Bitters,200ml Bottle,115.50,94.50,-18%,90.00,yes,Ekoyini retail base R90 (SHOP_PRICES)
+Appletiser Sparkling Apple Juice,1L,50.40,34.64,-31%,32.99,estimate,Shelf estimate
+Coca-Cola Original Taste Less Sugar,2L,47.25,28.34,-40%,26.99,yes,Checkers 6 x 2L R159.99 (R26.67 each)
+Liqui Fruit Cranberry Cooler,1L,57.75,34.64,-40%,32.99,estimate,Shelf estimate
+Monin Agave,700ml Bottle,367.50,230.99,-37%,219.99,estimate,Monin 700ml shelf estimate
+Monin Almond Orgeat,700ml Bottle,367.50,230.99,-37%,219.99,estimate,Monin 700ml shelf estimate
+Monin Blue Curaçao Syrup,700ml Bottle,367.50,230.99,-37%,219.99,estimate,Monin 700ml shelf estimate
+Monin Cherry,700ml Bottle,367.50,230.99,-37%,219.99,estimate,Monin 700ml shelf estimate
+Monin Crème Brûlée,700ml Bottle,367.50,230.99,-37%,219.99,estimate,Monin 700ml shelf estimate
+Monin Falernum,700ml Bottle,367.50,230.99,-37%,219.99,estimate,Monin 700ml shelf estimate
+Monin Grenadine,700ml Bottle,367.50,230.99,-37%,219.99,estimate,Monin 700ml shelf estimate
+Monin Kiwi Syrup,700ml Bottle,367.50,230.99,-37%,219.99,estimate,Monin 700ml shelf estimate
+Monin Lemon Pie / Tarte Citron,700ml Bottle,367.50,230.99,-37%,219.99,estimate,Monin 700ml shelf estimate
+Monin Lemon Tea / Citron,700ml Bottle,367.50,230.99,-37%,219.99,estimate,Monin 700ml shelf estimate
+Monin Melon,700ml Bottle,367.50,230.99,-37%,219.99,estimate,Monin 700ml shelf estimate
+Monin Spicy Mango,700ml Bottle,367.50,230.99,-37%,219.99,estimate,Monin 700ml shelf estimate
+Monin White Chocolate,700ml Bottle,367.50,230.99,-37%,219.99,estimate,Monin 700ml shelf estimate
+Red Bull Energy Drink,Can (355ml),273.00,176.34,-35%,167.94,estimate,6 cans; Shoprite R23.99 to PriceCheck R33.50 each
+Bonaqua Still Water,1.5L,29.40,18.89,-36%,17.99,estimate,Shelf estimate
+Thirsti Still Water,1.5L,23.10,18.90,-18%,18.00,estimate,Founder estimate R18 (CLAUDE.md)
+Tsitsikamma Sparkling Water,1L,27.30,18.89,-31%,17.99,estimate,Shelf estimate
+Tsitsikamma Still Water,1.5L,27.30,20.99,-23%,19.99,estimate,Shelf estimate
+Valpre Natural Spring Water,1.5L,31.50,19.94,-37%,18.99,estimate,Shelf estimate
+Valpre Sparkling Water,1L,30.45,17.84,-41%,16.99,estimate,Shelf estimate
+Beyerskloof Pinotage,750ml Bottle,197.95,128.39,-35%,119.99,estimate,Shelf estimate
+Kanonkop Kadette Cabernet,750ml Bottle,256.80,171.19,-33%,159.99,estimate,Shelf estimate
+Nederburg Baronne,750ml Bottle,144.45,117.69,-19%,109.99,estimate,Shelf estimate
+Nederburg Sauvignon Blanc,750ml Bottle,133.75,106.99,-20%,99.99,estimate,Shelf estimate
+Veuve Clicquot Yellow Label,750ml Bottle,1230.50,984.40,-20%,920.00,yes,Ekoyini retail base R920 (SHOP_PRICES)
