@@ -23,6 +23,7 @@
   <link rel="stylesheet" href="premium.css">
   <link rel="stylesheet" href="app.css">
   <link rel="stylesheet" href="home.css">
+  <link rel="stylesheet" href="home-app.css">
 </head>
 <body>
   <!-- ONBOARDING (first-run only) -->
@@ -82,7 +83,7 @@
     </div>
   </nav>
 
-  <main class="page mk" id="main">
+  <main class="page hx" id="main">
     <!-- INSTALL APP (only when the browser says it's installable) -->
     <div class="install-strip" id="installStrip">
       <img src="images/brand/ekoyini-icon.png" alt="">
@@ -91,279 +92,143 @@
       <button class="is-close" id="installClose" type="button" aria-label="Dismiss">&times;</button>
     </div>
 
-    <!-- ═══ HERO ═══ -->
-    <section class="mk-hero" aria-labelledby="heroTitle">
-      <div class="mk-wrap mk-hero-grid">
-        <div>
-          <div class="mk-eyebrow mk-rise"><span><span id="greetLabel">Good evening</span> · Drinks delivery, done properly</span></div>
-          <h1 class="mk-h1 mk-rise r1" id="heroTitle">Our kasi. Our brands. <em>Already on the way.</em></h1>
-          <p class="mk-hero-sub mk-rise r2">Ekoyini matches your order to an <strong>e-hailing driver already heading your way</strong> — drinks from your local taverns, at your door in around 30–45 minutes.</p>
 
-          <div class="mk-cta-row mk-rise r3">
-            <a href="shop.html" class="mk-btn mk-btn-primary">
-              Build your Cooler Box
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-            </a>
-            <a href="track.html" class="mk-btn mk-btn-ghost">Track an order</a>
-          </div>
-
-          <!-- Where + what: the functional heart of the page for returning users -->
-          <div class="mk-order mk-rise r4">
-            <div class="mk-order-row">
-              <div class="mk-order-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></div>
-              <div class="mk-order-field">
-                <label for="addressInput">Deliver to</label>
-                <input type="text" id="addressInput" placeholder="e.g. 12 Vilakazi St, Orlando West" autocomplete="street-address" value="">
-              </div>
-              <button class="mk-order-btn" type="button" onclick="saveAddress()">Save</button>
-            </div>
-            <form class="mk-order-row" role="search" onsubmit="event.preventDefault(); runSearch();">
-              <div class="mk-order-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></div>
-              <div class="mk-order-field">
-                <label for="searchInput">Looking for</label>
-                <input type="search" id="searchInput" placeholder="Black Label, KEM Gin, Hennessy…" enterkeyhint="search">
-              </div>
-              <button class="mk-order-btn go" type="submit" aria-label="Search">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-              </button>
-            </form>
-          </div>
-        </div>
-
-        <div class="mk-hero-media mk-rise r2">
-          <img
-            src="https://hercules-cdn.com/cdn-cgi/image/w=1100,quality=78,fit=scale-down,format=auto/file_NVkkEKlmGBWTXXMp08Gu9zhy"
-            srcset="https://hercules-cdn.com/cdn-cgi/image/w=640,quality=75,fit=scale-down,format=auto/file_NVkkEKlmGBWTXXMp08Gu9zhy 640w,
-                    https://hercules-cdn.com/cdn-cgi/image/w=1100,quality=78,fit=scale-down,format=auto/file_NVkkEKlmGBWTXXMp08Gu9zhy 1100w"
-            sizes="(min-width: 900px) 520px, 100vw"
-            alt="Friends laughing together on a stoep at golden hour with a cooler box of drinks"
-            fetchpriority="high" decoding="async">
-          <div class="mk-chip c2">
-            <div class="mk-chip-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg></div>
-            <div><b>Ride-Along</b><span>Driver already on your route</span></div>
-          </div>
-          <div class="mk-chip c1">
-            <div class="mk-chip-ic save"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" x2="5" y1="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></div>
-            <div><b>Cooler Box savings</b><span><span class="js-cooler-pct">5%</span> off from R<span class="js-cooler-min">1000</span>, automatically (until 8pm)</span></div>
-          </div>
-        </div>
+    <div class="hx-wrap">
+      <!-- Where you are, and whether we're delivering -->
+      <div class="hx-top">
+        <button class="hx-addr" type="button" id="addrBtn" aria-expanded="false" aria-controls="addrEdit">
+          <span class="hx-addr-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span>
+          <span class="hx-addr-text">
+            <span class="hx-addr-label">Deliver to</span>
+            <span class="hx-addr-value" id="addrValue">Add your address<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span>
+          </span>
+        </button>
+        <span class="hx-status" id="hxStatus"><span class="dot" aria-hidden="true"></span><span id="hxStatusText">Delivering now · 30–45 min</span></span>
       </div>
-    </section>
+      <form class="hx-addr-edit" id="addrEdit" onsubmit="event.preventDefault(); saveAddress();">
+        <label for="addressInput" class="sr-only">Delivery address</label>
+        <input type="text" id="addressInput" placeholder="e.g. 12 Vilakazi St, Motherwell NU10" autocomplete="street-address">
+        <button type="submit">Save</button>
+      </form>
 
-    <!-- ═══ TRUST STRIP ═══ -->
-    <div class="mk-trust" aria-label="Why Ekoyini">
-      <div class="mk-trust-row">
-        <div class="mk-trust-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span><b>30–45</b> min average</span></div>
-        <div class="mk-trust-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg><span>Live order tracking</span></div>
-        <div class="mk-trust-item mk-trust-stats" id="trustStrip" style="display:none;">
-          <span><b id="statProducts">—</b> products</span>
-          <span><b id="statTaverns">—</b> verified taverns</span>
-          <span><b id="statAreas">—</b> townships</span>
-        </div>
-        <div class="mk-trust-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg><span>18+ verified, always</span></div>
+      <!-- Search -->
+      <form class="hx-search" role="search" onsubmit="event.preventDefault(); runSearch();">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <label for="searchInput" class="sr-only">Search drinks</label>
+        <input type="search" id="searchInput" placeholder="Search Black Label, Hennessy, ice…" enterkeyhint="search">
+        <button type="submit">Search</button>
+      </form>
+
+      <!-- Promotions -->
+      <div class="hx-promos" id="hxPromos" aria-label="Deals">
+        <a class="hx-promo p1" href="shop.html">
+          <div class="hx-promo-copy">
+            <div class="hx-promo-kicker" id="coolerKicker">Cooler Box deal</div>
+            <h2><span class="js-cooler-pct">5%</span> off from R<span class="js-cooler-min">1000</span></h2>
+            <p>8% off from R2000. Applied automatically at checkout. <span class="hx-promo-timer" id="coolerTimer"></span></p>
+          </div>
+          <span class="hx-promo-cta">Fill your cooler <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span>
+          <div class="hx-promo-art" aria-hidden="true"><img src="images/brands/hennessy-vs-750ml-bottle.jpg" alt=""><img src="images/brands/carling-black-label-can.png" alt=""><img src="images/brands/savanna-dry.png" alt=""></div>
+        </a>
+        <a class="hx-promo p2" href="shop.html?cats=BRANDY,WHISKY,COGNAC,GIN,VODKA,RUM,TEQUILA,TEQUILA_PREMIUM,VODKA_PREMIUM,LIQUEUR">
+          <div class="hx-promo-copy">
+            <div class="hx-promo-kicker">Spirits, sealed</div>
+            <h2>Tamper-proof Safety Seal</h2>
+            <p>Add a R10 seal to any spirits order. Your bottle reaches you exactly as it left the shelf.</p>
+          </div>
+          <span class="hx-promo-cta">Shop spirits <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span>
+          <div class="hx-promo-art" aria-hidden="true"><img src="images/brands/johnnie-walker-black-label.png" alt=""><img src="images/brands/jameson-original-irish.png" alt=""></div>
+        </a>
+        <a class="hx-promo p3" href="shop.html?tag=BLACK_OWNED">
+          <div class="hx-promo-copy">
+            <div class="hx-promo-kicker">Proudly local</div>
+            <h2>Black-owned brands</h2>
+            <p>KEM Gin, Mofaya, Chillers Punch and more, made by our own people.</p>
+          </div>
+          <span class="hx-promo-cta">Shop local <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span>
+          <div class="hx-promo-art" aria-hidden="true"><img src="images/brands/kem-gin.png" alt=""><img src="images/brands/chillers-punch-caribbean-chaos.png" alt=""></div>
+        </a>
       </div>
+      <div class="hx-dots" id="hxDots" aria-hidden="true"><span class="on"></span><span></span><span></span></div>
+
+      <!-- Live Cooler Box progress (only when something is in the cart) -->
+      <div class="hx-cooler" id="hxCooler" aria-live="polite">
+        <div class="hx-cooler-row">
+          <div>
+            <div class="hx-cooler-title" id="hxCoolerTitle">Your Cooler Box</div>
+            <div class="hx-cooler-note" id="hxCoolerNote"></div>
+          </div>
+          <a class="hx-cooler-go" href="cart.html">View cart</a>
+        </div>
+        <div class="hx-cooler-bar"><div class="hx-cooler-fill" id="hxCoolerFill"></div></div>
+      </div>
+
+      <!-- Categories -->
+      <section class="hx-sec" aria-labelledby="catTitle">
+        <div class="hx-head"><h2 id="catTitle">Shop by category</h2><a href="shop.html">See all</a></div>
+        <div class="hx-cats" id="hxCats"></div>
+      </section>
+
+      <!-- Best sellers -->
+      <section class="hx-sec" aria-labelledby="bestTitle">
+        <div class="hx-head"><h2 id="bestTitle">Popular right now</h2><a href="shop.html">See all</a></div>
+        <div class="hx-rail" id="hxBest"><div class="hx-skel"></div><div class="hx-skel"></div><div class="hx-skel"></div></div>
+      </section>
+
+      <!-- Spirits -->
+      <section class="hx-sec" aria-labelledby="spiritTitle">
+        <div class="hx-head"><h2 id="spiritTitle">Top shelf</h2><a href="shop.html?cats=WHISKY,COGNAC,BRANDY,GIN,VODKA,VODKA_PREMIUM,TEQUILA,TEQUILA_PREMIUM,LIQUEUR,RUM">See all</a></div>
+        <div class="hx-rail" id="hxSpirits"><div class="hx-skel"></div><div class="hx-skel"></div><div class="hx-skel"></div></div>
+      </section>
+
+      <!-- Packs -->
+      <section class="hx-sec" aria-labelledby="packTitle">
+        <div class="hx-head"><h2 id="packTitle">Ready for the occasion</h2></div>
+        <div class="hx-packs">
+          <a class="hx-pack" href="shop.html?collection=braai">
+            <img loading="lazy" decoding="async" alt="" onerror="this.classList.add('broken')" src="https://hercules-cdn.com/cdn-cgi/image/w=720,quality=75,fit=scale-down,format=auto/file_pM2dUi23s1iZCBdV30SgUgVP">
+            <div><h3>Weekend braai</h3><p>Cold beers, ciders, mixers and ice for the fire.</p></div>
+          </a>
+          <a class="hx-pack" href="shop.html?collection=stokvel">
+            <img loading="lazy" decoding="async" alt="" onerror="this.classList.add('broken')" src="https://hercules-cdn.com/cdn-cgi/image/w=720,quality=75,fit=scale-down,format=auto/file_MJ3CkyocngpJlGA25b5PZux5">
+            <div><h3>Stokvel &amp; party</h3><p>Brandy, whisky and beer for the whole crew.</p></div>
+          </a>
+          <a class="hx-pack" href="shop.html?collection=festive">
+            <img loading="lazy" decoding="async" alt="" onerror="this.classList.add('broken')" src="https://hercules-cdn.com/cdn-cgi/image/w=720,quality=75,fit=scale-down,format=auto/file_ZWuB0Nu74eph2FxYRmL7SNtM">
+            <div><h3>Festive season</h3><p>Bubbly, whisky and everything to pour it with.</p></div>
+          </a>
+        </div>
+      </section>
+
+      <!-- Proudly local brands -->
+      <section class="hx-sec" aria-labelledby="brandTitle">
+        <div class="hx-head"><h2 id="brandTitle">Brands with a story</h2><a href="shop.html?tag=BLACK_OWNED">See all</a></div>
+        <div class="hx-brands" id="hxBrands"></div>
+      </section>
+
+      <!-- Our promise -->
+      <section class="hx-sec" aria-labelledby="promiseTitle">
+        <div class="hx-head"><h2 id="promiseTitle">Why Ekoyini</h2></div>
+        <div class="hx-promise">
+          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><b>30–45 minutes</b><span>A driver already on your route brings it.</span></div>
+          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg><b>Live tracking</b><span>Follow your order from shelf to gate.</span></div>
+          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg><b>Sealed &amp; checked</b><span>Safety Seal on spirits. ID checked at the door.</span></div>
+          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg><b>Pay your way</b><span>Card, Apple Pay, Google Pay or EFT.</span></div>
+        </div>
+      </section>
+
+      <!-- How it works -->
+      <section class="hx-sec" aria-labelledby="howTitle">
+        <div class="hx-head"><h2 id="howTitle">How it works</h2></div>
+        <div class="hx-how">
+          <div><em>1</em><p><b>Fill your cooler</b><span>Beer, spirits, mixers and ice in one order.</span></p></div>
+          <div><em>2</em><p><b>We match a ride</b><span>A driver already heading your way picks it up.</span></p></div>
+          <div><em>3</em><p><b>Cheers at your door</b><span>Show your ID. We only hand over to 18+.</span></p></div>
+        </div>
+      </section>
+
+      <div class="hx-18"><b>18+</b><span>We only sell to adults, and drivers check ID at the door. Enjoy it, share it, and never drink and drive.</span></div>
     </div>
-
-    <!-- ═══ RIDE-ALONG ═══ -->
-    <section class="mk-section" aria-labelledby="rideTitle">
-      <div class="mk-wrap">
-        <div class="mk-ride-grid">
-          <div class="mk-reveal">
-            <div class="mk-eyebrow">Ride-Along Delivery</div>
-            <h2 class="mk-h2" id="rideTitle">The driver was <em>already coming</em> your way.</h2>
-            <p class="mk-lede">No fleet of bikes sitting idle. When you order, we find an e-hailing driver whose trip already passes the tavern and your street — so your drinks hitch a ride. Faster for you, extra income for drivers from your community.</p>
-          </div>
-
-          <div class="mk-route mk-reveal d1" aria-label="Illustration: a driver picks up from your local tavern on a trip already heading to your street">
-            <div class="mk-route-top"><span class="mk-live" aria-hidden="true"></span>Driver matched<span class="mk-route-eta">~30–45 min</span></div>
-            <div class="mk-route-track" aria-hidden="true">
-              <div class="mk-route-line"></div>
-              <div class="mk-route-pass">already on this route</div>
-              <div class="mk-route-node n1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1.5-5h15L21 9"/><path d="M4 9v11h16V9"/><path d="M3 9h18"/><path d="M9 20v-6h6v6"/></svg></div>
-              <div class="mk-route-car"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg></div>
-              <div class="mk-route-node n2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg></div>
-            </div>
-            <div class="mk-route-labels"><span>Your local tavern</span><span>Your door</span></div>
-            <p class="mk-route-note"><b>Follow every step live</b> — from the tavern counter to your gate, with the driver's location once they're on the move.</p>
-          </div>
-        </div>
-
-        <div class="mk-steps">
-          <div class="mk-step mk-reveal"><div class="mk-step-num">01</div><div><h3>Fill your cooler</h3><p>Shop real stock from taverns and bottle stores near you.</p></div></div>
-          <div class="mk-step mk-reveal d1"><div class="mk-step-num">02</div><div><h3>We match a ride</h3><p>A driver already passing the tavern picks up your order.</p></div></div>
-          <div class="mk-step mk-reveal d2"><div class="mk-step-num">03</div><div><h3>Cheers at your door</h3><p>Track it live and show your ID — we only hand over to 18+.</p></div></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ═══ COOLER BOX ═══ -->
-    <section class="mk-section mk-cooler-sec" aria-labelledby="coolerTitle">
-      <div class="mk-wrap mk-cooler-grid">
-        <div class="mk-reveal">
-          <div class="mk-eyebrow">The Cooler Box</div>
-          <h2 class="mk-h2" id="coolerTitle">Pack it full. <em>Pay less.</em></h2>
-          <p class="mk-lede">A bottle, a couple of carry packs, mixers and ice — that's a proper cooler box. Every drink you add counts, and once you pass R<span class="js-cooler-min">1000</span> we take <span class="js-cooler-pct">5%</span> off automatically. No codes, no fine print.</p>
-          <div class="mk-cats" aria-label="Categories that count">
-            <span class="mk-cat">Beer</span><span class="mk-cat">Cider &amp; RTDs</span><span class="mk-cat">Gin</span><span class="mk-cat">Whisky</span><span class="mk-cat">Brandy</span><span class="mk-cat">Cognac</span><span class="mk-cat">Vodka</span><span class="mk-cat">Tequila</span><span class="mk-cat">Wine</span><span class="mk-cat">Bubbly</span><span class="mk-cat">Mixers</span><span class="mk-cat">Ice</span>
-          </div>
-          <p class="mk-cats-note">Every category counts toward your box.</p>
-          <div class="mk-cta-row">
-            <a href="shop.html" class="mk-btn mk-btn-primary">
-              Start your Cooler Box
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-            </a>
-          </div>
-        </div>
-
-        <div class="mk-cooler mk-reveal d1" id="coolerDemo" aria-label="Example Cooler Box">
-          <div class="mk-cooler-top">
-            <div>
-              <div class="mk-cooler-label">Example box</div>
-              <div class="mk-cooler-title">Saturday cooler</div>
-            </div>
-            <div class="mk-cooler-status" id="coolerDemoStatus" aria-live="polite">R0 so far</div>
-          </div>
-          <div class="mk-cooler-track"><div class="mk-cooler-fill" id="coolerDemoFill"></div></div>
-          <div class="mk-cooler-scale"><span>R0</span><span><b>R<span class="js-cooler-min">1000</span></b> · <span class="js-cooler-pct">5%</span> off</span></div>
-          <ul class="mk-cooler-items" id="coolerDemoItems">
-            <li data-amount="380"><span class="ci-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 22h8"/><path d="M7 10h10"/><path d="M12 15v7"/><path d="M12 15a5 5 0 0 0 5-5c0-2-.5-4-2-8H9c-1.5 4-2 6-2 8a5 5 0 0 0 5 5Z"/></svg></span>One bottle — gin, whisky or brandy<span class="ci-tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span></li>
-            <li data-amount="300"><span class="ci-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 11h1a3 3 0 0 1 0 6h-1"/><path d="M9 12v6"/><path d="M13 12v6"/><path d="M5 8v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8"/><path d="M4 8h14"/></svg></span>Two carry packs of beer or cider<span class="ci-tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span></li>
-            <li data-amount="60"><span class="ci-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 8 1.75 12.28a2 2 0 0 0 2 1.72h4.54a2 2 0 0 0 2-1.72L18 8"/><path d="M5 8h14"/><path d="m12 8 1-6h2"/></svg></span>Mixers — tonic, ginger ale, cola<span class="ci-tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span></li>
-            <li data-amount="30"><span class="ci-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12h20M12 2v20M20 16l-4-4 4-4M4 8l4 4-4 4M16 4l-4 4-4-4M8 20l4-4 4 4"/></svg></span>A bag of ice<span class="ci-tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span></li>
-          </ul>
-          <p class="mk-cooler-foot">Example amounts for illustration — real prices show in Shop, and the discount is worked out again at checkout.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- ═══ BRAND STORIES ═══ -->
-    <section class="mk-section mk-dark" aria-labelledby="brandsTitle">
-      <div class="mk-wrap">
-        <div class="mk-head mk-reveal">
-          <div class="mk-stripe" aria-hidden="true"></div>
-          <div class="mk-head-row" style="margin-top:20px;">
-            <div>
-              <div class="mk-eyebrow">Brand Stories</div>
-              <h2 class="mk-h2" id="brandsTitle">Pour something <em>with a story.</em></h2>
-              <p class="mk-lede">Black-owned distilleries, sisters running wine farms, local legends behind the label. We celebrate the people who built these brands — and make them easy to find.</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="mk-pillars">
-          <a class="mk-pillar mk-reveal" href="shop.html?tag=BLACK_OWNED">
-            <span class="mk-pillar-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 20h10"/><path d="M10 20c5.5-2.5.8-6.4 3-10"/><path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.900-3-4.2 2.8-.5 4.4 0 5.5.8z"/><path d="M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z"/></svg></span>
-            <span class="mk-pillar-body"><h3>Black-owned</h3><p>Founders still holding real ownership.</p></span>
-            <span class="mk-pillar-go"><span>Shop</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span>
-          </a>
-          <a class="mk-pillar mk-reveal d1" href="shop.html?tag=WOMEN_OWNED">
-            <span class="mk-pillar-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
-            <span class="mk-pillar-body"><h3>Women-owned</h3><p>Sisters, mothers and makers at the helm.</p></span>
-            <span class="mk-pillar-go"><span>Shop</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span>
-          </a>
-          <a class="mk-pillar mk-reveal d2" href="shop.html?tag=CELEBRITY_BACKED">
-            <span class="mk-pillar-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg></span>
-            <span class="mk-pillar-body"><h3>Celebrity-backed</h3><p>Icons with a real stake in the bottle.</p></span>
-            <span class="mk-pillar-go"><span>Shop</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span>
-          </a>
-        </div>
-
-        <div class="mk-rail mk-reveal d1" id="brandRail" aria-label="Featured brands"></div>
-
-        <p class="mk-honest mk-reveal">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.810 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>
-          <span>Every tag is checked against a real, current fact about who owns or backs the brand — and removed when that changes. That's why the list is short, and why you can trust it.</span>
-        </p>
-      </div>
-    </section>
-
-    <!-- ═══ OCCASIONS ═══ -->
-    <section class="mk-section" aria-labelledby="occTitle">
-      <div class="mk-wrap">
-        <div class="mk-head mk-head-row mk-reveal">
-          <div>
-            <div class="mk-eyebrow">Shop by occasion</div>
-            <h2 class="mk-h2" id="occTitle">Whatever the vibe, <em>it's sorted.</em></h2>
-          </div>
-          <a class="mk-link" href="shop.html">See the full menu</a>
-        </div>
-        <div class="mk-occ-rail">
-          <a class="mk-occ mk-reveal" href="shop.html?collection=braai">
-            <img loading="lazy" decoding="async" alt="Meat on a braai beside a cooler box of cold beers at sunset"
-              src="https://hercules-cdn.com/cdn-cgi/image/w=720,quality=75,fit=scale-down,format=auto/file_pM2dUi23s1iZCBdV30SgUgVP">
-            <div>
-              <span class="mk-occ-tag">Weekend</span>
-              <h3>Weekend Braai Pack</h3>
-              <p>Cold beers, ciders, mixers and ice for the fire.</p>
-              <span class="mk-occ-cta">Shop the pack <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span>
-            </div>
-          </a>
-          <a class="mk-occ mk-reveal d1" href="shop.html?collection=stokvel">
-            <img loading="lazy" decoding="async" alt="Friends dancing at an evening stokvel party under string lights"
-              src="https://hercules-cdn.com/cdn-cgi/image/w=720,quality=75,fit=scale-down,format=auto/file_MJ3CkyocngpJlGA25b5PZux5">
-            <div>
-              <span class="mk-occ-tag">Most loved</span>
-              <h3>Stokvel &amp; Party Case</h3>
-              <p>Brandy, whisky and beer by the case — for the whole crew.</p>
-              <span class="mk-occ-cta">Shop the case <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span>
-            </div>
-          </a>
-          <a class="mk-occ mk-reveal d2" href="shop.html?collection=festive">
-            <img loading="lazy" decoding="async" alt="Guests clinking glasses beside a crate of sparkling wine and whisky"
-              src="https://hercules-cdn.com/cdn-cgi/image/w=720,quality=75,fit=scale-down,format=auto/file_ZWuB0Nu74eph2FxYRmL7SNtM">
-            <div>
-              <span class="mk-occ-tag">Festive season</span>
-              <h3>Festive Season Crate</h3>
-              <p>Bubbly, whisky, beer and everything to pour it with.</p>
-              <span class="mk-occ-cta">Shop the crate <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span>
-            </div>
-          </a>
-        </div>
-      </div>
-    </section>
-
-    <!-- ═══ LOCAL TAVERNS ═══ -->
-    <section class="mk-section mk-local" id="storesSection" aria-labelledby="storesTitle">
-      <div class="mk-wrap">
-        <div class="mk-head mk-head-row mk-reveal">
-          <div>
-            <div class="mk-eyebrow">From your area</div>
-            <h2 class="mk-h2" id="storesTitle">Your local, <em>now on speed dial.</em></h2>
-            <p class="mk-lede">Every order is filled by a real tavern or bottle store in the community — the same spots you already know, with the money staying in the kasi.</p>
-          </div>
-          <a class="mk-link" href="shop.html">View all stores</a>
-        </div>
-        <div class="hood-filter" id="hoodFilter" aria-label="Filter stores by area"></div>
-        <div class="mk-store-rail" id="storeScroll" aria-live="polite">
-          <div class="skel-store-card"></div>
-          <div class="skel-store-card"></div>
-          <div class="skel-store-card"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ═══ CLOSING BAND ═══ -->
-    <section class="mk-close" aria-labelledby="closeTitle">
-      <div class="mk-wrap mk-close-grid">
-        <div class="mk-reveal">
-          <div class="mk-stripe" aria-hidden="true" style="margin-bottom:22px;"></div>
-          <div class="mk-eyebrow">Tonight's sorted</div>
-          <h2 class="mk-h2" id="closeTitle">Fill the cooler. <em>We'll catch a ride.</em></h2>
-          <p class="mk-lede">Local taverns, proudly local brands, and a driver already heading your way.</p>
-          <div class="mk-cta-row">
-            <a href="shop.html" class="mk-btn mk-btn-primary">
-              Shop now
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-            </a>
-            <a href="#storesSection" class="mk-btn mk-btn-ghost">See local stores</a>
-          </div>
-        </div>
-        <div class="mk-18 mk-reveal d1">
-          <div class="mk-18-num">18+</div>
-          <p>We only sell to adults, and drivers check ID at the door. Enjoy it, share it, and never drink and drive.</p>
-        </div>
-      </div>
-    </section>
 
     <!-- ═══ FOOTER ═══ -->
     <footer class="mk-footer">
@@ -391,6 +256,10 @@
       </div>
     </footer>
   </main>
+
+  <a href="cart.html" class="hx-cartbar" id="hxCartBar" hidden aria-label="View cart">
+    <span class="n" id="hxCartN">0</span><span class="l">View cart</span><span class="t" id="hxCartT">R0.00</span>
+  </a>
 
   <!-- BOTTOM NAV -->
   <nav class="bottom-nav" aria-label="App">
@@ -423,24 +292,237 @@
   <script src="auth.js"></script>
   <script src="script.js"></script>
   <script src="pricing.js"></script>
+  <script src="shelf-order.js"></script>
   <script>
   renderNavAuth();
   document.getElementById('footerYear').textContent = new Date().getFullYear();
 
-  // Store names/areas come from the database — escape before innerHTML.
-  function escapeHtml(value) {
-    return String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  }
-
-  // ── COOLER BOX COPY — read from pricing.js so the page can never
-  // advertise a threshold the checkout doesn't honour. ──
-  const COOLER_MIN = (window.EkoyiniPricing && EkoyiniPricing.COOLER_MIN_SUBTOTAL) || 1000;
-  const COOLER_PCT = (window.EkoyiniPricing && EkoyiniPricing.COOLER_DISCOUNT_PCT) || 0.05;
+  // ── Cooler Box rules come from pricing.js, so the page can never promise
+  // something checkout doesn't honour. ──
+  const P = window.EkoyiniPricing || {};
+  const COOLER_MIN = P.COOLER_MIN_SUBTOTAL || 1000;
+  const COOLER_PCT = P.COOLER_DISCOUNT_PCT || 0.05;
   document.querySelectorAll('.js-cooler-min').forEach(el => { el.textContent = COOLER_MIN; });
   document.querySelectorAll('.js-cooler-pct').forEach(el => { el.textContent = Math.round(COOLER_PCT * 100) + '%'; });
 
-  // ── BRAND STORIES — only brands whose tags are set in the catalogue
-  // (see README "Brand Story Tags"). Tags here mirror skus.csv exactly. ──
+  // ── Status + Cooler Box clock (SA time). Deals run 04:00–20:00. ──
+  function saNow() { return new Date(Date.now() + 2 * 3600 * 1000); }
+  function updateClock() {
+    const t = saNow();
+    const mins = t.getUTCHours() * 60 + t.getUTCMinutes();
+    const open = mins >= 4 * 60 && mins < 20 * 60;
+    const timer = document.getElementById('coolerTimer');
+    const kicker = document.getElementById('coolerKicker');
+    if (open) {
+      const left = 20 * 60 - mins;
+      const h = Math.floor(left / 60), m = left % 60;
+      timer.textContent = `Ends 8pm, ${h ? h + 'h ' : ''}${m}m left.`;
+      kicker.textContent = 'Cooler Box deal · on now';
+    } else {
+      timer.textContent = 'Back at 4am.';
+      kicker.textContent = 'Cooler Box deal · back at 4am';
+    }
+    const hour = t.getUTCHours();
+    document.getElementById('hxStatusText').textContent =
+      (hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening') + ' · 30–45 min';
+  }
+  updateClock();
+  setInterval(updateClock, 30000);
+
+  // ── Address ──
+  const addrEdit = document.getElementById('addrEdit');
+  const addrBtn = document.getElementById('addrBtn');
+  function renderAddress() {
+    const a = EkoyiniAddress.get();
+    const v = document.getElementById('addrValue');
+    v.firstChild.textContent = a || 'Add your address';
+    v.classList.toggle('is-empty', !a);
+    document.getElementById('addressInput').value = a;
+  }
+  addrBtn.onclick = () => {
+    const open = !addrEdit.classList.contains('open');
+    addrEdit.classList.toggle('open', open);
+    addrBtn.setAttribute('aria-expanded', String(open));
+    if (open) document.getElementById('addressInput').focus();
+  };
+  function saveAddress() {
+    const val = document.getElementById('addressInput').value.trim();
+    if (!val) return;
+    EkoyiniAddress.save(val);
+    renderAddress();
+    addrEdit.classList.remove('open');
+    addrBtn.setAttribute('aria-expanded', 'false');
+    showToast('Address saved');
+  }
+  renderAddress();
+
+  function runSearch() {
+    const q = document.getElementById('searchInput').value.trim();
+    window.location.href = q ? `shop.html?q=${encodeURIComponent(q)}` : 'shop.html';
+  }
+
+  // ── Promo dots follow the swipe ──
+  const promos = document.getElementById('hxPromos');
+  promos.addEventListener('scroll', () => {
+    const i = Math.round(promos.scrollLeft / promos.clientWidth);
+    document.querySelectorAll('#hxDots span').forEach((d, k) => d.classList.toggle('on', k === i));
+  }, { passive: true });
+
+  // ── Products: categories, best sellers, top shelf, quick add ──
+  let products = [];
+  const byId = new Map();
+  const CATEGORY_TILES = [
+    { label: 'Beer', cats: ['BEER'], pick: ['Carling Black Label|Can (500ml)', 'Castle Lite|Can (500ml)'] },
+    { label: 'Ciders & RTDs', cats: ['CIDER_RTD'], pick: ['Savanna Dry|Dumpy (330ml)'] },
+    { label: 'Whisky', cats: ['WHISKY'], pick: ['Johnnie Walker Black Label|750ml Bottle'] },
+    { label: 'Brandy', cats: ['BRANDY'], pick: ['Klipdrift Export|750ml Bottle'] },
+    { label: 'Cognac', cats: ['COGNAC'], pick: ['Hennessy VS|750ml Bottle'] },
+    { label: 'Gin', cats: ['GIN'], pick: ['Tanqueray London Dry Export|750ml Bottle'] },
+    { label: 'Vodka', cats: ['VODKA', 'VODKA_PREMIUM'], pick: ['Absolut Original Blue|750ml Bottle'] },
+    { label: 'Tequila', cats: ['TEQUILA', 'TEQUILA_PREMIUM'], pick: ['Olmeca Reposado|750ml Bottle', 'Don Julio Blanco|750ml Bottle'] },
+    { label: 'Liqueurs', cats: ['LIQUEUR'], pick: ['Amarula Original Cream|750ml Bottle'] },
+    { label: 'Wine', cats: ['WINE', 'WINE_BOX'], pick: ['4th Street Sweet Red|750ml Bottle'] },
+    { label: 'Bubbly', cats: ['SPARKLING', 'CHAMPAGNE'], pick: ['Moet & Chandon Imperial Brut|750ml Bottle'] },
+    { label: 'Cold drinks', cats: ['MIXER'], pick: ['Appletiser Sparkling Apple Juice|1L', 'Coca-Cola Original Taste Less Sugar|2L'] },
+    { label: 'Energy', cats: ['ENERGY_DRINK'], pick: ['Red Bull Energy Drink|Can (250ml)', 'Mofaya Original|Can (500ml)'] },
+    { label: 'Water & ice', cats: ['WATER', 'ICE'], pick: ['Ekoyini Ice Bag|1kg', 'Aquelle Still Water|1.5L'] },
+  ];
+  // Fast movers from the founder's stock receipts.
+  const BEST = ['Carling Black Label|Can (500ml)', 'Castle Lite|Can (500ml)', 'Savanna Dry|Dumpy (330ml)', 'Heineken|Dumpy (330ml)',
+    'Bernini Blush|Can (500ml)', 'Brutal Fruit Ruby Apple|Can (500ml)', 'Corona Extra|Dumpy (355ml)', 'Bacardi Breezer Watermelon|Can (500ml)',
+    'Red Bull Energy Drink|Can (250ml)', 'Ekoyini Ice Bag|2kg'];
+  const SPIRITS = ['Hennessy VS|750ml Bottle', 'Jameson Original Irish|750ml Bottle', 'Klipdrift Premium|750ml Bottle', 'Jagermeister Herbal Liqueur|750ml Bottle',
+    'Tanqueray London Dry Export|750ml Bottle', 'Ponchos Tequila Coffee|750ml Bottle', 'Johnnie Walker Black Label|750ml Bottle', 'Amarula Original Cream|750ml Bottle',
+    'Olmeca Reposado|750ml Bottle', 'Jameson Select Reserve|750ml Bottle'];
+
+  const keyOf = (p) => `${p.name}|${p.bottleFormat}`;
+  const findKey = (k) => products.find((p) => keyOf(p) === k);
+  const priced = (p) => p && p.retailSingleZAR > 0 && p.stock > 0;
+  const packLabel = (p) => p.packSize > 1 ? `${p.bottleFormat} · ${p.packSize}-pack` : p.bottleFormat;
+  const imgTag = (p, cls = '') => p && p.imageUrl
+    ? `<img class="${cls}" src="${escapeHtml(encodeURI(p.imageUrl))}" alt="" loading="lazy" decoding="async">`
+    : `<span class="ph" aria-hidden="true">${escapeHtml((p && p.name || '?')[0])}</span>`;
+
+  function renderCats() {
+    document.getElementById('hxCats').innerHTML = CATEGORY_TILES.map((t) => {
+      const hero = t.pick.map(findKey).find((p) => p && p.imageUrl)
+        || products.find((p) => t.cats.includes(p.category) && p.imageUrl);
+      return `<a class="hx-cat" href="shop.html?cats=${t.cats.join(',')}">
+        <span class="hx-cat-img">${hero ? imgTag(hero) : ''}</span><span>${escapeHtml(t.label)}</span></a>`;
+    }).join('');
+  }
+
+  function cardHtml(p) {
+    const qty = EkoyiniCart.get()[p.id] || 0;
+    const ctl = qty > 0
+      ? `<span class="hx-step"><button type="button" data-dec="${p.id}" aria-label="One less ${escapeHtml(p.name)}">−</button><b>${qty}</b><button type="button" data-inc="${p.id}" aria-label="One more ${escapeHtml(p.name)}">+</button></span>`
+      : `<button type="button" class="hx-add" data-inc="${p.id}" aria-label="Add ${escapeHtml(p.name)} to cart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>`;
+    return `<div class="hx-prod" data-card="${p.id}">
+      <div class="hx-prod-img"><a class="hx-prod-link" href="shop.html?q=${encodeURIComponent(p.name)}" aria-label="${escapeHtml(p.name)}">${imgTag(p)}</a>${ctl}</div>
+      <div class="hx-prod-price">${formatRand(p.retailSingleZAR)}</div>
+      <div class="hx-prod-name">${escapeHtml(p.name)}</div>
+      <div class="hx-prod-meta">${escapeHtml(packLabel(p))}</div>
+    </div>`;
+  }
+
+  function renderRail(el, keys, fallbackCats) {
+    let list = keys.map(findKey).filter(priced);
+    if (list.length < 6 && fallbackCats) {
+      const extra = products.filter((p) => fallbackCats.includes(p.category) && priced(p) && !list.includes(p));
+      list = list.concat(extra).slice(0, 10);
+    }
+    el.innerHTML = list.length ? list.map(cardHtml).join('') : '<p class="hx-sub">Nothing in stock here right now.</p>';
+  }
+
+  function renderAll() {
+    renderCats();
+    renderRail(document.getElementById('hxBest'), BEST, ['BEER', 'CIDER_RTD']);
+    renderRail(document.getElementById('hxSpirits'), SPIRITS, ['WHISKY', 'COGNAC', 'BRANDY', 'GIN']);
+  }
+
+  function rerenderCard(id) {
+    const p = byId.get(id);
+    if (!p) return;
+    document.querySelectorAll(`[data-card="${CSS.escape(id)}"]`).forEach((el) => { el.outerHTML = cardHtml(p); });
+  }
+
+  function changeQty(id, delta) {
+    const p = byId.get(id);
+    if (!priced(p)) return;
+    const cart = EkoyiniCart.get();
+    const next = (Number(cart[id]) || 0) + delta;
+    if (next <= 0) delete cart[id]; else cart[id] = Math.min(next, p.stock || 99);
+    EkoyiniCart.save(cart);
+    rerenderCard(id);
+    if (delta > 0 && next === 1) showToastTop(`Added ${p.name}`);
+    if (delta > 0 && navigator.vibrate) { try { navigator.vibrate(8); } catch {} }
+  }
+  document.getElementById('main').addEventListener('click', (e) => {
+    const inc = e.target.closest('[data-inc]');
+    const dec = e.target.closest('[data-dec]');
+    if (inc) { e.preventDefault(); changeQty(inc.dataset.inc, 1); }
+    else if (dec) { e.preventDefault(); changeQty(dec.dataset.dec, -1); }
+  });
+
+  // ── Cart bar + live Cooler Box progress ──
+  function cartTotals() {
+    let count = 0, total = 0;
+    Object.entries(EkoyiniCart.get()).forEach(([id, q]) => {
+      const n = Number(q) || 0;
+      count += n;
+      const p = byId.get(id);
+      if (p && p.retailSingleZAR > 0) total += p.retailSingleZAR * n;
+    });
+    return { count, total };
+  }
+  function updateCartUi() {
+    const { count, total } = cartTotals();
+    document.getElementById('navCartCount').textContent = count;
+    const bn = document.getElementById('bnavCartCount');
+    bn.textContent = count;
+    bn.style.display = count > 0 ? 'flex' : 'none';
+    const bar = document.getElementById('hxCartBar');
+    document.getElementById('hxCartN').textContent = count;
+    document.getElementById('hxCartT').textContent = formatRand(total);
+    bar.hidden = count <= 0 || !products.length;
+    document.body.classList.toggle('hx-has-cart', !bar.hidden);
+
+    const box = document.getElementById('hxCooler');
+    if (!products.length || total <= 0) { box.classList.remove('show'); return; }
+    box.classList.add('show');
+    const unlocked = total >= COOLER_MIN;
+    const big = total >= 2000;
+    box.classList.toggle('unlocked', unlocked);
+    document.getElementById('hxCoolerFill').style.width = Math.min(100, (total / (unlocked ? 2000 : COOLER_MIN)) * 100) + '%';
+    document.getElementById('hxCoolerTitle').textContent = `Your Cooler Box · ${formatRand(total)}`;
+    document.getElementById('hxCoolerNote').innerHTML = big
+      ? '<b>8% off unlocked</b> (until 8pm)'
+      : unlocked
+        ? `<b>${Math.round(COOLER_PCT * 100)}% off unlocked.</b> Add ${formatRand(2000 - total)} more for 8% off.`
+        : `Add <b>${formatRand(COOLER_MIN - total)}</b> more for ${Math.round(COOLER_PCT * 100)}% off.`;
+  }
+  window.addEventListener('ekoyini:cart-updated', () => { updateCartUi(); });
+
+  async function loadProducts() {
+    try {
+      const res = await fetch('/api/products');
+      if (!res.ok) throw new Error('Bad response');
+      products = await res.json();
+      products.forEach((p) => byId.set(p.id, p));
+      EkoyiniCart.reconcile(products);
+      renderAll();
+      updateCartUi();
+    } catch (err) {
+      console.error('Failed to load products:', err);
+      ['hxBest', 'hxSpirits'].forEach((id) => {
+        document.getElementById(id).innerHTML = '<p class="hx-sub">Couldn\'t load drinks right now. <a href="shop.html">Open the shop</a></p>';
+      });
+    }
+  }
+  loadProducts();
+  updateCartUi();
+
+  // ── Brands with a story (tags mirror skus.csv) ──
   const BRAND_STORIES = [
     { name: 'KEM Gin', img: 'images/brands/kem-gin.png', q: 'KEM', tags: ['Black-owned', 'Women-owned'],
       story: 'Crafted by the Koloko sisters in Matatiele, Eastern Cape.' },
@@ -459,57 +541,11 @@
     { name: 'Casamigos', img: 'images/brands/casamigos-blanco.png', q: 'Casamigos', tags: ['Celebrity-backed'],
       story: 'The tequila George Clooney started with his friends.' },
   ];
-  document.getElementById('brandRail').innerHTML = BRAND_STORIES.map(b => `
-    <a class="mk-brand" href="shop.html?q=${encodeURIComponent(b.q)}">
-      <div class="mk-brand-img"><img src="${encodeURI(b.img)}" alt="${escapeHtml(b.name)} bottle" loading="lazy" decoding="async"></div>
-      <div class="mk-brand-body">
-        <div class="mk-tags">${b.tags.map(t => `<span class="mk-tag">${t}</span>`).join('')}</div>
-        <h3>${escapeHtml(b.name)}</h3>
-        <p>${escapeHtml(b.story)}</p>
-      </div>
+  document.getElementById('hxBrands').innerHTML = BRAND_STORIES.map(b => `
+    <a class="hx-brand" href="shop.html?q=${encodeURIComponent(b.q)}">
+      <span class="hx-brand-img"><img src="${encodeURI(b.img)}" alt="" loading="lazy" decoding="async"></span>
+      <span><span class="tag">${escapeHtml(b.tags[0])}</span><h3>${escapeHtml(b.name)}</h3><p>${escapeHtml(b.story)}</p></span>
     </a>`).join('');
-
-  // ── SCROLL REVEAL + COOLER DEMO ──
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const revealEls = document.querySelectorAll('.mk-reveal');
-  if ('IntersectionObserver' in window && !reduceMotion) {
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach((e) => {
-        if (!e.isIntersecting) return;
-        e.target.classList.add('in');
-        io.unobserve(e.target);
-        if (e.target.id === 'coolerDemo') playCoolerDemo();
-      });
-    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.12 });
-    revealEls.forEach((el) => io.observe(el));
-  } else {
-    revealEls.forEach((el) => el.classList.add('in'));
-    playCoolerDemo(true);
-  }
-
-  function setCoolerDemo(total) {
-    const box = document.getElementById('coolerDemo');
-    const pct = Math.min(100, (total / COOLER_MIN) * 100);
-    const unlocked = total >= COOLER_MIN;
-    document.getElementById('coolerDemoFill').style.width = pct + '%';
-    box.classList.toggle('unlocked', unlocked);
-    document.getElementById('coolerDemoStatus').textContent = unlocked
-      ? `${Math.round(COOLER_PCT * 100)}% off · you save R${(total * COOLER_PCT).toFixed(2)}`
-      : `R${total} so far`;
-  }
-
-  function playCoolerDemo(instant) {
-    const items = Array.from(document.querySelectorAll('#coolerDemoItems li'));
-    let total = 0;
-    items.forEach((li, i) => {
-      const add = () => {
-        total += Number(li.dataset.amount);
-        li.classList.add('added');
-        setCoolerDemo(total);
-      };
-      if (instant) add(); else setTimeout(add, 450 + i * 650);
-    });
-  }
 
   // ── INSTALLABLE APP ──
   if ('serviceWorker' in navigator) {
@@ -588,104 +624,6 @@
   }
   initFirstRun();
 
-  const saved = EkoyiniAddress.get();
-  if (saved) document.getElementById('addressInput').value = saved;
-
-  function saveAddress() {
-    const val = document.getElementById('addressInput').value.trim();
-    if (val) { EkoyiniAddress.save(val); showToast('Address saved'); }
-  }
-
-  function runSearch() {
-    const q = document.getElementById('searchInput').value.trim();
-    window.location.href = q ? `shop.html?q=${encodeURIComponent(q)}` : 'shop.html';
-  }
-
-  async function loadTrustStrip() {
-    try {
-      const res = await fetch('/api/stats');
-      if (!res.ok) throw new Error('Bad response');
-      const stats = await res.json();
-      document.getElementById('statProducts').textContent = stats.products;
-      document.getElementById('statTaverns').textContent = stats.taverns;
-      document.getElementById('statAreas').textContent = stats.areas;
-      document.getElementById('trustStrip').style.display = 'flex';
-    } catch (err) {
-      console.error('Failed to load trust stats:', err);
-    }
-  }
-  loadTrustStrip();
-
-  function updateBadges() {
-    const count = EkoyiniCart.count();
-    document.getElementById('navCartCount').textContent = count;
-    const bnav = document.getElementById('bnavCartCount');
-    bnav.textContent = count;
-    bnav.style.display = count > 0 ? 'flex' : 'none';
-  }
-  window.addEventListener('ekoyini:cart-updated', updateBadges);
-  updateBadges();
-
-  const h = saHour();
-  document.getElementById('greetLabel').textContent = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
-
-  let allTaverns = [];
-  let activeHood = 'All';
-
-  async function loadStores() {
-    const scroll = document.getElementById('storeScroll');
-    try {
-      const res = await fetch('/api/taverns');
-      if (!res.ok) throw new Error('Bad response');
-      allTaverns = await res.json();
-      if (allTaverns.length === 0) {
-        document.getElementById('hoodFilter').innerHTML = '';
-        scroll.innerHTML = '<div class="store-empty">No stores nearby yet — check back soon.</div>';
-        return;
-      }
-      renderHoodFilter();
-      renderStores();
-    } catch (err) {
-      console.error('Failed to load stores:', err);
-      scroll.innerHTML = '<div class="store-empty">Couldn\'t load nearby stores right now.</div>';
-    }
-  }
-
-  function renderHoodFilter() {
-    const hoods = ['All', ...new Set(allTaverns.map(t => t.area))];
-    const filter = document.getElementById('hoodFilter');
-    filter.innerHTML = hoods.map((h, i) => `
-      <button type="button" class="pill-tag ${h === activeHood ? 'active' : ''}" data-hood-index="${i}" aria-pressed="${h === activeHood}">${h === 'All' ? 'All areas' : escapeHtml(h)}</button>
-    `).join('');
-    filter.querySelectorAll('[data-hood-index]').forEach((el) => {
-      el.onclick = () => setHood(hoods[+el.dataset.hoodIndex]);
-    });
-  }
-
-  function setHood(hood) {
-    activeHood = hood;
-    renderHoodFilter();
-    renderStores();
-  }
-
-  function renderStores() {
-    const scroll = document.getElementById('storeScroll');
-    const filtered = activeHood === 'All' ? allTaverns : allTaverns.filter(t => t.area === activeHood);
-    if (filtered.length === 0) {
-      scroll.innerHTML = `<div class="store-empty">No stores in ${escapeHtml(activeHood)} yet — try another area.</div>`;
-      return;
-    }
-    scroll.innerHTML = filtered.map((t) => `
-      <a class="mk-store" href="shop.html">
-        <div class="mk-store-mono" aria-hidden="true">${escapeHtml((t.name || '?')[0].toUpperCase())}</div>
-        <div class="mk-store-body">
-          <div class="mk-store-name">${escapeHtml(t.name)}</div>
-          <div class="mk-store-area">${escapeHtml(t.area)}</div>
-        </div>
-        <span class="mk-store-tag">Local</span>
-      </a>`).join('');
-  }
-  loadStores();
   </script>
   <script src="/analytics.js" defer></script>
 </body>
