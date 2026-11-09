@@ -43,7 +43,7 @@ const FORMAT_PHOTO_MAP = {
   "[\"Blue Curacao (Peddler's)\",\"750ml Bottle\"]": "/images/brands/peddlers-blue-curacao.png",
   "[\"Blue Curacao Apparently\",\"750ml Bottle\"]": "/images/brands/generic Blue Curacao .jpg",
   "[\"Bombay Sapphire\",\"750ml Bottle\"]": "/images/brands/bombay-sapphire.png",
-  "[\"Bonaqua Still Water\",\"500ml\"]": "/images/brands/bonaqua-still-water.png",
+  "[\"Bonaqua Still Water\",\"500ml\"]": "/images/brands/bonaqua-still-500ml.webp",
   "[\"Breezer (Red/Watermelon)\",\"Dumpy (275ml)\"]": "/images/brands/breezer-watermelon.png",
   "[\"Breezer Blackberry\",\"Can (500ml)\"]": "/images/brands/breezer-blackberry-can.png",
   "[\"Breezer Blackberry\",\"Dumpy (275ml)\"]": "/images/brands/breezer-blackberry.png",

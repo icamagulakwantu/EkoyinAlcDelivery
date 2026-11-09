@@ -54,6 +54,20 @@ test('six-packs for beer, cider and RTD cans, dumpies and 500ml NRBs; cold drink
   assert.equal(C.packSizeFor('Castle Lite', 'Quart (660ml)', 'BEER'), 1);
   assert.equal(C.packSizeFor('Red Bull Energy Drink', 'Can (250ml)', 'ENERGY_DRINK'), 1);
   assert.equal(C.packSizeFor('Coca-Cola Original', 'Can (500ml)', 'MIXER'), 1);
-  assert.equal(C.packSizeFor('Mofaya Original', 'Can (500ml)', 'MIXER'), 6);
+  assert.equal(C.packSizeFor('Mofaya Original', 'Can (500ml)', 'ENERGY_DRINK'), 6);
   assert.equal(C.packSizeFor('Schweppes Tonic Water', 'Can (200ml)', 'MIXER'), 6);
+});
+
+test('Monin syrups are R85; shelf categories are sensible', () => {
+  const rows = fs.readFileSync(path.join(__dirname, '../prisma/data/skus.csv'), 'utf8').trim().split(/\r?\n/).slice(1).map((l) => l.split(','));
+  const monin = rows.filter((r) => /^Monin /.test(r[0]));
+  assert.ok(monin.length >= 13);
+  for (const r of monin) assert.equal(C.finalPriceFor(r[0], r[2]), 85, r[0]);
+  const cat = (name) => rows.find((r) => r[0] === name)[1];
+  assert.equal(cat('Ponchos Tequila Coffee'), 'TEQUILA'); // with the other Ponchos
+  assert.equal(cat('Mofaya Original'), 'ENERGY_DRINK');
+  assert.equal(cat('Mofaya Orange Ting'), 'ENERGY_DRINK');
+  assert.equal(cat('Red Bull Energy Drink'), 'ENERGY_DRINK');
+  assert.equal(cat('Extreme Energy'), 'CIDER_RTD'); // alcoholic, not an energy drink
+  for (const r of rows.filter((x) => /Cordial|Syrup/.test(x[0]))) assert.equal(r[11], 'NON_ALCOHOL', r[0]);
 });

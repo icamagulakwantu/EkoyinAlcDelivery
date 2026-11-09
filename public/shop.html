@@ -296,6 +296,7 @@
   <script src="auth.js"></script>
   <script src="script.js"></script>
   <script src="pricing.js"></script>
+  <script src="shelf-order.js"></script>
   <script>
   renderNavAuth();
 
@@ -421,13 +422,16 @@
   const AISLES = [
     { key: 'beer', label: 'Beer & Cider', sub: 'Cold ones for the stoep — six-packs of dumpies and cans, quarts, and RTDs.', cats: ['BEER', 'CIDER_RTD'],
       img: 'https://images.unsplash.com/photo-1608270586620-248524c67de9?auto=format&fit=crop&w=800&q=80' },
-    { key: 'liquor', label: 'Spirits', sub: 'Whisky, gin, vodka, brandy, tequila, and more.', cats: ['BRANDY', 'WHISKY', 'COGNAC', 'GIN', 'VODKA', 'VODKA_PREMIUM', 'TEQUILA', 'TEQUILA_PREMIUM', 'LIQUEUR'],
+    { key: 'liquor', label: 'Spirits', sub: 'Whisky, gin, vodka, brandy, tequila, and more.', cats: ['BRANDY', 'WHISKY', 'COGNAC', 'GIN', 'VODKA', 'VODKA_PREMIUM', 'RUM', 'TEQUILA', 'TEQUILA_PREMIUM', 'LIQUEUR'],
       img: 'https://images.unsplash.com/photo-1527281400683-1aae777175f8?auto=format&fit=crop&w=800&q=80' },
     { key: 'wine', label: 'Wine & Bubbly', sub: 'Reds, whites, and something to pop for the occasion.', cats: ['WINE', 'WINE_BOX', 'SPARKLING', 'CHAMPAGNE'],
       img: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=800&q=80' },
-    { key: 'mixers', label: 'Mixers & Essentials', sub: 'Everything else your cooler box needs.', cats: ['MIXER', 'WATER', 'ICE'],
+    { key: 'mixers', label: 'Mixers & Essentials', sub: 'Cold drinks, energy drinks, water and ice for your cooler box.', cats: ['MIXER', 'ENERGY_DRINK', 'WATER', 'ICE', 'WATER_ICE'],
       img: 'https://images.unsplash.com/photo-1621263764928-df1444c5e859?auto=format&fit=crop&w=800&q=80' },
   ];
+
+  // Shelf order is shared with the server and admin (shelf-order.js).
+  const { shelfOf, compareShelf } = window.EkoyiniShelf;
 
   function aisleIndexForCategory(cat) {
     return AISLES.findIndex(a => a.cats.includes(cat));
@@ -574,12 +578,15 @@
     const filtering = !!(searchQuery || showFavoritesOnly || activeBrandFilters.size || categoryFilter);
     document.getElementById('resultCount').textContent = filtering && filtered.length
       ? `${filtered.length} drink${filtered.length === 1 ? '' : 's'} found` : '';
-    // In-stock first within each category, so the shelf never leads with "Out of Stock".
-    filtered.sort((a, b) => (a.stock <= 0) - (b.stock <= 0));
+    // Shelf order (founder, 9 Nov 2026): sections in a fixed, sensible order,
+    // brands kept together, packs in can → dumpy → NRB → quart → bottle order,
+    // and in-stock before sold-out so a shelf never leads with "Out of Stock".
+    filtered.sort(compareShelf);
     const byCategory = {};
     filtered.forEach(p => {
-      if (!byCategory[p.category]) byCategory[p.category] = [];
-      byCategory[p.category].push(p);
+      const shelf = shelfOf(p.category);
+      if (!byCategory[shelf]) byCategory[shelf] = [];
+      byCategory[shelf].push(p);
     });
 
     if (filtered.length === 0) {

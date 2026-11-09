@@ -238,7 +238,7 @@ Malibu Coconut Rum Liqueur,LIQUEUR,750ml Bottle,299.8,12,0,2073.60,0,0,0,Pernod 
 Nachtmusik Chocolate Liqueur,LIQUEUR,750ml Bottle,219.24,12,0,1497.60,0,0,0,Distell Portfolio,ALCOHOL,
 Peach Schnapps (Relic),LIQUEUR,750ml Bottle,0,12,0,2361.60,0,0,0,Local Craft,ALCOHOL,
 Peppermint Liqueur (Butlers),LIQUEUR,750ml Bottle,178.85,12,0,2188.80,0,0,0,Heineken SA,ALCOHOL,
-Ponchos Tequila Coffee,LIQUEUR,750ml Bottle,178.85,12,0,2188.80,0,0,0,,ALCOHOL,
+Ponchos Tequila Coffee,TEQUILA,750ml Bottle,178.85,12,0,2188.80,0,0,0,,ALCOHOL,
 Sambuca Lupini Black,LIQUEUR,750ml Bottle,271.89,12,0,1958.40,0,0,0,Edward Snell & Co.,ALCOHOL,
 Sambuca Lupini Blue,LIQUEUR,750ml Bottle,0,12,0,1612.80,0,0,0,Local Value Brand,ALCOHOL,
 Sambuca Lupini Gold,LIQUEUR,750ml Bottle,271.89,12,0,1958.40,0,0,0,Edward Snell & Co.,ALCOHOL,
@@ -322,7 +322,7 @@ Ekoyini Crushed Ice,ICE,1kg,22,10,2.0,215.60,40,5.0,8360.00,Ekoyini Essentials,N
 Ekoyini Crushed Ice,ICE,2kg,38,10,2.0,372.40,40,5.0,14440.00,Ekoyini Essentials,NON_ALCOHOL,
 Ekoyini Ice Bag,ICE,1kg,20,10,2.0,196.00,40,5.0,7600.00,Ekoyini Essentials,NON_ALCOHOL,
 Ekoyini Ice Bag,ICE,2kg,35,10,2.0,343.00,40,5.0,13300.00,Ekoyini Essentials,NON_ALCOHOL,
-Grenadine Syrup Cordial,MIXER,1 Litre Jug,0.00,12,0,823.20,0,0,0,Bar Mixer Supply,ALCOHOL,
-Kola Tonic Cordial,MIXER,750ml Bottle,0.00,12,0,529.20,0,0,0,Tiger Brands (Roses),ALCOHOL,
-Mofaya Original,MIXER,Can (500ml),9.99,24,2.0,234.96,60,5.0,13666.32,Coca-Cola Beverages SA,NON_ALCOHOL,BLACK_OWNED
-Mofaya Orange Ting,MIXER,Can (500ml),9.99,24,2.0,234.96,60,5.0,13666.32,Coca-Cola Beverages SA,NON_ALCOHOL,BLACK_OWNED
+Grenadine Syrup Cordial,MIXER,1 Litre Jug,0.00,12,0,823.20,0,0,0,Bar Mixer Supply,NON_ALCOHOL,
+Kola Tonic Cordial,MIXER,750ml Bottle,0.00,12,0,529.20,0,0,0,Tiger Brands (Roses),NON_ALCOHOL,
+Mofaya Original,ENERGY_DRINK,Can (500ml),9.99,24,2.0,234.96,60,5.0,13666.32,Coca-Cola Beverages SA,NON_ALCOHOL,BLACK_OWNED
+Mofaya Orange Ting,ENERGY_DRINK,Can (500ml),9.99,24,2.0,234.96,60,5.0,13666.32,Coca-Cola Beverages SA,NON_ALCOHOL,BLACK_OWNED
