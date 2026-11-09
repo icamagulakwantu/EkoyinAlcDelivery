@@ -4,6 +4,20 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 9 Nov 2026 (night): never sell below the Siba stock price
+The founder's Siba receipts (27 Sep and 9 Nov) show what stock costs. Six rows were priced below cost and are raised to the Siba price + 7%:
+
+| Product | Siba cost | Was | Now |
+|---|---|---|---|
+| Breezer Blackberry / Watermelon cans 6-pack | R150 | R128.39 | R160.50 |
+| Breezer Blueberry cans 6-pack (same family) | R150 | R128.39 | R160.50 |
+| Castle Lite cans 6-pack | R115 | R112.35 | R123.05 |
+| Black Label cans 6-pack | R115 | R112.34 | R123.05 |
+| Savanna Dry 500ml NRB (each) | R27.50 | R26.74 | R29.43 |
+
+- New test: 20 receipt items (beer, RTD, spirits, water) can never be priced below their Siba cost.
+- Most other receipt items were already Siba price + 5%/7% exactly (Bernini, Brutal Fruit, Sol, Stella, Hennessy VS, Tanqueray, Aquelle).
+
 ### 9 Nov 2026 (evening): ice bag photos
 - Founder's photos: Ice Bag 1kg (R20) = blue bag, Ice Bag 2kg (R35) = plain white bag. 1kg file renamed to `ice-bag-1kg-blue.jpg`; 2kg now `ice-bag-2kg-white.jpg` (was a branded "ICE" print bag). Prices unchanged.
 
