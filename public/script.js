@@ -124,6 +124,12 @@ function showToastTop(msg, duration = 1600) {
   t._hideTimer = setTimeout(() => t.classList.remove('show'), duration);
 }
 
+// ── Customer support on WhatsApp (change the number here only) ──
+const EKOYINI_SUPPORT_WHATSAPP = '27640045465'; // 064 004 5465
+function supportWhatsAppUrl(message) {
+  return `https://wa.me/${EKOYINI_SUPPORT_WHATSAPP}${message ? `?text=${encodeURIComponent(message)}` : ''}`;
+}
+
 // ── Small shared helpers ─────────────────────────
 // Anything from the database or the user goes through this before innerHTML.
 function escapeHtml(value) {

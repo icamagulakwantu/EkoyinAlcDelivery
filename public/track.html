@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/images/brand/favicon-32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/images/brand/favicon-16.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/images/brand/favicon-180.png">
-  <title>Ekoyini — Track Order</title>
+  <title>Track your order — Ekoyini</title>
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
   <style>
@@ -16,7 +16,25 @@
     .track-search { display: flex; gap: 8px; padding: 12px; }
     .track-search input { flex: 1; background: var(--card); border: 1px solid var(--border); padding: 12px 14px; border-radius: var(--r-sm); color: var(--white); font-size: 14px; text-transform: uppercase; }
     .track-search input:focus { outline: none; border-color: var(--green-mid); }
-    .track-search button { background: var(--terra-light); color: #fff; border: none; padding: 0 18px; border-radius: var(--r-sm); font-size: 13px; font-weight: 700; }
+    .track-search button { background: #17140e; color: #fff; border: none; padding: 0 22px; border-radius: 999px; font-size: 14px; font-weight: 700; cursor: pointer; }
+    .track-search input { border-radius: 999px !important; padding: 13px 18px !important; letter-spacing: .06em; }
+    .track-hero { padding: 20px 18px; border-radius: 20px; background: #17140e; color: #fff; margin-bottom: 14px; }
+    .track-hero.is-done { background: #1f7a4d; }
+    .track-hero.is-cancelled { background: #8f2a20; }
+    .track-hero small { display: block; font-size: 12px; opacity: .75; letter-spacing: .04em; text-transform: uppercase; font-weight: 700; margin-bottom: 4px; }
+    .track-hero h2 { font-family: var(--font-display); font-size: 24px; line-height: 1.15; color: #fff; margin: 0 0 6px; }
+    .track-hero p { font-size: 13.5px; opacity: .9; line-height: 1.45; margin: 0; }
+    .track-hero .track-eta { display: inline-flex; align-items: center; gap: 6px; margin-top: 12px; padding: 6px 12px; border-radius: 999px; background: rgba(255,255,255,.14); font-size: 12.5px; font-weight: 700; }
+    .track-summary { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 6px 16px; margin-bottom: 14px; }
+    .track-summary .bill-row { font-size: 13.5px; }
+    .track-help { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin: 4px 0 16px; padding: 13px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); color: var(--white); font-weight: 700; font-size: 14px; text-decoration: none; }
+    .track-help svg { color: #1f7a4d; }
+    .track-mine { margin: 0 12px; }
+    .track-mine h3 { font-size: 13px; color: var(--muted); font-weight: 700; margin: 6px 4px 8px; text-transform: uppercase; letter-spacing: .05em; }
+    .track-mine-list { display: flex; flex-direction: column; gap: 8px; }
+    .track-mine-item { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 14px 16px; border-radius: 16px; background: var(--surface); border: 1px solid var(--border); color: var(--white); text-decoration: none; font-size: 14px; }
+    .track-mine-item b { font-family: monospace; letter-spacing: .04em; }
+    .track-mine-item span { font-size: 12px; color: var(--muted); font-weight: 700; }
     .track-result { margin: 12px; }
     .track-result-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r-md); padding: 18px; margin-bottom: 16px; }
     .track-result-code { font-family: monospace; font-size: 18px; font-weight: 700; color: var(--green-light); margin-bottom: 4px; }
@@ -63,6 +81,7 @@
     <div class="track-result" id="trackResult">
       <div class="track-empty">Enter your order code to see live status — no login required.</div>
     </div>
+    <div class="track-mine" id="trackMine" hidden></div>
   </div>
 
   <!-- BOTTOM NAV -->
@@ -166,6 +185,55 @@
     await fetchAndRender(code);
   }
 
+  // Big, plain-language status at the top: what is happening and what's next.
+  function heroHTML(order) {
+    const s = order.status;
+    const eft = order.paymentMethod === 'eft';
+    const map = {
+      PAYMENT_PENDING: [eft ? 'Waiting for your EFT' : 'Order placed', eft ? 'Pay by EFT with this order code as the reference. We start packing as soon as it reflects.' : "We've got your order.", null],
+      PENDING: ['Packing your order', order.driverName ? `${order.driverName} will collect it from the tavern shortly.` : "We're matching a driver who's already heading your way.", 'Usually 30–45 min'],
+      DISPATCHED: ['On the way', order.driverName ? `${order.driverName}${order.driverVehicle ? ` (${order.driverVehicle})` : ''} is bringing your order. Have your ID ready.` : 'Your driver is on the way. Have your ID ready.', 'Arriving soon'],
+      DELIVERED: ['Delivered', 'Enjoy, and thanks for ordering with Ekoyini.', null],
+      CANCELLED: ['Order cancelled', CANCELLED_DESC, null],
+    };
+    const [title, text, eta] = map[s] || ['Order status', '', null];
+    const cls = s === 'DELIVERED' ? ' is-done' : s === 'CANCELLED' ? ' is-cancelled' : '';
+    return `<div class="track-hero${cls}">
+      <small>Order ${escapeHtml(order.code)}</small>
+      <h2>${escapeHtml(title)}</h2>
+      <p>${escapeHtml(text)}</p>
+      ${eta ? `<span class="track-eta">⏱ ${eta}</span>` : ''}
+    </div>`;
+  }
+
+  // What was ordered and what it cost.
+  function summaryHTML(order) {
+    const items = (order.items || []).map((i) => `<div class="bill-row"><span>${escapeHtml(i.name)}</span><span>× ${Number(i.quantity)}</span></div>`).join('');
+    const pay = { card: 'Paid by card', cod: 'Cash on delivery: pay the driver', eft: order.status === 'PAYMENT_PENDING' ? 'EFT: waiting for payment' : 'Paid by EFT' }[order.paymentMethod] || '';
+    return `<div class="track-summary">
+      ${items}
+      ${order.total != null ? `<div class="bill-row is-total"><span>Total</span><span>${formatRand(order.total)}</span></div>` : ''}
+      ${pay ? `<div class="bill-note" style="padding-bottom:10px">${escapeHtml(pay)}</div>` : ''}
+    </div>`;
+  }
+
+  // Signed-in customers see their active orders as one-tap shortcuts.
+  async function showMyActiveOrders() {
+    try {
+      const session = await getSession();
+      if (!session) return;
+      const res = await authedFetch('/api/my-orders');
+      if (!res.ok) return;
+      const active = (await res.json()).filter((o) => ['PAYMENT_PENDING', 'PENDING', 'DISPATCHED'].includes(o.status)).slice(0, 5);
+      if (!active.length || activeCode) return;
+      const LABEL = { PAYMENT_PENDING: 'Awaiting payment', PENDING: 'Packing', DISPATCHED: 'On the way' };
+      const box = document.getElementById('trackMine');
+      box.innerHTML = `<h3>Your active orders</h3><div class="track-mine-list">${active.map((o) => `
+        <a class="track-mine-item" href="track.html?code=${encodeURIComponent(o.code)}"><b>${escapeHtml(o.code)}</b><span>${LABEL[o.status]} · ${formatRand(o.total)}</span></a>`).join('')}</div>`;
+      box.hidden = false;
+    } catch {}
+  }
+
   function driverBlock(order) {
     if (!order.tavern) return '';
     const tavern = `<strong>${escapeHtml(order.tavern.name)}</strong> — picking up in ${escapeHtml(order.tavern.area)}`;
@@ -203,12 +271,18 @@
       localStorage.setItem(seenKey, order.status);
 
       const itemCount = order.items.length;
+      document.getElementById('trackMine').hidden = true;
       result.innerHTML = `
+        ${heroHTML(order)}
         <div class="track-result-card">
-          <div class="track-result-code">${escapeHtml(order.code)}</div>
           <div class="track-result-meta">${itemCount} item${itemCount !== 1 ? 's' : ''} · placed ${new Date(order.createdAt).toLocaleString('en-ZA')}</div>
           ${isCancelled ? '' : driverBlock(order)}
         </div>
+        ${summaryHTML(order)}
+        <a class="track-help" href="${supportWhatsAppUrl(`Hi Ekoyini, I have a question about my order ${order.code}.`)}" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 21l2.1-5.5A8.4 8.4 0 1 1 21 11.5z"/></svg>
+          WhatsApp us about this order
+        </a>
         ${isCancelled
           ? `<div class="track-cancelled"><h3>Order cancelled</h3><p>${CANCELLED_DESC}</p><p style="margin-top:14px;"><a href="shop.html" style="color:var(--terra-light);font-weight:700;">Shop again</a></p></div>`
           : `<div class="track-map" id="trackMap"></div>
@@ -327,6 +401,8 @@
   if (prefillCode) {
     document.getElementById('codeInput').value = prefillCode;
     lookup();
+  } else {
+    showMyActiveOrders();
   }
   </script>
 </body>

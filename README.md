@@ -4,6 +4,22 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 9 Nov 2026 (evening): tracking and profile pages restyled
+- **Track:**
+  - A clear status headline ("Packing your order", "On the way" with the driver's name, "Waiting for your EFT") with the expected time.
+  - What was ordered and the total, with payment status (the public tracking response now includes `total`).
+  - A **WhatsApp us about this order** button.
+  - Signed-in customers see their active orders as one-tap shortcuts.
+  - Search uses the dark pill button.
+- **Profile:**
+  - A compact account row.
+  - Quick links: Help on WhatsApp, Track an order, Terms, Privacy.
+  - Orders split into **Active** (with a Track button) and **Past orders** (Reorder button, first 5 then "Show all").
+  - Each card shows what was ordered; Cancel, Remove and Report driver are quiet text buttons.
+  - "Member since" is hidden when the date is missing.
+- The support WhatsApp number lives in one place: `EKOYINI_SUPPORT_WHATSAPP` in `public/script.js`.
+- Service-worker cache `v7`.
+
 ### 9 Nov 2026 (later): security hardening
 - **Fixed on the live database (urgent, already applied):** 3 tables, `DriverReport` (driver names and phone numbers), `DeliverySettings` and `_prisma_migrations`, had no row level security. The public Supabase roles (`anon`, `authenticated`: the key in `public/auth.js`) could read AND change them, and the other 8 tables still had those grants. Row level security is now on for every table, and every grant to those roles is removed (now and for future tables). The app connects as the table owner and is unaffected. Supabase's security advisor no longer reports any errors.
 - **Same lock-down re-applied on every deploy** by `scripts/ensure-schema.js`, so a new table can never be left open.
