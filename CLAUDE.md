@@ -11,8 +11,10 @@ These points replace anything older in the sections below.
 - **Security (9 Nov)**: every public table has row level security and NO grants to `anon`/`authenticated` (the browser uses Supabase for login only). `ensure-schema.js` re-applies this on every deploy; never re-grant. Admin token needs 32+ chars; webhooks older than 5 min are rejected; set `TRUST_PROXY_HOPS` from the `[proxy]` log lines.
 - **Marketing & reports (9 Nov)**: `MarketingConsent` table (POPIA opt-in: signup, checkout, profile switch, signed unsubscribe links via `MARKETING_LINK_SECRET`); admin **Reports** tab (`admin/reports.js`, section name `sales` because `reports` is the driver-reports tab); CSV exports are super-admin only and logged; `/analytics.js` loads Cloudflare Web Analytics only when `CF_ANALYTICS_TOKEN` is set. `TRUST_PROXY_HOPS=3` is set on Render.
 - **Order alerts (9 Nov)**: `admin/order-alerts.js` (sound, notification, banner; dispatchers tap "Turn on order alerts"); "Post job to drivers group" button builds a WhatsApp job post with NO customer details; new-order emails go to `ORDER_ALERT_EMAILS` (fallback `ADMIN_EMAILS`). Step 2 (WhatsApp Business Platform + shared team inbox for one number across 8 people) is advised, not built.
+- **Founder prices (9 Nov, late)**: `lib/founder-prices-2026-11-09.js` holds FINAL prices that win over everything (Heineken dumpies R145, Castle Lite/Black Label cans R130, Savanna 500ml NRB six-pack R210, Appletiser R45, Red Bull 250ml single R30, Coke 500ml can R20, strategic spirits at Siba cost + 14%). Alcoholic can six-packs are never under R130 (Corona and Savanna excepted). Stock is bought at Siba; a test keeps every receipt item at or above its Siba cost.
+- **Six-packs only** for beer/cider/RTD cans, dumpies and 500ml NRBs; cold drinks, energy drinks, water and ice are loose (`packSizeFor()` in `lib/catalogue-2026-11.js`; Mofaya and Schweppes cans stay six-packs).
 - **Service worker cache is `ekoyini-shell-v8`**. Bump it again when static pages change.
-- **Tests**: 62, including `test/reports-marketing.test.js`, `test/order-pricing.test.js` and `test/price-corrections.test.js`.
+- **Tests**: 70 (incl. `test/founder-prices.test.js`), including `test/reports-marketing.test.js`, `test/order-pricing.test.js` and `test/price-corrections.test.js`.
 
 ## 1. What this is
 Alcohol delivery app for Gqeberha townships (ride-along delivery). Founder: Thandu (Thanduxolo Makeleni), Ekoyini Group.
@@ -29,11 +31,11 @@ Stack: Node/Express 4, Prisma 5, Supabase Postgres, Yoco payments, vanilla HTML/
 `npm install` runs `postinstall`, which runs `node --test` plus the migrations and the catalogue/photo scripts. If any test fails the deploy fails and the old code stays live. This happened 6 Nov 20:38 to 7 Nov 03:10 (`roundTavern` was exported but never defined). Always run `npm test` (or `node --test`) before pushing. Tests need every image path in the photo map to exist.
 
 ## 4. Catalogue rules (decided by the founder)
-- 326 rows = 322 master workbook SKUs + 4 house products (Mofaya Original R62.94 and Mofaya Orange Ting R62.94 six-packs, Grenadine Syrup Cordial R73.50, Kola Tonic Cordial R47.25).
+- 327 rows = 322 master workbook SKUs + 5 house products (Mofaya Original R62.94 and Mofaya Orange Ting R62.94 six-packs, Grenadine Syrup Cordial R73.50, Kola Tonic Cordial R47.25, Coca-Cola Original 500ml can R20).
 - Final customer prices live in `lib/catalogue-2026-11.js` (`FINAL_CUSTOMER_PRICES`). Markup is already inside them: 7% beer/cider/RTD/wine, 5% spirits/liqueurs/mixers/water/ice. Never stack a markup on a final price.
 - NEVER show "Price coming soon". `PRICE_COMING_SOON` is empty. Every new product needs a real shelf price + the category markup.
 - No 375ml spirits. No 1 litre rows (the founder never added them). Black Label is the 750ml quart. Breezer has no quarts. MXD is quart (660ml) + can only. Chillers Punch is cans only. Brutal Fruit has no 750ml. Extreme is an alcoholic RTD.
-- Prices the founder kept at his list: Johnnie Walker Red R315, Klipdrift Export R252, Castle Milk Stout quart R29.96. Heineken dumpy stays R117.70.
+- Prices the founder kept at his list: Johnnie Walker Red R315, Klipdrift Export R252, Castle Milk Stout quart R29.96. Heineken dumpies are R145 (founder, 9 Nov).
 - Photos: `public/images/brands/`, mapped in `prisma/catalogue-photo-config.js` (`FORMAT_PHOTO_MAP`, key = `JSON.stringify([name, bottleFormat])`). Exact pack photos only (can is not dumpy is not quart). Better a missing photo than a wrong one. Keep new photos small (WebP, about 300px).
 - Data files: `prisma/data/skus.csv`, `prisma/seed.js`, `prisma/catalogue-update.js`, `prisma/sync-images.js`, `prisma/catalogue-photo-matching.js`.
 - Prices that are estimates (shelf price unknown): Thirsti 1.5L R18, Tsitsikamma waters, Coca-Cola 2L R36, Guinness Draught 6-pack R210, Red Bull R34, Appletiser R38, Mofaya, Grenadine, Kola Tonic. Worth checking.

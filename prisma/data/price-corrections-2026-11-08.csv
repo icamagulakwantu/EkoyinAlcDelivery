@@ -2,7 +2,7 @@ Product,Pack,Was (R),Now (R),Change,Shelf price used (R),Checked on shelf?,Sourc
 Amstel Lager,Can (500ml),171.20,117.69,-31%,109.99,estimate,Amstel cans R18.99 each (Shoprite); 6-pack estimate
 Amstel Lager,Dumpy (330ml),187.25,106.99,-43%,99.99,estimate,Amstel 330ml R16.99 each (Shoprite); 6-pack estimate
 Amstel Lager,Quart (660ml),47.08,25.67,-45%,23.99,yes,"Checkers single 660ml R23.99 (9 Nov: single bottle, not crate / 12)"
-Carling Black Label,Can (500ml),123.05,112.34,-9%,104.99,yes,Shoprite 6 x 500ml R104.99
+Carling Black Label,Can (500ml),123.05,123.05,0%,115.00,yes,Siba receipt 9 Nov 2026: 6 x 500ml R115 (Shoprite R104.99)
 Carling Black Label,Dumpy (330ml),128.40,96.29,-25%,89.99,yes,Checkers 6 x 340ml R89.99
 Carling Black Label,Quart (750ml),28.89,23.53,-19%,21.99,yes,"Shoprite Liquor single 750ml R21.99 (9 Nov: single bottle, not crate / 12)"
 Budweiser,Can (500ml),187.25,117.69,-37%,109.99,estimate,Premium-lager can tier estimate
@@ -28,9 +28,9 @@ Stella Artois,Can (500ml),208.65,117.69,-44%,109.99,estimate,Premium-lager can t
 Windhoek Draught,Can (440ml),117.70,123.04,+5%,114.99,yes,Shoprite 6 x 440ml R114.99
 Windhoek Lager,Can (500ml),197.95,123.04,-38%,114.99,yes,Checkers 6 x 440ml R114.99
 Windhoek Lager,Dumpy (330ml),208.65,112.34,-46%,104.99,estimate,Premium-lager dumpy tier estimate
-Bacardi Breezer Blackberry,Can (500ml),224.70,128.39,-43%,119.99,estimate,RTD can tier estimate
-Bacardi Breezer Blueberry,Can (500ml),224.70,128.39,-43%,119.99,estimate,RTD can tier estimate
-Bacardi Breezer Watermelon,Can (500ml),160.50,128.39,-20%,119.99,estimate,RTD can tier estimate
+Bacardi Breezer Blackberry,Can (500ml),224.70,160.50,-29%,150.00,yes,Siba receipt 9 Nov 2026: 6 x 500ml R150
+Bacardi Breezer Blueberry,Can (500ml),224.70,160.50,-29%,150.00,estimate,Same as Blackberry and Watermelon cans (Siba receipt 9 Nov 2026 R150)
+Bacardi Breezer Watermelon,Can (500ml),160.50,160.50,0%,150.00,yes,Siba receipt 9 Nov 2026: 6 x 500ml R150
 Bacardi Breezer Blackberry,Dumpy (275ml),197.95,117.69,-41%,109.99,estimate,RTD 275ml tier estimate
 Bacardi Breezer Blueberry,Dumpy (275ml),197.95,117.69,-41%,109.99,estimate,RTD 275ml tier estimate
 Bacardi Breezer Watermelon,Dumpy (275ml),197.95,117.69,-41%,109.99,estimate,RTD 275ml tier estimate
@@ -79,7 +79,7 @@ Redd's Original,Can (500ml),192.60,128.39,-33%,119.99,estimate,Cider can tier es
 Redd's Original,Dumpy (330ml),208.65,112.34,-46%,104.99,estimate,Cider 6 x 330ml tier (Hunter's R104.99)
 Savanna Angry Lemon,Dumpy (330ml),224.70,133.74,-40%,124.99,estimate,Savanna Dry 6 x 330ml R119.99–R124.99
 Savanna Dry,Can (500ml),208.65,144.44,-31%,134.99,estimate,Savanna 500ml tier estimate
-Savanna Dry,NRB (500ml),53.50,26.74,-50%,24.99,estimate,Single 500ml bottle estimate
+Savanna Dry,NRB (500ml),53.50,29.43,-45%,27.50,yes,Siba receipt 9 Nov 2026: 6 x 500ml R165 (R27.50 a bottle)
 Smirnoff Storm Citrus,Can (500ml),144.45,117.70,-19%,110.00,yes,Ultra Liquors 24 cans R439.99 (SHOP_PRICES)
 Smirnoff Storm Pine Twist,Can (500ml),144.45,117.70,-19%,110.00,yes,Ultra Liquors 24 cans R439.99 (SHOP_PRICES)
 Smirnoff Storm Citrus,Dumpy (250ml),192.60,106.99,-44%,99.99,estimate,RTD 250ml tier estimate
@@ -182,7 +182,6 @@ Monin Lemon Tea / Citron,700ml Bottle,367.50,230.99,-37%,219.99,estimate,Monin 7
 Monin Melon,700ml Bottle,367.50,230.99,-37%,219.99,estimate,Monin 700ml shelf estimate
 Monin Spicy Mango,700ml Bottle,367.50,230.99,-37%,219.99,estimate,Monin 700ml shelf estimate
 Monin White Chocolate,700ml Bottle,367.50,230.99,-37%,219.99,estimate,Monin 700ml shelf estimate
-Red Bull Energy Drink,Can (355ml),273.00,176.34,-35%,167.94,estimate,6 cans; Shoprite R23.99 to PriceCheck R33.50 each
 Bonaqua Still Water,1.5L,29.40,18.89,-36%,17.99,estimate,Shelf estimate
 Thirsti Still Water,1.5L,23.10,18.90,-18%,18.00,estimate,Founder estimate R18 (CLAUDE.md)
 Tsitsikamma Sparkling Water,1L,27.30,18.89,-31%,17.99,estimate,Shelf estimate
@@ -194,3 +193,4 @@ Kanonkop Kadette Cabernet,750ml Bottle,256.80,171.19,-33%,159.99,estimate,Shelf 
 Nederburg Baronne,750ml Bottle,144.45,117.69,-19%,109.99,estimate,Shelf estimate
 Nederburg Sauvignon Blanc,750ml Bottle,133.75,106.99,-20%,99.99,estimate,Shelf estimate
 Veuve Clicquot Yellow Label,750ml Bottle,1230.50,984.40,-20%,920.00,yes,Ekoyini retail base R920 (SHOP_PRICES)
+Castle Lite,Can (500ml),112.35,123.05,+10%,115.00,yes,Siba receipt 9 Nov 2026: 6 x 500ml R115

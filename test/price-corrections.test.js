@@ -44,7 +44,7 @@ test('founder-fixed prices are not overridden', () => {
   assert.equal(C.finalPriceFor('Johnnie Walker Red Label', '750ml Bottle'), 315);
   assert.equal(C.finalPriceFor('Klipdrift Export', '750ml Bottle'), 252);
   assert.equal(C.finalPriceFor('Castle Milk Stout', 'Quart (750ml)'), 29.96);
-  assert.equal(C.finalPriceFor('Heineken', 'Dumpy (330ml)'), 117.7);
+  assert.equal(C.finalPriceFor('Heineken', 'Dumpy (330ml)'), 145); // founder price 9 Nov 2026
   assert.equal(C.finalPriceFor('Hennessy VS', '750ml Bottle'), 682.5);
   assert.equal(C.finalPriceFor('Corona Extra', 'Dumpy (355ml)'), 135);
   assert.equal(C.finalPriceFor('Sambuca Lupini Blue', '750ml Bottle'), 357);
@@ -85,5 +85,28 @@ test('premium brands are never cheaper than the value brands they sit above', ()
   for (const [hi, lo] of above) {
     assert.ok(price(hi) > 0 && price(lo) > 0, `${hi} / ${lo} priced`);
     assert.ok(price(hi) >= price(lo), `${hi} R${price(hi)} is cheaper than ${lo} R${price(lo)}`);
+  }
+});
+
+// Founder's stock receipts from Siba (27 Sep and 9 Nov 2026). Siba is where
+// stock is bought, so the app must never sell below these prices.
+test('the app never sells below what the stock costs at Siba', () => {
+  const siba = [
+    ['Bernini Blush', 'Can (500ml)', 125], ['Bernini Classic', 'Can (500ml)', 125],
+    ['Jagermeister Herbal Liqueur', '750ml Bottle', 360],
+    ['Bacardi Breezer Blackberry', 'Can (500ml)', 150], ['Bacardi Breezer Watermelon', 'Can (500ml)', 150],
+    ['Castle Lite', 'Can (500ml)', 115], ['Carling Black Label', 'Can (500ml)', 115],
+    ['Savanna Dry', 'NRB (500ml)', 165 / 6], ['Savanna Dry', 'Dumpy (330ml)', 120],
+    ['Brutal Fruit Ruby Apple', 'Can (500ml)', 135], ['Brutal Fruit Strawberry Rouge', 'Can (500ml)', 135],
+    ['Sol NRB', 'Dumpy (330ml)', 100], ['Stella Artois', 'Dumpy (330ml)', 100],
+    ['Jameson Original Irish', '750ml Bottle', 420], ['Jameson Select Reserve', '750ml Bottle', 600],
+    ['Hennessy VS', '750ml Bottle', 650], ['Olmeca Reposado', '750ml Bottle', 350],
+    ['Ponchos Tequila Coffee', '750ml Bottle', 320], ['Tanqueray London Dry Export', '750ml Bottle', 360],
+    ['Aquelle Still Water', '1.5L', 20],
+  ];
+  for (const [name, format, cost] of siba) {
+    const price = C.finalPriceFor(name, format);
+    assert.ok(price != null, `${name} ${format} has a price`);
+    assert.ok(price >= cost, `${name} ${format}: app R${price} is below the Siba cost R${cost}`);
   }
 });

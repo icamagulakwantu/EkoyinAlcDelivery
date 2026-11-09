@@ -25,7 +25,16 @@ const STATEMENTS = [
          "packSize" = 6
    WHERE "packSize" = 1
      AND "retailSingleZAR" > 0
-     AND ("bottleFormat" ILIKE 'Dumpy%' OR "bottleFormat" ILIKE 'Can%')`,
+     AND ("bottleFormat" ILIKE 'Dumpy%' OR "bottleFormat" ILIKE 'Can%')
+     AND "category"::text NOT IN ('MIXER', 'ENERGY_DRINK', 'WATER', 'ICE')`,
+  // 9 Nov 2026 (founder): Red Bull is a single 250ml can sold loose, not a
+  // 355ml six-pack. Rename the row in place (keeps its id and order history);
+  // the seed then sets packSize 1 and the R30 price.
+  `UPDATE "SkuItem"
+     SET "bottleFormat" = 'Can (250ml)', "packSize" = 1,
+         "unitsPerCase" = "unitsPerCase" * 6
+   WHERE "name" = 'Red Bull Energy Drink' AND "bottleFormat" = 'Can (355ml)'
+     AND NOT EXISTS (SELECT 1 FROM "SkuItem" WHERE "name" = 'Red Bull Energy Drink' AND "bottleFormat" = 'Can (250ml)')`,
   `CREATE TABLE IF NOT EXISTS "DriverReport" (
      "id" TEXT NOT NULL PRIMARY KEY,
      "orderCode" TEXT NOT NULL,

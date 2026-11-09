@@ -58,10 +58,10 @@ test('minimum delivery order stays R300', () => {
 
 test('Castle Milk Stout: shelf-corrected packs, founder-fixed quart', () => {
   const row = (bottleFormat, packSize, listPriceZAR) => ({ name: 'Castle Milk Stout', bottleFormat, packSize, listPriceZAR });
-  assert.equal(C.newSinglePrice(row('Can (500ml)', 6, 24.22)), 112.34); // Shoprite 6 x 500ml R104.99 + 7%
+  assert.equal(C.newSinglePrice(row('Can (500ml)', 6, 24.22)), 130); // R130 can six-pack floor (founder, 9 Nov 2026)
   assert.equal(C.newSinglePrice(row('Quart (750ml)', 1, 38.65)), 29.96); // founder-fixed
   assert.equal(C.newSinglePrice(row('Dumpy (330ml)', 6, 25.95)), 101.64); // R94.99 + 7%
-  assert.equal(C.casePrice(112.34, 4, 8), 413.41);
+  assert.equal(C.casePrice(130, 4, 8), 478.4);
   assert.equal(C.casePrice(29.96, 12, 8), 330.76);
   assert.equal(C.casePrice(101.64, 4, 8), 374.04);
 });
