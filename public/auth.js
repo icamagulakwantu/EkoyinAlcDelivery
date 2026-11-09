@@ -95,3 +95,21 @@ async function renderNavAuth() {
   }
 }
 window.addEventListener('ekoyini:auth-changed', renderNavAuth);
+
+// A "send me specials" tick at sign-up is saved once the customer is signed
+// in (straight away, or after they confirm their email and log in).
+async function applyPendingMarketingChoice() {
+  let pending = null;
+  try { pending = localStorage.getItem('ekoyini_pending_marketing'); } catch {}
+  if (pending !== 'true') return;
+  const session = await getSession();
+  if (!session) return;
+  try {
+    const res = await authedFetch('/api/marketing-consent', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ optedIn: true, source: 'signup' }),
+    });
+    if (res.ok) localStorage.removeItem('ekoyini_pending_marketing');
+  } catch {}
+}
+window.addEventListener('ekoyini:auth-changed', applyPendingMarketingChoice);

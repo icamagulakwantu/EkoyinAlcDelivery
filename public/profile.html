@@ -76,6 +76,14 @@
     body .order-card-total { font-size: 16px; }
     body .reorder-btn, body .track-btn { background: #17140e; color: #fff; border: 0; padding: 9px 16px; border-radius: 999px; font-size: 13px; font-weight: 700; text-decoration: none; cursor: pointer; }
     body .cancel-order-btn, body .remove-order-btn, body .report-driver-btn { border: 0 !important; background: transparent !important; padding: 9px 6px !important; font-size: 13px !important; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+    .specials-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin: 6px 16px 0; padding: 14px 16px; border-radius: 18px; background: var(--surface); border: 1px solid var(--border); cursor: pointer; }
+    .specials-row b { display: block; font-size: 14px; color: var(--white); }
+    .specials-row small { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .specials-row input { appearance: none; -webkit-appearance: none; width: 46px; height: 28px; border-radius: 999px; background: #d9cfb8; position: relative; flex-shrink: 0; cursor: pointer; transition: background .2s; }
+    .specials-row input::after { content: ''; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.2); transition: transform .2s; }
+    .specials-row input:checked { background: #1f7a4d; }
+    .specials-row input:checked::after { transform: translateX(18px); }
+    .specials-row input:disabled { opacity: .6; }
     .show-all-btn { display: block; width: 100%; margin: 4px 0 8px; padding: 12px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); color: var(--white); font-weight: 700; font-size: 14px; cursor: pointer; }
   </style>
 </head>
@@ -223,16 +231,42 @@
         <a href="terms.html">Terms</a>
         <a href="privacy.html">Privacy</a>
       </div>
+      <label class="specials-row" for="specialsToggle">
+        <span><b>Specials on WhatsApp &amp; email</b><small id="specialsNote">Deals and new arrivals, now and then. Never shared or sold.</small></span>
+        <input type="checkbox" id="specialsToggle" role="switch" disabled>
+      </label>
       <div class="section-header"><h2>Your orders</h2></div>
       <div class="order-list" id="orderList"><div class="empty-state">Loading orders…</div></div>
     `;
     document.getElementById('logoutBtn').onclick = async () => { await signOut(); showToast('Logged out'); };
+    initSpecialsToggle();
     loadOrders();
   }
 
   let myOrders = [];
   // Order codes the customer has already sent a driver report for.
   let reportedCodes = new Set();
+
+  // POPIA: customers switch marketing on or off here at any time.
+  async function initSpecialsToggle() {
+    const box = document.getElementById('specialsToggle');
+    try {
+      const d = await (await authedFetch('/api/marketing-consent')).json();
+      box.checked = !!d.optedIn;
+      box.disabled = false;
+    } catch { return; }
+    box.onchange = async () => {
+      box.disabled = true;
+      try {
+        const res = await authedFetch('/api/marketing-consent', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ optedIn: box.checked, source: 'profile' }) });
+        if (!res.ok) throw new Error();
+        showToast(box.checked ? "You'll get our specials" : 'Specials switched off');
+      } catch {
+        box.checked = !box.checked;
+        showToast("Couldn't save that — try again");
+      } finally { box.disabled = false; }
+    };
+  }
 
   const ACTIVE = new Set(['PAYMENT_PENDING', 'PENDING', 'DISPATCHED']);
   const PAST_PAGE = 5;
@@ -468,5 +502,6 @@
   window.addEventListener('ekoyini:auth-changed', init);
   init();
   </script>
+  <script src="/analytics.js" defer></script>
 </body>
 </html>

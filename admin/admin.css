@@ -233,7 +233,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 /* ── New-order alerts (order-alerts.js) ── */
 .order-alert-switch { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
 .order-alert-switch small { font-size: 11px; opacity: .7; max-width: 220px; }
-.alert-switch { border: 1px solid var(--border); background: var(--surface); color: inherit; border-radius: 999px; padding: 8px 14px; font-weight: 700; font-size: 13px; cursor: pointer; }
+.alert-switch { border: 1px solid var(--border); background: var(--surface); color: #17140e; border-radius: 999px; padding: 8px 14px; font-weight: 700; font-size: 13px; cursor: pointer; }
 .alert-switch.on { background: #1a6b3a; border-color: #1a6b3a; color: #fff; }
 #orderAlertBanner { position: fixed; z-index: 1000; left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); display: none; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 14px; background: #ff4500; color: #fff; box-shadow: 0 12px 30px rgba(0,0,0,.25); cursor: pointer; animation: oab-pulse 1.2s ease-in-out infinite; }
 #orderAlertBanner.show { display: flex; }
@@ -245,3 +245,25 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 @media (min-width: 720px) { #orderAlertBanner { left: auto; width: 440px; } }
 .btn-post-job { background: #25d366 !important; color: #08311a !important; border-color: #25d366 !important; }
 @media (prefers-reduced-motion: reduce) { #orderAlertBanner { animation: none; } }
+
+/* ── Reports tab (reports.js) ── */
+#reportsBody { padding: 0 16px 32px; }
+.rep-range { display: flex; gap: 8px; flex-wrap: wrap; margin: 4px 0 14px; }
+.rep-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.rep-tile { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 14px; }
+.rep-tile b { display: block; font-size: 22px; font-variant-numeric: tabular-nums; }
+.rep-tile span { font-size: 12px; opacity: .7; }
+.rep-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+.rep-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 14px 16px; }
+.rep-card h3 { font-size: 14px; margin: 0 0 10px; }
+.rep-bar-row { display: grid; grid-template-columns: minmax(0, 1.3fr) 1fr auto; gap: 10px; align-items: center; font-size: 12.5px; padding: 5px 0; }
+.rep-bar-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rep-bar-track { height: 8px; border-radius: 999px; background: var(--deep); overflow: hidden; }
+.rep-bar-fill { display: block; height: 100%; border-radius: inherit; background: var(--terra); }
+.rep-bar-val { font-variant-numeric: tabular-nums; white-space: nowrap; opacity: .85; }
+.rep-exports { margin-top: 12px; }
+.rep-exports p { font-size: 13px; opacity: .8; margin: 0 0 10px; }
+.rep-exports button { margin: 0 8px 10px 0; }
+.rep-note { font-size: 12px !important; }
+.rep-range-btn { border: 1px solid var(--border); background: var(--card); border-radius: 999px; padding: 8px 14px; font-weight: 700; font-size: 13px; cursor: pointer; color: inherit; }
+.rep-range-btn.active { background: #17140e; color: #fff; border-color: #17140e; }

@@ -4,6 +4,28 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 9 Nov 2026 (night): marketing opt-in, sales reports, visitor analytics
+**Database change:** new table `MarketingConsent` (migration `20261109120000_add_marketing_consent`, only adds a table). It is locked away from the public Supabase roles by the deploy lock-down like every other table.
+- **Marketing opt-in (POPIA s69):**
+  - "Send me specials" boxes at sign-up and checkout, unticked by default.
+  - A **Specials on WhatsApp & email** switch on the profile page.
+  - Each choice is saved with date and source, and opting out keeps the record as proof.
+  - An order without the field never changes an existing choice.
+  - **Unsubscribe links:** `/unsubscribe.html?u=…&t=…` is signed per customer (`MARKETING_LINK_SECRET`) and needs a button press, so link scanners can't unsubscribe people.
+- **Admin → Reports tab:**
+  - Sales, orders, average order, repeat-customer rate, opt-in count, best sellers, top areas, orders by day, busiest hours (SA time) and payment mix, for 7 / 30 / 90 days or 12 months.
+  - Paid and cash orders only; unpaid EFT and cancelled orders are counted separately.
+- **Downloads (super admins only, each one written to the Activity log):**
+  - **Marketing list:** opted-in customers only, with orders, spend, last order and an unsubscribe link.
+  - **Orders CSV:** areas only, no street addresses.
+  - Cells are protected against spreadsheet formula injection. Dispatchers can see reports but can't download.
+- **Visitor analytics:** customer pages load `/analytics.js`, which turns on Cloudflare Web Analytics only when `CF_ANALYTICS_TOKEN` is set on Render (free, no cookies, no personal data). The admin and driver pages are never tracked.
+- **Fixes and housekeeping:**
+  - The "Turn on order alerts" button is readable on desktop.
+  - `TRUST_PROXY_HOPS=3` is set on Render (from the live `[proxy]` logs).
+  - Service-worker cache `v8`.
+  - Tests: 62.
+
 ### 9 Nov 2026 (evening): tracking and profile pages restyled
 - **Track:**
   - A clear status headline ("Packing your order", "On the way" with the driver's name, "Waiting for your EFT") with the expected time.

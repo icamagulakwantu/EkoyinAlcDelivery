@@ -78,6 +78,7 @@
     <button class="section-tab" id="sectionTabInventory" onclick="showSection('inventory', this)">Inventory</button>
     <button class="section-tab" id="sectionTabReports" onclick="showSection('reports', this)">Driver reports</button>
     <button class="section-tab" id="sectionTabDelivery" onclick="showSection('delivery', this)">Delivery</button>
+    <button class="section-tab" id="sectionTabSales" onclick="showSection('sales', this)">Reports</button>
     <button class="section-tab" id="sectionTabAdmins" onclick="showSection('admins', this)" style="display:none;">Admins</button>
     <button class="section-tab" id="sectionTabActivity" onclick="showSection('activity', this)" style="display:none;">Activity</button>
   </div>
@@ -114,6 +115,11 @@
   <!-- DELIVERY SECTION (surge switch + tavern locations) -->
   <div id="deliverySection" style="display:none;">
     <div id="deliverySettingsBody"></div>
+  </div>
+
+  <!-- REPORTS SECTION (sales, best sellers, exports) -->
+  <div id="reportsSection" style="display:none;">
+    <div id="reportsBody"></div>
   </div>
 
   <!-- ADMINS SECTION (super-admin only) -->
@@ -167,6 +173,7 @@
   <script src="admin-api.js"></script>
   <script src="driver-reports.js"></script>
   <script src="delivery-settings.js"></script>
+  <script src="reports.js"></script>
   <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});</script>
 </body>
 </html>
