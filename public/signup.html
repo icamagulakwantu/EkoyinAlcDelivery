@@ -11,6 +11,11 @@
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="premium.css">
   <link rel="stylesheet" href="app.css">
+
+  <style>
+    .optin-row { display: flex; gap: 10px; align-items: flex-start; margin: 4px 0 16px; font-size: 13px; color: var(--muted); line-height: 1.45; text-align: left; cursor: pointer; }
+    .optin-row input { width: 18px; height: 18px; margin-top: 1px; flex-shrink: 0; }
+  </style>
 </head>
 <body>
   <div class="auth-page">
@@ -29,6 +34,8 @@
         <label>Password</label>
         <input type="password" id="password" required autocomplete="new-password" minlength="6" placeholder="At least 6 characters">
       </div>
+      <!-- POPIA: marketing only with consent, so this starts unticked. -->
+      <label class="optin-row"><input type="checkbox" id="marketingOptIn"> <span>Send me Ekoyini specials and new arrivals on WhatsApp or email. Optional; switch it off any time in your profile.</span></label>
       <button type="submit" class="cta-btn" id="submitBtn">Sign Up</button>
     </form>
 
@@ -54,7 +61,13 @@
     btn.disabled = true;
     btn.textContent = 'Creating account…';
     try {
+      const wantsSpecials = document.getElementById('marketingOptIn').checked;
       const data = await signUp(document.getElementById('email').value.trim(), document.getElementById('password').value);
+      if (wantsSpecials) {
+        // Saved once the account is signed in (now, or after email confirmation).
+        try { localStorage.setItem('ekoyini_pending_marketing', 'true'); } catch {}
+        if (data.session) await applyPendingMarketingChoice();
+      }
       if (data.session) {
         window.location.href = redirect;
       } else {
@@ -69,5 +82,6 @@
     }
   });
   </script>
+  <script src="/analytics.js" defer></script>
 </body>
 </html>

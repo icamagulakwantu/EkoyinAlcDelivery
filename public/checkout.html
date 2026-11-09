@@ -210,6 +210,11 @@
         <!-- Links open in a new tab so the customer doesn't lose their checkout. -->
         <label for="termsConfirm">I agree to the <a href="terms.html" target="_blank" rel="noopener">Terms</a> and <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a></label>
       </div>
+      <!-- POPIA: marketing only with consent. Optional and unticked unless they opted in before. -->
+      <div class="checkbox-row" style="margin:12px 0 0">
+        <input type="checkbox" id="marketingOptIn">
+        <label for="marketingOptIn">Send me specials and new arrivals on WhatsApp or email (optional)</label>
+      </div>
     </section>
 
     <div class="trust-mini">
@@ -261,6 +266,7 @@
   let deliveryQuote = null;  // latest quote from the server
   let quoteNeedsPin = false; // stores have locations but there's no pin yet
   let submitting = false;
+  let marketingChoiceLoaded = false;
 
   const hasCaseDeal = (p) => p.unitsPerCase > 1 && p.retailCaseZAR > 0;
   const isCaseLine = (p) => checkoutData.purchaseType === 'case' && hasCaseDeal(p);
@@ -586,6 +592,9 @@
       deliveryLng: deliveryPin ? deliveryPin.lng : null,
       priorityFee,
       safetySeal,
+      // Only sent once we know their current choice, so a slow network never
+      // switches someone's specials off by accident.
+      marketingOptIn: marketingChoiceLoaded ? document.getElementById('marketingOptIn').checked : undefined,
     };
 
     setBusy(true, selectedPayment === 'card' ? 'Opening secure payment' : 'Placing your order');
@@ -692,6 +701,14 @@
       renderOrderReview();
       refreshQuote();
 
+      authedFetch('/api/marketing-consent').then((r) => r.json()).then((d) => {
+        if (typeof d.optedIn === 'boolean') {
+          document.getElementById('marketingOptIn').checked = d.optedIn;
+          marketingChoiceLoaded = true;
+        }
+      }).catch(() => {});
+      document.getElementById('marketingOptIn').addEventListener('change', () => { marketingChoiceLoaded = true; });
+
       authedFetch('/api/cod-eligibility').then((r) => r.json()).then((data) => {
         if (data.error) return;
         codEligibility = data;
@@ -724,5 +741,6 @@
 
   loadCheckout();
   </script>
+  <script src="/analytics.js" defer></script>
 </body>
 </html>

@@ -299,3 +299,21 @@ model DriverReport {
 
   @@index([orderCode])
 }
+
+// ── Marketing consent (POPIA s69) ─────────────────────────────────────
+// One row per customer account. Marketing (specials on WhatsApp, SMS or
+// email) may only be sent while optedIn is true. Order updates don't need
+// this. Opting out keeps the row (with optedOutAt) as proof of the change.
+model MarketingConsent {
+  id         String    @id @default(cuid())
+  userId     String    @unique // Supabase auth user id
+  email      String?
+  name       String?
+  phone      String?
+  optedIn    Boolean   @default(false)
+  optedInAt  DateTime?
+  optedOutAt DateTime?
+  source     String? // "checkout", "signup", "profile", "unsubscribe-link"
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}

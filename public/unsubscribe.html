@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/brand/favicon-32.png">
+  <meta name="robots" content="noindex">
+  <title>Unsubscribe — Ekoyini</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/premium.css">
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+  <main class="page">
+    <div class="empty" style="padding-top:96px" id="box">
+      <div class="empty-ic"><svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16v16H4z"/><path d="m4 7 8 6 8-6"/></svg></div>
+      <h1 style="font-size:24px;color:var(--white);margin-bottom:6px">Stop Ekoyini specials?</h1>
+      <p>You'll still get messages about your own orders. You can switch specials back on any time in your profile.</p>
+      <button type="button" class="action-btn-main" id="unsubBtn" style="justify-content:center"><span class="ab-label">Unsubscribe</span></button>
+    </div>
+  </main>
+  <script>
+  // One-click opt-out from a signed link (POPIA s69). The button press (not
+  // just opening the link) does it, so link scanners can't unsubscribe people.
+  const p = new URLSearchParams(location.search);
+  const box = document.getElementById('box');
+  const done = (title, text) => {
+    box.querySelector('h1').textContent = title;
+    box.querySelector('p').textContent = text;
+    document.getElementById('unsubBtn').remove();
+  };
+  document.getElementById('unsubBtn').onclick = async (e) => {
+    e.currentTarget.disabled = true;
+    try {
+      const res = await fetch('/api/marketing/unsubscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ u: p.get('u'), t: p.get('t') }) });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) return done("That link didn't work", data.error || 'Please switch specials off in your profile instead.');
+      done("You're unsubscribed", "We won't send you specials any more. Order updates still come through.");
+    } catch {
+      done('Something went wrong', 'Check your connection and open the link again.');
+    }
+  };
+  </script>
+</body>
+</html>

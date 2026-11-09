@@ -762,7 +762,7 @@ const DIRECT_PAYMENT_METHODS = new Set(["cod", "eft"]);
 // 📦 CREATE ORDER (customer, auth-gated) — COD/EFT only.
 app.post("/order", writeLimiter, requireUser, async (req, res) => {
   try {
-    const { address, items, customerName, customerPhone, paymentMethod, promoCode, landmark, deliveryLat, deliveryLng, priorityFee, safetySeal } = req.body || {};
+    const { address, items, customerName, customerPhone, paymentMethod, promoCode, landmark, deliveryLat, deliveryLng, priorityFee, safetySeal, marketingOptIn } = req.body || {};
     const priced = await validateAndPriceOrder({
       address,
       items,
@@ -807,6 +807,7 @@ app.post("/order", writeLimiter, requireUser, async (req, res) => {
       status: paymentMethod === "eft" ? "PAYMENT_PENDING" : "PENDING",
     });
     console.log("New order:", order.code);
+    saveMarketingChoice(req.user, marketingOptIn, { name: customerName, phone: customerPhone, source: "checkout" });
     sendOrderConfirmationEmail(order, req.user.email).catch((e) => console.error("[email] confirmation failed:", e));
     sendAdminOrderAlertEmail(order).catch((e) => console.error("[email] admin alert failed:", e));
     res.json({ message: "Order received", order });
@@ -860,7 +861,7 @@ function appBaseUrl(req) {
 app.post("/order/checkout-session", writeLimiter, requireUser, async (req, res) => {
   if (!isYocoConfigured()) return res.status(400).json({ error: "Card payment isn't available yet" });
   try {
-    const { address, items, customerName, customerPhone, promoCode, landmark, deliveryLat, deliveryLng, priorityFee, safetySeal } = req.body || {};
+    const { address, items, customerName, customerPhone, promoCode, landmark, deliveryLat, deliveryLng, priorityFee, safetySeal, marketingOptIn } = req.body || {};
     const priced = await validateAndPriceOrder({
       address,
       items,
@@ -911,6 +912,8 @@ app.post("/order/checkout-session", writeLimiter, requireUser, async (req, res) 
     }
 
     await prisma.pendingCheckout.update({ where: { id: pending.id }, data: { yocoCheckoutId: checkout.id } });
+    // Consent is independent of whether the payment completes.
+    saveMarketingChoice(req.user, marketingOptIn, { name: customerName, phone: customerPhone, source: "checkout" });
     res.json({ redirectUrl: checkout.redirectUrl });
   } catch (err) {
     console.error("[yoco] Failed to start checkout:", err);
@@ -1597,6 +1600,157 @@ app.use((err, req, res, next) => {
   if (err.type === "entity.too.large") return res.status(413).json({ error: "That request is too large" });
   console.error(err);
   res.status(500).json({ error: "Something went wrong — please try again" });
+});
+
+
+// ── Marketing consent (POPIA s69) ─────────────────────────────────────
+// Only an explicit true/false changes anything; a missing value leaves the
+// customer's current choice alone. Never blocks or fails an order.
+const { verifyUnsubscribeToken, unsubscribeUrl } = require("./lib/marketing.js");
+const { buildReport, toCsv, areaOf } = require("./lib/reports.js");
+
+async function saveMarketingChoice(user, optedIn, { name, phone, source } = {}) {
+  if (typeof optedIn !== "boolean" || !user?.id) return;
+  try {
+    const now = new Date();
+    const clean = (v, n) => (typeof v === "string" && v.trim() ? v.trim().slice(0, n) : undefined);
+    await prisma.marketingConsent.upsert({
+      where: { userId: user.id },
+      create: {
+        userId: user.id, email: user.email || null, name: clean(name, 80) || null, phone: clean(phone, 20) || null,
+        optedIn, optedInAt: optedIn ? now : null, optedOutAt: optedIn ? null : now, source: source || null,
+      },
+      update: {
+        email: user.email || undefined, name: clean(name, 80), phone: clean(phone, 20),
+        optedIn, ...(optedIn ? { optedInAt: now, optedOutAt: null } : { optedOutAt: now }), source: source || undefined,
+      },
+    });
+  } catch (err) {
+    console.error("[marketing] Failed to save consent:", err.message);
+  }
+}
+
+app.get("/api/marketing-consent", requireUser, async (req, res) => {
+  try {
+    const row = await prisma.marketingConsent.findUnique({ where: { userId: req.user.id } });
+    res.json({ optedIn: !!row?.optedIn });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to load your preferences" });
+  }
+});
+
+app.post("/api/marketing-consent", writeLimiter, requireUser, async (req, res) => {
+  const { optedIn, source } = req.body || {};
+  if (typeof optedIn !== "boolean") return res.status(400).json({ error: "optedIn must be true or false" });
+  const allowed = new Set(["signup", "profile", "checkout"]);
+  await saveMarketingChoice(req.user, optedIn, { source: allowed.has(source) ? source : "profile" });
+  res.json({ optedIn });
+});
+
+// One-click unsubscribe from a signed link (no login needed).
+app.post("/api/marketing/unsubscribe", writeLimiter, async (req, res) => {
+  const { u, t } = req.body || {};
+  if (!verifyUnsubscribeToken(String(u || ""), t, process.env.MARKETING_LINK_SECRET)) {
+    return res.status(400).json({ error: "This unsubscribe link isn't valid. Please use the link from your latest message, or switch specials off in your profile." });
+  }
+  await saveMarketingChoice({ id: String(u) }, false, { source: "unsubscribe-link" });
+  res.json({ ok: true });
+});
+
+// ── Reports and exports (admin) ───────────────────────────────────────
+function reportDays(req) {
+  const d = parseInt(req.query.days, 10);
+  return [7, 30, 90, 365].includes(d) ? d : 30;
+}
+
+app.get("/admin/reports", requireAdmin, async (req, res) => {
+  try {
+    const days = reportDays(req);
+    const since = new Date(Date.now() - days * 86400000);
+    const [orders, optedIn] = await Promise.all([
+      prisma.order.findMany({
+        where: { createdAt: { gte: since } },
+        select: { createdAt: true, status: true, total: true, paymentMethod: true, address: true, userId: true, items: { select: { name: true, quantity: true, price: true } } },
+      }),
+      prisma.marketingConsent.count({ where: { optedIn: true } }),
+    ]);
+    res.json({ ...buildReport(orders, { days }), marketingOptIns: optedIn });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to build report" });
+  }
+});
+
+function sendCsv(res, filename, header, rows) {
+  res.setHeader("Content-Type", "text/csv; charset=utf-8");
+  res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+  res.setHeader("Cache-Control", "no-store");
+  res.send("﻿" + toCsv(header, rows)); // BOM so Excel reads rands and names correctly
+}
+
+// Opted-in customers only. Super admins only; every download is logged.
+app.get("/admin/export/marketing.csv", requireAdmin, requireSuperAdmin, async (req, res) => {
+  try {
+    const consents = await prisma.marketingConsent.findMany({ where: { optedIn: true }, orderBy: { optedInAt: "desc" } });
+    const ids = consents.map((c) => c.userId);
+    const orders = ids.length ? await prisma.order.findMany({
+      where: { userId: { in: ids }, status: { notIn: ["CANCELLED", "PAYMENT_PENDING"] } },
+      select: { userId: true, total: true, createdAt: true, address: true, customerName: true, customerPhone: true },
+      orderBy: { createdAt: "desc" },
+    }) : [];
+    const byUser = new Map();
+    for (const o of orders) {
+      const s = byUser.get(o.userId) || { count: 0, spent: 0, last: null, area: null, name: null, phone: null };
+      s.count += 1; s.spent += o.total;
+      if (!s.last) { s.last = o.createdAt; s.area = areaOf(o.address); s.name = o.customerName; s.phone = o.customerPhone; }
+      byUser.set(o.userId, s);
+    }
+    const base = process.env.APP_BASE_URL || "https://www.ekoyini.co.za";
+    const rows = consents.map((c) => {
+      const s = byUser.get(c.userId) || {};
+      return [c.name || s.name || "", c.phone || s.phone || "", c.email || "", c.optedInAt ? c.optedInAt.toISOString().slice(0, 10) : "", c.source || "",
+        s.area || "", s.count || 0, (s.spent || 0).toFixed(2), s.last ? s.last.toISOString().slice(0, 10) : "",
+        unsubscribeUrl(base, c.userId, process.env.MARKETING_LINK_SECRET)];
+    });
+    await logAdminAction(req, "EXPORT_MARKETING_LIST", null, `${rows.length} opted-in customers`);
+    sendCsv(res, `ekoyini-marketing-optins-${new Date().toISOString().slice(0, 10)}.csv`,
+      ["Name", "Phone", "Email", "Opted in on", "Opted in via", "Area", "Orders", "Total spent (R)", "Last order", "Unsubscribe link"], rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to export" });
+  }
+});
+
+app.get("/admin/export/orders.csv", requireAdmin, requireSuperAdmin, async (req, res) => {
+  try {
+    const days = reportDays(req);
+    const orders = await prisma.order.findMany({
+      where: { createdAt: { gte: new Date(Date.now() - days * 86400000) } },
+      include: { items: true, tavern: { select: { name: true } } },
+      orderBy: { createdAt: "desc" },
+    });
+    const rows = orders.map((o) => [o.code, o.createdAt.toISOString(), o.status, o.paymentMethod, o.total.toFixed(2),
+      o.items.map((i) => `${i.name} x${i.quantity}`).join("; "), areaOf(o.address), o.tavern?.name || "", o.driverName || "",
+      o.deliveryFee ?? "", o.surgeFee ?? "", o.priorityFee ?? "", o.serviceFee ?? "", o.safetySealFee ?? "", o.promoCode || "", o.rating ?? ""]);
+    await logAdminAction(req, "EXPORT_ORDERS", null, `${rows.length} orders, last ${days} days`);
+    sendCsv(res, `ekoyini-orders-${days}d-${new Date().toISOString().slice(0, 10)}.csv`,
+      ["Code", "Placed (UTC)", "Status", "Payment", "Total (R)", "Items", "Area", "Tavern", "Driver", "Delivery fee", "Surge fee", "Priority fee", "Care & Handling", "Safety seal", "Promo", "Rating"], rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to export" });
+  }
+});
+
+// ── Visitor analytics (Cloudflare Web Analytics: no cookies, no personal data)
+// Pages load /analytics.js; it only loads Cloudflare's beacon when
+// CF_ANALYTICS_TOKEN is set on Render, so nothing runs until you turn it on.
+app.get("/analytics.js", (req, res) => {
+  res.setHeader("Content-Type", "application/javascript; charset=utf-8");
+  res.setHeader("Cache-Control", "public, max-age=300");
+  const token = String(process.env.CF_ANALYTICS_TOKEN || "").replace(/[^a-zA-Z0-9]/g, "");
+  if (!token) return res.send("/* analytics off */");
+  res.send(`(function(){var s=document.createElement('script');s.defer=true;s.src='https://static.cloudflareinsights.com/beacon.min.js';s.setAttribute('data-cf-beacon',JSON.stringify({token:'${token}'}));document.head.appendChild(s);})();`);
 });
 
 // Admin-only: shows what the proxy chain sends, to choose TRUST_PROXY_HOPS.
