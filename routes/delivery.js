@@ -1,7 +1,7 @@
 // Delivery fee preview for checkout, plus the admin settings behind it
 // (tavern locations and the surge on/off switch).
 const rateLimit = require("express-rate-limit");
-const { isValidPin } = require("../lib/delivery-quote.js");
+const { isValidPin, cartWeightKg } = require("../lib/delivery-quote.js");
 
 // Checkout re-quotes on every priority tap, so this is looser than the
 // order-creation limiter.
@@ -24,7 +24,7 @@ module.exports = function mountDelivery(app, { prisma, requireAdmin, requireSupe
   // server when the order is placed, so nothing sent here can lower the price.
   app.post("/api/delivery-quote", quoteLimiter, async (req, res) => {
     try {
-      const { subtotal, deliveryLat, deliveryLng, priorityFee } = req.body || {};
+      const { subtotal, deliveryLat, deliveryLng, priorityFee, items } = req.body || {};
       const parsedSubtotal = parseFloat(subtotal);
       if (!Number.isFinite(parsedSubtotal) || parsedSubtotal < 0) {
         return res.status(400).json({ error: "subtotal is required" });
@@ -37,6 +37,7 @@ module.exports = function mountDelivery(app, { prisma, requireAdmin, requireSupe
         deliveryLat: pinOk ? lat : null,
         deliveryLng: pinOk ? lng : null,
         priorityFee,
+        weightKg: await cartWeightKg(prisma, items),
       });
       if (result.error) return res.status(400).json({ error: result.error });
       res.json({ needsPin: result.needsPin, quote: result.quote });
@@ -77,6 +78,40 @@ module.exports = function mountDelivery(app, { prisma, requireAdmin, requireSupe
     } catch (err) {
       console.error(err);
       res.status(500).json({ error: "Failed to save delivery settings" });
+    }
+  });
+
+  // ADMIN: add a tavern / dark store (founder, 10 Nov 2026: "I will load a
+  // number of taverns we will be working with"). Delivery distance is
+  // measured to the nearest one with a location. `location` may be one
+  // "lat, lng" string, as Google Maps copies it.
+  app.post("/admin/taverns", requireAdmin, requireSuperAdmin, async (req, res) => {
+    try {
+      const clean = (v, max) => (typeof v === "string" ? v.trim() : "").slice(0, max);
+      const name = clean(req.body?.name, 80);
+      const area = clean(req.body?.area, 60);
+      const phone = clean(req.body?.phone, 20).replace(/[\s-]/g, "");
+      if (name.length < 2 || area.length < 2) return res.status(400).json({ error: "Enter the tavern's name and area" });
+      if (/[\u0000-\u001f\u007f<>]/.test(name + area)) return res.status(400).json({ error: "The name or area has characters we can't accept" });
+      if (phone && !/^(\+27|0)\d{9}$/.test(phone)) return res.status(400).json({ error: "Enter a South African phone number, e.g. 072 123 4567" });
+      let lat = null;
+      let lng = null;
+      const loc = clean(req.body?.location, 60);
+      if (loc) {
+        const m = loc.match(/^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/);
+        lat = m ? parseFloat(m[1]) : NaN;
+        lng = m ? parseFloat(m[2]) : NaN;
+        if (!isValidPin(lat, lng)) return res.status(400).json({ error: "Paste the location as two numbers, like -33.8734, 25.5612 (long-press the spot in Google Maps)" });
+      }
+      const tavern = await prisma.tavern.create({
+        data: { name, area, phone, latitude: lat, longitude: lng },
+        select: { id: true, name: true, area: true, latitude: true, longitude: true },
+      });
+      await logAdminAction(req, "ADD_TAVERN", tavern.name, `${area}${lat != null ? ` · ${lat}, ${lng}` : ""}`);
+      res.status(201).json(tavern);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "Failed to add the tavern" });
     }
   });
 

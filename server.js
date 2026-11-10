@@ -247,7 +247,7 @@ async function logAdminAction(req, action, targetId, detail) {
 
 // ── Pricing — shared with the browser via public/pricing.js, so the cart,
 // checkout and server can never disagree on discounts or the delivery fee.
-const { COOLER_ELIGIBLE, coolerDiscountPct, MIN_ORDER_SUBTOTAL, safetySealFeeFor } = require("./public/pricing.js");
+const { COOLER_ELIGIBLE, coolerDiscountPct, MIN_ORDER_SUBTOTAL, safetySealFeeFor, orderWeightKg } = require("./public/pricing.js");
 // Shelf order (shared with the shop and admin): sensible sections, brands together.
 const { compareCatalogue } = require("./public/shelf-order.js");
 const { createQuoter } = require("./lib/delivery-quote.js");
@@ -600,6 +600,7 @@ async function validateAndPriceOrder({ address, items, customerName, customerPho
   const orderItems = [];
   const stockNeeded = []; // units are individual bottles (six-packs for dumpies/cans), not cases
   const categories = [];
+  const weighed = []; // for the load (weight) part of the delivery fee
 
   for (const i of items) {
     const sku = skuMap.get(i.skuId);
@@ -624,6 +625,7 @@ async function validateAndPriceOrder({ address, items, customerName, customerPho
 
     orderItems.push({ skuId: sku.id, name: sku.name, price: unitPrice, quantity });
     stockNeeded.push({ skuId: sku.id, name: sku.name, units: quantity });
+    weighed.push({ bottleFormat: sku.bottleFormat, packSize: sku.packSize, category: sku.category, quantity });
   }
 
   // Orders below the minimum don't qualify for delivery. Compared on the
@@ -641,6 +643,7 @@ async function validateAndPriceOrder({ address, items, customerName, customerPho
     deliveryLng: pin.deliveryLng,
     priorityFee,
     now: pricedAt,
+    weightKg: orderWeightKg(weighed),
   });
   if (delivery.error) return { error: delivery.error };
   if (delivery.needsPin) {

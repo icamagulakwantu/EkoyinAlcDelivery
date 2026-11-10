@@ -4,7 +4,8 @@
 These points replace anything older in the sections below.
 - **Cart and checkout are restyled** to the shop style (shared `public/app.css`, dark `#17140e` buttons, sticky total bars). Section 8 item 1 is done.
 - **The R10 tamper-proof Safety Seal is built**: spirits only, charged by the server, saved in `Order.safetySealFee`, shown on the admin order card.
-- **The service fee is "Care & Handling"**: 5% of the items, minimum R15, maximum R75 (`CARE_FEE_PCT/MIN/MAX` in `public/pricing.js`, founder decision 8 Nov). The R50–R110 and 5/7/15% bands are gone.
+- **The service fee is "Care & Handling"**: 3% of the items, minimum R10, maximum R40 (`CARE_FEE_PCT/MIN/MAX` in `public/pricing.js`, founder decision 10 Nov; was 5%/R15/R75).
+- **Delivery fee (10 Nov)** = distance (R35 covers 3 km, then R6/km to the nearest tavern/dark store with a location) + load (R1.50/kg above 20 kg, weight estimated per pack by `itemWeightKg`, server weighs from the catalogue). Load rides inside `Order.deliveryFee`; all delivery, load, surge and priority money goes to the driver. Admin Delivery tab can add taverns (`POST /admin/taverns`).
 - **One total calculation**: cart, checkout and server all use `priceOrder()` in `public/pricing.js`. Change fees there, not in page code.
 - **Card payment (Yoco) is the default** in checkout. Paid checkouts become orders via the webhook OR the confirmation-page status check (`completePaidCheckout` in `server.js`, atomic claim, never twice).
 - **Prices corrected 8 Nov, fixed 9 Nov**: `lib/price-corrections-2026-11-08.js` (HIGHEST regular shelf price of the single pack + 7%/5%; never crate/12, never promo; a test enforces it) overrides the older list; review sheet `prisma/data/price-corrections-2026-11-08.csv`. Rows marked estimate are worth checking on the shelf.
@@ -14,8 +15,8 @@ These points replace anything older in the sections below.
 - **Founder prices (9 Nov, late)**: `lib/founder-prices-2026-11-09.js` holds FINAL prices that win over everything (Heineken dumpies R145, Castle Lite/Black Label cans R130, Savanna 500ml NRB six-pack R210, Appletiser R45, Red Bull 250ml single R30, Coke 500ml can R20, strategic spirits at Siba cost + 14%). Alcoholic can six-packs are never under R130 (Corona and Savanna excepted). Stock is bought at Siba; a test keeps every receipt item at or above its Siba cost.
 - **Six-packs only** for beer/cider/RTD cans, dumpies and 500ml NRBs; cold drinks, energy drinks, water and ice are loose (`packSizeFor()` in `lib/catalogue-2026-11.js`; Mofaya and Schweppes cans stay six-packs).
 - **Shelf order (9 Nov)**: `public/shelf-order.js` (shared by shop, `/api/products`, admin stock list). Water & Ice is one section; Mofaya + Red Bull are Energy Drinks; Ponchos Coffee is Tequila. Monin syrups are R230.99 and must never be under R230 (founder; a test enforces it).
-- **Service worker cache is `ekoyini-shell-v10`**. Bump it again when static pages change.
-- **Tests**: 75 (incl. `test/founder-prices.test.js`, `test/shelf-order.test.js`), including `test/reports-marketing.test.js`, `test/order-pricing.test.js` and `test/price-corrections.test.js`.
+- **Service worker cache is `ekoyini-shell-v11`**. Bump it again when static pages change.
+- **Tests**: 77 (incl. `test/founder-prices.test.js`, `test/shelf-order.test.js`), including `test/reports-marketing.test.js`, `test/order-pricing.test.js` and `test/price-corrections.test.js`.
 
 ## 1. What this is
 Alcohol delivery app for Gqeberha townships (ride-along delivery). Founder: Thandu (Thanduxolo Makeleni), Ekoyini Group.
@@ -32,7 +33,7 @@ Stack: Node/Express 4, Prisma 5, Supabase Postgres, Yoco payments, vanilla HTML/
 `npm install` runs `postinstall`, which runs `node --test` plus the migrations and the catalogue/photo scripts. If any test fails the deploy fails and the old code stays live. This happened 6 Nov 20:38 to 7 Nov 03:10 (`roundTavern` was exported but never defined). Always run `npm test` (or `node --test`) before pushing. Tests need every image path in the photo map to exist.
 
 ## 4. Catalogue rules (decided by the founder)
-- 327 rows = 322 master workbook SKUs + 5 house products (Mofaya Original R62.94 and Mofaya Orange Ting R62.94 six-packs, Grenadine Syrup Cordial R73.50, Kola Tonic Cordial R47.25, Coca-Cola Original 500ml can R20).
+- 328 rows = 322 master workbook SKUs + 5 house products (Mofaya Original R62.94 and Mofaya Orange Ting R62.94 six-packs, Grenadine Syrup Cordial R73.50, Kola Tonic Cordial R47.25, Coca-Cola Original 500ml can R20) + Ice Tropez 6 x 275ml R401.24 (10 Nov, no photo yet).
 - Final customer prices live in `lib/catalogue-2026-11.js` (`FINAL_CUSTOMER_PRICES`). Markup is already inside them: 7% beer/cider/RTD/wine, 5% spirits/liqueurs/mixers/water/ice. Never stack a markup on a final price.
 - NEVER show "Price coming soon". `PRICE_COMING_SOON` is empty. Every new product needs a real shelf price + the category markup.
 - No 375ml spirits. No 1 litre rows (the founder never added them). Black Label is the 750ml quart. Breezer has no quarts. MXD is quart (660ml) + can only. Chillers Punch is cans only. Brutal Fruit has no 750ml. Extreme is an alcoholic RTD.
@@ -44,8 +45,8 @@ Stack: Node/Express 4, Prisma 5, Supabase Postgres, Yoco payments, vanilla HTML/
 
 ## 5. Fees and orders (founder decisions)
 - No free delivery. Minimum order R300.
-- Service fee (now "Care & Handling", see section 0) is its own line, saved in `Order.serviceFee`, included in the server total and the Yoco amount. Decided 8 Nov: 5% of items, min R15, max R75.
-- Cooler Box discount: 5% from R1000, 8% above R2000, only until 20:00 SA time (comes back 04:00). No other discounts.
+- Service fee (now "Care & Handling", see section 0) is its own line, saved in `Order.serviceFee`, included in the server total and the Yoco amount. Decided 10 Nov: 3% of items, min R10, max R40.
+- Cooler Box discount: 5% from R2000, 8% from R4000 (founder, 10 Nov), only until 20:00 SA time (comes back 04:00). No other discounts.
 - Drivers keep 100% of delivery, surge and priority fees. Dispatch stays manual (admin finds a driver, sends details by WhatsApp). One shared stock and one platform price (no per-tavern stock). Low commission while taverns are onboarded.
 - Yoco fee is 3.25% + R2.50 per transaction. The founder floated 6% / 8% markups to absorb it, then said the workbook prices already include 5% / 7%. Not applied. Ask before touching.
 
@@ -79,4 +80,4 @@ Stack: Node/Express 4, Prisma 5, Supabase Postgres, Yoco payments, vanilla HTML/
 - Do not touch the other Supabase projects. Do not delete order data. `OrderItem` snapshots name + price, so catalogue changes do not break history.
 - Commit trailer to use:
   `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>`
-- Verify on the LIVE site after each deploy (products API, a photo, a price). The service worker caches the shell (`ekoyini-shell-v10`), so bump the cache name when you change static pages.
+- Verify on the LIVE site after each deploy (products API, a photo, a price). The service worker caches the shell (`ekoyini-shell-v11`), so bump the cache name when you change static pages.
