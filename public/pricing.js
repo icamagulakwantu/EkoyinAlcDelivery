@@ -180,7 +180,8 @@
   function loadFeeFor(weightKg) {
     const kg = Number(weightKg);
     if (!Number.isFinite(kg) || kg <= LOAD_FREE_KG) return 0;
-    return round2((kg - LOAD_FREE_KG) * LOAD_FEE_PER_KG);
+    // Whole rands, so a few grams over never shows as "R0.38".
+    return Math.round((kg - LOAD_FREE_KG) * LOAD_FEE_PER_KG);
   }
 
   // Which surge window (if any) is active at this moment, on SA time.
@@ -248,13 +249,40 @@
     return wanted === true && hasSpirits(categories) ? SAFETY_SEAL_FEE : 0;
   }
 
+  // ── Returnable bottles & crates (founder, 10 Nov 2026) ───────────
+  // SAB-style returnable quarts carry a bottle deposit. The ride-along
+  // driver makes a single trip and cannot take empties back, so every
+  // returnable quart is charged: R2 a bottle + R28 a crate per full crate of
+  // 12 ("In a crate", R52), or R3 a bottle loose ("No crate", and for the
+  // bottles that don't fill a crate). Cans, dumpies, NRBs and spirits are
+  // non-returnable and never charged. Amstel, Corona, Heineken, Sol, Stella
+  // and Hunter's quarts are not returnable here (founder).
+  const RETURNABLE_QUART_BRANDS = /^(Carling Black Label|Castle Lager|Castle Lite|Castle Milk Stout|Hansa Pilsener|Lion Lager|Windhoek|Flying Fish|Redd's|Strongbow)/;
+  const CRATE_SIZE = 12;
+  const BOTTLE_DEPOSIT_IN_CRATE = 2;
+  const CRATE_FEE = 28;
+  const BOTTLE_DEPOSIT_LOOSE = 3;
+  function isReturnableQuart(name, bottleFormat) {
+    return /^Quart/i.test(String(bottleFormat || '')) && RETURNABLE_QUART_BRANDS.test(String(name || ''));
+  }
+  // bottles: number of returnable quarts; crate: true = deliver full dozens in crates.
+  function bottleDepositFor(bottles, crate) {
+    const n = Math.max(0, Math.floor(Number(bottles) || 0));
+    if (n === 0) return { bottles: 0, crates: 0, loose: 0, fee: 0 };
+    const crates = crate === false ? 0 : Math.floor(n / CRATE_SIZE);
+    const loose = n - crates * CRATE_SIZE;
+    const fee = round2(crates * (CRATE_SIZE * BOTTLE_DEPOSIT_IN_CRATE + CRATE_FEE) + loose * BOTTLE_DEPOSIT_LOOSE);
+    return { bottles: n, crates, loose, fee };
+  }
+
   // ── One order total, used by the cart, checkout and server ─────────
   // lines: [{ category, total }] (line totals already priced).
   // promoPct: 0-100. deliveryTotal: the whole delivery quote total
   // (delivery + surge + priority + care fee). Order of operations:
   //   subtotal -> minus Cooler Box -> minus promo (on what is left)
-  //   -> plus delivery quote -> plus Safety Seal.
-  function priceOrder({ lines, promoPct, deliveryTotal, safetySeal, now }) {
+  //   -> plus delivery quote -> plus Safety Seal -> plus bottles & crates.
+  // bottleDeposit: rand amount from bottleDepositFor() (never discounted).
+  function priceOrder({ lines, promoPct, deliveryTotal, safetySeal, now, bottleDeposit }) {
     let subtotal = 0;
     let coolerSubtotal = 0;
     const categories = [];
@@ -272,8 +300,9 @@
     const promoDiscount = round2((subtotal - coolerDiscount) * (pct / 100));
     const delivery = roundCurrency(deliveryTotal);
     const safetySealFee = safetySealFeeFor(safetySeal, categories);
-    const total = round2(subtotal - coolerDiscount - promoDiscount + delivery + safetySealFee);
-    return { subtotal, coolerSubtotal, coolerPct, coolerDiscount, promoDiscount, delivery, safetySealFee, total };
+    const bottleDepositFee = roundCurrency(bottleDeposit);
+    const total = round2(subtotal - coolerDiscount - promoDiscount + delivery + safetySealFee + bottleDepositFee);
+    return { subtotal, coolerSubtotal, coolerPct, coolerDiscount, promoDiscount, delivery, safetySealFee, bottleDepositFee, total };
   }
 
   // What the shopper still needs for the next Cooler Box tier, for nudges.
@@ -302,6 +331,12 @@
     COOLER_DISCOUNT_PCT,
     COOLER_TOP_SUBTOTAL,
     COOLER_TOP_DISCOUNT_PCT,
+    CRATE_SIZE,
+    BOTTLE_DEPOSIT_IN_CRATE,
+    CRATE_FEE,
+    BOTTLE_DEPOSIT_LOOSE,
+    isReturnableQuart,
+    bottleDepositFor,
     LOAD_FREE_KG,
     LOAD_FEE_PER_KG,
     BASE_DELIVERY_KM,

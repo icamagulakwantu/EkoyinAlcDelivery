@@ -225,6 +225,7 @@ model Order {
   priorityFee Float? // optional "Super Priority" the customer added
   serviceFee  Float? // Care & Handling fee, 5% / 7% / 15% of subtotal
   safetySealFee Float? // optional R10 tamper-evident seals (spirits only)
+  bottleDepositFee Float? // returnable quarts: R52 per crate of 12, R3 per loose bottle (founder, 10 Nov 2026)
 
   total         Float
   items         OrderItem[]

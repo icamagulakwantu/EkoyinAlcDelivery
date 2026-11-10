@@ -50,7 +50,8 @@ test('heavy loads pay the driver more: R1.50 a kg above 20 kg', () => {
   const crates = [{ bottleFormat: 'Quart (750ml)', packSize: 1, category: 'BEER', quantity: 96 }];
   const kg = P.orderWeightKg(crates);
   assert.ok(kg > 110 && kg < 130, `${kg} kg`);
-  assert.equal(P.loadFeeFor(kg), Math.round((kg - 20) * 1.5 * 100) / 100);
+  assert.equal(P.loadFeeFor(kg), Math.round((kg - 20) * 1.5)); // whole rands
+  assert.equal(P.loadFeeFor(20.25), 0); // a few grams over shows nothing, not R0.38
   const q = P.buildDeliveryQuote({ subtotal: 2258.88, distanceKm: 3, priorityFee: 0, now: at('08:00'), weightKg: kg });
   assert.equal(q.distanceFee, 40);
   assert.equal(q.loadFee, P.loadFeeFor(kg));

@@ -142,8 +142,10 @@
     const weightKg = P.orderWeightKg(lines.map((l) => ({ bottleFormat: l.p.bottleFormat, packSize: l.p.packSize, category: l.p.category, quantity: l.cases ? l.cases * l.p.unitsPerCase : l.qty })));
     const loadFee = lines.length ? P.loadFeeFor(weightKg) : 0;
     const deliveryTotal = lines.length ? P.BASE_DELIVERY_FEE + loadFee + surge.fee + P.careFeeFor(subtotal) : 0;
-    const priced = P.priceOrder({ lines, promoPct: appliedPromo ? appliedPromo.discountPct : 0, deliveryTotal });
-    return { lines, ...priced, careFee: lines.length ? P.careFeeFor(subtotal) : 0, weightKg, loadFee };
+    // Returnable quarts: bottles & crates (the cart assumes "in a crate"; checkout lets you choose).
+    const bottles = P.bottleDepositFor(lines.reduce((n, l) => n + (P.isReturnableQuart(l.p.name, l.p.bottleFormat) ? (l.cases ? l.cases * l.p.unitsPerCase : l.qty) * (l.p.packSize || 1) : 0), 0), true);
+    const priced = P.priceOrder({ lines, promoPct: appliedPromo ? appliedPromo.discountPct : 0, deliveryTotal, bottleDeposit: bottles.fee });
+    return { lines, ...priced, bottles, careFee: lines.length ? P.careFeeFor(subtotal) : 0, weightKg, loadFee };
   }
 
   async function loadCart() {
@@ -324,6 +326,7 @@
       ${appliedPromo ? `<div class="bill-row is-saving"><span>Promo ${escapeHtml(appliedPromo.code)}</span><span>−${formatRand(t.promoDiscount)}</span></div>` : ''}
       <div class="bill-row"><span>Delivery<small>From R${P.BASE_DELIVERY_FEE} · exact fee at checkout</small></span><span>${formatRand(P.BASE_DELIVERY_FEE)}</span></div>
       ${t.loadFee > 0 ? `<div class="bill-row"><span>Heavy load<small>About ${Math.round(t.weightKg)} kg · goes 100% to your driver</small></span><span>${formatRand(t.loadFee)}</span></div>` : ''}
+      ${t.bottleDepositFee > 0 ? `<div class="bill-row"><span>Bottles &amp; crates<small>${t.bottles.bottles} returnable quart${t.bottles.bottles === 1 ? '' : 's'} · crate or loose at checkout</small></span><span>${formatRand(t.bottleDepositFee)}</span></div>` : ''}
       ${surge.fee > 0 ? `<div class="bill-row"><span>${surge.key === 'LATE_NIGHT' ? 'Late-night fee' : 'Peak-hours fee'}<small>Goes 100% to your driver</small></span><span>${formatRand(surge.fee)}</span></div>` : ''}
       <div class="bill-row"><span>Care &amp; Handling<small>Order checks so it arrives sealed and correct</small></span><span>${formatRand(t.careFee)}</span></div>
       <div class="bill-row is-total"><span>Estimated total</span><span>${formatRand(t.total)}</span></div>
