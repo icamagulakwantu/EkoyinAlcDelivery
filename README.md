@@ -4,6 +4,12 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 10 Nov 2026 (night): shop aisle cards show real products (sponsor-ready)
+- The four shop aisle banners (Beer & Cider, Spirits, Wine & Bubbly, Mixers & Essentials) used stock photos. They are now rounded cards in their own colour with a white plate bottom-right showing three real products (Castle Lite, Black Label quart, Savanna; Hennessy, Johnnie Walker Black, Klipdrift; 4th Street, Moët, JC Le Roux; Red Bull, Coca-Cola, Appletiser), a "Shop now" button that jumps to the aisle, and swipe/dots as before.
+- **Sponsor-ready:** each aisle's `featured` block in `AISLES` (shop.html) holds its label, product photos and an optional search link, so a brand partner (SAB, Distell/Heineken, Pernod Ricard, Diageo) can take an aisle by editing one block. Cloudflare Web Analytics (live) gives the visitor numbers for those talks.
+- Fixed: the "Cooler Box" title on the shop's Cooler Box card was white on white.
+- New trimmed banner photos in `public/images/promo/`. Service worker cache `ekoyini-shell-v15`.
+
 ### 10 Nov 2026 (night): product sheet in the shop, photo summary in checkout
 - **Shop product sheet:** tap a drink's photo or name to open it big, with every pack of that drink side by side (e.g. Black Label: 6 cans, 6 dumpies, quart), each with its price and how many are already in your cart. Pick a pack, set the quantity, "Add to cart · R282.36". Notes explain six-packs, returnable bottles and crates, the case price, the Cooler Box and the Safety Seal where they apply.
 - **Checkout:** a "Your order · 15 items" card at the top with product photos (tap to edit in the cart); the review lists each item with its photo and pack.

@@ -160,6 +160,31 @@
     @keyframes fab-in { from { transform: translateY(14px); opacity: 0; } to { transform: none; opacity: 1; } }
     @media (min-width: 700px) { .cart-fab { left: 50%; right: auto; width: 420px; transform: translateX(-50%); animation: none; } }
   </style>
+  <style id="aisle-cards">
+    /* Aisle cards (10 Nov 2026): rounded card, white plate bottom-right with
+       real product photos, like the home deals. Sponsor-ready (see AISLES). */
+    body .shop-hero { height: 196px; border-radius: 24px !important; background: #17140e; }
+    .shop-hero-slide { padding: 18px 20px; justify-content: center; overflow: hidden; isolation: isolate; background: none; cursor: pointer; }
+    .shop-hero-slide::before { display: none; }
+    .shop-hero-slide.a-beer { background: radial-gradient(120% 140% at 100% 0%, #ffb21f 0%, #e07b00 45%, #8f3f00 100%); }
+    .shop-hero-slide.a-spirits { background: radial-gradient(120% 140% at 100% 0%, #3a3127 0%, #1f1a13 55%, #120f0a 100%); }
+    .shop-hero-slide.a-wine { background: radial-gradient(120% 140% at 100% 0%, #b0304f 0%, #7a1530 50%, #45091a 100%); }
+    .shop-hero-slide.a-mixers { background: radial-gradient(120% 140% at 100% 0%, #2fa3c9 0%, #1a6f99 50%, #0e3f5c 100%); }
+    .sh-copy { position: relative; z-index: 2; max-width: 52%; }
+    .sh-kicker { font-size: 10.5px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: rgba(255,255,255,.82); }
+    .shop-hero-slide .sh-title { font-size: 24px; line-height: 1.05; margin: 4px 0 4px; }
+    .shop-hero-slide .sh-sub { max-width: none; font-size: 12px; }
+    .sh-cta { display: inline-flex; align-items: center; gap: 6px; margin-top: 12px; padding: 8px 13px; border-radius: 999px; background: #fff; color: #17140e; font-weight: 800; font-size: 12.5px; }
+    .sh-art { position: absolute; z-index: 1; right: -52px; bottom: -70px; width: 236px; height: 236px; border-radius: 50%; background: #fff; overflow: hidden;
+      display: flex; align-items: flex-start; justify-content: center; padding: 30px 58px 0 32px; box-shadow: 0 18px 40px rgba(0,0,0,.28); }
+    .sh-art img { height: 132px; width: auto; mix-blend-mode: multiply; }
+    .sh-art img + img { height: 118px; margin-left: 4px; margin-top: 12px; }
+    .sh-art img + img + img { height: 102px; margin-top: 26px; }
+    body .shop-hero-dots { bottom: 12px; left: 20px; right: auto; }
+    @media (min-width: 700px) { body .shop-hero { height: 220px; } .sh-art { width: 270px; height: 270px; right: -30px; } .sh-art img { height: 156px; } .sh-art img + img { height: 138px; } .sh-art img + img + img { height: 120px; } .sh-copy { max-width: 46%; } }
+    /* Cooler Box card title was white on white since the light redesign. */
+    body .cooler-bar-title { color: var(--white) !important; }
+  </style>
   <style id="product-sheet">
     /* Product sheet (10 Nov 2026): tap a drink to see it big, with every pack
        of that drink side by side, like Sixty60 / Uber Eats. */
@@ -469,19 +494,21 @@
   }
 
   // ── HERO AISLE BANNER ──
-  // Grouped into 4 aisles (not 18 individual categories — that's too many
-  // hand-picked images to maintain) using the same Unsplash photos
-  // prisma/seed.js already uses for category thumbnails, so nothing new
-  // to vet. Tapping a category pill crossfades to that pill's aisle.
+  // Founder, 10 Nov 2026: stylish cards that show real products, built so
+  // each aisle can later be SOLD to a brand partner (SAB, Distell/Heineken,
+  // Pernod Ricard, Diageo...). To feature a partner, change that aisle's
+  // `featured` block: its label ("Featured: SAB"), the product photos
+  // (trimmed copies in /images/promo/) and the search the card opens.
+  // Cloudflare Web Analytics counts the shop's visitors for those talks.
   const AISLES = [
-    { key: 'beer', label: 'Beer & Cider', sub: 'Cold ones for the stoep — six-packs of dumpies and cans, quarts, and RTDs.', cats: ['BEER', 'CIDER_RTD'],
-      img: 'https://images.unsplash.com/photo-1608270586620-248524c67de9?auto=format&fit=crop&w=800&q=80' },
-    { key: 'liquor', label: 'Spirits', sub: 'Whisky, gin, vodka, brandy, tequila, and more.', cats: ['BRANDY', 'WHISKY', 'COGNAC', 'GIN', 'VODKA', 'VODKA_PREMIUM', 'RUM', 'TEQUILA', 'TEQUILA_PREMIUM', 'LIQUEUR'],
-      img: 'https://images.unsplash.com/photo-1527281400683-1aae777175f8?auto=format&fit=crop&w=800&q=80' },
-    { key: 'wine', label: 'Wine & Bubbly', sub: 'Reds, whites, and something to pop for the occasion.', cats: ['WINE', 'WINE_BOX', 'SPARKLING', 'CHAMPAGNE'],
-      img: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=800&q=80' },
-    { key: 'mixers', label: 'Mixers & Essentials', sub: 'Cold drinks, energy drinks, water and ice for your cooler box.', cats: ['MIXER', 'ENERGY_DRINK', 'WATER', 'ICE', 'WATER_ICE'],
-      img: 'https://images.unsplash.com/photo-1621263764928-df1444c5e859?auto=format&fit=crop&w=800&q=80' },
+    { key: 'beer', label: 'Beer & Cider', sub: 'Six-packs of cans and dumpies, quarts and RTDs.', cats: ['BEER', 'CIDER_RTD'],
+      theme: 'a-beer', featured: { label: 'Cold ones', art: ['castle-lite-can', 'black-label-quart', 'savanna-dry'], q: '' } },
+    { key: 'liquor', label: 'Spirits', sub: 'Whisky, brandy, cognac, gin, vodka and tequila.', cats: ['BRANDY', 'WHISKY', 'COGNAC', 'GIN', 'VODKA', 'VODKA_PREMIUM', 'RUM', 'TEQUILA', 'TEQUILA_PREMIUM', 'LIQUEUR'],
+      theme: 'a-spirits', featured: { label: 'Top shelf', art: ['hennessy-vs', 'jw-black', 'klipdrift-export'], q: '' } },
+    { key: 'wine', label: 'Wine & Bubbly', sub: 'Reds, whites and something to pop.', cats: ['WINE', 'WINE_BOX', 'SPARKLING', 'CHAMPAGNE'],
+      theme: 'a-wine', featured: { label: 'For the table', art: ['4th-street-sweet-red', 'moet', 'jc-le-roux'], q: '' } },
+    { key: 'mixers', label: 'Mixers & Essentials', sub: 'Cold drinks, energy drinks, water and ice.', cats: ['MIXER', 'ENERGY_DRINK', 'WATER', 'ICE', 'WATER_ICE'],
+      theme: 'a-mixers', featured: { label: 'Cooler box basics', art: ['red-bull', 'coca-cola-2l', 'appletiser'], q: '' } },
   ];
 
   // Shelf order is shared with the server and admin (shelf-order.js).
@@ -496,10 +523,19 @@
     const dotsHolder = document.getElementById('shopHeroDots');
     AISLES.forEach((a, i) => {
       const slide = document.createElement('div');
-      slide.className = 'shop-hero-slide' + (i === 0 ? ' active' : '');
-      slide.style.backgroundImage = `url('${a.img}')`;
+      slide.className = `shop-hero-slide ${a.theme}` + (i === 0 ? ' active' : '');
       slide.dataset.aisle = a.key;
-      slide.innerHTML = `<div class="sh-title">${a.label}</div><div class="sh-sub">${a.sub}</div>`;
+      slide.setAttribute('role', 'button');
+      slide.setAttribute('aria-label', `${a.label}: ${a.sub}`);
+      slide.onclick = () => { if (a.featured.q) { location.href = `shop.html?q=${encodeURIComponent(a.featured.q)}`; return; } setActivePill(a.cats[0]); scrollToSection(a.cats[0]); };
+      slide.innerHTML = `
+        <div class="sh-copy">
+          <div class="sh-kicker">${esc(a.featured.label)}</div>
+          <div class="sh-title">${esc(a.label)}</div>
+          <div class="sh-sub">${esc(a.sub)}</div>
+          <span class="sh-cta">Shop now <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span>
+        </div>
+        <div class="sh-art" aria-hidden="true">${a.featured.art.map((k) => `<img src="images/promo/${k}.webp" alt="" loading="lazy" decoding="async">`).join('')}</div>`;
       hero.insertBefore(slide, dotsHolder);
     });
     dotsHolder.innerHTML = AISLES.map((a, i) => `<div class="shop-hero-dot${i === 0 ? ' active' : ''}" onclick="setAisle(${i})"></div>`).join('');
