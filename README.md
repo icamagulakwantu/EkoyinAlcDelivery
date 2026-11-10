@@ -4,6 +4,10 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 10 Nov 2026 (evening): every product photo the same size
+- Founder: "make sure items are similar sizes, some items seem tiny". Product photos came from many shops: the product filled anything from 56% to 100% of its photo, so a Breezer dumpy looked half the size of a Klipdrift. `scripts/normalize-photos.js` (run by hand, not on deploy) trimmed the white border of all 321 photos and centred each product on a 480px white square at 88% of the frame. Same file names and formats, so the photo map, database and tests are unchanged; total size stays about 8.5 MB.
+- Shop tiles show photos larger (less padding) and the home rails and category tiles use 94% / 92% of the tile. Service worker cache `ekoyini-shell-v13`.
+
 ### 10 Nov 2026 (later): the 16 partner taverns are the dark stores
 - The founder's 16 taverns, with Google Maps pins, are created by `prisma/seed.js` on deploy (only when missing, so a location corrected later in Admin → Delivery is kept): Oom Cola's Place (Gqalane), Mabaso, Skwerini NU2, Coke's Tavern, Zwide Liquor Stores, One Way Bottle Store, KwaLifa and Mafa, Monde's Lounge, KwaNceba, KwaMagxaki Butchery, Maleidini, Skwerini (Wells Estate), KwaMasinga, Ekupholeni Cocktail Lounge, Barbara's Lounge and KwaSiba. Endaweni (closed) and TigersMilk are left out.
 - The five made-up sample taverns from the first setup are removed (only if no order was ever assigned to one).

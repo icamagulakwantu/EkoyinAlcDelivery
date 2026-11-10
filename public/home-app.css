@@ -221,3 +221,8 @@ body.hx-has-cart .hx { padding-bottom: calc(var(--bottom-h) + 96px); }
 }
 .hx-promo-copy { max-width: 47%; }
 .hx-promo-art { right: -66px; overflow: hidden; padding-left: 40px; }
+
+/* 10 Nov 2026: photos are now normalised (product = 88% of the photo), so
+   tiles can show them larger and every product reads the same size. */
+.hx-prod-img img { width: 94%; height: 94%; }
+.hx-cat-img img { width: 92%; height: 92%; }
