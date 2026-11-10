@@ -374,18 +374,38 @@ async function main() {
     console.log('Master catalogue sync is in preview mode; obsolete SKUs were not deleted.');
   }
 
-  // Seed the taverns admin-api.js's assign-order dropdown expects to find.
+  // Partner taverns / dark stores (founder list with Google Maps pins,
+  // 10 Nov 2026). Delivery distance is measured to the nearest one. Rows are
+  // only created when missing, so a location corrected later in Admin ->
+  // Delivery is never overwritten.
   const taverns = [
-    { name: 'Extreme Liquor Store', area: 'Zwide', phone: '27841234567' },
-    { name: "Mama's Corner Tavern", area: 'KwaZakhele', phone: '27721234567' },
-    { name: 'New Brighton Liquor', area: 'New Brighton', phone: '27839876543' },
-    { name: 'Central Bottle Store', area: 'Central', phone: '27739876543' },
-    { name: 'Motherwell Drinks Hub', area: 'Motherwell', phone: '27851239876' },
+    { id: 'tav_oomcola', name: "Oom Cola's Place (Gqalane Tavern)", area: 'Zwide', latitude: -33.8643, longitude: 25.5684 },
+    { id: 'tav_mabaso', name: 'Mabaso', area: 'Soweto-on-Sea', latitude: -33.8687, longitude: 25.5612 },
+    { id: 'tav_skwerini_nu2', name: 'Skwerini NU2', area: 'Motherwell NU2', latitude: -33.8052, longitude: 25.6033 },
+    { id: 'tav_cokes', name: "Coke's Tavern", area: 'Motherwell', latitude: -33.8001, longitude: 25.5876 },
+    { id: 'tav_zwide_liquor', name: 'Zwide Liquor Stores', area: 'Zwide 4', latitude: -33.8685, longitude: 25.5618 },
+    { id: 'tav_one_way', name: 'One Way Bottle Store', area: 'Zwide 3', latitude: -33.8596, longitude: 25.5714 },
+    { id: 'tav_lifa_mafa', name: 'KwaLifa and Mafa', area: 'Zwide 3', latitude: -33.8633, longitude: 25.5670 },
+    { id: 'tav_mondes', name: "Monde's Lounge (Mondes Lifestyle)", area: 'Motherwell', latitude: -33.8091, longitude: 25.5997 },
+    { id: 'tav_kwanceba', name: 'KwaNceba', area: 'New Brighton', latitude: -33.8974, longitude: 25.5962 },
+    { id: 'tav_kwamagxaki_butchery', name: 'KwaMagxaki Butchery', area: 'KwaMagxaki', latitude: -33.8646, longitude: 25.5348 },
+    { id: 'tav_maleidini', name: 'Maleidini', area: 'Ezinyoka', latitude: -33.8344, longitude: 25.5261 },
+    { id: 'tav_skwerini_wells', name: 'Skwerini', area: 'Wells Estate', latitude: -33.8037, longitude: 25.6428 },
+    { id: 'tav_kwamasinga', name: 'KwaMasinga', area: 'Wells Estate', latitude: -33.8021, longitude: 25.6359 },
+    { id: 'tav_ekupholeni', name: 'Ekupholeni Cocktail Lounge', area: 'Zwide 4', latitude: -33.8661, longitude: 25.5701 },
+    { id: 'tav_barbaras', name: "Barbara's Lounge", area: 'KwaZakhele 3', latitude: -33.8763, longitude: 25.5912 },
+    { id: 'tav_kwasiba', name: 'KwaSiba', area: 'Govan Mbeki', latitude: -33.8471, longitude: 25.5432 },
   ];
   for (const t of taverns) {
-    const existing = await prisma.tavern.findFirst({ where: { name: t.name } });
-    if (!existing) await prisma.tavern.create({ data: t });
+    const existing = await prisma.tavern.findUnique({ where: { id: t.id } });
+    if (!existing) await prisma.tavern.create({ data: { ...t, phone: '' } });
   }
+
+  // The five made-up sample taverns from the first setup (no location, no
+  // real business) are removed, but only if no order was ever assigned to one.
+  const SAMPLE_TAVERNS = ['Extreme Liquor Store', "Mama's Corner Tavern", 'New Brighton Liquor', 'Central Bottle Store', 'Motherwell Drinks Hub'];
+  const removedSamples = await prisma.tavern.deleteMany({ where: { name: { in: SAMPLE_TAVERNS }, orders: { none: {} } } });
+  if (removedSamples.count) console.log(`Removed ${removedSamples.count} sample tavern(s).`);
 
   console.log('Seed complete.');
 }

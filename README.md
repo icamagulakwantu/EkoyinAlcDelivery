@@ -4,6 +4,14 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 10 Nov 2026 (later): the 16 partner taverns are the dark stores
+- The founder's 16 taverns, with Google Maps pins, are created by `prisma/seed.js` on deploy (only when missing, so a location corrected later in Admin → Delivery is kept): Oom Cola's Place (Gqalane), Mabaso, Skwerini NU2, Coke's Tavern, Zwide Liquor Stores, One Way Bottle Store, KwaLifa and Mafa, Monde's Lounge, KwaNceba, KwaMagxaki Butchery, Maleidini, Skwerini (Wells Estate), KwaMasinga, Ekupholeni Cocktail Lounge, Barbara's Lounge and KwaSiba. Endaweni (closed) and TigersMilk are left out.
+- The five made-up sample taverns from the first setup are removed (only if no order was ever assigned to one).
+- Delivery distance is now measured to the nearest of these, and checkout asks customers to pin their location. Rehearsed locally: a Zwide customer matches Zwide Liquor Stores at 0.4 km (R40); a central Gqeberha customer matches KwaNceba at 7 km (R64.18).
+
+### 10 Nov 2026 (later): delivery base back to R40
+- Founder: the delivery base starts at R40. Now R40 covers the first 3 km, then R6 a km (5 km R52, 10 km R82). Load fee, Care & Handling and Cooler Box unchanged. Tests updated.
+
 ### 10 Nov 2026: delivery priced by distance AND load, lower Care & Handling, Cooler Box from R2000
 Founder: 96 quarts (8 crates) paid the same R40 delivery as one six-pack, while Care & Handling went up. Fixed in `public/pricing.js` (shared by cart, checkout and server):
 - **Distance, like the delivery apps:** R35 covers the first 3 km to the nearest dark store, then R6 a km. No more R40/R55/R75 jumps.

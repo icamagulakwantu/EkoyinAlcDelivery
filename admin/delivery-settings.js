@@ -34,7 +34,7 @@ function renderDeliverySettings(data) {
                 <span class="activity-action">Surge pricing: ${data.surgesEnabled ? 'ON' : 'OFF'}</span>
             </div>
             <div class="activity-detail">Peak (4 PM to 10 PM) adds R20. Late night (10 PM to 4 AM) adds R30. Both go 100% to the driver. South African time.</div>
-            <div class="activity-detail">Delivery fee: R35 for the first 3 km, then R6 a km to the nearest dark store. Heavy orders add R1.50 a kg above 20 kg (a crate of 12 quarts is about 15 kg). All of it goes to the driver.</div>
+            <div class="activity-detail">Delivery fee: R40 for the first 3 km, then R6 a km to the nearest dark store. Heavy orders add R1.50 a kg above 20 kg (a crate of 12 quarts is about 15 kg). All of it goes to the driver.</div>
             <div class="order-actions">
                 <button class="btn ${data.surgesEnabled ? 'btn-deliver' : 'btn-assign'}" onclick="setSurgesEnabled(${!data.surgesEnabled})">${data.surgesEnabled ? 'Turn surges off' : 'Turn surges on'}</button>
             </div>

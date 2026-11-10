@@ -58,7 +58,7 @@
   // ── Delivery quote ─────────────────────────────────────────────
   // The delivery fee is built from these parts, all calculated on the server
   // at order time (the browser only previews them):
-  //   1. Distance fee  — base R35 for the first 3 km, then R6 a km
+  //   1. Distance fee  — base R40 for the first 3 km, then R6 a km
   //                      (straight-line distance x ROUTING_BUFFER), like
   //                      Uber Eats / Mr D / Bolt Food: base + per km
   //   2. Load fee      — heavy orders: R1.50 a kg above 20 kg (cases of
@@ -88,7 +88,7 @@
 
   // Distance (founder, 10 Nov 2026: "use similar delivery apps metrics"):
   // a base fee that covers the first few km, then a per-km rate. No jumps.
-  const BASE_DELIVERY_FEE = 35; // covers the first BASE_DELIVERY_KM (also the floor)
+  const BASE_DELIVERY_FEE = 40; // covers the first BASE_DELIVERY_KM (also the floor)
   const BASE_DELIVERY_KM = 3;
   const PER_KM_FEE = 6; // per km beyond BASE_DELIVERY_KM
   const DELIVERY_FEE = BASE_DELIVERY_FEE; // kept for older callers
