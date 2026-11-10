@@ -28,5 +28,5 @@ PORT=3000 node server.js &
 STAGING_DATABASE_URL="$DATABASE_URL" node staging/scenarios.js
 ```
 
-Expected today: 23/24 pass. 6.3 (rate limits vs a faked X-Forwarded-For)
+Expected today: 24/25 pass. 6.3 (rate limits vs a faked X-Forwarded-For)
 passes only once `TRUST_PROXY_HOPS` is set; see MARKET_READINESS.md.

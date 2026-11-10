@@ -4,6 +4,10 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 10 Nov 2026 (late): full launch-readiness diagnosis
+- `MARKET_READINESS.md` rewritten: software about 95% ready, launch overall about 70%. Six blockers: order emails not sending (`RESEND_API_KEY` missing on Render), checkout needs a GPS pin (no fallback), trading hours not enforced, legal-page placeholders, no order ever delivered or paid by card, licence position to confirm.
+- Staged scenarios updated for the 10 Nov rules (customer pin, 328 products, bottles & crates): 24/25 pass (6.3 needs Render's real proxy). Tests: 80.
+
 ### 10 Nov 2026 (night): shop aisle cards show real products (sponsor-ready)
 - The four shop aisle banners (Beer & Cider, Spirits, Wine & Bubbly, Mixers & Essentials) used stock photos. They are now rounded cards in their own colour with a white plate bottom-right showing three real products (Castle Lite, Black Label quart, Savanna; Hennessy, Johnnie Walker Black, Klipdrift; 4th Street, Moët, JC Le Roux; Red Bull, Coca-Cola, Appletiser), a "Shop now" button that jumps to the aisle, and swipe/dots as before.
 - **Sponsor-ready:** each aisle's `featured` block in `AISLES` (shop.html) holds its label, product photos and an optional search link, so a brand partner (SAB, Distell/Heineken, Pernod Ricard, Diageo) can take an aisle by editing one block. Cloudflare Web Analytics (live) gives the visitor numbers for those talks.

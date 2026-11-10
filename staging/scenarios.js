@@ -32,7 +32,10 @@ async function scenario(stage, id, title, fn) {
 const check = (ok, what) => current.checks.push({ ok: !!ok, what });
 const note = (n) => current.notes.push(n);
 
-const base = { address: '12 Vilakazi St, Orlando West', customerName: 'Thandeka', customerPhone: '072 123 4567', priorityFee: 0 };
+// A Zwide pin: since 10 Nov 2026 the 16 partner taverns have locations, so
+// every order needs the customer's pin to work out the delivery distance.
+const PIN = { deliveryLat: -33.8670, deliveryLng: 25.5660 };
+const base = { address: '12 Vilakazi St, Zwide', customerName: 'Thandeka', customerPhone: '072 123 4567', priorityFee: 0, ...PIN };
 
 (async () => {
   const products = (await call('GET', '/api/products')).json;
@@ -40,17 +43,18 @@ const base = { address: '12 Vilakazi St, Orlando West', customerName: 'Thandeka'
   const beer6 = by('BEER', (p) => p.packSize === 6);
   const gin = by('GIN', (p) => p.retailSingleZAR > 300);
   const whisky = by('WHISKY', (p) => p.retailSingleZAR > 400);
-  const linesFor = (items) => items.map((i) => { const p = products.find((x) => x.id === i.skuId); return { category: p.category, total: p.retailSingleZAR * i.quantity }; });
+  const linesFor = (items) => items.map((i) => { const p = products.find((x) => x.id === i.skuId); return { category: p.category, total: p.retailSingleZAR * i.quantity, name: p.name, bottleFormat: p.bottleFormat, quantity: i.quantity * (p.packSize || 1) }; });
   const expectTotal = async (items, { safetySeal = false, promoPct = 0, priorityFee = 0 } = {}) => {
     const lines = linesFor(items);
     const subtotal = lines.reduce((s, l) => s + l.total, 0);
-    const q = (await call('POST', '/api/delivery-quote', { body: { subtotal, priorityFee } })).json.quote;
-    return P.priceOrder({ lines, deliveryTotal: q.total, safetySeal, promoPct }).total;
+    const q = (await call('POST', '/api/delivery-quote', { body: { subtotal, priorityFee, items, ...PIN } })).json.quote;
+    const bottles = lines.reduce((n, l) => n + (P.isReturnableQuart(l.p ? l.p.name : l.name, l.p ? l.p.bottleFormat : l.bottleFormat) ? (l.units || l.quantity || 0) : 0), 0);
+    return P.priceOrder({ lines, deliveryTotal: q.total, safetySeal, promoPct, bottleDeposit: P.bottleDepositFor(bottles, true).fee }).total;
   };
 
   // ───────── STAGE 1: catalogue & content ─────────
   await scenario('1 Catalogue', '1.1', 'Every product is priced, in stock data, and no cost data leaks', async () => {
-    check(products.length === 326, `326 products (got ${products.length})`);
+    check(products.length === 328, `328 products (got ${products.length})`);
     check(products.every((p) => p.retailSingleZAR > 0), 'every product has a price > 0');
     const leaked = ['listPriceZAR', 'supplierCaseZAR', 'supplierPortfolio', 'palletPackQty'].filter((k) => products.some((p) => k in p));
     check(leaked.length === 0, `no supplier/cost fields in the public API (${leaked.join(',') || 'none'})`);

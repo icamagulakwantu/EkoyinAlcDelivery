@@ -1,66 +1,58 @@
-# Ekoyini market-readiness evaluation (8 Nov 2026)
+# Ekoyini launch readiness (full diagnosis, 10 Nov 2026)
 
-Code evaluated: branch `claude/app-ui-ux-logic-upgrade-nn7g90` (PR #4) on top of
-the live branch. Method: the real server against a local Postgres seeded with the
-full 326-product catalogue, with stand-ins for Yoco and Supabase login. 24 staged
-API scenarios (`staging/`), 13 browser scenarios on a simulated phone, 57 unit
-tests, a dependency audit, a photo-weight check and a read of the legal pages.
+Checked on the live code (merge `40ad6d6`), the live database (read-only),
+live server logs, and a full local rehearsal. Unit tests: **80/80**.
+Staged end-to-end scenarios (`staging/`): **24/25**. The one failure (6.3, faked
+IP vs rate limits) only fails on a local machine; live has `TRUST_PROXY_HOPS=3`,
+checked against Render's real proxy headers on 9 Nov.
 
-## Verdict: not yet. The software is ready, the business setup is not.
+## Verdict: the app is about 95% ready; the business is about 70% ready to launch
 
-Ordering, pricing, payments, stock, the order lifecycle and security all pass.
-**Three things must be done before launch**, and none of them is code:
-
-| # | Blocker | Why it matters | Who |
-|---|---|---|---|
-| 1 | **Legal pages still have placeholders**: `[REGISTERED COMPANY NAME]`, `[REG NO]`, `[PHYSICAL ADDRESS]`, `[NAME]` (Information Officer), `[PRIVACY EMAIL]`, `[EMAIL]`, `[PHONE]`, `[DATE]` in `public/privacy.html` and `public/terms.html`. | POPIA requires a named Information Officer and contact details. Customers and Yoco can see the gaps. | Founder supplies the details; a 10-minute edit |
-| 2 | **Liquor trading hours are not enforced.** The Terms promise "deliveries happen only within the legal trading hours", but the app takes orders 24 hours a day and even charges a late-night fee from 22:00 to 04:00. | Selling outside licensed hours puts the partner taverns' licences at risk. | Founder confirms the Eastern Cape off-consumption hours (and Sunday or holiday rules) with the Eastern Cape Liquor Board. Then it's a small code change: closed-hours message plus server refusal |
-| 3 | **No live order has gone through end to end since 6 Nov.** Your earlier test order did not reach the live database, and a card checkout from 6 Nov 20:33 is still unresolved. | The live setup (Yoco keys, webhook, Supabase login, emails) has only been exercised locally. | After PR #4 deploys: place one real card order and one EFT order on www.ekoyini.co.za, and check the 6 Nov payment in the Yoco dashboard |
-
-## Scorecard
-
-| Area | Result | Evidence |
+| Area | Score | Why |
 |---|---|---|
-| Catalogue | ✅ Pass | 326 products, all priced, no supplier or cost data in the public API, no quart over R35, a case never dearer than singles |
-| Pricing integrity | ✅ Pass | Server total = total shown to the customer, to the cent, for EFT, card, promo, Cooler Box and Safety Seal orders. Tampered requests (fake price, negative or zero quantity, unknown product, made-up fees, bad phone, control characters) are refused or ignored. R300 minimum enforced |
-| Promo codes | ✅ Pass | Discount matches; single-use, minimum-spend and expired codes are refused |
-| Card payments | ✅ Pass | Paid with no webhook → order created once. Wrong amount charged → flagged for refund, no order. Forged webhook → 401. Webhook delivered twice → one order. Another customer cannot read your checkout |
-| Cash on delivery | ✅ Pass | New account refused with a clear reason, trusted account allowed, R1500 cap enforced |
-| Stock | ✅ Pass | Two customers racing for the last bottle → exactly one gets it. Stock never goes negative, cancelling restores it, sold-out items can't be ordered |
-| Order lifecycle | ✅ Pass | EFT → admin confirms → assign tavern + driver → wrong driver link refused → pickup → no customer cancel once dispatched → live location → delivered → rating (once, own order only). Public tracking hides phone numbers and the address |
-| Database exposure | ✅ Fixed 9 Nov | 3 tables were readable and writable by anyone with the public Supabase key. Locked down on the live database, and re-applied on every deploy by `ensure-schema.js` |
-| Admin security | ✅ Pass | Every admin endpoint refuses anonymous callers and customers |
-| Age verification | ✅ Pass | Under-18 blocked. Deep links (e.g. a shared shop link) send unverified visitors to the gate and back afterwards. Checkout requires the 18+ and Terms boxes |
-| Error handling | ✅ Pass (fixed today) | Malformed JSON and huge carts get clean errors. Unknown pages showed a bare "Cannot GET"; there is now a friendly 404 |
-| Browser security headers | ✅ Pass (fixed today) | Added nosniff, frame protection, HSTS, Referrer-Policy and Permissions-Policy. Content-Security-Policy left out on purpose (see CLAUDE.md) |
-| Rate limiting | ⚠️ Needs one setting | Limits work per IP, but `trust proxy: true` lets anyone fake their IP and dodge them; the rate-limit library logs this warning on every start. Fixed in code behind `TRUST_PROXY_HOPS` (see below) |
-| Mobile performance | ✅ Pass (fixed today) | Product photos went from 29 MB to 11 MB with the same file names, and the shop's first load from 2.5 MB to 0.96 MB. The optimiser never ran on deploy (the dashboard build command overrides render.yaml); its comment now says to run it by hand |
-| Dependencies | ⚠️ Low risk | `npm audit`: 1 high (sharp/libvips). sharp is only used by the offline image script on our own files, never at runtime. Upgrade to sharp 0.35.5 in a quiet moment and test the build |
-| Photos | ⚠️ Minor | 324/326 have a product photo. Schweppes Lemonade and Tonic cans use a generic stock photo, not the product |
-| Emails | ❓ Not verified | Order emails use Resend and are skipped when `RESEND_API_KEY` is not set. Check it is set on Render |
-| Promo admin | ⚠️ Gap | There is no admin screen for promo codes; they can only be added in the database |
+| Software (shop, cart, checkout, pricing, payments code, admin, security) | **95%** | 24/25 scenarios, 80 tests, prices match server to the cent, stock races safe, card recovery, RLS lock-down |
+| Live operations (emails, real orders, dispatch team, stock) | **45%** | Emails are not sending, no order has ever been delivered, no dispatcher accounts, stock not real |
+| Legal & compliance | **40%** | Legal pages have placeholders, trading hours not enforced, licence position to confirm |
+| **Overall launch readiness** | **≈ 70%** | 6 must-fix items below; 2 are small code changes, 4 are setup by the founder |
 
-## Fixed during this evaluation (in PR #4)
-- Friendly 404 page for people, JSON `{"error":"Not found"}` for anything under `/api/`.
-- Browser security headers on every response.
-- `TRUST_PROXY_HOPS` setting plus an admin-only `GET /admin/client-ip` endpoint that shows what Render's proxies send.
-- Product photos compressed (palette PNG and JPEG q80, max 600px, same names).
-- Service-worker cache bumped to `v5`.
+## Must fix before launch (blockers)
 
-## Set this on Render after deploying
-1. Open `https://www.ekoyini.co.za/admin/client-ip` while signed in as admin. Count the IPs in `xForwardedFor`:
-   - one IP: set `TRUST_PROXY_HOPS=1`;
-   - two (yours plus a Cloudflare edge address): set `2`.
+| # | Blocker | What we found | Who / effort |
+|---|---|---|---|
+| 1 | **Order emails are not being sent** | Live log 10 Nov 06:27: `RESEND_API_KEY not set — skipping` for order EKO-FKA9SAV9 (customer confirmation and the team alert). The key is not on Render. | Founder: add `RESEND_API_KEY` on Render → ekoyini-api → Environment, choose **Save, rebuild and deploy**. 2 min |
+| 2 | **Customers who won't share their location can't order** | Since the 16 taverns have pins, checkout *requires* a GPS pin. A customer on a desktop, or who taps "Block", is stuck. | Code (small): allow the order without a pin, charge the base R40, and flag it "no pin: confirm distance" for the dispatcher. Needs founder OK |
+| 3 | **Liquor trading hours not enforced** | The Terms promise legal hours; the app takes orders 24 hours a day. | Founder: confirm Eastern Cape off-consumption hours (and Sunday/holiday rules). Then code (small): closed-hours message + server refusal |
+| 4 | **Legal pages have placeholders** | `privacy.html` and `terms.html` still say `[REGISTERED COMPANY NAME]`, `[REG NO]`, `[PHYSICAL ADDRESS]`, `[NAME]` (Information Officer), `[PRIVACY EMAIL]`, `[EMAIL]`, `[PHONE]`, `[DATE]`, `[X]`, `[EMAIL / WHATSAPP]`. POPIA needs a named Information Officer. | Founder sends details; 10-minute edit |
+| 5 | **No order has gone all the way through** | Live: 9 orders ever, **0 delivered**; 2 EFT orders waiting for payment (tests); 3 card checkouts started but never paid, so **no live card payment has ever completed**. | Founder: one real card order and one EFT order, through to "Delivered" with a real driver |
+| 6 | **Licence position** | The app sells at one platform price from shared stock bought at Siba. In South Africa liquor must be sold from licensed premises by the licence holder. | Founder: confirm with the Eastern Cape Liquor Board (or a liquor attorney) that each sale goes through a licensed partner tavern / Siba's licence, or that Ekoyini holds its own. Not legal advice |
 
-   Re-open the page: `reqIp` must show your own IP.
-2. Confirm `RESEND_API_KEY`, `YOCO_SECRET_KEY` and `YOCO_WEBHOOK_SECRET` are set (values never go in chat or Git).
+## Should fix in the first weeks
 
-## Recommended next (after launch blockers)
-1. Move Render off the free plan. Cold starts make the first customer of the morning wait, and slow Yoco webhooks (now covered by the status check, but still slow).
-2. An admin page for promo codes.
-3. Check the shelf prices marked "estimate" in `prisma/data/price-corrections-2026-11-08.csv`.
-4. Webhook replay window: reject signed Yoco messages older than 5 minutes. Harmless today because processing runs once, but standard practice.
-5. Real photos for the two Schweppes cans.
+| # | Item | Found |
+|---|---|---|
+| 7 | **No admin or dispatcher accounts** | `AdminUser` table is empty. Add your dispatchers in Admin → Admins (Dispatcher role) |
+| 8 | **Stock is not real** | 325 of 328 products show stock 999 (the default), so the app can sell what Siba doesn't have. Either set real stock in Admin → Stock, or decide on "always available, we confirm by phone" |
+| 9 | **Render free plan** | Cold starts: the first customer after a quiet spell waits ~30 s, and Yoco's payment notice can arrive late (covered by the status check, but slow). Starter plan ≈ R130 a month |
+| 10 | **Leaked-password check is off** | Supabase → Authentication → Passwords → turn on "Leaked password protection" ([guide](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection)) |
+| 11 | **133 prices are estimates** | Marked "estimate" in `prisma/data/price-corrections-2026-11-08.csv`. Siba receipts cover the fast movers; the rest are worth a shelf check |
+| 12 | **4 products without a real photo** | Ice Tropez, Coca-Cola 500ml can, Schweppes Lemonade and Tonic cans |
+| 13 | **Clean up test orders** | Cancel EKO-D6VQV4BL and EKO-FKA9SAV9 if they were tests |
+| 14 | **Support WhatsApp number** | The app shows 064 004 5465. Confirm it is the business line |
+
+## What passed (evidence)
+
+| Area | Result |
+|---|---|
+| Catalogue | 328 products, all priced, photos all load, no supplier/cost data in the public API, every photo the same size |
+| Pricing | Server total = what the customer saw, to the cent (EFT, card, promo, Cooler Box, Safety Seal, bottles & crates, load fee). Tampered prices/quantities/fees refused. R300 minimum enforced. Never below Siba cost (30 receipt items tested) |
+| Payments | Card: paid with no webhook → order created once; wrong amount → flagged, no order; forged webhook refused; webhook twice → one order. EFT waits for confirmation. Cash: new account refused, trusted allowed, R1500 cap |
+| Stock | Two customers racing for the last item → exactly one gets it; never negative; sold-out can't be ordered |
+| Order lifecycle | EFT → confirm → assign tavern + driver → pickup → live location → delivered → rating; customers see only their own orders |
+| Delivery | 16 partner taverns with pins; distance to the nearest (R40 for 3 km, then R6/km); heavy-load fee; surge windows |
+| Security | Every table locked (RLS, no public grants); admin endpoints refuse customers; admin token lock-out; security headers; no secrets in the repo; script in a name stored as text |
+| Resilience | Bad input → clean errors; unknown page → friendly 404 |
+| Analytics | Cloudflare Web Analytics live (founder confirmed) |
 
 ## How to re-run
-`staging/README.md` covers the 24 API scenarios (23/24 pass until `TRUST_PROXY_HOPS` is set). Unit tests: `npm test` (57 pass).
+- Unit tests: `node --test` (80).
+- Scenarios: see `staging/README.md` (25 scenarios; they now send a delivery pin, like real customers).
