@@ -4,6 +4,9 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 10 Nov 2026 (later): delivery base back to R40
+- Founder: the delivery base starts at R40. Now R40 covers the first 3 km, then R6 a km (5 km R52, 10 km R82). Load fee, Care & Handling and Cooler Box unchanged. Tests updated.
+
 ### 10 Nov 2026: delivery priced by distance AND load, lower Care & Handling, Cooler Box from R2000
 Founder: 96 quarts (8 crates) paid the same R40 delivery as one six-pack, while Care & Handling went up. Fixed in `public/pricing.js` (shared by cart, checkout and server):
 - **Distance, like the delivery apps:** R35 covers the first 3 km to the nearest dark store, then R6 a km. No more R40/R55/R75 jumps.

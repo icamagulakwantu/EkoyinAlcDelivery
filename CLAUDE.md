@@ -5,7 +5,7 @@ These points replace anything older in the sections below.
 - **Cart and checkout are restyled** to the shop style (shared `public/app.css`, dark `#17140e` buttons, sticky total bars). Section 8 item 1 is done.
 - **The R10 tamper-proof Safety Seal is built**: spirits only, charged by the server, saved in `Order.safetySealFee`, shown on the admin order card.
 - **The service fee is "Care & Handling"**: 3% of the items, minimum R10, maximum R40 (`CARE_FEE_PCT/MIN/MAX` in `public/pricing.js`, founder decision 10 Nov; was 5%/R15/R75).
-- **Delivery fee (10 Nov)** = distance (R35 covers 3 km, then R6/km to the nearest tavern/dark store with a location) + load (R1.50/kg above 20 kg, weight estimated per pack by `itemWeightKg`, server weighs from the catalogue). Load rides inside `Order.deliveryFee`; all delivery, load, surge and priority money goes to the driver. Admin Delivery tab can add taverns (`POST /admin/taverns`).
+- **Delivery fee (10 Nov)** = distance (R40 covers 3 km, founder 10 Nov, then R6/km to the nearest tavern/dark store with a location) + load (R1.50/kg above 20 kg, weight estimated per pack by `itemWeightKg`, server weighs from the catalogue). Load rides inside `Order.deliveryFee`; all delivery, load, surge and priority money goes to the driver. Admin Delivery tab can add taverns (`POST /admin/taverns`).
 - **One total calculation**: cart, checkout and server all use `priceOrder()` in `public/pricing.js`. Change fees there, not in page code.
 - **Card payment (Yoco) is the default** in checkout. Paid checkouts become orders via the webhook OR the confirmation-page status check (`completePaidCheckout` in `server.js`, atomic claim, never twice).
 - **Prices corrected 8 Nov, fixed 9 Nov**: `lib/price-corrections-2026-11-08.js` (HIGHEST regular shelf price of the single pack + 7%/5%; never crate/12, never promo; a test enforces it) overrides the older list; review sheet `prisma/data/price-corrections-2026-11-08.csv`. Rows marked estimate are worth checking on the shelf.
@@ -15,7 +15,7 @@ These points replace anything older in the sections below.
 - **Founder prices (9 Nov, late)**: `lib/founder-prices-2026-11-09.js` holds FINAL prices that win over everything (Heineken dumpies R145, Castle Lite/Black Label cans R130, Savanna 500ml NRB six-pack R210, Appletiser R45, Red Bull 250ml single R30, Coke 500ml can R20, strategic spirits at Siba cost + 14%). Alcoholic can six-packs are never under R130 (Corona and Savanna excepted). Stock is bought at Siba; a test keeps every receipt item at or above its Siba cost.
 - **Six-packs only** for beer/cider/RTD cans, dumpies and 500ml NRBs; cold drinks, energy drinks, water and ice are loose (`packSizeFor()` in `lib/catalogue-2026-11.js`; Mofaya and Schweppes cans stay six-packs).
 - **Shelf order (9 Nov)**: `public/shelf-order.js` (shared by shop, `/api/products`, admin stock list). Water & Ice is one section; Mofaya + Red Bull are Energy Drinks; Ponchos Coffee is Tequila. Monin syrups are R230.99 and must never be under R230 (founder; a test enforces it).
-- **Service worker cache is `ekoyini-shell-v11`**. Bump it again when static pages change.
+- **Service worker cache is `ekoyini-shell-v12`**. Bump it again when static pages change.
 - **Tests**: 77 (incl. `test/founder-prices.test.js`, `test/shelf-order.test.js`), including `test/reports-marketing.test.js`, `test/order-pricing.test.js` and `test/price-corrections.test.js`.
 
 ## 1. What this is
@@ -80,4 +80,4 @@ Stack: Node/Express 4, Prisma 5, Supabase Postgres, Yoco payments, vanilla HTML/
 - Do not touch the other Supabase projects. Do not delete order data. `OrderItem` snapshots name + price, so catalogue changes do not break history.
 - Commit trailer to use:
   `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>`
-- Verify on the LIVE site after each deploy (products API, a photo, a price). The service worker caches the shell (`ekoyini-shell-v11`), so bump the cache name when you change static pages.
+- Verify on the LIVE site after each deploy (products API, a photo, a price). The service worker caches the shell (`ekoyini-shell-v12`), so bump the cache name when you change static pages.

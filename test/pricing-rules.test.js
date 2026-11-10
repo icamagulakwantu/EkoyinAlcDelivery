@@ -20,19 +20,19 @@ test('Care & Handling is 3% of items, at least R10 and at most R40, with no jump
 
 test('there is no free delivery: a big order still pays the distance fee', () => {
   assert.equal(P.FREE_DELIVERY_THRESHOLD, undefined);
-  assert.equal(P.deliveryFee(5000), 35);
+  assert.equal(P.deliveryFee(5000), 40);
   const q = P.buildDeliveryQuote({ subtotal: 2500, distanceKm: 3, priorityFee: 0, now: at('08:00') });
-  assert.equal(q.deliveryFee, 35);
+  assert.equal(q.deliveryFee, 40);
   assert.equal(q.serviceFee, 40); // capped
-  assert.equal(q.total, 75);
+  assert.equal(q.total, 80);
 });
 
-test('distance like the delivery apps: R35 covers 3 km, then R6 a km, no jumps', () => {
-  assert.equal(P.distanceDeliveryFee(null), 35);
-  assert.equal(P.distanceDeliveryFee(2), 35);
-  assert.equal(P.distanceDeliveryFee(3), 35);
-  assert.equal(P.distanceDeliveryFee(5), 47);
-  assert.equal(P.distanceDeliveryFee(10), 77);
+test('distance like the delivery apps: R40 covers 3 km, then R6 a km, no jumps (founder, 10 Nov 2026)', () => {
+  assert.equal(P.distanceDeliveryFee(null), 40);
+  assert.equal(P.distanceDeliveryFee(2), 40);
+  assert.equal(P.distanceDeliveryFee(3), 40);
+  assert.equal(P.distanceDeliveryFee(5), 52);
+  assert.equal(P.distanceDeliveryFee(10), 82);
   let last = 0;
   for (let km = 0; km <= 30; km += 0.25) { const f = P.distanceDeliveryFee(km); assert.ok(f >= last, `${km} km`); last = f; }
 });
@@ -52,9 +52,9 @@ test('heavy loads pay the driver more: R1.50 a kg above 20 kg', () => {
   assert.ok(kg > 110 && kg < 130, `${kg} kg`);
   assert.equal(P.loadFeeFor(kg), Math.round((kg - 20) * 1.5 * 100) / 100);
   const q = P.buildDeliveryQuote({ subtotal: 2258.88, distanceKm: 3, priorityFee: 0, now: at('08:00'), weightKg: kg });
-  assert.equal(q.distanceFee, 35);
+  assert.equal(q.distanceFee, 40);
   assert.equal(q.loadFee, P.loadFeeFor(kg));
-  assert.equal(q.deliveryFee, Math.round((35 + q.loadFee) * 100) / 100);
+  assert.equal(q.deliveryFee, Math.round((40 + q.loadFee) * 100) / 100);
   assert.equal(q.total, Math.round((q.deliveryFee + 40) * 100) / 100);
   // No weight given: no load fee.
   assert.equal(P.buildDeliveryQuote({ subtotal: 500, distanceKm: 1, priorityFee: 0, now: at('08:00') }).loadFee, 0);
@@ -66,7 +66,7 @@ test('service fee no longer depends on distance or surge, and surge stays separa
   const night = P.buildDeliveryQuote({ subtotal: 600, distanceKm: 1, priorityFee: 10, now: at('21:00') }); // 23:00 SA
   assert.equal(night.serviceFee, 18);
   assert.equal(night.surgeFee, 30);
-  assert.equal(night.total, 35 + 30 + 10 + 18);
+  assert.equal(night.total, 40 + 30 + 10 + 18);
 });
 
 test('Cooler Box: 5% from R2000, 8% from R4000 (founder, 10 Nov 2026)', () => {
