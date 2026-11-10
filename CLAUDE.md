@@ -6,6 +6,7 @@ These points replace anything older in the sections below.
 - **The R10 tamper-proof Safety Seal is built**: spirits only, charged by the server, saved in `Order.safetySealFee`, shown on the admin order card.
 - **The service fee is "Care & Handling"**: 3% of the items, minimum R10, maximum R40 (`CARE_FEE_PCT/MIN/MAX` in `public/pricing.js`, founder decision 10 Nov; was 5%/R15/R75).
 - **Delivery fee (10 Nov)** = distance (R40 covers 3 km, founder 10 Nov, then R6/km to the nearest tavern/dark store with a location) + load (R1.50/kg above 20 kg, weight estimated per pack by `itemWeightKg`, server weighs from the catalogue). Load rides inside `Order.deliveryFee`; all delivery, load, surge and priority money goes to the driver. Admin Delivery tab can add taverns (`POST /admin/taverns`). The 16 founder taverns (dark stores, with pins) are created by `prisma/seed.js` when missing; the old sample taverns are removed by the seed.
+- **Bottles & crates (10 Nov)**: returnable quarts (SAB + Windhoek, Flying Fish, Redd's MXD, Strongbow; NOT Amstel/Corona/Heineken/Sol/Stella/Hunter's) pay R52 per crate of 12 or R3 a loose bottle (`bottleDepositFor` in `public/pricing.js`), saved in `Order.bottleDepositFee`; customer picks crate or loose at checkout.
 - **One total calculation**: cart, checkout and server all use `priceOrder()` in `public/pricing.js`. Change fees there, not in page code.
 - **Card payment (Yoco) is the default** in checkout. Paid checkouts become orders via the webhook OR the confirmation-page status check (`completePaidCheckout` in `server.js`, atomic claim, never twice).
 - **Prices corrected 8 Nov, fixed 9 Nov**: `lib/price-corrections-2026-11-08.js` (HIGHEST regular shelf price of the single pack + 7%/5%; never crate/12, never promo; a test enforces it) overrides the older list; review sheet `prisma/data/price-corrections-2026-11-08.csv`. Rows marked estimate are worth checking on the shelf.
@@ -16,7 +17,7 @@ These points replace anything older in the sections below.
 - **Six-packs only** for beer/cider/RTD cans, dumpies and 500ml NRBs; cold drinks, energy drinks, water and ice are loose (`packSizeFor()` in `lib/catalogue-2026-11.js`; Mofaya and Schweppes cans stay six-packs).
 - **Shelf order (9 Nov)**: `public/shelf-order.js` (shared by shop, `/api/products`, admin stock list). Water & Ice is one section; Mofaya + Red Bull are Energy Drinks; Ponchos Coffee is Tequila. Monin syrups are R230.99 and must never be under R230 (founder; a test enforces it).
 - **Service worker cache is `ekoyini-shell-v13`**. Bump it again when static pages change.
-- **Tests**: 77 (incl. `test/founder-prices.test.js`, `test/shelf-order.test.js`), including `test/reports-marketing.test.js`, `test/order-pricing.test.js` and `test/price-corrections.test.js`.
+- **Tests**: 80 (incl. `test/founder-prices.test.js`, `test/shelf-order.test.js`), including `test/reports-marketing.test.js`, `test/order-pricing.test.js` and `test/price-corrections.test.js`.
 
 ## 1. What this is
 Alcohol delivery app for Gqeberha townships (ride-along delivery). Founder: Thandu (Thanduxolo Makeleni), Ekoyini Group.

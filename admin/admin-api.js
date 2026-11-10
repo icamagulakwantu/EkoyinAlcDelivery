@@ -237,6 +237,11 @@ function renderOrderCard(order) {
                         <span><strong>Safety Seal stickers</strong> — seal the spirit bottles</span>
                         <span>${formatRand(order.safetySealFee)}</span>
                     </div>` : ''}
+                ${order.bottleDepositFee > 0 ? `
+                    <div class="item-row">
+                        <span><strong>Bottles &amp; crates</strong> — returnable quarts, customer keeps them</span>
+                        <span>${formatRand(order.bottleDepositFee)}</span>
+                    </div>` : ''}
                 <div class="total-row">
                     <span>Total</span>
                     <span>${formatRand(order.total)}</span>

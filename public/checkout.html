@@ -188,6 +188,16 @@
       </label>
     </section>
 
+    <!-- BOTTLES & CRATES (returnable quarts only) -->
+    <section class="checkout-section" id="bottleSection" hidden>
+      <h2>Bottles &amp; crates</h2>
+      <p class="bottle-note" id="bottleNote">Returnable quarts carry a bottle charge, because our driver makes one trip and can't take empties back. Keep the bottles and swap them at any tavern next time.</p>
+      <div class="bottle-options" id="bottleOptions" role="radiogroup" aria-label="How your quarts arrive">
+        <label class="seal-option"><input type="radio" name="crateChoice" value="crate" checked onchange="onCrateChange()"><div><b>In a crate</b><span id="crateText">R2 a bottle + R28 a crate, per 12</span></div></label>
+        <label class="seal-option"><input type="radio" name="crateChoice" value="loose" onchange="onCrateChange()"><div><b>No crate, loose</b><span>R3 a bottle</span></div></label>
+      </div>
+    </section>
+
     <!-- 4. REVIEW -->
     <section class="checkout-section" aria-labelledby="hReview">
       <h2 id="hReview"><span class="h-num">4</span>Review</h2>
@@ -258,6 +268,7 @@
   let cardEnabled = true;
   let codEligibility = null;
   let safetySeal = false;
+  let crate = true; // returnable quarts: full dozens in a crate (founder, 10 Nov 2026)
   let appliedPromo = null;   // { code, discountPct }
   let promoOpen = false;
   let showAllItems = false;
@@ -294,7 +305,8 @@
     const subtotal = P.roundCurrency(lines.reduce((s, l) => s + l.total, 0));
     // Until the server's quote lands, preview the base fee + load + Care & Handling.
     const deliveryTotal = deliveryQuote ? deliveryQuote.total : P.BASE_DELIVERY_FEE + P.loadFeeFor(cartWeight(lines)) + P.careFeeFor(subtotal);
-    return { lines, ...P.priceOrder({ lines, promoPct: appliedPromo ? appliedPromo.discountPct : 0, deliveryTotal, safetySeal }) };
+    const bottles = P.bottleDepositFor(returnableCount(lines), crate);
+    return { lines, bottles, ...P.priceOrder({ lines, promoPct: appliedPromo ? appliedPromo.discountPct : 0, deliveryTotal, safetySeal, bottleDeposit: bottles.fee }) };
   }
 
   // ── Delivery quote ── re-asked whenever the pin or priority changes; a
@@ -389,6 +401,27 @@
     refreshQuote();
   }
 
+  // ── Bottles & crates (returnable quarts — the server applies the same rule) ──
+  function returnableCount(lines) {
+    return (lines || cartLines()).reduce((n, l) => n + (P.isReturnableQuart(l.p.name, l.p.bottleFormat) ? l.units * (l.p.packSize || 1) : 0), 0);
+  }
+  function onCrateChange() {
+    const picked = document.querySelector('input[name="crateChoice"]:checked');
+    crate = !picked || picked.value !== 'loose';
+    renderOrderReview();
+  }
+  function updateBottleSection() {
+    const n = returnableCount();
+    document.getElementById('bottleSection').hidden = n === 0;
+    // The crate choice only matters once there's a full crate.
+    document.getElementById('bottleOptions').hidden = n < P.CRATE_SIZE;
+    document.getElementById('bottleNote').textContent = n < P.CRATE_SIZE
+      ? `Your ${n} returnable quart${n === 1 ? '' : 's'} carry a bottle charge of R${P.BOTTLE_DEPOSIT_LOOSE} each, because our driver makes one trip and can't take empties back. Keep the bottles and swap them at any tavern next time.`
+      : `Your ${n} returnable quarts carry a bottle charge, because our driver makes one trip and can't take empties back. Keep the bottles and crate and swap them at any tavern next time.`;
+    const crates = Math.floor(n / P.CRATE_SIZE);
+    document.getElementById('crateText').textContent = `R${P.CRATE_SIZE * P.BOTTLE_DEPOSIT_IN_CRATE + P.CRATE_FEE} a crate of ${P.CRATE_SIZE}${crates > 1 ? ` (${crates} crates)` : ''}`;
+  }
+
   // ── Safety Seal (spirits only — the server applies the same rule) ──
   function onSafetyStickerChange() {
     safetySeal = document.getElementById('safetyStickerCheck').checked;
@@ -435,6 +468,7 @@
       ${appliedPromo ? `<div class="bill-row is-saving"><span>Promo ${escapeHtml(appliedPromo.code)}</span><span>−${formatRand(t.promoDiscount)}</span></div>` : ''}
       ${deliveryRowsHTML(t)}
       ${t.safetySealFee ? `<div class="bill-row"><span>Safety Seal stickers</span><span>${formatRand(t.safetySealFee)}</span></div>` : ''}
+      ${t.bottleDepositFee ? `<div class="bill-row"><span>Bottles &amp; crates<small>${t.bottles.crates ? `${t.bottles.crates} crate${t.bottles.crates === 1 ? '' : 's'}` : ''}${t.bottles.crates && t.bottles.loose ? ' + ' : ''}${t.bottles.loose ? `${t.bottles.loose} loose bottle${t.bottles.loose === 1 ? '' : 's'}` : ''} · returnable, yours to keep</small></span><span>${formatRand(t.bottleDepositFee)}</span></div>` : ''}
       <div class="bill-row is-total"><span>Total</span><span>${formatRand(t.total)}</span></div>`;
     renderPromoArea();
     updateCodAvailability(t.total);
@@ -601,6 +635,7 @@
       deliveryLng: deliveryPin ? deliveryPin.lng : null,
       priorityFee,
       safetySeal,
+      crate,
       // Only sent once we know their current choice, so a slow network never
       // switches someone's specials off by accident.
       marketingOptIn: marketingChoiceLoaded ? document.getElementById('marketingOptIn').checked : undefined,
@@ -707,6 +742,8 @@
       }
 
       updateSafetyStickerVisibility();
+    updateBottleSection();
+      updateBottleSection();
       renderOrderReview();
       refreshQuote();
 
@@ -738,6 +775,7 @@
     checkoutData.cart = EkoyiniCart.get();
     if (!Object.keys(checkoutData.cart).length) { window.location.replace('cart.html'); return; }
     updateSafetyStickerVisibility();
+    updateBottleSection();
     renderOrderReview();
     refreshQuote();
   });

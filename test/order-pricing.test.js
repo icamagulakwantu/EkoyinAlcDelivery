@@ -49,3 +49,37 @@ test("coolerNudge points at the next tier", () => {
   assert.equal(P.coolerNudge(4000, DAY), null);
   assert.equal(P.coolerNudge(400, NIGHT), null);
 });
+
+// Bottles & crates on returnable quarts (founder, 10 Nov 2026).
+test("bottles & crates: R52 per crate of 12, R3 a loose bottle", () => {
+  assert.equal(P.bottleDepositFor(12, true).fee, 52); // R2 x 12 + R28 crate
+  assert.equal(P.bottleDepositFor(12, false).fee, 36); // no crate: R3 x 12
+  assert.equal(P.bottleDepositFor(6, true).fee, 18); // under a crate: R3 each
+  assert.equal(P.bottleDepositFor(18, true).fee, 70); // 1 crate + 6 loose
+  assert.equal(P.bottleDepositFor(96, true).fee, 416); // 8 crates
+  assert.equal(P.bottleDepositFor(0, true).fee, 0);
+  assert.equal(P.bottleDepositFor("abc", true).fee, 0);
+});
+
+test("only returnable quarts carry the bottle charge", () => {
+  const fs = require("fs");
+  const path = require("path");
+  const rows = fs.readFileSync(path.join(__dirname, "../prisma/data/skus.csv"), "utf8").trim().split(/\r?\n/).slice(1).map((l) => l.split(","));
+  const returnable = rows.filter((r) => P.isReturnableQuart(r[0], r[2])).map((r) => r[0]).sort();
+  assert.deepEqual(returnable, [
+    "Carling Black Label", "Castle Lager", "Castle Lite", "Castle Milk Stout", "Flying Fish Dry Apple", "Flying Fish Lemon",
+    "Hansa Pilsener", "Lion Lager", "Redd's MXD Guarana", "Redd's MXD Pine", "Strongbow Gold Apple", "Strongbow Red Berries",
+    "Windhoek Draught", "Windhoek Lager",
+  ]);
+  for (const [name, fmt] of [["Amstel Lager", "Quart (660ml)"], ["Corona Extra", "Quart (600ml)"], ["Stella Artois", "Quart (620ml)"],
+    ["Heineken", "Quart (650ml)"], ["Hunter's Dry", "Quart (660ml)"], ["Castle Lager", "Can (500ml)"], ["Carling Black Label", "Dumpy (330ml)"]]) {
+    assert.equal(P.isReturnableQuart(name, fmt), false, `${name} ${fmt}`);
+  }
+});
+
+test("priceOrder adds bottles & crates after every discount", () => {
+  const r = P.priceOrder({ lines: [{ category: "BEER", total: 2400 }], deliveryTotal: 80, bottleDeposit: 52, now: DAY });
+  assert.equal(r.coolerDiscount, 120); // 5% of the drinks only, never of the bottles
+  assert.equal(r.bottleDepositFee, 52);
+  assert.equal(r.total, 2400 - 120 + 80 + 52);
+});

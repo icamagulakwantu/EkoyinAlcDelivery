@@ -4,6 +4,13 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 10 Nov 2026 (evening): bottles & crates on returnable quarts
+**Database change (founder approved):** new column `Order.bottleDepositFee` (migration `20261110120000_add_bottle_deposit_fee`, adds one column only).
+- Our ride-along driver makes one trip and can't take empties back, so returnable quarts carry a bottle charge. Founder rules: **R52 per crate of 12** (R2 a bottle + R28 crate) or **R3 a bottle loose**; bottles that don't fill a crate are R3 each. 12 quarts in a crate R52, loose R36; 6 quarts R18; 18 quarts in a crate R70.
+- Returnable: Black Label, Castle Lager, Castle Lite, Castle Milk Stout, Hansa, Lion, Windhoek Lager and Draught, Flying Fish, Redd's MXD and Strongbow quarts. Not returnable: Amstel, Corona, Heineken, Sol, Stella and Hunter's quarts, and every can, dumpy, NRB and spirit.
+- Checkout shows a **Bottles & crates** step when there are returnable quarts ("In a crate" or "No crate, loose" once there are 12 or more), and a separate bill line. The cart estimate assumes a crate. The admin order card and the orders CSV show it. Never discounted by the Cooler Box or a promo.
+- Rule in `public/pricing.js` (`isReturnableQuart`, `bottleDepositFor`), charged by the server (`validateAndPriceOrder`) and included in the Yoco amount. Tests: 80.
+
 ### 10 Nov 2026 (evening): every product photo the same size
 - Founder: "make sure items are similar sizes, some items seem tiny". Product photos came from many shops: the product filled anything from 56% to 100% of its photo, so a Breezer dumpy looked half the size of a Klipdrift. `scripts/normalize-photos.js` (run by hand, not on deploy) trimmed the white border of all 321 photos and centred each product on a 480px white square at 88% of the frame. Same file names and formats, so the photo map, database and tests are unchanged; total size stays about 8.5 MB.
 - Shop tiles show photos larger (less padding) and the home rails and category tiles use 94% / 92% of the tile. Service worker cache `ekoyini-shell-v13`.
