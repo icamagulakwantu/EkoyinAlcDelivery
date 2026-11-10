@@ -4,6 +4,17 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 10 Nov 2026: delivery priced by distance AND load, lower Care & Handling, Cooler Box from R2000
+Founder: 96 quarts (8 crates) paid the same R40 delivery as one six-pack, while Care & Handling went up. Fixed in `public/pricing.js` (shared by cart, checkout and server):
+- **Distance, like the delivery apps:** R35 covers the first 3 km to the nearest dark store, then R6 a km. No more R40/R55/R75 jumps.
+- **Load:** every product has an estimated weight from its pack (quart about 1.25 kg, six-pack of cans about 3.1 kg, 2 kg ice = 2 kg). Orders over 20 kg pay R1.50 a kg above 20 kg, 100% to the driver. The founder's 96 quarts are about 120 kg, so R150. A normal cooler box (a few six-packs, a bottle, ice) pays nothing extra. The server weighs the order from the real catalogue (`orderWeightKg`), never from what the browser sends. The load fee rides inside `Order.deliveryFee` (no database change); cart and checkout show it as its own "Heavy load (about N kg)" line.
+- **Care & Handling:** 3% of the items, minimum R10, maximum R40 (was 5%, R15–R75).
+- **Cooler Box:** 5% from R2000, 8% from R4000 (was R1000 / R2000), still 04:00–20:00. All page wording reads the numbers from `pricing.js`.
+- **Dark stores:** admin Delivery tab has a new "Add a tavern / dark store" form (name, area, phone, location pasted from Google Maps as "-33.87, 25.56"; super admin, logged). Delivery distance is measured to the nearest one with a location; once one has a location, customers are asked to pin theirs at checkout.
+- **Ice Tropez** six-pack (6 x 275ml) added at R401.24 (Shoprite R374.99 + 7%). No photo yet (retailer photos are not reachable from here; founder to send a single-bottle photo). Catalogue is 328 rows.
+- **Home banners:** bottles are much bigger (trimmed banner copies in `public/images/promo/`), the Cooler Box banner shows Corona instead of Black Label, and the Black-owned banner adds Kwande Gin. Service worker cache `ekoyini-shell-v11`.
+- Tests: 77 (new distance and load tests; fee and Cooler Box tests updated). Rehearsed against a local copy: 96 quarts quote R35 + R150 load + R40 care; a pin 6 km from a dark store adds R18; fake items sent to the quote endpoint weigh nothing.
+
 ### 9 Nov 2026 (night): a new home screen, built like a top-tier delivery app
 Founder: "nothing wow… I still don't feel like this is a top tier app." The old home page was a long brochure (8 phone screens, about 7,000px) with no products on it, so it took two taps to see anything to buy. The new home (`public/index.html` + `public/home-app.css`) works like Uber Eats, Sixty60 and Bolt Food:
 - **Top:** "Deliver to" address chip (tap to change) and a live greeting with the 30–45 min promise; a big search bar.

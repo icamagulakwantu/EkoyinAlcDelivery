@@ -236,7 +236,7 @@
     </div>
     <div class="cooler-progress-track"><div class="cooler-progress-fill" id="coolerFill" style="width:0%"></div></div>
     <div class="cooler-tier-labels">
-      <span id="coolerGoal">R1000 · 5% off · 8% over R2000</span>
+      <span id="coolerGoal">R2000 · 5% off · 8% from R4000</span>
     </div>
     <div class="cooler-slots" id="coolerSlots"></div>
   </div>
@@ -802,10 +802,10 @@
     goal.classList.toggle('hit', unlocked);
     if (!open) {
       goal.textContent = 'Cooler Box discount is available until 8pm';
-    } else if (subtotal > COOLER_TOP_SUBTOTAL) {
+    } else if (subtotal >= COOLER_TOP_SUBTOTAL) {
       goal.textContent = `${COOLER_TOP_DISCOUNT_PCT * 100}% off unlocked`;
     } else if (unlocked) {
-      goal.textContent = `${COOLER_DISCOUNT_PCT * 100}% off unlocked · ${COOLER_TOP_DISCOUNT_PCT * 100}% over R${COOLER_TOP_SUBTOTAL}`;
+      goal.textContent = `${COOLER_DISCOUNT_PCT * 100}% off unlocked · ${COOLER_TOP_DISCOUNT_PCT * 100}% from R${COOLER_TOP_SUBTOTAL}`;
     } else {
       goal.textContent = `Add ${formatRand(COOLER_MIN_SUBTOTAL - subtotal)} for ${COOLER_DISCOUNT_PCT * 100}% off, until 8pm`;
     }

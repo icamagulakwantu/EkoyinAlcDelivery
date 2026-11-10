@@ -137,11 +137,13 @@
   function totals() {
     const lines = cartLines();
     const subtotal = P.roundCurrency(lines.reduce((s, l) => s + l.total, 0));
-    // Delivery is distance-based; the cart shows the 0–5 km fee plus the
-    // Care & Handling fee. Checkout replaces this with the real quote.
-    const deliveryTotal = lines.length ? P.BASE_DELIVERY_FEE + surge.fee + P.careFeeFor(subtotal) : 0;
+    // Delivery is distance-based; the cart shows the base fee, the heavy-load
+    // fee and the Care & Handling fee. Checkout replaces this with the real quote.
+    const weightKg = P.orderWeightKg(lines.map((l) => ({ bottleFormat: l.p.bottleFormat, packSize: l.p.packSize, category: l.p.category, quantity: l.cases ? l.cases * l.p.unitsPerCase : l.qty })));
+    const loadFee = lines.length ? P.loadFeeFor(weightKg) : 0;
+    const deliveryTotal = lines.length ? P.BASE_DELIVERY_FEE + loadFee + surge.fee + P.careFeeFor(subtotal) : 0;
     const priced = P.priceOrder({ lines, promoPct: appliedPromo ? appliedPromo.discountPct : 0, deliveryTotal });
-    return { lines, ...priced, careFee: lines.length ? P.careFeeFor(subtotal) : 0 };
+    return { lines, ...priced, careFee: lines.length ? P.careFeeFor(subtotal) : 0, weightKg, loadFee };
   }
 
   async function loadCart() {
@@ -321,6 +323,7 @@
       ${t.coolerDiscount > 0 ? `<div class="bill-row is-saving"><span>Cooler Box (${Math.round(t.coolerPct * 100)}% off)<small>Until 8pm today</small></span><span>−${formatRand(t.coolerDiscount)}</span></div>` : ''}
       ${appliedPromo ? `<div class="bill-row is-saving"><span>Promo ${escapeHtml(appliedPromo.code)}</span><span>−${formatRand(t.promoDiscount)}</span></div>` : ''}
       <div class="bill-row"><span>Delivery<small>From R${P.BASE_DELIVERY_FEE} · exact fee at checkout</small></span><span>${formatRand(P.BASE_DELIVERY_FEE)}</span></div>
+      ${t.loadFee > 0 ? `<div class="bill-row"><span>Heavy load<small>About ${Math.round(t.weightKg)} kg · goes 100% to your driver</small></span><span>${formatRand(t.loadFee)}</span></div>` : ''}
       ${surge.fee > 0 ? `<div class="bill-row"><span>${surge.key === 'LATE_NIGHT' ? 'Late-night fee' : 'Peak-hours fee'}<small>Goes 100% to your driver</small></span><span>${formatRand(surge.fee)}</span></div>` : ''}
       <div class="bill-row"><span>Care &amp; Handling<small>Order checks so it arrives sealed and correct</small></span><span>${formatRand(t.careFee)}</span></div>
       <div class="bill-row is-total"><span>Estimated total</span><span>${formatRand(t.total)}</span></div>

@@ -34,12 +34,24 @@ function renderDeliverySettings(data) {
                 <span class="activity-action">Surge pricing: ${data.surgesEnabled ? 'ON' : 'OFF'}</span>
             </div>
             <div class="activity-detail">Peak (4 PM to 10 PM) adds R20. Late night (10 PM to 4 AM) adds R30. Both go 100% to the driver. South African time.</div>
+            <div class="activity-detail">Delivery fee: R35 for the first 3 km, then R6 a km to the nearest dark store. Heavy orders add R1.50 a kg above 20 kg (a crate of 12 quarts is about 15 kg). All of it goes to the driver.</div>
             <div class="order-actions">
                 <button class="btn ${data.surgesEnabled ? 'btn-deliver' : 'btn-assign'}" onclick="setSurgesEnabled(${!data.surgesEnabled})">${data.surgesEnabled ? 'Turn surges off' : 'Turn surges on'}</button>
             </div>
         </div>
         <div class="activity-row">
             <div class="activity-detail"><strong>${withLocation} of ${data.taverns.length}</strong> taverns have a saved location. Customers are asked to pin their location at checkout as soon as at least one tavern has one. Distance is measured to the nearest tavern with a location. Find coordinates by long-pressing the tavern on Google Maps.</div>
+        </div>
+        <div class="activity-row">
+            <div class="activity-row-top"><span class="activity-action">Add a tavern / dark store</span></div>
+            <div class="activity-detail">Long-press the tavern in Google Maps, copy the two numbers at the top (like -33.8734, 25.5612) and paste them below.</div>
+            <div class="admin-add-row">
+                <input type="text" id="newTavernName" placeholder="Name, e.g. Siba's Tavern" maxlength="80">
+                <input type="text" id="newTavernArea" placeholder="Area, e.g. Motherwell NU10" maxlength="60">
+                <input type="tel" id="newTavernPhone" placeholder="Phone (optional)" maxlength="20">
+                <input type="text" id="newTavernLocation" placeholder="Location, e.g. -33.8734, 25.5612" maxlength="60">
+                <button class="dispatch-btn" onclick="addTavern()">Add</button>
+            </div>
         </div>
         ${data.taverns.map(renderTavernLocationRow).join('')}`;
 }
@@ -102,6 +114,25 @@ function saveTavernLocation(id) {
     sendTavernLocation(id, lat, lng);
 }
 window.saveTavernLocation = saveTavernLocation;
+
+async function addTavern() {
+    const body = {
+        name: document.getElementById('newTavernName').value,
+        area: document.getElementById('newTavernArea').value,
+        phone: document.getElementById('newTavernPhone').value,
+        location: document.getElementById('newTavernLocation').value,
+    };
+    try {
+        const res = await adminFetch('/admin/taverns', { method: 'POST', body: JSON.stringify(body) });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || 'Failed to add the tavern');
+        loadDeliverySettings();
+    } catch (err) {
+        console.error(err);
+        alert(err.message);
+    }
+}
+window.addTavern = addTavern;
 
 function clearTavernLocation(id) {
     sendTavernLocation(id, null, null);

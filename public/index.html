@@ -38,7 +38,7 @@
       <div class="ob-slide" data-slide="1">
         <div class="ob-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h20M12 2v20M20 16l-4-4 4-4M4 8l4 4-4 4M16 4l-4 4-4-4M8 20l4-4 4 4"/></svg></div>
         <h2>Build Your Cooler Box</h2>
-        <p>Beer, spirits, mixers, ice — bundle them up in Shop and get 5% off automatically once your cooler box reaches R1000 (8% over R2000), until 8pm.</p>
+        <p>Beer, spirits, mixers, ice — bundle them up in Shop and get 5% off automatically once your cooler box reaches R2000 (8% from R4000), until 8pm.</p>
       </div>
       <div class="ob-slide" data-slide="2">
         <div class="ob-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></div>
@@ -124,11 +124,11 @@
         <a class="hx-promo p1" href="shop.html">
           <div class="hx-promo-copy">
             <div class="hx-promo-kicker" id="coolerKicker">Cooler Box deal</div>
-            <h2><span class="js-cooler-pct">5%</span> off from R<span class="js-cooler-min">1000</span></h2>
-            <p>8% off from R2000. Applied automatically at checkout. <span class="hx-promo-timer" id="coolerTimer"></span></p>
+            <h2><span class="js-cooler-pct">5%</span> off from R<span class="js-cooler-min">2000</span></h2>
+            <p><span class="js-cooler-top-pct">8%</span> off from R<span class="js-cooler-top">4000</span>. Applied automatically at checkout. <span class="hx-promo-timer" id="coolerTimer"></span></p>
           </div>
           <span class="hx-promo-cta">Fill your cooler <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span>
-          <div class="hx-promo-art" aria-hidden="true"><img src="images/brands/hennessy-vs-750ml-bottle.jpg" alt=""><img src="images/brands/carling-black-label-can.png" alt=""><img src="images/brands/savanna-dry.png" alt=""></div>
+          <div class="hx-promo-art" aria-hidden="true"><img src="images/promo/hennessy-vs.webp" alt=""><img src="images/promo/corona.webp" alt=""><img src="images/promo/savanna-dry.webp" alt=""></div>
         </a>
         <a class="hx-promo p2" href="shop.html?cats=BRANDY,WHISKY,COGNAC,GIN,VODKA,RUM,TEQUILA,TEQUILA_PREMIUM,VODKA_PREMIUM,LIQUEUR">
           <div class="hx-promo-copy">
@@ -137,16 +137,16 @@
             <p>Add a R10 seal to any spirits order. Your bottle reaches you exactly as it left the shelf.</p>
           </div>
           <span class="hx-promo-cta">Shop spirits <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span>
-          <div class="hx-promo-art" aria-hidden="true"><img src="images/brands/johnnie-walker-black-label.png" alt=""><img src="images/brands/jameson-original-irish.png" alt=""></div>
+          <div class="hx-promo-art" aria-hidden="true"><img src="images/promo/jw-black.webp" alt=""><img src="images/promo/jameson.webp" alt=""></div>
         </a>
         <a class="hx-promo p3" href="shop.html?tag=BLACK_OWNED">
           <div class="hx-promo-copy">
             <div class="hx-promo-kicker">Proudly local</div>
             <h2>Black-owned brands</h2>
-            <p>KEM Gin, Mofaya, Chillers Punch and more, made by our own people.</p>
+            <p>KEM Gin, Kwande Gin, Mofaya, Chillers Punch and more, made by our own people.</p>
           </div>
           <span class="hx-promo-cta">Shop local <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span>
-          <div class="hx-promo-art" aria-hidden="true"><img src="images/brands/kem-gin.png" alt=""><img src="images/brands/chillers-punch-caribbean-chaos.png" alt=""></div>
+          <div class="hx-promo-art" aria-hidden="true"><img src="images/promo/kem-gin.webp" alt=""><img src="images/promo/kwande-gin.webp" alt=""><img src="images/promo/chillers-punch.webp" alt=""></div>
         </a>
       </div>
       <div class="hx-dots" id="hxDots" aria-hidden="true"><span class="on"></span><span></span><span></span></div>
@@ -300,10 +300,14 @@
   // ── Cooler Box rules come from pricing.js, so the page can never promise
   // something checkout doesn't honour. ──
   const P = window.EkoyiniPricing || {};
-  const COOLER_MIN = P.COOLER_MIN_SUBTOTAL || 1000;
+  const COOLER_MIN = P.COOLER_MIN_SUBTOTAL || 2000;
+  const COOLER_TOP = P.COOLER_TOP_SUBTOTAL || 4000;
+  const COOLER_TOP_PCT = P.COOLER_TOP_DISCOUNT_PCT || 0.08;
   const COOLER_PCT = P.COOLER_DISCOUNT_PCT || 0.05;
   document.querySelectorAll('.js-cooler-min').forEach(el => { el.textContent = COOLER_MIN; });
   document.querySelectorAll('.js-cooler-pct').forEach(el => { el.textContent = Math.round(COOLER_PCT * 100) + '%'; });
+  document.querySelectorAll('.js-cooler-top').forEach(el => { el.textContent = COOLER_TOP; });
+  document.querySelectorAll('.js-cooler-top-pct').forEach(el => { el.textContent = Math.round(COOLER_TOP_PCT * 100) + '%'; });
 
   // ── Status + Cooler Box clock (SA time). Deals run 04:00–20:00. ──
   function saNow() { return new Date(Date.now() + 2 * 3600 * 1000); }
@@ -491,14 +495,14 @@
     if (!products.length || total <= 0) { box.classList.remove('show'); return; }
     box.classList.add('show');
     const unlocked = total >= COOLER_MIN;
-    const big = total >= 2000;
+    const big = total >= COOLER_TOP;
     box.classList.toggle('unlocked', unlocked);
-    document.getElementById('hxCoolerFill').style.width = Math.min(100, (total / (unlocked ? 2000 : COOLER_MIN)) * 100) + '%';
+    document.getElementById('hxCoolerFill').style.width = Math.min(100, (total / (unlocked ? COOLER_TOP : COOLER_MIN)) * 100) + '%';
     document.getElementById('hxCoolerTitle').textContent = `Your Cooler Box · ${formatRand(total)}`;
     document.getElementById('hxCoolerNote').innerHTML = big
-      ? '<b>8% off unlocked</b> (until 8pm)'
+      ? `<b>${Math.round(COOLER_TOP_PCT * 100)}% off unlocked</b> (until 8pm)`
       : unlocked
-        ? `<b>${Math.round(COOLER_PCT * 100)}% off unlocked.</b> Add ${formatRand(2000 - total)} more for 8% off.`
+        ? `<b>${Math.round(COOLER_PCT * 100)}% off unlocked.</b> Add ${formatRand(COOLER_TOP - total)} more for ${Math.round(COOLER_TOP_PCT * 100)}% off.`
         : `Add <b>${formatRand(COOLER_MIN - total)}</b> more for ${Math.round(COOLER_PCT * 100)}% off.`;
   }
   window.addEventListener('ekoyini:cart-updated', () => { updateCartUi(); });

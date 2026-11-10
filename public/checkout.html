@@ -283,11 +283,17 @@
     }).filter(Boolean);
   }
 
+  // Rough weight of the order (the server works out the real one from the
+  // catalogue; this only previews the heavy-load fee).
+  function cartWeight(lines) {
+    return P.orderWeightKg(lines.map((l) => ({ bottleFormat: l.p.bottleFormat, packSize: l.p.packSize, category: l.p.category, quantity: l.units })));
+  }
+
   function computeTotals() {
     const lines = cartLines();
     const subtotal = P.roundCurrency(lines.reduce((s, l) => s + l.total, 0));
-    // Until the server's quote lands, preview the 0–5 km fee + Care & Handling.
-    const deliveryTotal = deliveryQuote ? deliveryQuote.total : P.BASE_DELIVERY_FEE + P.careFeeFor(subtotal);
+    // Until the server's quote lands, preview the base fee + load + Care & Handling.
+    const deliveryTotal = deliveryQuote ? deliveryQuote.total : P.BASE_DELIVERY_FEE + P.loadFeeFor(cartWeight(lines)) + P.careFeeFor(subtotal);
     return { lines, ...P.priceOrder({ lines, promoPct: appliedPromo ? appliedPromo.discountPct : 0, deliveryTotal, safetySeal }) };
   }
 
@@ -302,6 +308,7 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           subtotal: computeTotals().subtotal,
+          items: cartLines().map((l) => ({ skuId: l.id, quantity: l.units })),
           deliveryLat: deliveryPin ? deliveryPin.lat : null,
           deliveryLng: deliveryPin ? deliveryPin.lng : null,
           priorityFee,
@@ -404,8 +411,10 @@
     const q = deliveryQuote;
     const distanceNote = q.distanceKm != null ? `<small>About ${q.distanceKm.toFixed(1)} km away</small>` : (quoteNeedsPin ? '<small>Pin your location for the exact fee</small>' : '');
     const surgeLabel = q.surgeKey === 'LATE_NIGHT' ? 'Late-night fee' : 'Peak-hours fee';
+    const distanceFee = q.distanceFee != null ? q.distanceFee : q.deliveryFee;
     return `
-      <div class="bill-row"><span>Delivery${distanceNote}</span><span>${formatRand(q.deliveryFee)}</span></div>
+      <div class="bill-row"><span>Delivery${distanceNote}</span><span>${formatRand(distanceFee)}</span></div>
+      ${q.loadFee > 0 ? `<div class="bill-row"><span>Heavy load<small>About ${Math.round(q.weightKg)} kg · goes 100% to your driver</small></span><span>${formatRand(q.loadFee)}</span></div>` : ''}
       ${q.surgeFee > 0 ? `<div class="bill-row"><span>${surgeLabel}<small>Goes 100% to your driver</small></span><span>${formatRand(q.surgeFee)}</span></div>` : ''}
       ${q.priorityFee > 0 ? `<div class="bill-row"><span>Super Priority</span><span>${formatRand(q.priorityFee)}</span></div>` : ''}
       <div class="bill-row"><span>Care &amp; Handling</span><span>${formatRand(q.careFee ?? q.serviceFee)}</span></div>`;

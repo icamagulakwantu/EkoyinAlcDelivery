@@ -23,13 +23,13 @@
     'WINE', 'WINE_BOX', 'SPARKLING', 'CHAMPAGNE', 'WATER', 'ICE',
   ]);
 
-  // Cooler Box discount (founder decision, Nov 2026): 5% once the eligible
-  // subtotal (the physical cooler box itself is not counted) reaches R1000,
-  // and 8% above R2000. It is only available until 20:00 South African time
-  // and comes back at 04:00, when the late-night window ends.
-  const COOLER_MIN_SUBTOTAL = 1000;
+  // Cooler Box discount (founder decision, 10 Nov 2026): 5% once the
+  // eligible subtotal reaches R2000, and 8% from R4000 (was R1000 / R2000).
+  // It is only available until 20:00 South African time and comes back at
+  // 04:00, when the late-night window ends.
+  const COOLER_MIN_SUBTOTAL = 2000;
   const COOLER_DISCOUNT_PCT = 0.05;
-  const COOLER_TOP_SUBTOTAL = 2000; // above this amount the top tier applies
+  const COOLER_TOP_SUBTOTAL = 4000; // from this amount the top tier applies
   const COOLER_TOP_DISCOUNT_PCT = 0.08;
   const COOLER_CUTOFF_HOUR = 20;
   const COOLER_RESUME_HOUR = 4;
@@ -48,7 +48,7 @@
   // quote and the payment check use the same clock.
   function coolerDiscountPct(coolerSubtotal, now) {
     if (!coolerDiscountAvailable(now)) return 0;
-    if (coolerSubtotal > COOLER_TOP_SUBTOTAL) return COOLER_TOP_DISCOUNT_PCT;
+    if (coolerSubtotal >= COOLER_TOP_SUBTOTAL) return COOLER_TOP_DISCOUNT_PCT;
     return coolerSubtotal >= COOLER_MIN_SUBTOTAL ? COOLER_DISCOUNT_PCT : 0;
   }
 
@@ -56,25 +56,29 @@
   const MIN_ORDER_SUBTOTAL = 300;
 
   // ── Delivery quote ─────────────────────────────────────────────
-  // The delivery fee is built from four parts, all calculated on the server
+  // The delivery fee is built from these parts, all calculated on the server
   // at order time (the browser only previews them):
-  //   1. Distance fee  — by straight-line distance x ROUTING_BUFFER
-  //   2. Surge fee     — time of day (South African time), 100% to the driver
-  //   3. Priority fee  — optional "Super Priority" the customer adds
-  //   4. Care & Handling fee — 5% of items, min R15, max R75 (customer protection)
+  //   1. Distance fee  — base R35 for the first 3 km, then R6 a km
+  //                      (straight-line distance x ROUTING_BUFFER), like
+  //                      Uber Eats / Mr D / Bolt Food: base + per km
+  //   2. Load fee      — heavy orders: R1.50 a kg above 20 kg (cases of
+  //                      quarts are hard work for the driver). Shown as part
+  //                      of the delivery line. 100% to the driver.
+  //   3. Surge fee     — time of day (South African time), 100% to the driver
+  //   4. Priority fee  — optional "Super Priority" the customer adds
+  //   5. Care & Handling fee — 3% of items, min R10, max R40
   //
   // There is no free delivery: every order pays the distance fee.
 
   // Care & Handling fee (formerly "service fee"), framed as customer
   // protection: order checks so the right products arrive sealed and correct.
-  // Founder decision 8 Nov 2026: industry standard, but lower. Delivery apps
-  // usually charge 10–15% with a minimum and a cap; Ekoyini charges 5% of the
-  // items, at least R15 and never more than R75. One rate, no jumps between
-  // bands (the old 5% / 7% / 15% bands made a R2001 order pay R160 more than
-  // a R1999 one).
-  const CARE_FEE_PCT = 0.05;
-  const CARE_FEE_MIN = 15;
-  const CARE_FEE_MAX = 75;
+  // Founder decision 10 Nov 2026: "let's not charge too much on care and
+  // handling". Now 3% of the items, at least R10 and never more than R40
+  // (was 5%, R15–R75). Heavy orders pay for the driver's work through the
+  // load fee instead. One rate, no jumps between bands.
+  const CARE_FEE_PCT = 0.03;
+  const CARE_FEE_MIN = 10;
+  const CARE_FEE_MAX = 40;
   // Kept for any older code that still reads the band list.
   const CARE_FEE_BANDS = [{ upTo: Infinity, pct: CARE_FEE_PCT, min: CARE_FEE_MIN, max: CARE_FEE_MAX }];
   const SERVICE_FEE_BANDS = CARE_FEE_BANDS;
@@ -82,11 +86,18 @@
   // Straight-line distance is multiplied by this to account for real roads.
   const ROUTING_BUFFER = 1.2;
 
-  const BASE_DELIVERY_FEE = 40; // up to 5 km (also the floor)
-  const MID_DELIVERY_FEE = 55; // over 5 km, up to 10 km
-  const FAR_DELIVERY_FEE = 75; // over 10 km, plus the per-km charge below
-  const FAR_PER_KM_FEE = 6.5; // per km beyond 10 km
+  // Distance (founder, 10 Nov 2026: "use similar delivery apps metrics"):
+  // a base fee that covers the first few km, then a per-km rate. No jumps.
+  const BASE_DELIVERY_FEE = 35; // covers the first BASE_DELIVERY_KM (also the floor)
+  const BASE_DELIVERY_KM = 3;
+  const PER_KM_FEE = 6; // per km beyond BASE_DELIVERY_KM
   const DELIVERY_FEE = BASE_DELIVERY_FEE; // kept for older callers
+
+  // Load (founder, 10 Nov 2026): "those were cases 750ml of beer which is
+  // heavy load for the driver". A normal cooler box (a few six-packs, a
+  // bottle, mixers, ice) is under 20 kg and pays nothing extra.
+  const LOAD_FREE_KG = 20;
+  const LOAD_FEE_PER_KG = 1.5;
 
   const PEAK_SURGE_FEE = 20; // 16:00 to 22:00
   const LATE_NIGHT_SURGE_FEE = 30; // 22:00 to 04:00
@@ -131,9 +142,45 @@
 
   // distanceKm null (no distance data) falls back to the base fee.
   function distanceDeliveryFee(distanceKm) {
-    if (distanceKm == null || distanceKm <= 5) return BASE_DELIVERY_FEE;
-    if (distanceKm <= 10) return MID_DELIVERY_FEE;
-    return round2(FAR_DELIVERY_FEE + FAR_PER_KM_FEE * (distanceKm - 10));
+    if (distanceKm == null || !(distanceKm > BASE_DELIVERY_KM)) return BASE_DELIVERY_FEE;
+    return round2(BASE_DELIVERY_FEE + PER_KM_FEE * (distanceKm - BASE_DELIVERY_KM));
+  }
+
+  // ── Load (weight) ──────────────────────────────────────────────
+  // Rough shipping weight of one shop item (a single bottle, or a whole
+  // six-pack when packSize is 6), worked out from its pack label:
+  // liquid ~1 kg a litre, glass ~0.5 kg per 750 ml, a can ~15 g.
+  function packVolumeLitres(bottleFormat) {
+    const f = String(bottleFormat || '');
+    const kg = f.match(/(\d+(?:\.\d+)?)\s*kg/i);
+    if (kg) return { kg: Number(kg[1]) };
+    const ml = f.match(/(\d+(?:\.\d+)?)\s*ml/i);
+    if (ml) return { litres: Number(ml[1]) / 1000 };
+    const l = f.match(/(\d+(?:\.\d+)?)\s*(?:L\b|Litre|Liter)/i);
+    if (l) return { litres: Number(l[1]) };
+    return { litres: 0.75 };
+  }
+  function itemWeightKg(bottleFormat, packSize, category) {
+    const size = Number.isInteger(packSize) && packSize > 0 ? packSize : 1;
+    const f = String(bottleFormat || '');
+    const v = packVolumeLitres(f);
+    if (v.kg != null) return round2(v.kg * size); // ice
+    const cat = String(category || '').toUpperCase();
+    let container;
+    if (/^Can/i.test(f)) container = 0.015;
+    else if (/Box|Co-Pack/i.test(f)) container = 0.15;
+    else if ((cat === 'WATER' || cat === 'MIXER' || cat === 'ENERGY_DRINK') && !/Bottle|Jar|Jug/i.test(f)) container = 0.04; // plastic
+    else container = 0.5 * (v.litres / 0.75); // glass
+    return round2((v.litres + container) * size);
+  }
+  // items: [{ bottleFormat, packSize, category, quantity }]
+  function orderWeightKg(items) {
+    return round2((items || []).reduce((sum, it) => sum + itemWeightKg(it.bottleFormat, it.packSize, it.category) * (Number(it.quantity) || 0), 0));
+  }
+  function loadFeeFor(weightKg) {
+    const kg = Number(weightKg);
+    if (!Number.isFinite(kg) || kg <= LOAD_FREE_KG) return 0;
+    return round2((kg - LOAD_FREE_KG) * LOAD_FEE_PER_KG);
   }
 
   // Which surge window (if any) is active at this moment, on SA time.
@@ -159,14 +206,23 @@
     return careFeeFor(subtotal);
   }
 
-  function buildDeliveryQuote({ subtotal, distanceKm, priorityFee, now, surgesEnabled }) {
+  function buildDeliveryQuote({ subtotal, distanceKm, priorityFee, now, surgesEnabled, weightKg }) {
     const km = Number.isFinite(distanceKm) ? distanceKm : null;
     const surge = surgesEnabled === false ? { key: null, fee: 0 } : surgeWindow(now || new Date());
     const priority = PRIORITY_OPTIONS.includes(priorityFee) ? priorityFee : 0;
-    const deliveryFee = distanceDeliveryFee(km);
+    const distanceFee = distanceDeliveryFee(km);
+    const kg = Number.isFinite(Number(weightKg)) ? round2(Number(weightKg)) : 0;
+    const loadFee = loadFeeFor(kg);
+    // The load fee rides inside deliveryFee (one "Delivery" line, saved in
+    // Order.deliveryFee, 100% to the driver); the parts are returned too so
+    // pages can explain it.
+    const deliveryFee = round2(distanceFee + loadFee);
     const careFee = careFeeFor(subtotal);
     return {
       distanceKm: km,
+      distanceFee,
+      weightKg: kg,
+      loadFee,
       deliveryFee,
       surgeKey: surge.key,
       surgeFee: surge.fee,
@@ -227,8 +283,8 @@
     if (coolerSubtotal < COOLER_MIN_SUBTOTAL) {
       return { needed: round2(COOLER_MIN_SUBTOTAL - coolerSubtotal), pct: COOLER_DISCOUNT_PCT, progress: coolerSubtotal / COOLER_MIN_SUBTOTAL };
     }
-    if (coolerSubtotal <= COOLER_TOP_SUBTOTAL) {
-      return { needed: round2(COOLER_TOP_SUBTOTAL - coolerSubtotal + 0.01), pct: COOLER_TOP_DISCOUNT_PCT, progress: coolerSubtotal / COOLER_TOP_SUBTOTAL, current: COOLER_DISCOUNT_PCT };
+    if (coolerSubtotal < COOLER_TOP_SUBTOTAL) {
+      return { needed: round2(COOLER_TOP_SUBTOTAL - coolerSubtotal), pct: COOLER_TOP_DISCOUNT_PCT, progress: coolerSubtotal / COOLER_TOP_SUBTOTAL, current: COOLER_DISCOUNT_PCT };
     }
     return null;
   }
@@ -246,6 +302,13 @@
     COOLER_DISCOUNT_PCT,
     COOLER_TOP_SUBTOTAL,
     COOLER_TOP_DISCOUNT_PCT,
+    LOAD_FREE_KG,
+    LOAD_FEE_PER_KG,
+    BASE_DELIVERY_KM,
+    PER_KM_FEE,
+    itemWeightKg,
+    orderWeightKg,
+    loadFeeFor,
     COOLER_CUTOFF_HOUR,
     coolerDiscountPct,
     coolerDiscountAvailable,

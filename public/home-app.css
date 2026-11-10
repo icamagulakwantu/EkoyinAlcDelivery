@@ -200,3 +200,24 @@ body.hx-has-cart .hx { padding-bottom: calc(var(--bottom-h) + 96px); }
 .hx-addr-label, .hx-addr-value { display: block; }
 .hx-addr-value { display: flex; }
 .hx-pack img.broken { display: none; }
+
+/* 10 Nov 2026 (founder: "bottles look smaller"): bigger bottles on the deal
+   banners. The banner is taller and the white plate sits low on the right,
+   so it never covers the text; bottles stand inside the plate. */
+.hx-promo { min-height: 262px; }
+.hx-promo-copy { max-width: 50%; }
+.hx-promo-art {
+  width: 250px; height: 250px; right: -52px; bottom: -78px;
+  align-items: flex-start; justify-content: center; padding: 34px 62px 0 34px;
+}
+.hx-promo-art img { height: 150px; width: auto; max-width: none; }
+.hx-promo-art img + img { height: 132px; margin-left: 6px; margin-top: 18px; }
+.hx-promo-art img + img + img { height: 112px; margin-left: 6px; margin-top: 38px; }
+@media (min-width: 420px) {
+  .hx-promo-art { width: 270px; height: 270px; }
+  .hx-promo-art img { height: 166px; }
+  .hx-promo-art img + img { height: 146px; }
+  .hx-promo-art img + img + img { height: 124px; }
+}
+.hx-promo-copy { max-width: 47%; }
+.hx-promo-art { right: -66px; overflow: hidden; padding-left: 40px; }
