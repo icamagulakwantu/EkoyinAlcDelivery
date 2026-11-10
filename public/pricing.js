@@ -180,7 +180,8 @@
   function loadFeeFor(weightKg) {
     const kg = Number(weightKg);
     if (!Number.isFinite(kg) || kg <= LOAD_FREE_KG) return 0;
-    return round2((kg - LOAD_FREE_KG) * LOAD_FEE_PER_KG);
+    // Whole rands, so a few grams over never shows as "R0.38".
+    return Math.round((kg - LOAD_FREE_KG) * LOAD_FEE_PER_KG);
   }
 
   // Which surge window (if any) is active at this moment, on SA time.

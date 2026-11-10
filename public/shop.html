@@ -160,6 +160,43 @@
     @keyframes fab-in { from { transform: translateY(14px); opacity: 0; } to { transform: none; opacity: 1; } }
     @media (min-width: 700px) { .cart-fab { left: 50%; right: auto; width: 420px; transform: translateX(-50%); animation: none; } }
   </style>
+  <style id="product-sheet">
+    /* Product sheet (10 Nov 2026): tap a drink to see it big, with every pack
+       of that drink side by side, like Sixty60 / Uber Eats. */
+    .product-img-box, .product-info h3 { cursor: pointer; }
+    .ps-overlay { position: fixed; inset: 0; z-index: 200; background: rgba(23,20,14,.45); display: none; align-items: flex-end; justify-content: center; }
+    .ps-overlay.open { display: flex; animation: ps-fade .2s ease; }
+    .ps-sheet { position: relative; width: 100%; max-width: 560px; max-height: 92vh; overflow-y: auto; background: var(--black); border-radius: 26px 26px 0 0; animation: ps-up .28s cubic-bezier(.2,.8,.2,1); padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
+    @media (min-width: 700px) { .ps-overlay { align-items: center; } .ps-sheet { border-radius: 26px; max-height: 88vh; } }
+    @keyframes ps-up { from { transform: translateY(40px); opacity: .6; } to { transform: none; opacity: 1; } }
+    @keyframes ps-fade { from { opacity: 0; } to { opacity: 1; } }
+    .ps-close { position: absolute; top: 12px; right: 12px; z-index: 2; width: 38px; height: 38px; border-radius: 50%; border: 0; background: rgba(255,255,255,.92); box-shadow: 0 2px 8px rgba(23,20,14,.15); font-size: 24px; line-height: 1; color: var(--white); cursor: pointer; }
+    .ps-photo { aspect-ratio: 4 / 3; display: grid; place-items: center; background: radial-gradient(120% 95% at 50% 28%, #ffffff 0%, #f9f3e6 52%, #efe6d1 100%); border-radius: 26px 26px 0 0; }
+    .ps-photo img { width: 78%; height: 88%; object-fit: contain; mix-blend-mode: multiply; }
+    .ps-photo .img-fallback { font-family: var(--font-display); font-size: 64px; color: var(--faint); }
+    .ps-body { padding: 18px 20px 8px; }
+    .ps-cat { font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+    .ps-name { font-family: var(--font-display); font-size: 26px; line-height: 1.1; margin-top: 4px; color: var(--white); }
+    .ps-label { margin-top: 16px; font-size: 13px; font-weight: 800; color: var(--white); }
+    .ps-packs { margin-top: 8px; display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; }
+    .ps-pack { border: 1px solid var(--border); background: var(--surface); border-radius: 16px; padding: 10px; text-align: left; cursor: pointer; display: flex; flex-direction: column; gap: 2px; font: inherit; color: var(--white); }
+    .ps-pack.on { border-color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink); }
+    .ps-pack[disabled] { opacity: .45; cursor: not-allowed; }
+    .ps-pack b { font-size: 13px; }
+    .ps-pack span { font-size: 12px; color: var(--muted); }
+    .ps-pack strong { font-size: 15px; margin-top: 4px; font-variant-numeric: tabular-nums; }
+    .ps-pack em { font-style: normal; font-size: 11px; font-weight: 800; color: var(--ok); }
+    .ps-notes { margin-top: 14px; display: grid; gap: 8px; }
+    .ps-note { display: flex; gap: 10px; align-items: flex-start; font-size: 12.5px; color: var(--muted); line-height: 1.45; padding: 10px 12px; border-radius: 14px; background: var(--deep); }
+    .ps-note b { color: var(--white); }
+    .ps-bar { position: fixed; left: 50%; transform: translateX(-50%); bottom: 0; width: 100%; max-width: 560px; padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px)); background: color-mix(in srgb, var(--black) 94%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-top: 1px solid var(--p-hairline, var(--border)); display: flex; gap: 10px; align-items: center; }
+    @media (min-width: 700px) { .ps-bar { position: sticky; left: auto; transform: none; } }
+    .ps-qty { display: flex; align-items: center; gap: 4px; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 4px; }
+    .ps-qty button { width: 38px; height: 38px; border-radius: 50%; border: 0; background: var(--deep); font-size: 20px; font-weight: 700; color: var(--white); cursor: pointer; }
+    .ps-qty b { min-width: 28px; text-align: center; font-variant-numeric: tabular-nums; }
+    .ps-add { flex: 1; height: 50px; border-radius: 999px; border: 0; background: var(--ink); color: #fff; font-weight: 800; font-size: 15px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; cursor: pointer; }
+    .ps-add[disabled] { opacity: .5; cursor: not-allowed; }
+  </style>
 </head>
 <body>
   <!-- NAVBAR -->
@@ -285,6 +322,23 @@
       <div class="modal-btns">
         <button type="button" class="btn-cancel" onclick="closeModal()">Close</button>
       </div>
+    </div>
+  </div>
+
+  <!-- PRODUCT SHEET: big photo + every pack of this drink side by side -->
+  <div class="ps-overlay" id="productSheet" role="dialog" aria-modal="true" aria-labelledby="psName" onclick="if(event.target===this)closeProductSheet()">
+    <div class="ps-sheet">
+      <button type="button" class="ps-close" aria-label="Close" onclick="closeProductSheet()">×</button>
+      <div class="ps-photo" id="psPhoto"></div>
+      <div class="ps-body">
+        <div class="ps-cat" id="psCat"></div>
+        <h2 class="ps-name" id="psName"></h2>
+        <div id="psBadges"></div>
+        <div class="ps-label" id="psPackLabel">Choose your pack</div>
+        <div class="ps-packs" id="psPacks" role="radiogroup" aria-labelledby="psPackLabel"></div>
+        <div class="ps-notes" id="psNotes"></div>
+      </div>
+      <div class="ps-bar" id="psBar"></div>
     </div>
   </div>
 
@@ -636,9 +690,9 @@
             <svg viewBox="0 0 24 24" fill="${isFav ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
           </button>
           ${outOfStock ? '<div class="stock-badge">Out of Stock</div>' : ''}
-          ${productImageHTML(p)}
+          <div onclick="openProductSheet('${p.id}')">${productImageHTML(p)}</div>
           <div class="product-info">
-            <h3>${esc(p.name)}</h3>
+            <h3 onclick="openProductSheet('${p.id}')">${esc(p.name)}</h3>
             ${brandBadgesHTML(p)}
             <div class="product-size">${esc(sizeLabel(p))}</div>
             <div class="product-footer">
@@ -840,7 +894,96 @@
   }
 
   function closeModal() { document.getElementById('priceModal').classList.remove('open'); }
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeModal(); closeProductSheet(); } });
+
+  // ── Product sheet ──
+  let sheetId = null;   // the pack being looked at
+  let sheetQty = 1;     // how many to add
+  function siblingsOf(p) {
+    return products.filter((x) => x.name === p.name)
+      .sort((a, b) => EkoyiniShelf.packRank(a.bottleFormat) - EkoyiniShelf.packRank(b.bottleFormat)
+        || String(a.bottleFormat).localeCompare(String(b.bottleFormat), undefined, { numeric: true }));
+  }
+  function packTitle(p) {
+    const f = String(p.bottleFormat);
+    const kind = /^Can/.test(f) ? 'Cans' : /^Dumpy/.test(f) ? 'Dumpies' : /^NRB/.test(f) ? 'Bottles' : /^Quart/.test(f) ? 'Quart' : f.replace(/\s*\(.*$/, '');
+    const size = (f.match(/\(([^)]+)\)/) || [])[1] || '';
+    return { kind: isPack(p) ? `${p.packSize} ${kind.toLowerCase()}` : kind, size: size || f };
+  }
+  function openProductSheet(id) {
+    const p = products.find((x) => x.id === id);
+    if (!p) return;
+    sheetId = id;
+    sheetQty = 1;
+    renderProductSheet();
+    document.getElementById('productSheet').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeProductSheet() {
+    const el = document.getElementById('productSheet');
+    if (!el.classList.contains('open')) return;
+    el.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  function pickSheetPack(id) { sheetId = id; sheetQty = 1; renderProductSheet(); }
+  function sheetStep(d) { sheetQty = Math.max(1, Math.min(sheetQty + d, 99)); renderProductSheet(); }
+  function addFromSheet() {
+    const p = products.find((x) => x.id === sheetId);
+    if (!p || !isPriced(p) || p.stock <= 0) return;
+    const inCart = cart[p.id] || 0;
+    const add = Math.min(sheetQty, Math.max(0, (p.stock || 99) - inCart));
+    if (add <= 0) { showToastTop('That\u2019s all we have in stock'); return; }
+    for (let i = 0; i < add; i++) changeQty(p.id, 1);
+    closeProductSheet();
+  }
+  function renderProductSheet() {
+    const p = products.find((x) => x.id === sheetId);
+    if (!p) return;
+    const letter = esc((p.name || '?').trim().charAt(0).toUpperCase());
+    document.getElementById('psPhoto').innerHTML = p.imageUrl
+      ? `<img src="${esc(p.imageUrl)}" alt="${esc(p.name)} ${esc(p.bottleFormat)}">`
+      : `<span class="img-fallback">${letter}</span>`;
+    document.getElementById('psCat').textContent = categoryLabel(p.category);
+    document.getElementById('psName').textContent = p.name;
+    document.getElementById('psBadges').innerHTML = brandBadgesHTML(p);
+    const packs = siblingsOf(p);
+    document.getElementById('psPackLabel').textContent = packs.length > 1 ? 'Choose your pack' : 'Pack';
+    document.getElementById('psPacks').innerHTML = packs.map((x) => {
+      const t = packTitle(x);
+      const off = !isPriced(x) || x.stock <= 0;
+      const inCart = cart[x.id] || 0;
+      return `<button type="button" class="ps-pack${x.id === p.id ? ' on' : ''}" role="radio" aria-checked="${x.id === p.id}" ${off ? 'disabled' : ''} onclick="pickSheetPack('${x.id}')">
+        <b>${esc(t.kind)}</b><span>${esc(t.size)}</span>
+        <strong>${off ? 'Unavailable' : fmtPrice(x.retailSingleZAR)}</strong>
+        ${inCart ? `<em>${inCart} in cart</em>` : ''}
+      </button>`;
+    }).join('');
+    const notes = [];
+    if (EkoyiniPricing.isReturnableQuart(p.name, p.bottleFormat)) {
+      notes.push(`<div class="ps-note"><span>♻️</span><span><b>Returnable quart.</b> Bottles are R${EkoyiniPricing.BOTTLE_DEPOSIT_LOOSE} each, or R${EkoyiniPricing.CRATE_SIZE * EkoyiniPricing.BOTTLE_DEPOSIT_IN_CRATE + EkoyiniPricing.CRATE_FEE} for a crate of ${EkoyiniPricing.CRATE_SIZE}. You keep them; you choose crate or loose at checkout.</span></div>`);
+    }
+    if (isPack(p)) notes.push(`<div class="ps-note"><span>📦</span><span>Sold as a <b>${p.packSize}-pack</b>. The price is for all ${p.packSize}.</span></div>`);
+    if (p.unitsPerCase > 1 && p.retailCaseDiscountPct > 0) {
+      notes.push(`<div class="ps-note"><span>🏷️</span><span>A case of ${p.unitsPerCase} is <b>${fmtPrice(p.retailCaseZAR)}</b> (${p.retailCaseDiscountPct}% off). Switch to cases in your cart.</span></div>`);
+    }
+    if (COOLER_ELIGIBLE.has(p.category)) {
+      notes.push(`<div class="ps-note"><span>🧊</span><span>Counts toward your <b>Cooler Box</b>: ${COOLER_DISCOUNT_PCT * 100}% off from R${COOLER_MIN_SUBTOTAL}, ${COOLER_TOP_DISCOUNT_PCT * 100}% from R${COOLER_TOP_SUBTOTAL}, until 8pm.</span></div>`);
+    }
+    if (EkoyiniPricing.SPIRIT_CATEGORIES.has(p.category)) {
+      notes.push(`<div class="ps-note"><span>🔒</span><span>Add a <b>R${EkoyiniPricing.SAFETY_SEAL_FEE} Safety Seal</b> at checkout and your bottle is sealed at the tavern.</span></div>`);
+    }
+    document.getElementById('psNotes').innerHTML = notes.join('');
+    const ok = isPriced(p) && p.stock > 0;
+    document.getElementById('psBar').innerHTML = ok
+      ? `<div class="ps-qty"><button type="button" aria-label="One less" onclick="sheetStep(-1)">−</button><b aria-live="polite">${sheetQty}</b><button type="button" aria-label="One more" onclick="sheetStep(1)">+</button></div>
+         <button type="button" class="ps-add" onclick="addFromSheet()"><span>Add to cart</span><span>${fmtPrice(p.retailSingleZAR * sheetQty)}</span></button>`
+      : `<button type="button" class="ps-add" disabled><span>Unavailable right now</span><span></span></button>`;
+  }
+  window.openProductSheet = openProductSheet;
+  window.closeProductSheet = closeProductSheet;
+  window.pickSheetPack = pickSheetPack;
+  window.sheetStep = sheetStep;
+  window.addFromSheet = addFromSheet;
 
   function saveAddress() {
     const input = document.getElementById('shopAddress');

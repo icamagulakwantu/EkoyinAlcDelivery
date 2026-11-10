@@ -4,6 +4,12 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 10 Nov 2026 (night): product sheet in the shop, photo summary in checkout
+- **Shop product sheet:** tap a drink's photo or name to open it big, with every pack of that drink side by side (e.g. Black Label: 6 cans, 6 dumpies, quart), each with its price and how many are already in your cart. Pick a pack, set the quantity, "Add to cart · R282.36". Notes explain six-packs, returnable bottles and crates, the case price, the Cooler Box and the Safety Seal where they apply.
+- **Checkout:** a "Your order · 15 items" card at the top with product photos (tap to edit in the cart); the review lists each item with its photo and pack.
+- **Load fee in whole rands**, so a few grams over 20 kg no longer shows "Heavy load R0.38".
+- Checked in a phone-sized browser against a local copy: sheet opens, pack switch, 12 quarts added in one tap, checkout summary and review render. Service worker cache `ekoyini-shell-v14`. Tests: 80.
+
 ### 10 Nov 2026 (evening): bottles & crates on returnable quarts
 **Database change (founder approved):** new column `Order.bottleDepositFee` (migration `20261110120000_add_bottle_deposit_fee`, adds one column only).
 - Our ride-along driver makes one trip and can't take empties back, so returnable quarts carry a bottle charge. Founder rules: **R52 per crate of 12** (R2 a bottle + R28 crate) or **R3 a bottle loose**; bottles that don't fill a crate are R3 each. 12 quarts in a crate R52, loose R36; 6 quarts R18; 18 quarts in a crate R70.

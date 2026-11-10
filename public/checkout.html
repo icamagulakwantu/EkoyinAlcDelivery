@@ -92,6 +92,9 @@
       <div class="checkout-progress-step"><span>3</span><small>Confirm</small></div>
     </div>
 
+    <!-- YOUR ORDER at a glance (10 Nov 2026): what you're paying for, with photos -->
+    <a class="co-summary" id="coSummary" href="cart.html" aria-label="Your order, tap to edit in your cart"></a>
+
     <form id="checkoutForm" novalidate onsubmit="event.preventDefault(); submitOrder();">
 
     <!-- 1. DELIVERY -->
@@ -453,14 +456,29 @@
       <div class="bill-row"><span>Care &amp; Handling</span><span>${formatRand(q.careFee ?? q.serviceFee)}</span></div>`;
   }
 
+  function thumb(p) {
+    return p.imageUrl ? `<img src="${escapeHtml(encodeURI(p.imageUrl))}" alt="" loading="lazy">` : `<span>${escapeHtml((p.name || '?')[0])}</span>`;
+  }
+  function renderSummary(t) {
+    const el = document.getElementById('coSummary');
+    if (!t.lines.length) { el.hidden = true; return; }
+    el.hidden = false;
+    const units = t.lines.reduce((n, l) => n + l.units, 0);
+    const shown = t.lines.slice(0, 5);
+    el.innerHTML = `
+      <div class="co-sum-thumbs">${shown.map((l) => `<span class="co-thumb">${thumb(l.p)}${l.units > 1 ? `<i>${l.units}</i>` : ''}</span>`).join('')}${t.lines.length > shown.length ? `<span class="co-thumb more">+${t.lines.length - shown.length}</span>` : ''}</div>
+      <div class="co-sum-text"><b>Your order · ${units} item${units === 1 ? '' : 's'}</b><span>${formatRand(t.subtotal)} in drinks · tap to edit</span></div>`;
+  }
+
   function renderOrderReview() {
     const t = computeTotals();
+    renderSummary(t);
     const LIMIT = 4;
     const shown = showAllItems ? t.lines : t.lines.slice(0, LIMIT);
     const hidden = t.lines.length - shown.length;
     document.getElementById('orderReview').innerHTML = `
       <div class="review-items">
-        ${shown.map((l) => `<div class="bill-row"><span>${escapeHtml(l.p.name)} × ${escapeHtml(l.qtyLabel)}</span><span>${formatRand(l.total)}</span></div>`).join('')}
+        ${shown.map((l) => `<div class="bill-row review-line"><span class="rl-left"><span class="co-thumb sm">${thumb(l.p)}</span><span>${escapeHtml(l.p.name)} × ${escapeHtml(l.qtyLabel)}<small>${escapeHtml(l.p.packSize > 1 ? `${l.p.bottleFormat} · ${l.p.packSize}-pack` : l.p.bottleFormat)}</small></span></span><span>${formatRand(l.total)}</span></div>`).join('')}
         ${hidden > 0 ? `<button type="button" class="review-toggle" onclick="showAllItems=true;renderOrderReview()">Show ${hidden} more item${hidden === 1 ? '' : 's'}</button>` : ''}
       </div>
       <div class="bill-row is-total" style="font-size:14px;font-weight:600;padding:10px 0 6px"><span>Items</span><span>${formatRand(t.subtotal)}</span></div>
