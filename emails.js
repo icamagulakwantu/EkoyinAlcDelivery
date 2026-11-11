@@ -173,7 +173,7 @@ async function sendPayoutSummaryEmail(day, p) {
     <p style="color:#666;font-size:14px;margin:0 0 16px">${p.totals.orders} delivered orders · sales ${R(p.totals.sales)} · Ekoyini keeps ${R(p.totals.ekoyini)} after Yoco fees.</p>
     <h3 style="font-size:15px;margin:16px 0 4px">Drivers (pay today)</h3>
     <table style="width:100%;font-size:14px;border-collapse:collapse">${drivers || '<tr><td style="color:#999">No driver payouts</td></tr>'}</table>
-    <h3 style="font-size:15px;margin:16px 0 4px">Taverns</h3>
+    <h3 style="font-size:15px;margin:16px 0 4px">Taverns (pay today)</h3>
     <table style="width:100%;font-size:14px;border-collapse:collapse">${taverns || '<tr><td style="color:#999">No tavern payouts</td></tr>'}</table>
     ${p.unassigned.length ? `<p style="color:#b45309;font-size:13px">Orders with no tavern or driver recorded: ${escapeHtml(p.unassigned.join(', '))}</p>` : ''}
     <p style="font-size:13px;margin-top:16px">Pay from your banking app, then tap <b>Mark as paid</b> in Admin → Payouts.</p>`);

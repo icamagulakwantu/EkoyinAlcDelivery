@@ -4,6 +4,9 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 11 Nov 2026 (later): taverns are paid daily too
+- Founder: taverns and drivers are both paid daily at 12:00 for the previous day's deliveries. The Payouts tab and the 12:00 email now say so (the screen already opens on Yesterday).
+
 ### 11 Nov 2026 (later): Admin → Payouts; Cooler Box a flat 2.5%
 - **Payouts tab** on the admin dashboard (next to Reports). Pick Yesterday, Today so far, Last 7 days or any date to see who is owed what for delivered orders:
   - **Drivers (paid daily at 12:00):** 100% of delivery, surge and priority fees, less any cash they collected on cash orders. A red amount means the driver owes Ekoyini.

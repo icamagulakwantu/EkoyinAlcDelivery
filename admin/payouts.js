@@ -65,7 +65,7 @@ async function loadPayouts() {
                 ${p.drivers.length ? p.drivers.map((d) => payoutRow('DRIVER', d)).join('') : '<div class="no-orders" style="padding:12px">No deliveries</div>'}
             </section>
             <section class="rep-card po-card">
-                <div class="po-head"><h3>Taverns <small>shelf price of what they sold + bottles</small></h3><button type="button" class="secondary-btn" onclick="copyPayoutList('TAVERN')">Copy list</button></div>
+                <div class="po-head"><h3>Taverns <small>pay daily at 12:00 · shelf price of what they sold + bottles</small></h3><button type="button" class="secondary-btn" onclick="copyPayoutList('TAVERN')">Copy list</button></div>
                 ${p.taverns.length ? p.taverns.map((t) => payoutRow('TAVERN', t)).join('') : '<div class="no-orders" style="padding:12px">No tavern sales</div>'}
             </section>
             <p class="rep-note po-note">How it is worked out: a tavern gets the item price less our markup (7% beer, cider and wine, 5% spirits and mixers) plus the bottles & crates charge. A driver gets 100% of the delivery, surge and priority fees; cash they collected on cash orders is taken off (red means the driver owes Ekoyini). Ekoyini keeps the rest and carries the Cooler Box, promo and Yoco costs.${isSuper ? '' : ' Only super admins can mark payments.'}</p>`;
