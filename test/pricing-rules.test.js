@@ -104,7 +104,7 @@ test('Castle Milk Stout: shelf-corrected packs, founder-fixed quart', () => {
   const row = (bottleFormat, packSize, listPriceZAR) => ({ name: 'Castle Milk Stout', bottleFormat, packSize, listPriceZAR });
   assert.equal(C.newSinglePrice(row('Can (500ml)', 6, 24.22)), 130); // R130 can six-pack floor (founder, 9 Nov 2026)
   assert.equal(C.newSinglePrice(row('Quart (750ml)', 1, 38.65)), 29.96); // founder-fixed
-  assert.equal(C.newSinglePrice(row('Dumpy (330ml)', 6, 25.95)), 101.64); // R94.99 + 7%
+  assert.equal(C.newSinglePrice(row('Dumpy (330ml)', 6, 25.95)), 106.99); // Shoprite R99.99 + 7% (11 Nov 2026)
   assert.equal(C.casePrice(130, 4, 8), 520); // no case discount (11 Nov 2026)
   assert.equal(C.casePrice(29.96, 12, 8), 359.52);
   assert.equal(C.casePrice(101.64, 4, 8), 406.56);

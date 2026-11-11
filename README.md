@@ -4,6 +4,11 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 11 Nov 2026 (later): beer & spirit prices from the Shoprite shelf (only increases)
+- Founder rule: always the highest regular shelf price, then 7% (beer) / 5% (spirits). Promotions are never used. A Shoprite price that is lower than ours is ignored, and founder-fixed prices stay as they are (Hennessy VS, Klipdrift Export, Jameson, Heineken dumpies, Castle Lite and Black Label cans).
+- 25 prices go up, none go down. Beer six-packs: Black Label, Castle Milk Stout, Hansa, Sol and Stella 330ml; Heineken 500ml cans R139.09. Spirits: Scottish Leader R325.49, Viceroy R236.24, Bisquit VS R682.49, Courvoisier VSOP R997.49, Martell VS R608.99, Inverroche Amber R566.99, Cruz R367.49, Frangelico R346.49, Southern Comfort R209.99, Wild Africa Cream R178.49, and the Butlers liqueur range R241.49.
+- Honor VS is unchanged: Shoprite's R599.99 is the Honor VS Gold Edition, a different bottle. Tests: 83.
+
 ### 11 Nov 2026 (later): cider & RTD pack sizes and prices from the Shoprite shelf
 - From the founder's Shoprite Ziyabuya screenshots: pack sizes corrected and renamed in place (same product id, order history kept). Strongbow, Smirnoff Storm, Belgravia, Redd's MXD and Chillers Punch cans are 440ml; Hunter's Iced cans are 500ml; Brutal Fruit and Extreme bottles are 275ml.
 - **New:** Redd's Original and Redd's Berry 660ml quarts (R26.74; returnable, so the bottle & crate charge applies). No photo yet. Catalogue is now 330 products.
