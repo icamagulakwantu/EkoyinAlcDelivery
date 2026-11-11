@@ -4,6 +4,12 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 11 Nov 2026 (later): legal pages filled in; trading hours follow the partner taverns
+- `privacy.html` and `terms.html` have no placeholders left: Ekoyini Holdings, 7 Torquay Street, Summerstrand, Gqeberha; contact support@ekoyini.co.za and WhatsApp 064 004 5465; refunds within 7 business days.
+- The Information Officer is named by role ("the head of Ekoyini Holdings"), not by person. The founder asked that his personal details stay off the app (safety).
+- Trading hours (founder): orders follow the licensed trading hours of the partner tavern that supplies them. An order placed outside those hours is held for the next opening, or cancelled and refunded on request.
+- Service worker cache bumped to `ekoyini-shell-v17`.
+
 ### 11 Nov 2026: order without a GPS pin; order emails live
 - **No-pin checkout:** a customer who can't or won't share their location can still order. They pay the base delivery fee (R40, plus any load fee) and must give a landmark (3+ letters) so the driver can find them. The rule is `noPinProblem()` in `public/pricing.js`, used by checkout and the server. The admin order card shows "No GPS pin: call the customer to confirm the distance" in orange.
 - **Emails:** ekoyini.co.za verified in Resend (DKIM + SPF on Domains.co.za). Render has a new send-only `RESEND_API_KEY` and `RESEND_FROM_EMAIL=Ekoyini <orders@ekoyini.co.za>`. Test email delivered. Mailboxes admin@, orders@, support@ created (Domains.co.za Email Only 10).
