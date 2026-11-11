@@ -4,6 +4,13 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 11 Nov 2026 (later): 14 new products from the Shoprite shelf, with photos
+- **Brandy:** KWV 3 Year R230.99, KWV 5 Year R262.49, KWV 10 Year R482.99, KWV 15 Year R1049.99, Richelieu International R246.74, Olof Bergh Solera R220.49.
+- **Whisky:** Redbreast 12 R1679.99, The Glenlivet 15 R1364.99, Maker's Mark R545.99. **Tequila:** Espolon Reposado R650.99. **Champagne:** G.H. Mumm Grand Cordon R909.49.
+- **Beer six-packs:** Miller Genuine Draft 6 x 330ml R117.69; Castle Double Malt and Castle Lite Draught 6 x 500ml cans R130 (the can floor).
+- Prices are the Shoprite regular price + 5% (spirits) or 7% (beer, champagne). Photos were cut from the founder's screenshots and normalised like the rest (`public/images/brands/*.webp`). Castle Lite Draught has no photo yet (the screenshot's age badge covers the pack).
+- Catalogue: 344 products. Deploy rehearsed on a copy (330 -> 344). Cache `ekoyini-shell-v19`. Tests: 83.
+
 ### 11 Nov 2026: changes now go live without pull requests
 - Founder decision: tested changes are pushed straight to the live branch. Every push still runs all tests first (a failing test stops the deploy), gets a changelog entry and a Render check.
 

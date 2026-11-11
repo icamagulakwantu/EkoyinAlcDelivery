@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const C = require('../lib/catalogue-2026-11.js');
 const { run } = require('../prisma/catalogue-update.js');
 
-test('canonical catalogue: 322 master workbook SKUs plus 8 house products, every one priced', () => {
+test('canonical catalogue: 322 master workbook SKUs plus 22 added products, every one priced', () => {
   const csv = fs.readFileSync(require.resolve('../prisma/data/skus.csv'), 'utf8').trim().split(/\r?\n/);
   const header = csv[0].split(',');
   const nameIndex = header.indexOf('name');
@@ -14,8 +14,8 @@ test('canonical catalogue: 322 master workbook SKUs plus 8 house products, every
     const cells = line.split(',');
     return `${cells[nameIndex]}|${cells[formatIndex]}`;
   });
-  assert.equal(keys.length, 330);
-  assert.equal(new Set(keys).size, 330);
+  assert.equal(keys.length, 344);
+  assert.equal(new Set(keys).size, 344);
   const categoryByName = new Map(csv.slice(1).map(line => {
     const cells = line.split(',');
     return [cells[nameIndex], cells[header.indexOf('category')]];
@@ -24,9 +24,9 @@ test('canonical catalogue: 322 master workbook SKUs plus 8 house products, every
   assert.equal(categoryByName.get('Belvedere Pure Vodka'), 'VODKA_PREMIUM');
   assert.equal(categoryByName.get('Casamigos Blanco'), 'TEQUILA_PREMIUM');
   assert.equal(categoryByName.get('Don Julio Reposado'), 'TEQUILA_PREMIUM');
-  assert.equal(C.FINAL_CUSTOMER_PRICES.length, 330);
+  assert.equal(C.FINAL_CUSTOMER_PRICES.length, 344);
   const finalKeys = C.FINAL_CUSTOMER_PRICES.map(row => `${row.name}|${row.bottleFormat}`);
-  assert.equal(new Set(finalKeys).size, 330);
+  assert.equal(new Set(finalKeys).size, 344);
   assert.equal(C.PRICE_COMING_SOON.length, 0);
   const uncovered = csv.slice(1).filter(line => {
     const cells = line.split(',');

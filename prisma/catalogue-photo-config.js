@@ -2,6 +2,20 @@
 // Mirrors I-Camagu's live catalogue photo for every exact pack. Photos that I-Camagu serves
 // from a CDN (the founder photos and retailer packshots) were downloaded into public/images/brands.
 const FORMAT_PHOTO_MAP = {
+  // 11 Nov 2026: new products, photos cut from the founder's Shoprite screenshots
+  "[\"KWV 3 Year Old\",\"750ml Bottle\"]": "/images/brands/kwv-3-year-brandy.webp",
+  "[\"KWV 5 Year Old\",\"750ml Bottle\"]": "/images/brands/kwv-5-year-brandy.webp",
+  "[\"KWV 10 Year Old\",\"750ml Bottle\"]": "/images/brands/kwv-10-year-brandy.webp",
+  "[\"KWV 15 Year Old\",\"750ml Bottle\"]": "/images/brands/kwv-15-year-brandy.webp",
+  "[\"Richelieu International\",\"750ml Bottle\"]": "/images/brands/richelieu-international-brandy.webp",
+  "[\"Olof Bergh Solera\",\"750ml Bottle\"]": "/images/brands/olof-bergh-solera-brandy.webp",
+  "[\"Redbreast 12 Year Old\",\"750ml Bottle\"]": "/images/brands/redbreast-12-year.webp",
+  "[\"The Glenlivet 15 Year\",\"750ml Bottle\"]": "/images/brands/glenlivet-15-year.webp",
+  "[\"Maker's Mark Bourbon\",\"750ml Bottle\"]": "/images/brands/makers-mark-bourbon.webp",
+  "[\"Espolon Reposado\",\"750ml Bottle\"]": "/images/brands/espolon-reposado.webp",
+  "[\"G.H. Mumm Grand Cordon\",\"750ml Bottle\"]": "/images/brands/gh-mumm-grand-cordon.webp",
+  "[\"Miller Genuine Draft\",\"Dumpy (330ml)\"]": "/images/brands/miller-genuine-draft-6x330.webp",
+  "[\"Castle Double Malt\",\"Can (500ml)\"]": "/images/brands/castle-double-malt-can-500ml.webp",
   "[\"4th Street Sweet Red\",\"5 Litre Box\"]": "/images/brands/4th-street-sweet-red-box.png",
   "[\"4th Street Sweet Red\",\"750ml Bottle\"]": "/images/brands/4th-street-sweet-red.png",
   "[\"4th Street Sweet Rosé\",\"5 Litre Box\"]": "/images/brands/4th-street-sweet-rose-box.png",
