@@ -78,6 +78,7 @@ Stack: Node/Express 4, Prisma 5, Supabase Postgres, Yoco payments, vanilla HTML/
 9. Optional: scan-to-pay (SnapScan/Zapper), soft drinks/water expansion, a real photo for any new product, restyle track + profile.
 
 ## 9. Working rules
+- **Push directly (founder, 11 Nov 2026):** no more pull requests. Commit tested changes straight to `claude/ekoyini-alcohol-delivery-1xnmtz` (it goes live on Render). Run `node --test` first and never push if it fails; rehearse data changes on a local database; check the Render deploy afterwards and report. Still ask the founder first for Prisma migrations, deleting data, Render settings or anything that costs money.
 - Write every change into the README change log (`## Changelog` section, newest entry on top). The founder asked for this every time.
 - Work in small, safe steps. The founder is on free usage limits and cannot afford rework or broken deploys. Test first, then push.
 - Tell the founder before any Prisma migration. Never push if a test fails.
