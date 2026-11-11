@@ -324,7 +324,21 @@
     return BASE_DELIVERY_FEE;
   }
 
+  // ── No GPS pin (founder, 11 Nov 2026) ──────────────────────────
+  // A customer who can't or won't share their location can still order:
+  // they pay the base delivery fee and must give a landmark so the driver
+  // can find them; the dispatcher confirms the distance by phone.
+  // Returns an error message, or null when the order may go ahead.
+  const MIN_LANDMARK_LENGTH = 3;
+  function noPinProblem({ needsPin, hasPin, landmark }) {
+    if (!needsPin || hasPin) return null;
+    if (String(landmark || '').trim().length >= MIN_LANDMARK_LENGTH) return null;
+    return 'Pin your location, or add a landmark so the driver can find you';
+  }
+
   return {
+    MIN_LANDMARK_LENGTH,
+    noPinProblem,
     MIN_ORDER_SUBTOTAL,
     COOLER_ELIGIBLE,
     COOLER_MIN_SUBTOTAL,

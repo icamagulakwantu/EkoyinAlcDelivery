@@ -220,7 +220,7 @@ function renderOrderCard(order) {
                 <p>${formatPaymentBadge(order)}${order.codFlagged ? formatCodFlagBadge(order) : ''}</p>
                 <p><strong>Delivery:</strong> ${esc(order.address)}</p>
                 ${order.landmark ? `<p><strong>Landmark:</strong> ${esc(order.landmark)}</p>` : ''}
-                ${mapsUrl ? `<p><strong>Pin:</strong> <a href="${esc(mapsUrl)}" target="_blank" rel="noopener">Open in Google Maps</a></p>` : ''}
+                ${mapsUrl ? `<p><strong>Pin:</strong> <a href="${esc(mapsUrl)}" target="_blank" rel="noopener">Open in Google Maps</a></p>` : `<p class="no-pin-flag" style="color:#b45309"><strong>⚠ No GPS pin:</strong> base delivery fee charged. Call the customer to confirm the distance before sending a driver.</p>`}
                 <p><strong>Customer:</strong> ${esc(order.customerName || 'N/A')} · ${esc(order.customerPhone || 'N/A')}</p>
                 <p><strong>Date:</strong> ${esc(new Date(order.createdAt).toLocaleString())}</p>
                 ${order.status === 'CANCELLED' && order.cancelReason ? `<p><strong>Cancel reason:</strong> ${esc(order.cancelReason)}</p>` : ''}

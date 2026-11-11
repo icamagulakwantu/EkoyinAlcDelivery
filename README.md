@@ -4,6 +4,21 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 11 Nov 2026 (later): legal pages filled in; trading hours follow the partner taverns
+- `privacy.html` and `terms.html` have no placeholders left: Ekoyini Holdings, 7 Torquay Street, Summerstrand, Gqeberha; contact support@ekoyini.co.za and WhatsApp 064 004 5465; refunds within 7 business days.
+- The Information Officer is named by role ("the head of Ekoyini Holdings"), not by person. The founder asked that his personal details stay off the app (safety).
+- Trading hours (founder): orders follow the licensed trading hours of the partner tavern that supplies them. An order placed outside those hours is held for the next opening, or cancelled and refunded on request.
+- Service worker cache bumped to `ekoyini-shell-v17`.
+
+### 11 Nov 2026: order without a GPS pin; order emails live
+- **No-pin checkout:** a customer who can't or won't share their location can still order. They pay the base delivery fee (R40, plus any load fee) and must give a landmark (3+ letters) so the driver can find them. The rule is `noPinProblem()` in `public/pricing.js`, used by checkout and the server. The admin order card shows "No GPS pin: call the customer to confirm the distance" in orange.
+- **Emails:** ekoyini.co.za verified in Resend (DKIM + SPF on Domains.co.za). Render has a new send-only `RESEND_API_KEY` and `RESEND_FROM_EMAIL=Ekoyini <orders@ekoyini.co.za>`. Test email delivered. Mailboxes admin@, orders@, support@ created (Domains.co.za Email Only 10).
+- Service worker cache bumped to `ekoyini-shell-v16`. Tests: 81. Staged scenarios: 25/26 (new 2.5b; 6.3 needs Render's real proxy).
+
+### 10 Nov 2026 (late): full launch-readiness diagnosis
+- `MARKET_READINESS.md` rewritten: software about 95% ready, launch overall about 70%. Six blockers: order emails not sending (`RESEND_API_KEY` missing on Render), checkout needs a GPS pin (no fallback), trading hours not enforced, legal-page placeholders, no order ever delivered or paid by card, licence position to confirm.
+- Staged scenarios updated for the 10 Nov rules (customer pin, 328 products, bottles & crates): 24/25 pass (6.3 needs Render's real proxy). Tests: 80.
+
 ### 10 Nov 2026 (night): shop aisle cards show real products (sponsor-ready)
 - The four shop aisle banners (Beer & Cider, Spirits, Wine & Bubbly, Mixers & Essentials) used stock photos. They are now rounded cards in their own colour with a white plate bottom-right showing three real products (Castle Lite, Black Label quart, Savanna; Hennessy, Johnnie Walker Black, Klipdrift; 4th Street, Moët, JC Le Roux; Red Bull, Coca-Cola, Appletiser), a "Shop now" button that jumps to the aisle, and swipe/dots as before.
 - **Sponsor-ready:** each aisle's `featured` block in `AISLES` (shop.html) holds its label, product photos and an optional search link, so a brand partner (SAB, Distell/Heineken, Pernod Ricard, Diageo) can take an aisle by editing one block. Cloudflare Web Analytics (live) gives the visitor numbers for those talks.

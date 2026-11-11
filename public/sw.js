@@ -2,7 +2,7 @@
 // app shell loading on flaky township data. Deliberately NEVER caches
 // API, order, admin or webhook requests: prices, stock and order status
 // must always be live.
-const CACHE = 'ekoyini-shell-v15';
+const CACHE = 'ekoyini-shell-v17';
 const SHELL = ['/index.html', '/shop.html', '/cart.html', '/track.html', '/profile.html', '/style.css', '/premium.css', '/home.css', '/home-app.css', '/app.css', '/script.js', '/auth.js', '/pricing.js', '/shelf-order.js', '/images/brand/ekoyini-icon.png'];
 
 self.addEventListener('install', (e) => {

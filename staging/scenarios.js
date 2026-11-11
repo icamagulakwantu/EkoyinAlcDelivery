@@ -32,7 +32,10 @@ async function scenario(stage, id, title, fn) {
 const check = (ok, what) => current.checks.push({ ok: !!ok, what });
 const note = (n) => current.notes.push(n);
 
-const base = { address: '12 Vilakazi St, Orlando West', customerName: 'Thandeka', customerPhone: '072 123 4567', priorityFee: 0 };
+// A Zwide pin: since 10 Nov 2026 the 16 partner taverns have locations, so
+// every order needs the customer's pin to work out the delivery distance.
+const PIN = { deliveryLat: -33.8670, deliveryLng: 25.5660 };
+const base = { address: '12 Vilakazi St, Zwide', customerName: 'Thandeka', customerPhone: '072 123 4567', priorityFee: 0, ...PIN };
 
 (async () => {
   const products = (await call('GET', '/api/products')).json;
@@ -40,17 +43,18 @@ const base = { address: '12 Vilakazi St, Orlando West', customerName: 'Thandeka'
   const beer6 = by('BEER', (p) => p.packSize === 6);
   const gin = by('GIN', (p) => p.retailSingleZAR > 300);
   const whisky = by('WHISKY', (p) => p.retailSingleZAR > 400);
-  const linesFor = (items) => items.map((i) => { const p = products.find((x) => x.id === i.skuId); return { category: p.category, total: p.retailSingleZAR * i.quantity }; });
+  const linesFor = (items) => items.map((i) => { const p = products.find((x) => x.id === i.skuId); return { category: p.category, total: p.retailSingleZAR * i.quantity, name: p.name, bottleFormat: p.bottleFormat, quantity: i.quantity * (p.packSize || 1) }; });
   const expectTotal = async (items, { safetySeal = false, promoPct = 0, priorityFee = 0 } = {}) => {
     const lines = linesFor(items);
     const subtotal = lines.reduce((s, l) => s + l.total, 0);
-    const q = (await call('POST', '/api/delivery-quote', { body: { subtotal, priorityFee } })).json.quote;
-    return P.priceOrder({ lines, deliveryTotal: q.total, safetySeal, promoPct }).total;
+    const q = (await call('POST', '/api/delivery-quote', { body: { subtotal, priorityFee, items, ...PIN } })).json.quote;
+    const bottles = lines.reduce((n, l) => n + (P.isReturnableQuart(l.p ? l.p.name : l.name, l.p ? l.p.bottleFormat : l.bottleFormat) ? (l.units || l.quantity || 0) : 0), 0);
+    return P.priceOrder({ lines, deliveryTotal: q.total, safetySeal, promoPct, bottleDeposit: P.bottleDepositFor(bottles, true).fee }).total;
   };
 
   // ───────── STAGE 1: catalogue & content ─────────
   await scenario('1 Catalogue', '1.1', 'Every product is priced, in stock data, and no cost data leaks', async () => {
-    check(products.length === 326, `326 products (got ${products.length})`);
+    check(products.length === 328, `328 products (got ${products.length})`);
     check(products.every((p) => p.retailSingleZAR > 0), 'every product has a price > 0');
     const leaked = ['listPriceZAR', 'supplierCaseZAR', 'supplierPortfolio', 'palletPackQty'].filter((k) => products.some((p) => k in p));
     check(leaked.length === 0, `no supplier/cost fields in the public API (${leaked.join(',') || 'none'})`);
@@ -132,6 +136,16 @@ const base = { address: '12 Vilakazi St, Orlando West', customerName: 'Thandeka'
   await scenario('2 Pricing', '2.5', 'Safety Seal is never charged without a spirit', async () => {
     const r = await call('POST', '/order', { body: { ...base, paymentMethod: 'eft', safetySeal: true, items: [{ skuId: beer6.id, quantity: 4 }] } });
     check(r.status === 200 && !r.json.order.safetySealFee, `beer-only order seal fee: ${r.json?.order?.safetySealFee ?? 0}`);
+  });
+
+  await scenario('2 Pricing', '2.5b', 'No GPS pin: refused without a landmark, accepted with one at the base delivery fee', async () => {
+    const noPin = { ...base, deliveryLat: null, deliveryLng: null, paymentMethod: 'eft', items: [{ skuId: beer6.id, quantity: 4 }] };
+    const bare = await call('POST', '/order', { body: noPin });
+    check(bare.status === 400 && /landmark/i.test(bare.json?.error), `no pin, no landmark refused: ${bare.json?.error}`);
+    const ok = await call('POST', '/order', { body: { ...noPin, landmark: 'Blue gate opposite the spaza' } });
+    const o = ok.json?.order;
+    check(ok.status === 200 && o && o.deliveryLat == null, `no pin + landmark accepted: ${ok.status}`);
+    check(o && o.deliveryFee >= P.BASE_DELIVERY_FEE && o.deliveryFee < P.BASE_DELIVERY_FEE + 10, `base delivery fee (plus any load): R${o?.deliveryFee}`);
   });
 
   await scenario('2 Pricing', '2.6', 'Promo codes: valid, exhausted, below minimum, expired', async () => {
