@@ -70,12 +70,13 @@ test('service fee no longer depends on distance or surge, and surge stays separa
   assert.equal(night.total, 40 + 30 + 10 + 18);
 });
 
-test('Cooler Box: 2.5% from R2000, 3.5% from R4000 (founder, 11 Nov 2026)', () => {
+test('Cooler Box: a flat 2.5% from R2000 (founder, 11 Nov 2026)', () => {
   const noon = at('10:00');
   assert.equal(P.coolerDiscountPct(1999.99, noon), 0);
   assert.equal(P.coolerDiscountPct(2000, noon), 0.025);
   assert.equal(P.coolerDiscountPct(3999.99, noon), 0.025);
-  assert.equal(P.coolerDiscountPct(4000, noon), 0.035);
+  assert.equal(P.coolerDiscountPct(4000, noon), 0.025);
+  assert.equal(P.coolerDiscountPct(20000, noon), 0.025);
   assert.equal(P.pctLabel(0.025), '2.5%');
   assert.equal(P.pctLabel(0.035), '3.5%');
 });

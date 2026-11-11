@@ -39,13 +39,12 @@ test("priceOrder: bad values never produce NaN", () => {
   assert.equal(r.total, 0);
 });
 
-test("coolerNudge points at the next tier", () => {
+test("coolerNudge points at the one 2.5% tier, then stops", () => {
   assert.deepEqual(
     { needed: P.coolerNudge(400, DAY).needed, pct: P.coolerNudge(400, DAY).pct },
     { needed: 1600, pct: 0.025 }
   );
-  assert.equal(P.coolerNudge(2500, DAY).pct, 0.035);
-  assert.equal(P.coolerNudge(2500, DAY).needed, 1500);
+  assert.equal(P.coolerNudge(2500, DAY), null, "no second tier any more");
   assert.equal(P.coolerNudge(4000, DAY), null);
   assert.equal(P.coolerNudge(400, NIGHT), null);
 });

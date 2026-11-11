@@ -3,4 +3,5 @@
 module.exports = function mountRoutes(app, deps) {
   require("./driver-reports.js")(app, deps);
   require("./delivery.js")(app, deps);
+  require("./payouts.js")(app, deps);
 };

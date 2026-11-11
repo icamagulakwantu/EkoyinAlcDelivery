@@ -1325,7 +1325,7 @@ app.post("/order/:code/confirm-delivered", driverActionLimiter, async (req, res)
     // Clearing the token makes the driver link dead once the job is done.
     const { count } = await prisma.order.updateMany({
       where: { code: req.params.code, status: "DISPATCHED" },
-      data: { status: "DELIVERED", driverShareToken: null },
+      data: { status: "DELIVERED", driverShareToken: null, deliveredAt: new Date() },
     });
     if (count === 0) return res.status(409).json({ error: "This order was just updated — refresh the page" });
     res.json({ ok: true, status: "DELIVERED" });
@@ -1362,7 +1362,7 @@ app.patch("/order/:code/status", requireAdmin, async (req, res) => {
       data: {
         status,
         // The driver link stops working once the order is finished.
-        ...(status === "DELIVERED" ? { driverShareToken: null } : {}),
+        ...(status === "DELIVERED" ? { driverShareToken: null, deliveredAt: new Date() } : {}),
       },
     });
     if (count === 0) {

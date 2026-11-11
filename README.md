@@ -4,6 +4,17 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 11 Nov 2026 (later): Admin → Payouts; Cooler Box a flat 2.5%
+- **Payouts tab** on the admin dashboard (next to Reports). Pick Yesterday, Today so far, Last 7 days or any date to see who is owed what for delivered orders:
+  - **Drivers (paid daily at 12:00):** 100% of delivery, surge and priority fees, less any cash they collected on cash orders. A red amount means the driver owes Ekoyini.
+  - **Taverns:** the partner taverns sell the alcohol, so each tavern gets the item price less Ekoyini's markup (7% beer, cider, RTD and wine; 5% spirits, liqueurs and mixers) plus the bottles & crates charge.
+  - **Ekoyini** keeps the rest and carries the Cooler Box, promo and Yoco card costs. Tiles show sales, driver pay, tavern pay, estimated Yoco fees, Ekoyini's share and cash held by drivers.
+  - **Copy list** gives a ready-to-paste list for the banking app. **Mark as paid** (super admins) records each payment once, logs it in Activity, and has an undo.
+- **12:00 email:** yesterday's payout summary goes to the order-alert emails once a day. On Render's free plan it arrives on the first wake-up after 12:00.
+- **Database (founder approved):** migration `20261111120000_add_payouts` adds `Order.deliveredAt` (set on delivery; older delivered orders get their last update time) and the `Payout` and `PayoutEmail` tables (row level security on).
+- **Cooler Box is now a flat 2.5% from R2000** (founder; the 3.5% tier is gone, it could lose money on spirits paid by card).
+- New `lib/payouts.js` with `test/payouts.test.js` (4 tests). Cache `ekoyini-shell-v20`. Tests: 87. Scenarios 25/26.
+
 ### 11 Nov 2026 (later): separate WhatsApp buttons for the tavern and the driver
 - The one "Send WhatsApp to Tavern & Driver" button tried to open two WhatsApp chats at once. Phones only open the first, so the dispatcher only ever saw the tavern's "please prepare this order" message. It is now two buttons on the order card: **1. WhatsApp tavern (prepare)** and **2. WhatsApp driver (collect & deliver)**.
 - The tavern message now shows only what to pack and who collects it (driver name and car). No customer address and no total (POPIA). The driver message is unchanged: pickup, address, landmark, pin, tracking link.

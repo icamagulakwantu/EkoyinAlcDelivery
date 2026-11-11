@@ -160,7 +160,28 @@ async function sendPaymentFailureAlertEmail(pendingCheckout, reason) {
   await sendEmail({ to: adminEmails, subject: `⚠ Payment needs attention — ${pendingCheckout.yocoCheckoutId}`, html });
 }
 
+// 12:00 daily payout summary (founder, 11 Nov 2026). p = lib/payouts.js result.
+async function sendPayoutSummaryEmail(day, p) {
+  const to = orderAlertEmailList();
+  if (!to.length) return;
+  const R = (n) => `R${Number(n || 0).toFixed(2)}`;
+  const row = (name, phone, amount, note) => `<tr><td style="padding:6px 0;border-bottom:1px solid #f0ebe0">${escapeHtml(name)}<br><span style="color:#999;font-size:12px">${escapeHtml(phone || '')}${note ? ' · ' + escapeHtml(note) : ''}</span></td><td style="padding:6px 0;border-bottom:1px solid #f0ebe0;text-align:right;font-weight:700">${R(amount)}</td></tr>`;
+  const drivers = p.drivers.map((d) => row(d.name, d.phone, d.owed, d.owed < 0 ? `owes Ekoyini (holds ${R(d.cashCollected)} cash)` : `${d.orders.length} deliveries`)).join('');
+  const taverns = p.taverns.map((t) => row(t.name, t.phone, t.owed, `${t.orders.length} orders`)).join('');
+  const html = wrapper(`
+    <h2 style="font-size:18px;margin:0 0 6px">Payouts for ${escapeHtml(day)}</h2>
+    <p style="color:#666;font-size:14px;margin:0 0 16px">${p.totals.orders} delivered orders · sales ${R(p.totals.sales)} · Ekoyini keeps ${R(p.totals.ekoyini)} after Yoco fees.</p>
+    <h3 style="font-size:15px;margin:16px 0 4px">Drivers (pay today)</h3>
+    <table style="width:100%;font-size:14px;border-collapse:collapse">${drivers || '<tr><td style="color:#999">No driver payouts</td></tr>'}</table>
+    <h3 style="font-size:15px;margin:16px 0 4px">Taverns</h3>
+    <table style="width:100%;font-size:14px;border-collapse:collapse">${taverns || '<tr><td style="color:#999">No tavern payouts</td></tr>'}</table>
+    ${p.unassigned.length ? `<p style="color:#b45309;font-size:13px">Orders with no tavern or driver recorded: ${escapeHtml(p.unassigned.join(', '))}</p>` : ''}
+    <p style="font-size:13px;margin-top:16px">Pay from your banking app, then tap <b>Mark as paid</b> in Admin → Payouts.</p>`);
+  await sendEmail({ to, subject: `Ekoyini payouts for ${day}: drivers ${R(p.totals.toDrivers)}, taverns ${R(p.totals.toTaverns)}`, html });
+}
+
 module.exports = {
+  sendPayoutSummaryEmail,
   sendEmail,
   escapeHtml,
   sendOrderConfirmationEmail,

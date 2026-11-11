@@ -16,10 +16,11 @@ These points replace anything older in the sections below.
 - **Founder prices (9 Nov, late)**: `lib/founder-prices-2026-11-09.js` holds FINAL prices that win over everything (Heineken dumpies R145, Castle Lite/Black Label cans R130, Savanna 500ml NRB six-pack R210, Appletiser R45, Red Bull 250ml single R30, Coke 500ml can R20, strategic spirits at Siba cost + 14%). Alcoholic can six-packs are never under R130 (Corona and Savanna excepted). Stock is bought at Siba; a test keeps every receipt item at or above its Siba cost.
 - **Six-packs only** for beer/cider/RTD cans, dumpies and 500ml NRBs; cold drinks, energy drinks, water and ice are loose (`packSizeFor()` in `lib/catalogue-2026-11.js`; Mofaya and Schweppes cans stay six-packs).
 - **Shelf order (9 Nov)**: `public/shelf-order.js` (shared by shop, `/api/products`, admin stock list). Water & Ice is one section; Mofaya + Red Bull are Energy Drinks; Ponchos Coffee is Tequila. Monin syrups are R230.99 and must never be under R230 (founder; a test enforces it).
-- **Service worker cache is `ekoyini-shell-v19`**. Bump it again when static pages change.
-- **Discounts (11 Nov, founder)**: ONE discount only, never more than half our markup. Cooler Box is now 2.5% from R2000 / 3.5% from R4000; the case discount is removed (`CASE_DISCOUNT_PCT = 0`, cases = single x units). Use `pctLabel()` to show percentages.
+- **Service worker cache is `ekoyini-shell-v20`**. Bump it again when static pages change.
+- **Discounts (11 Nov, founder)**: ONE discount only, never more than half our markup. Cooler Box is now a FLAT 2.5% from R2000 (one tier; COOLER_TOP_* equal the first tier); the case discount is removed (`CASE_DISCOUNT_PCT = 0`, cases = single x units). Use `pctLabel()` to show percentages.
+- **Business model + Payouts (11 Nov)**: Ekoyini is the platform; partner taverns SELL the alcohol. Tavern payout = item price / (1 + markup) + bottles; driver = delivery + surge + priority (100%) less cash collected; Ekoyini keeps the rest. Admin → Payouts tab (`admin/payouts.js`, `routes/payouts.js`, `lib/payouts.js`), `Payout` table, `Order.deliveredAt`, 12:00 SA summary email (`sendPayoutSummaryEmail`).
 - **No GPS pin (11 Nov)**: checkout allows an order without a pin when a landmark is given (`noPinProblem()` in `public/pricing.js`); base delivery fee; admin card flags it. **Emails live (11 Nov)**: Resend domain verified, sender `orders@ekoyini.co.za`.
-- **Tests**: 82 (incl. `test/founder-prices.test.js`, `test/shelf-order.test.js`), including `test/reports-marketing.test.js`, `test/order-pricing.test.js` and `test/price-corrections.test.js`.
+- **Tests**: 87 (incl. `test/founder-prices.test.js`, `test/shelf-order.test.js`), including `test/reports-marketing.test.js`, `test/order-pricing.test.js` and `test/price-corrections.test.js`.
 
 ## 1. What this is
 Alcohol delivery app for Gqeberha townships (ride-along delivery). Founder: Thandu (Thanduxolo Makeleni), Ekoyini Group.
@@ -49,7 +50,7 @@ Stack: Node/Express 4, Prisma 5, Supabase Postgres, Yoco payments, vanilla HTML/
 ## 5. Fees and orders (founder decisions)
 - No free delivery. Minimum order R300.
 - Service fee (now "Care & Handling", see section 0) is its own line, saved in `Order.serviceFee`, included in the server total and the Yoco amount. Decided 10 Nov: 3% of items, min R10, max R40.
-- Cooler Box discount: 2.5% from R2000, 3.5% from R4000 (founder, 11 Nov; was 5%/8%), only until 20:00 SA time (comes back 04:00). No other discounts: the case discount was removed 11 Nov.
+- Cooler Box discount: flat 2.5% from R2000 (founder, 11 Nov; was 2.5%/3.5%, before that 5%/8%), only until 20:00 SA time (comes back 04:00). No other discounts: the case discount was removed 11 Nov.
 - Drivers keep 100% of delivery, surge and priority fees. Dispatch stays manual (admin finds a driver, sends details by WhatsApp). One shared stock and one platform price (no per-tavern stock). Low commission while taverns are onboarded.
 - Yoco fee is 3.25% + R2.50 per transaction. The founder floated 6% / 8% markups to absorb it, then said the workbook prices already include 5% / 7%. Not applied. Ask before touching.
 
@@ -85,4 +86,4 @@ Stack: Node/Express 4, Prisma 5, Supabase Postgres, Yoco payments, vanilla HTML/
 - Do not touch the other Supabase projects. Do not delete order data. `OrderItem` snapshots name + price, so catalogue changes do not break history.
 - Commit trailer to use:
   `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>`
-- Verify on the LIVE site after each deploy (products API, a photo, a price). The service worker caches the shell (`ekoyini-shell-v19`), so bump the cache name when you change static pages.
+- Verify on the LIVE site after each deploy (products API, a photo, a price). The service worker caches the shell (`ekoyini-shell-v20`), so bump the cache name when you change static pages.

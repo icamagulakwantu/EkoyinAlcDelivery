@@ -23,16 +23,17 @@
     'WINE', 'WINE_BOX', 'SPARKLING', 'CHAMPAGNE', 'WATER', 'ICE',
   ]);
 
-  // Cooler Box discount (founder decision, 11 Nov 2026): 2.5% once the
-  // eligible subtotal reaches R2000, and 3.5% from R4000 (was 5% / 8%).
+  // Cooler Box discount (founder decision, 11 Nov 2026, later): a flat 2.5%
+  // once the eligible subtotal reaches R2000 (was 2.5% / 3.5% from R4000,
+  // before that 5% / 8%). One tier: the "top" tier equals the first.
   // Rule: a discount is never more than half of our markup (5% / 7%), and
   // it is the ONLY discount (the case discount was removed, 11 Nov 2026).
   // It is only available until 20:00 South African time and comes back at
   // 04:00, when the late-night window ends.
   const COOLER_MIN_SUBTOTAL = 2000;
   const COOLER_DISCOUNT_PCT = 0.025;
-  const COOLER_TOP_SUBTOTAL = 4000; // from this amount the top tier applies
-  const COOLER_TOP_DISCOUNT_PCT = 0.035;
+  const COOLER_TOP_SUBTOTAL = 2000; // single tier (equal to COOLER_MIN_SUBTOTAL)
+  const COOLER_TOP_DISCOUNT_PCT = 0.025;
   const COOLER_CUTOFF_HOUR = 20;
   const COOLER_RESUME_HOUR = 4;
 

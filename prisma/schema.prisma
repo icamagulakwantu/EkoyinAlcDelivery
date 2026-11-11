@@ -226,6 +226,7 @@ model Order {
   serviceFee  Float? // Care & Handling fee, 5% / 7% / 15% of subtotal
   safetySealFee Float? // optional R10 tamper-evident seals (spirits only)
   bottleDepositFee Float? // returnable quarts: R52 per crate of 12, R3 per loose bottle (founder, 10 Nov 2026)
+  deliveredAt   DateTime? // set when the order is delivered (payouts are per delivery day)
 
   total         Float
   items         OrderItem[]
@@ -317,4 +318,28 @@ model MarketingConsent {
   source     String? // "checkout", "signup", "profile", "unsubscribe-link"
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
+}
+
+// ── Payouts (founder, 11 Nov 2026) ──────────────────────────────────────
+// One row per driver or tavern paid for a period ("2026-11-10" or
+// "2026-11-04..2026-11-10"), so nobody is paid twice. Amounts are worked
+// out by lib/payouts.js from delivered orders.
+model Payout {
+  id         String   @id @default(cuid())
+  period     String
+  payeeType  String // DRIVER | TAVERN
+  payeeKey   String // driver phone (27...) or tavern id
+  payeeName  String
+  amount     Float
+  orderCodes String // JSON array
+  paidBy     String?
+  paidAt     DateTime @default(now())
+
+  @@unique([period, payeeType, payeeKey])
+}
+
+// The 12:00 payout summary email, sent once per day.
+model PayoutEmail {
+  day    String   @id
+  sentAt DateTime @default(now())
 }

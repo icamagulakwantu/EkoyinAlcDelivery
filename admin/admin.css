@@ -267,3 +267,24 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .rep-note { font-size: 12px !important; }
 .rep-range-btn { border: 1px solid var(--border); background: var(--card); border-radius: 999px; padding: 8px 14px; font-weight: 700; font-size: 13px; cursor: pointer; color: inherit; }
 .rep-range-btn.active { background: #17140e; color: #fff; border-color: #17140e; }
+
+/* Payouts tab (11 Nov 2026) */
+.po-period { font-size: 14px; margin: 4px 0 12px; opacity: .85; }
+.po-date { border: 1px solid var(--border); background: var(--card); color: inherit; border-radius: 999px; padding: 7px 12px; font: inherit; font-size: 13px; }
+.po-card { margin-bottom: 14px; }
+.po-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.po-head h3 { margin: 0 0 6px; }
+.po-head h3 small { font-weight: 400; font-size: 12px; opacity: .65; margin-left: 6px; }
+.po-row { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--border); }
+.po-row.is-paid { opacity: .55; }
+.po-who b { display: block; }
+.po-who span { font-size: 12px; opacity: .7; margin-right: 6px; }
+.po-who small { display: block; font-size: 12px; opacity: .7; margin-top: 2px; word-break: break-word; }
+.po-amt { font-weight: 800; font-size: 17px; font-variant-numeric: tabular-nums; text-align: right; }
+.po-amt.owes { color: #b91c1c; font-size: 15px; }
+.po-act { grid-column: 1 / -1; display: flex; justify-content: flex-end; }
+.po-btn { padding: 8px 14px; font-size: 13px; }
+.po-paid { font-size: 13px; font-weight: 700; color: #15803d; }
+.po-undo { border: 0; background: none; color: inherit; text-decoration: underline; cursor: pointer; font-size: 12px; opacity: .7; }
+.po-warn { background: #fff7ed; border: 1px solid #fed7aa; color: #9a3412; border-radius: 12px; padding: 10px 12px; font-size: 13px; }
+.po-note { margin-top: 6px; }
