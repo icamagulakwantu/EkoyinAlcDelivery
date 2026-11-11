@@ -155,7 +155,7 @@ test('runner: fixes labels, removes 375ml, prices everything, and is repeatable'
   assert.equal(heineken.retailCaseZAR, 580); // 145 x 4 six-packs, no case discount (11 Nov 2026)
   // Receipt-calibrated prices are used where configured.
   assert.equal(find('Windhoek Lager', 'Dumpy (330ml)').retailSingleZAR, 112.34); // 8 Nov shelf correction: R104.99 + 7%
-  assert.equal(find('Stella Artois', 'Dumpy (330ml)').retailSingleZAR, 107.0); // configured final customer price
+  assert.equal(find('Stella Artois', 'Dumpy (330ml)').retailSingleZAR, 112.34); // Shoprite 6 x 330ml R104.99 + 7% (11 Nov 2026)
   assert.equal(find('Bombay Sapphire', '750ml Bottle').retailSingleZAR, 398.99);
   assert.deepEqual(first.unpriced, []);
 
