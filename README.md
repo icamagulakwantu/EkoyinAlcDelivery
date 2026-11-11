@@ -4,6 +4,12 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 11 Nov 2026 (later): cider & RTD pack sizes and prices from the Shoprite shelf
+- From the founder's Shoprite Ziyabuya screenshots: pack sizes corrected and renamed in place (same product id, order history kept). Strongbow, Smirnoff Storm, Belgravia, Redd's MXD and Chillers Punch cans are 440ml; Hunter's Iced cans are 500ml; Brutal Fruit and Extreme bottles are 275ml.
+- **New:** Redd's Original and Redd's Berry 660ml quarts (R26.74; returnable, so the bottle & crate charge applies). No photo yet. Catalogue is now 330 products.
+- Prices updated to the Shoprite shelf + 7% (for example Strongbow 6 x 440ml R139.09, Smirnoff Storm 6 x 440ml R155.14, Ice Tropez 6 x 275ml R524.29, Chillers Punch 6 x 440ml R165.84). The R130 can six-pack floor still applies. Strongbow quart stays at R32.10 (highest verified retail on file, R30).
+- The deploy renames rows in `scripts/ensure-schema.js` before the seed runs. Tested on a copy of the live catalogue (328 -> 330, no duplicates). Tests: 82. Scenarios: 25/26.
+
 ### 11 Nov 2026 (later): one discount only, at half our markup
 - **Founder rule:** a discount may never be more than half of our markup (5% / 7%), and discounts never stack.
 - **Cooler Box halved:** 2.5% from R2000 and 3.5% from R4000 (was 5% / 8%), still only 04:00-20:00. Pages show the numbers from `public/pricing.js` through the new `pctLabel()` helper (so 2.5% never shows as "3%").

@@ -68,7 +68,7 @@ test("only returnable quarts carry the bottle charge", () => {
   const returnable = rows.filter((r) => P.isReturnableQuart(r[0], r[2])).map((r) => r[0]).sort();
   assert.deepEqual(returnable, [
     "Carling Black Label", "Castle Lager", "Castle Lite", "Castle Milk Stout", "Flying Fish Dry Apple", "Flying Fish Lemon",
-    "Hansa Pilsener", "Lion Lager", "Redd's MXD Guarana", "Redd's MXD Pine", "Strongbow Gold Apple", "Strongbow Red Berries",
+    "Hansa Pilsener", "Lion Lager", "Redd's Berry", "Redd's MXD Guarana", "Redd's MXD Pine", "Redd's Original", "Strongbow Gold Apple", "Strongbow Red Berries",
     "Windhoek Draught", "Windhoek Lager",
   ]);
   for (const [name, fmt] of [["Amstel Lager", "Quart (660ml)"], ["Corona Extra", "Quart (600ml)"], ["Stella Artois", "Quart (620ml)"],

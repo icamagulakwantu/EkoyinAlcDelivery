@@ -35,6 +35,62 @@ const STATEMENTS = [
          "unitsPerCase" = "unitsPerCase" * 6
    WHERE "name" = 'Red Bull Energy Drink' AND "bottleFormat" = 'Can (355ml)'
      AND NOT EXISTS (SELECT 1 FROM "SkuItem" WHERE "name" = 'Red Bull Energy Drink' AND "bottleFormat" = 'Can (250ml)')`,
+  // 11 Nov 2026 (founder, Shoprite screenshots): correct pack sizes in place,
+  // before the seed runs, so ids and order history are kept and no duplicate is made.
+  `UPDATE "SkuItem" SET "bottleFormat" = 'Can (440ml)'
+   WHERE "name" = 'Strongbow Gold Apple' AND "bottleFormat" = 'Can (500ml)'
+     AND NOT EXISTS (SELECT 1 FROM "SkuItem" WHERE "name" = 'Strongbow Gold Apple' AND "bottleFormat" = 'Can (440ml)')`,
+  `UPDATE "SkuItem" SET "bottleFormat" = 'Can (440ml)'
+   WHERE "name" = 'Strongbow Red Berries' AND "bottleFormat" = 'Can (500ml)'
+     AND NOT EXISTS (SELECT 1 FROM "SkuItem" WHERE "name" = 'Strongbow Red Berries' AND "bottleFormat" = 'Can (440ml)')`,
+  `UPDATE "SkuItem" SET "bottleFormat" = 'Can (440ml)'
+   WHERE "name" = 'Smirnoff Storm Citrus' AND "bottleFormat" = 'Can (500ml)'
+     AND NOT EXISTS (SELECT 1 FROM "SkuItem" WHERE "name" = 'Smirnoff Storm Citrus' AND "bottleFormat" = 'Can (440ml)')`,
+  `UPDATE "SkuItem" SET "bottleFormat" = 'Can (440ml)'
+   WHERE "name" = 'Smirnoff Storm Pine Twist' AND "bottleFormat" = 'Can (500ml)'
+     AND NOT EXISTS (SELECT 1 FROM "SkuItem" WHERE "name" = 'Smirnoff Storm Pine Twist' AND "bottleFormat" = 'Can (440ml)')`,
+  `UPDATE "SkuItem" SET "bottleFormat" = 'Can (440ml)'
+   WHERE "name" = 'Belgravia Gin & Dark Cherry' AND "bottleFormat" = 'Can (500ml)'
+     AND NOT EXISTS (SELECT 1 FROM "SkuItem" WHERE "name" = 'Belgravia Gin & Dark Cherry' AND "bottleFormat" = 'Can (440ml)')`,
+  `UPDATE "SkuItem" SET "bottleFormat" = 'Can (440ml)'
+   WHERE "name" = 'Belgravia Gin & Dry Lemon' AND "bottleFormat" = 'Can (500ml)'
+     AND NOT EXISTS (SELECT 1 FROM "SkuItem" WHERE "name" = 'Belgravia Gin & Dry Lemon' AND "bottleFormat" = 'Can (440ml)')`,
+  `UPDATE "SkuItem" SET "bottleFormat" = 'Can (440ml)'
+   WHERE "name" = 'Belgravia Gin & Tonic' AND "bottleFormat" = 'Can (500ml)'
+     AND NOT EXISTS (SELECT 1 FROM "SkuItem" WHERE "name" = 'Belgravia Gin & Tonic' AND "bottleFormat" = 'Can (440ml)')`,
+  `UPDATE "SkuItem" SET "bottleFormat" = 'Can (440ml)'
+   WHERE "name" = 'Redd''s MXD Guarana' AND "bottleFormat" = 'Can (500ml)'
+     AND NOT EXISTS (SELECT 1 FROM "SkuItem" WHERE "name" = 'Redd''s MXD Guarana' AND "bottleFormat" = 'Can (440ml)')`,
+  `UPDATE "SkuItem" SET "bottleFormat" = 'Can (440ml)'
+   WHERE "name" = 'Redd''s MXD Pine' AND "bottleFormat" = 'Can (500ml)'
+     AND NOT EXISTS (SELECT 1 FROM "SkuItem" WHERE "name" = 'Redd''s MXD Pine' AND "bottleFormat" = 'Can (440ml)')`,
+  `UPDATE "SkuItem" SET "bottleFormat" = 'Can (440ml)'
+   WHERE "name" = 'Chillers Punch Caribbean Chaos' AND "bottleFormat" = 'Can (500ml)'
+     AND NOT EXISTS (SELECT 1 FROM "SkuItem" WHERE "name" = 'Chillers Punch Caribbean Chaos' AND "bottleFormat" = 'Can (440ml)')`,
+  `UPDATE "SkuItem" SET "bottleFormat" = 'Can (440ml)'
+   WHERE "name" = 'Chillers Punch Milano Spritz' AND "bottleFormat" = 'Can (500ml)'
+     AND NOT EXISTS (SELECT 1 FROM "SkuItem" WHERE "name" = 'Chillers Punch Milano Spritz' AND "bottleFormat" = 'Can (440ml)')`,
+  `UPDATE "SkuItem" SET "bottleFormat" = 'Can (440ml)'
+   WHERE "name" = 'Chillers Punch Peach & Mango' AND "bottleFormat" = 'Can (500ml)'
+     AND NOT EXISTS (SELECT 1 FROM "SkuItem" WHERE "name" = 'Chillers Punch Peach & Mango' AND "bottleFormat" = 'Can (440ml)')`,
+  `UPDATE "SkuItem" SET "bottleFormat" = 'Can (440ml)'
+   WHERE "name" = 'Chillers Punch Tequila Sunrise (Zero Alc)' AND "bottleFormat" = 'Can (500ml)'
+     AND NOT EXISTS (SELECT 1 FROM "SkuItem" WHERE "name" = 'Chillers Punch Tequila Sunrise (Zero Alc)' AND "bottleFormat" = 'Can (440ml)')`,
+  `UPDATE "SkuItem" SET "bottleFormat" = 'Can (500ml)'
+   WHERE "name" = 'Hunter''s Iced Apple' AND "bottleFormat" = 'Can (440ml)'
+     AND NOT EXISTS (SELECT 1 FROM "SkuItem" WHERE "name" = 'Hunter''s Iced Apple' AND "bottleFormat" = 'Can (500ml)')`,
+  `UPDATE "SkuItem" SET "bottleFormat" = 'Can (500ml)'
+   WHERE "name" = 'Hunter''s Iced Watermelon' AND "bottleFormat" = 'Can (440ml)'
+     AND NOT EXISTS (SELECT 1 FROM "SkuItem" WHERE "name" = 'Hunter''s Iced Watermelon' AND "bottleFormat" = 'Can (500ml)')`,
+  `UPDATE "SkuItem" SET "bottleFormat" = 'Dumpy (275ml)'
+   WHERE "name" = 'Brutal Fruit Ruby Apple' AND "bottleFormat" = 'Dumpy (330ml)'
+     AND NOT EXISTS (SELECT 1 FROM "SkuItem" WHERE "name" = 'Brutal Fruit Ruby Apple' AND "bottleFormat" = 'Dumpy (275ml)')`,
+  `UPDATE "SkuItem" SET "bottleFormat" = 'Dumpy (275ml)'
+   WHERE "name" = 'Brutal Fruit Strawberry Rouge' AND "bottleFormat" = 'Dumpy (330ml)'
+     AND NOT EXISTS (SELECT 1 FROM "SkuItem" WHERE "name" = 'Brutal Fruit Strawberry Rouge' AND "bottleFormat" = 'Dumpy (275ml)')`,
+  `UPDATE "SkuItem" SET "bottleFormat" = 'Dumpy (275ml)'
+   WHERE "name" = 'Extreme Energy' AND "bottleFormat" = 'Dumpy (330ml)'
+     AND NOT EXISTS (SELECT 1 FROM "SkuItem" WHERE "name" = 'Extreme Energy' AND "bottleFormat" = 'Dumpy (275ml)')`,
   `CREATE TABLE IF NOT EXISTS "DriverReport" (
      "id" TEXT NOT NULL PRIMARY KEY,
      "orderCode" TEXT NOT NULL,

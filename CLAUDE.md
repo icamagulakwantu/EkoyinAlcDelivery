@@ -36,7 +36,7 @@ Stack: Node/Express 4, Prisma 5, Supabase Postgres, Yoco payments, vanilla HTML/
 `npm install` runs `postinstall`, which runs `node --test` plus the migrations and the catalogue/photo scripts. If any test fails the deploy fails and the old code stays live. This happened 6 Nov 20:38 to 7 Nov 03:10 (`roundTavern` was exported but never defined). Always run `npm test` (or `node --test`) before pushing. Tests need every image path in the photo map to exist.
 
 ## 4. Catalogue rules (decided by the founder)
-- 328 rows = 322 master workbook SKUs + 5 house products (Mofaya Original R62.94 and Mofaya Orange Ting R62.94 six-packs, Grenadine Syrup Cordial R73.50, Kola Tonic Cordial R47.25, Coca-Cola Original 500ml can R20) + Ice Tropez 6 x 275ml R401.24 (10 Nov, no photo yet).
+- 330 rows (11 Nov: + Redd's Original and Redd's Berry 660ml quarts, returnable) = 322 master workbook SKUs + 5 house products (Mofaya Original R62.94 and Mofaya Orange Ting R62.94 six-packs, Grenadine Syrup Cordial R73.50, Kola Tonic Cordial R47.25, Coca-Cola Original 500ml can R20) + Ice Tropez 6 x 275ml R401.24 (10 Nov, no photo yet).
 - Final customer prices live in `lib/catalogue-2026-11.js` (`FINAL_CUSTOMER_PRICES`). Markup is already inside them: 7% beer/cider/RTD/wine, 5% spirits/liqueurs/mixers/water/ice. Never stack a markup on a final price.
 - NEVER show "Price coming soon". `PRICE_COMING_SOON` is empty. Every new product needs a real shelf price + the category markup.
 - No 375ml spirits. No 1 litre rows (the founder never added them). Black Label is the 750ml quart. Breezer has no quarts. MXD is quart (660ml) + can only. Chillers Punch is cans only. Brutal Fruit has no 750ml. Extreme is an alcoholic RTD.
