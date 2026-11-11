@@ -70,20 +70,30 @@ test('service fee no longer depends on distance or surge, and surge stays separa
   assert.equal(night.total, 40 + 30 + 10 + 18);
 });
 
-test('Cooler Box: 5% from R2000, 8% from R4000 (founder, 10 Nov 2026)', () => {
+test('Cooler Box: 2.5% from R2000, 3.5% from R4000 (founder, 11 Nov 2026)', () => {
   const noon = at('10:00');
   assert.equal(P.coolerDiscountPct(1999.99, noon), 0);
-  assert.equal(P.coolerDiscountPct(2000, noon), 0.05);
-  assert.equal(P.coolerDiscountPct(3999.99, noon), 0.05);
-  assert.equal(P.coolerDiscountPct(4000, noon), 0.08);
+  assert.equal(P.coolerDiscountPct(2000, noon), 0.025);
+  assert.equal(P.coolerDiscountPct(3999.99, noon), 0.025);
+  assert.equal(P.coolerDiscountPct(4000, noon), 0.035);
+  assert.equal(P.pctLabel(0.025), '2.5%');
+  assert.equal(P.pctLabel(0.035), '3.5%');
+});
+
+test('Discounts never pass half our markup, and cases have no discount (founder, 11 Nov 2026)', () => {
+  // Markup is 5% (spirits, mixers, water, ice) or 7% (beer, cider, RTD, wine).
+  assert.ok(P.COOLER_TOP_DISCOUNT_PCT <= 0.07 / 2, 'top Cooler Box tier stays at or under 3.5% (half of 7%)');
+  assert.ok(P.COOLER_DISCOUNT_PCT <= 0.05 / 2, 'first Cooler Box tier stays at or under 2.5% (half of 5%)');
+  assert.equal(C.CASE_DISCOUNT_PCT, 0);
+  assert.equal(C.casePrice(130, 4, 8), 520, 'an old 8% case discount is ignored');
 });
 
 test('Cooler Box is only available until 20:00 South African time', () => {
-  assert.equal(P.coolerDiscountPct(2500, at('17:59')), 0.05); // 19:59
+  assert.equal(P.coolerDiscountPct(2500, at('17:59')), 0.025); // 19:59
   assert.equal(P.coolerDiscountPct(2500, at('18:00')), 0); // 20:00
   assert.equal(P.coolerDiscountPct(5000, at('20:30')), 0); // 22:30
   assert.equal(P.coolerDiscountPct(2500, at('01:59')), 0); // 03:59
-  assert.equal(P.coolerDiscountPct(2500, at('02:00')), 0.05); // 04:00
+  assert.equal(P.coolerDiscountPct(2500, at('02:00')), 0.025); // 04:00
 });
 
 test('minimum delivery order stays R300', () => {
@@ -95,7 +105,7 @@ test('Castle Milk Stout: shelf-corrected packs, founder-fixed quart', () => {
   assert.equal(C.newSinglePrice(row('Can (500ml)', 6, 24.22)), 130); // R130 can six-pack floor (founder, 9 Nov 2026)
   assert.equal(C.newSinglePrice(row('Quart (750ml)', 1, 38.65)), 29.96); // founder-fixed
   assert.equal(C.newSinglePrice(row('Dumpy (330ml)', 6, 25.95)), 101.64); // R94.99 + 7%
-  assert.equal(C.casePrice(130, 4, 8), 478.4);
-  assert.equal(C.casePrice(29.96, 12, 8), 330.76);
-  assert.equal(C.casePrice(101.64, 4, 8), 374.04);
+  assert.equal(C.casePrice(130, 4, 8), 520); // no case discount (11 Nov 2026)
+  assert.equal(C.casePrice(29.96, 12, 8), 359.52);
+  assert.equal(C.casePrice(101.64, 4, 8), 406.56);
 });

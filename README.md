@@ -4,6 +4,13 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 11 Nov 2026 (later): one discount only, at half our markup
+- **Founder rule:** a discount may never be more than half of our markup (5% / 7%), and discounts never stack.
+- **Cooler Box halved:** 2.5% from R2000 and 3.5% from R4000 (was 5% / 8%), still only 04:00-20:00. Pages show the numbers from `public/pricing.js` through the new `pctLabel()` helper (so 2.5% never shows as "3%").
+- **Case discount removed:** a case now costs its single price times the number in the case (`CASE_DISCOUNT_PCT = 0` in `lib/catalogue-2026-11.js`). The deploy price step sets `retailCaseDiscountPct` to 0 and recalculates `retailCaseZAR` on all 328 products (checked on a local copy). Cart and checkout no longer offer "Full cases" when there is no saving.
+- Promo codes are unchanged (admin-created, still apply on top of the Cooler Box).
+- Service worker cache bumped to `ekoyini-shell-v18`. Tests: 82. Staged scenarios: 25/26.
+
 ### 11 Nov 2026 (later): legal pages filled in; trading hours follow the partner taverns
 - `privacy.html` and `terms.html` have no placeholders left: Ekoyini Holdings, 7 Torquay Street, Summerstrand, Gqeberha; contact support@ekoyini.co.za and WhatsApp 064 004 5465; refunds within 7 business days.
 - The Information Officer is named by role ("the head of Ekoyini Holdings"), not by person. The founder asked that his personal details stay off the app (safety).

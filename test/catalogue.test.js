@@ -152,7 +152,7 @@ test('runner: fixes labels, removes 375ml, prices everything, and is repeatable'
   assert.equal(find('Hennessy VS', '750ml Bottle').imageUrl, null);
   const heineken = find('Heineken', 'Dumpy (330ml)');
   assert.equal(heineken.retailSingleZAR, 145); // founder price 9 Nov 2026
-  assert.equal(heineken.retailCaseZAR, 533.6); // 145 x 4 six-packs - 8%
+  assert.equal(heineken.retailCaseZAR, 580); // 145 x 4 six-packs, no case discount (11 Nov 2026)
   // Receipt-calibrated prices are used where configured.
   assert.equal(find('Windhoek Lager', 'Dumpy (330ml)').retailSingleZAR, 112.34); // 8 Nov shelf correction: R104.99 + 7%
   assert.equal(find('Stella Artois', 'Dumpy (330ml)').retailSingleZAR, 107.0); // configured final customer price

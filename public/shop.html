@@ -298,7 +298,7 @@
     </div>
     <div class="cooler-progress-track"><div class="cooler-progress-fill" id="coolerFill" style="width:0%"></div></div>
     <div class="cooler-tier-labels">
-      <span id="coolerGoal">R2000 · 5% off · 8% from R4000</span>
+      <span id="coolerGoal">R2000 · 2.5% off · 3.5% from R4000</span>
     </div>
     <div class="cooler-slots" id="coolerSlots"></div>
   </div>
@@ -859,7 +859,7 @@
   function scrollToCoolerBox() {
     const bar = document.getElementById('coolerBar');
     if (bar.style.display === 'none' || !bar.offsetParent) {
-      showToast(`Add any drink to start filling your Cooler Box — ${COOLER_DISCOUNT_PCT * 100}% off from R${COOLER_MIN_SUBTOTAL}, until 8pm`);
+      showToast(`Add any drink to start filling your Cooler Box — ${EkoyiniPricing.pctLabel(COOLER_DISCOUNT_PCT)} off from R${COOLER_MIN_SUBTOTAL}, until 8pm`);
       return;
     }
     bar.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -893,11 +893,11 @@
     if (!open) {
       goal.textContent = 'Cooler Box discount is available until 8pm';
     } else if (subtotal >= COOLER_TOP_SUBTOTAL) {
-      goal.textContent = `${COOLER_TOP_DISCOUNT_PCT * 100}% off unlocked`;
+      goal.textContent = `${EkoyiniPricing.pctLabel(COOLER_TOP_DISCOUNT_PCT)} off unlocked`;
     } else if (unlocked) {
-      goal.textContent = `${COOLER_DISCOUNT_PCT * 100}% off unlocked · ${COOLER_TOP_DISCOUNT_PCT * 100}% from R${COOLER_TOP_SUBTOTAL}`;
+      goal.textContent = `${EkoyiniPricing.pctLabel(COOLER_DISCOUNT_PCT)} off unlocked · ${EkoyiniPricing.pctLabel(COOLER_TOP_DISCOUNT_PCT)} from R${COOLER_TOP_SUBTOTAL}`;
     } else {
-      goal.textContent = `Add ${formatRand(COOLER_MIN_SUBTOTAL - subtotal)} for ${COOLER_DISCOUNT_PCT * 100}% off, until 8pm`;
+      goal.textContent = `Add ${formatRand(COOLER_MIN_SUBTOTAL - subtotal)} for ${EkoyiniPricing.pctLabel(COOLER_DISCOUNT_PCT)} off, until 8pm`;
     }
 
     const slots = document.getElementById('coolerSlots');
@@ -925,7 +925,7 @@
       <div class="price-details-row"><span class="pd-label">Single ${unitName}</span><span class="pd-value">${fmtPrice(p.retailSingleZAR)}</span></div>
       <div class="price-details-row"><span class="pd-label">Case (${p.unitsPerCase} ${unitsName})</span><span class="pd-value">${fmtPrice(p.retailCaseZAR)}</span></div>
       <div class="price-details-row"><span class="pd-label">Per ${unitName} (case)</span><span class="pd-value">${fmtPrice(perUnitCase)}</span></div>
-      <div class="price-details-row"><span class="pd-label">Case savings</span><span class="price-details-save">${p.retailCaseDiscountPct}% off</span></div>`;
+      ${p.retailCaseDiscountPct > 0 ? `<div class="price-details-row"><span class="pd-label">Case savings</span><span class="price-details-save">${p.retailCaseDiscountPct}% off</span></div>` : ''}`;
     document.getElementById('priceModal').classList.add('open');
   }
 
@@ -1003,7 +1003,7 @@
       notes.push(`<div class="ps-note"><span>🏷️</span><span>A case of ${p.unitsPerCase} is <b>${fmtPrice(p.retailCaseZAR)}</b> (${p.retailCaseDiscountPct}% off). Switch to cases in your cart.</span></div>`);
     }
     if (COOLER_ELIGIBLE.has(p.category)) {
-      notes.push(`<div class="ps-note"><span>🧊</span><span>Counts toward your <b>Cooler Box</b>: ${COOLER_DISCOUNT_PCT * 100}% off from R${COOLER_MIN_SUBTOTAL}, ${COOLER_TOP_DISCOUNT_PCT * 100}% from R${COOLER_TOP_SUBTOTAL}, until 8pm.</span></div>`);
+      notes.push(`<div class="ps-note"><span>🧊</span><span>Counts toward your <b>Cooler Box</b>: ${EkoyiniPricing.pctLabel(COOLER_DISCOUNT_PCT)} off from R${COOLER_MIN_SUBTOTAL}, ${EkoyiniPricing.pctLabel(COOLER_TOP_DISCOUNT_PCT)} from R${COOLER_TOP_SUBTOTAL}, until 8pm.</span></div>`);
     }
     if (EkoyiniPricing.SPIRIT_CATEGORIES.has(p.category)) {
       notes.push(`<div class="ps-note"><span>🔒</span><span>Add a <b>R${EkoyiniPricing.SAFETY_SEAL_FEE} Safety Seal</b> at checkout and your bottle is sealed at the tavern.</span></div>`);

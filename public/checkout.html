@@ -282,7 +282,7 @@
   let submitting = false;
   let marketingChoiceLoaded = false;
 
-  const hasCaseDeal = (p) => p.unitsPerCase > 1 && p.retailCaseZAR > 0;
+  const hasCaseDeal = (p) => p.unitsPerCase > 1 && p.retailCaseZAR > 0 && Number(p.retailCaseDiscountPct) > 0;
   const isCaseLine = (p) => checkoutData.purchaseType === 'case' && hasCaseDeal(p);
 
   function cartLines() {
@@ -489,7 +489,7 @@
         ${hidden > 0 ? `<button type="button" class="review-toggle" onclick="showAllItems=true;renderOrderReview()">Show ${hidden} more item${hidden === 1 ? '' : 's'}</button>` : ''}
       </div>
       <div class="bill-row is-total" style="font-size:14px;font-weight:600;padding:10px 0 6px"><span>Items</span><span>${formatRand(t.subtotal)}</span></div>
-      ${t.coolerDiscount > 0 ? `<div class="bill-row is-saving"><span>Cooler Box (${Math.round(t.coolerPct * 100)}% off)</span><span>−${formatRand(t.coolerDiscount)}</span></div>` : ''}
+      ${t.coolerDiscount > 0 ? `<div class="bill-row is-saving"><span>Cooler Box (${P.pctLabel(t.coolerPct)} off)</span><span>−${formatRand(t.coolerDiscount)}</span></div>` : ''}
       ${appliedPromo ? `<div class="bill-row is-saving"><span>Promo ${escapeHtml(appliedPromo.code)}</span><span>−${formatRand(t.promoDiscount)}</span></div>` : ''}
       ${deliveryRowsHTML(t)}
       ${t.safetySealFee ? `<div class="bill-row"><span>Safety Seal stickers</span><span>${formatRand(t.safetySealFee)}</span></div>` : ''}

@@ -23,10 +23,10 @@ test("priceOrder: subtotal, Cooler Box, promo on the remainder, delivery, seal",
     now: DAY,
   });
   assert.equal(r.subtotal, 2200);
-  assert.equal(r.coolerDiscount, 110); // 5% of 2200 (5% starts at R2000)
-  assert.equal(r.promoDiscount, 209); // 10% of 2090
+  assert.equal(r.coolerDiscount, 55); // 2.5% of 2200 (2.5% starts at R2000)
+  assert.equal(r.promoDiscount, 214.5); // 10% of 2145
   assert.equal(r.safetySealFee, 10);
-  assert.equal(r.total, 2200 - 110 - 209 + 117 + 10);
+  assert.equal(r.total, 2200 - 55 - 214.5 + 117 + 10);
 });
 
 test("priceOrder: no Cooler Box discount after 20:00 SA time", () => {
@@ -42,9 +42,9 @@ test("priceOrder: bad values never produce NaN", () => {
 test("coolerNudge points at the next tier", () => {
   assert.deepEqual(
     { needed: P.coolerNudge(400, DAY).needed, pct: P.coolerNudge(400, DAY).pct },
-    { needed: 1600, pct: 0.05 }
+    { needed: 1600, pct: 0.025 }
   );
-  assert.equal(P.coolerNudge(2500, DAY).pct, 0.08);
+  assert.equal(P.coolerNudge(2500, DAY).pct, 0.035);
   assert.equal(P.coolerNudge(2500, DAY).needed, 1500);
   assert.equal(P.coolerNudge(4000, DAY), null);
   assert.equal(P.coolerNudge(400, NIGHT), null);
@@ -79,9 +79,9 @@ test("only returnable quarts carry the bottle charge", () => {
 
 test("priceOrder adds bottles & crates after every discount", () => {
   const r = P.priceOrder({ lines: [{ category: "BEER", total: 2400 }], deliveryTotal: 80, bottleDeposit: 52, now: DAY });
-  assert.equal(r.coolerDiscount, 120); // 5% of the drinks only, never of the bottles
+  assert.equal(r.coolerDiscount, 60); // 2.5% of the drinks only, never of the bottles
   assert.equal(r.bottleDepositFee, 52);
-  assert.equal(r.total, 2400 - 120 + 80 + 52);
+  assert.equal(r.total, 2400 - 60 + 80 + 52);
 });
 
 test("No GPS pin: allowed with a landmark, refused without one", () => {
