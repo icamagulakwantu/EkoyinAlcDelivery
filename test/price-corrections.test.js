@@ -116,3 +116,10 @@ test('the app never sells below what the stock costs at Siba', () => {
     assert.ok(price >= cost, `${name} ${format}: app R${price} is below the Siba cost R${cost}`);
   }
 });
+
+test('founder rule: always the higher shelf price (Bernini kept at R109.99 over Shoprite R104.99)', () => {
+  for (const v of ['Blush', 'Classic', 'Ruby Berry']) {
+    const row = PRICE_CORRECTIONS.find((p) => p.name === `Bernini ${v}` && p.bottleFormat === 'Dumpy (275ml)');
+    assert.equal(row.shelf, 109.99);
+  }
+});
