@@ -4,6 +4,11 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 11 Nov 2026 (later): separate WhatsApp buttons for the tavern and the driver
+- The one "Send WhatsApp to Tavern & Driver" button tried to open two WhatsApp chats at once. Phones only open the first, so the dispatcher only ever saw the tavern's "please prepare this order" message. It is now two buttons on the order card: **1. WhatsApp tavern (prepare)** and **2. WhatsApp driver (collect & deliver)**.
+- The tavern message now shows only what to pack and who collects it (driver name and car). No customer address and no total (POPIA). The driver message is unchanged: pickup, address, landmark, pin, tracking link.
+- `admin-api.js` loads with a version tag so dispatchers get the new buttons straight away. Tests: 83.
+
 ### 11 Nov 2026 (later): 14 new products from the Shoprite shelf, with photos
 - **Brandy:** KWV 3 Year R230.99, KWV 5 Year R262.49, KWV 10 Year R482.99, KWV 15 Year R1049.99, Richelieu International R246.74, Olof Bergh Solera R220.49.
 - **Whisky:** Redbreast 12 R1679.99, The Glenlivet 15 R1364.99, Maker's Mark R545.99. **Tequila:** Espolon Reposado R650.99. **Champagne:** G.H. Mumm Grand Cordon R909.49.

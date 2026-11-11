@@ -281,7 +281,10 @@ function getActionButtons(order) {
         buttons += `<button class="btn btn-assign" onclick="openAssignModal('${code}')">Assign</button>`;
     }
     if (order.status === 'PENDING' && order.tavern) {
-        buttons += `<button class="btn btn-dispatch" onclick="sendDispatchWhatsApp('${code}')">Send WhatsApp to Tavern & Driver</button>`;
+        // Two buttons (founder, 11 Nov 2026): a phone opens only one WhatsApp
+        // chat per tap, so one combined button only ever reached the tavern.
+        buttons += `<button class="btn btn-dispatch" onclick="sendTavernOnly('${code}')">1. WhatsApp tavern (prepare)</button>`;
+        if (order.driverName) buttons += `<button class="btn btn-dispatch" onclick="sendDriverOnly('${code}')">2. WhatsApp driver (collect & deliver)</button>`;
         buttons += `<button class="btn btn-assign" onclick="markPickedUpManually('${code}')" title="Only if the driver can't use their own confirm-pickup link">Mark Picked Up (Manual)</button>`;
     }
     if (order.status === 'DISPATCHED') {
@@ -406,7 +409,7 @@ async function dispatchOrder() {
         if (!res.ok) throw new Error('Assign failed');
         closeAssignModal();
         loadOrders();
-        alert('Order assigned! Use "Send WhatsApp & Dispatch" on the order card to notify the tavern and driver.');
+        alert('Order assigned! On the order card tap "1. WhatsApp tavern", then "2. WhatsApp driver".');
     } catch (err) {
         console.error(err);
         alert('Failed to assign order');
@@ -420,7 +423,10 @@ async function dispatchOrder() {
 // HTML escaping is needed here — only consistent 2-decimal money.
 function sendTavernWhatsApp(orderCode, tavern, order) {
     const itemList = order.items.map(item => `${item.name} (x${item.quantity})`).join('\n');
-    const message = `*Ekoyini Order - ${orderCode}*\n\n*Tavern:* ${tavern.name}\n*Items:*\n${itemList}\n\n*Total:* ${formatRand(order.total)}\n*Delivery:* ${order.address}\n\n*Please prepare this order.*\nDriver will collect and deliver.\nCode: *${orderCode}*`;
+    // The tavern only needs what to pack and who collects it: no customer
+    // address or phone (POPIA), no order total.
+    const collector = order.driverName ? `${order.driverName}${order.driverVehicle ? ` (${order.driverVehicle})` : ''}` : 'our driver';
+    const message = `*Ekoyini Order - ${orderCode}* (for ${tavern.name})\n\n*Please pack this order:*\n${itemList}\n\n*Collected by:* ${collector}\nThe driver will quote order code *${orderCode}* at collection.\nPlease have it packed and cold. Thank you!`;
     window.open(`https://wa.me/${tavern.phone}?text=${encodeURIComponent(message)}`, '_blank');
 }
 
@@ -474,6 +480,20 @@ function postDriverJob(orderCode) {
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
 }
 window.postDriverJob = postDriverJob;
+
+function sendTavernOnly(orderCode) {
+    const order = allOrders.find(o => o.code === orderCode);
+    if (!order || !order.tavern) { alert('Please assign a tavern first'); return; }
+    if (!order.tavern.phone) { alert(`${order.tavern.name} has no phone number saved. Add it in the Delivery tab.`); return; }
+    sendTavernWhatsApp(orderCode, order.tavern, order);
+}
+
+function sendDriverOnly(orderCode) {
+    const order = allOrders.find(o => o.code === orderCode);
+    if (!order || !order.tavern || !order.driverName) { alert('Please assign a tavern and driver first'); return; }
+    sendDriverWhatsApp(orderCode, order.driverName, order.driverPhone, order);
+    // The order moves to DISPATCHED when the driver taps "Confirm Pickup" on their link.
+}
 
 function sendDispatchWhatsApp(orderCode) {
     const order = allOrders.find(o => o.code === orderCode);
