@@ -23,14 +23,16 @@
     'WINE', 'WINE_BOX', 'SPARKLING', 'CHAMPAGNE', 'WATER', 'ICE',
   ]);
 
-  // Cooler Box discount (founder decision, 10 Nov 2026): 5% once the
-  // eligible subtotal reaches R2000, and 8% from R4000 (was R1000 / R2000).
+  // Cooler Box discount (founder decision, 11 Nov 2026): 2.5% once the
+  // eligible subtotal reaches R2000, and 3.5% from R4000 (was 5% / 8%).
+  // Rule: a discount is never more than half of our markup (5% / 7%), and
+  // it is the ONLY discount (the case discount was removed, 11 Nov 2026).
   // It is only available until 20:00 South African time and comes back at
   // 04:00, when the late-night window ends.
   const COOLER_MIN_SUBTOTAL = 2000;
-  const COOLER_DISCOUNT_PCT = 0.05;
+  const COOLER_DISCOUNT_PCT = 0.025;
   const COOLER_TOP_SUBTOTAL = 4000; // from this amount the top tier applies
-  const COOLER_TOP_DISCOUNT_PCT = 0.08;
+  const COOLER_TOP_DISCOUNT_PCT = 0.035;
   const COOLER_CUTOFF_HOUR = 20;
   const COOLER_RESUME_HOUR = 4;
 
@@ -336,7 +338,14 @@
     return 'Pin your location, or add a landmark so the driver can find you';
   }
 
+  // 0.025 -> "2.5%", 0.035 -> "3.5%", 0.05 -> "5%" (no float noise).
+  function pctLabel(fraction) {
+    const n = Math.round(Number(fraction || 0) * 1000) / 10;
+    return `${n}%`;
+  }
+
   return {
+    pctLabel,
     MIN_LANDMARK_LENGTH,
     noPinProblem,
     MIN_ORDER_SUBTOTAL,

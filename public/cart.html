@@ -118,7 +118,7 @@
     return p.packSize > 1 ? `${p.bottleFormat} · ${p.packSize}-pack` : p.bottleFormat;
   }
   const casesOf = (qty, p) => Math.ceil(qty / p.unitsPerCase);
-  const hasCaseDeal = (p) => p.unitsPerCase > 1 && p.retailCaseZAR > 0;
+  const hasCaseDeal = (p) => p.unitsPerCase > 1 && p.retailCaseZAR > 0 && Number(p.retailCaseDiscountPct) > 0;
 
   // One priced line per cart entry. Case mode buys whole cases (rounded up),
   // exactly like the server does.
@@ -293,13 +293,13 @@
     }
     const nudge = P.coolerNudge(t.coolerSubtotal);
     if (nudge) {
-      const now = nudge.current ? `<span class="nudge-tag">${Math.round(nudge.current * 100)}% off unlocked</span>` : `<span class="nudge-tag">Cooler Box</span>`;
+      const now = nudge.current ? `<span class="nudge-tag">${P.pctLabel(nudge.current)} off unlocked</span>` : `<span class="nudge-tag">Cooler Box</span>`;
       html += `<div class="nudge${nudge.current ? ' is-done' : ''}">
-        <div class="nudge-row"><span>Add <b>${formatRand(nudge.needed)}</b> for <b>${Math.round(nudge.pct * 100)}% off</b> your Cooler Box</span>${now}</div>
+        <div class="nudge-row"><span>Add <b>${formatRand(nudge.needed)}</b> for <b>${P.pctLabel(nudge.pct)} off</b> your Cooler Box</span>${now}</div>
         <div class="nudge-track"><div class="nudge-fill" style="width:${Math.min(100, nudge.progress * 100)}%"></div></div>
       </div>`;
     } else if (t.coolerDiscount > 0) {
-      html += `<div class="nudge is-done"><div class="nudge-row"><span>Cooler Box maxed out — <b>${Math.round(t.coolerPct * 100)}% off</b> applied</span><span class="nudge-tag">−${formatRand(t.coolerDiscount)}</span></div></div>`;
+      html += `<div class="nudge is-done"><div class="nudge-row"><span>Cooler Box maxed out — <b>${P.pctLabel(t.coolerPct)} off</b> applied</span><span class="nudge-tag">−${formatRand(t.coolerDiscount)}</span></div></div>`;
     } else if (!P.coolerDiscountAvailable(new Date())) {
       html += `<div class="nudge"><div class="nudge-row"><span>Cooler Box savings are back at 4am — they run until 8pm daily.</span></div></div>`;
     }
@@ -322,7 +322,7 @@
     return `<section class="bill" aria-label="Order summary">
       <h2>Summary</h2>
       <div class="bill-row"><span>Items</span><span>${formatRand(t.subtotal)}</span></div>
-      ${t.coolerDiscount > 0 ? `<div class="bill-row is-saving"><span>Cooler Box (${Math.round(t.coolerPct * 100)}% off)<small>Until 8pm today</small></span><span>−${formatRand(t.coolerDiscount)}</span></div>` : ''}
+      ${t.coolerDiscount > 0 ? `<div class="bill-row is-saving"><span>Cooler Box (${P.pctLabel(t.coolerPct)} off)<small>Until 8pm today</small></span><span>−${formatRand(t.coolerDiscount)}</span></div>` : ''}
       ${appliedPromo ? `<div class="bill-row is-saving"><span>Promo ${escapeHtml(appliedPromo.code)}</span><span>−${formatRand(t.promoDiscount)}</span></div>` : ''}
       <div class="bill-row"><span>Delivery<small>From R${P.BASE_DELIVERY_FEE} · exact fee at checkout</small></span><span>${formatRand(P.BASE_DELIVERY_FEE)}</span></div>
       ${t.loadFee > 0 ? `<div class="bill-row"><span>Heavy load<small>About ${Math.round(t.weightKg)} kg · goes 100% to your driver</small></span><span>${formatRand(t.loadFee)}</span></div>` : ''}

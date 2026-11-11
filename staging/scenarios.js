@@ -54,7 +54,7 @@ const base = { address: '12 Vilakazi St, Zwide', customerName: 'Thandeka', custo
 
   // ───────── STAGE 1: catalogue & content ─────────
   await scenario('1 Catalogue', '1.1', 'Every product is priced, in stock data, and no cost data leaks', async () => {
-    check(products.length === 328, `328 products (got ${products.length})`);
+    check(products.length === 330, `330 products (got ${products.length})`);
     check(products.every((p) => p.retailSingleZAR > 0), 'every product has a price > 0');
     const leaked = ['listPriceZAR', 'supplierCaseZAR', 'supplierPortfolio', 'palletPackQty'].filter((k) => products.some((p) => k in p));
     check(leaked.length === 0, `no supplier/cost fields in the public API (${leaked.join(',') || 'none'})`);

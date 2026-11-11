@@ -123,6 +123,8 @@ async function applyPrices(prisma, rows, log, dryRun = false) {
         data.retailSingleZAR = single;
         data.retailCaseZAR = caseZAR;
       }
+      // Case discount removed (founder, 11 Nov 2026).
+      if (Number(row.retailCaseDiscountPct) !== C.CASE_DISCOUNT_PCT) data.retailCaseDiscountPct = C.CASE_DISCOUNT_PCT;
     } else {
       unpriced.push(`${row.name} ${row.bottleFormat}`);
     }

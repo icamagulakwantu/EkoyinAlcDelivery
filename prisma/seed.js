@@ -308,7 +308,8 @@ async function main() {
       throw new Error('Invalid case quantity for ' + row.name + ' ' + row.bottleFormat + ': ' + sourceUnitsPerCase + ' is not divisible by pack size ' + packSize);
     }
     const unitsPerCase = sourceUnitsPerCase / packSize;
-    const retailCaseDiscountPct = RETAIL_CASE_DISCOUNT_PCT[category] ?? 5;
+    // Case discount removed (founder, 11 Nov 2026): cases cost single x units.
+    const retailCaseDiscountPct = 0; // was RETAIL_CASE_DISCOUNT_PCT[category]
     const retailSingleZAR = CataloguePricing.newSinglePrice({ name: row.name, bottleFormat: row.bottleFormat, category, packSize, listPriceZAR }) ?? 0;
     const retailCaseZAR = round2(retailSingleZAR * unitsPerCase * (1 - retailCaseDiscountPct / 100));
     const photoCandidates = [FORMAT_PHOTO_MAP[JSON.stringify([row.name, row.bottleFormat])], BRAND_PHOTO_MAP[row.name]];
