@@ -2,7 +2,7 @@
 
 Checked on the live code (merge `40ad6d6`), the live database (read-only),
 live server logs, and a full local rehearsal. Unit tests: **80/80**.
-Staged end-to-end scenarios (`staging/`): **24/25**. The one failure (6.3, faked
+Staged end-to-end scenarios (`staging/`): **25/26** (11 Nov). The one failure (6.3, faked
 IP vs rate limits) only fails on a local machine; live has `TRUST_PROXY_HOPS=3`,
 checked against Render's real proxy headers on 9 Nov.
 
@@ -13,14 +13,14 @@ checked against Render's real proxy headers on 9 Nov.
 | Software (shop, cart, checkout, pricing, payments code, admin, security) | **95%** | 24/25 scenarios, 80 tests, prices match server to the cent, stock races safe, card recovery, RLS lock-down |
 | Live operations (emails, real orders, dispatch team, stock) | **45%** | Emails are not sending, no order has ever been delivered, no dispatcher accounts, stock not real |
 | Legal & compliance | **40%** | Legal pages have placeholders, trading hours not enforced, licence position to confirm |
-| **Overall launch readiness** | **≈ 70%** | 6 must-fix items below; 2 are small code changes, 4 are setup by the founder |
+| **Overall launch readiness** | **≈ 75%** (11 Nov) | 2 of the 6 must-fix items are done (emails, no-pin orders); 4 remain: trading hours, legal pages, a first real order, licence |
 
 ## Must fix before launch (blockers)
 
 | # | Blocker | What we found | Who / effort |
 |---|---|---|---|
-| 1 | **Order emails are not being sent** | Live log 10 Nov 06:27: `RESEND_API_KEY not set — skipping` for order EKO-FKA9SAV9 (customer confirmation and the team alert). The key is not on Render. | Founder: add `RESEND_API_KEY` on Render → ekoyini-api → Environment, choose **Save, rebuild and deploy**. 2 min |
-| 2 | **Customers who won't share their location can't order** | Since the 16 taverns have pins, checkout *requires* a GPS pin. A customer on a desktop, or who taps "Block", is stuck. | Code (small): allow the order without a pin, charge the base R40, and flag it "no pin: confirm distance" for the dispatcher. Needs founder OK |
+| 1 | ✅ **Fixed 11 Nov: order emails** (was: not being sent) | Live log 10 Nov 06:27: `RESEND_API_KEY not set — skipping` for order EKO-FKA9SAV9 (customer confirmation and the team alert). The key is not on Render. | Founder: add `RESEND_API_KEY` on Render → ekoyini-api → Environment, choose **Save, rebuild and deploy**. 2 min |
+| 2 | ✅ **Fixed 11 Nov: no-pin orders allowed with a landmark** (was: customers who won't share their location can't order) | Since the 16 taverns have pins, checkout *requires* a GPS pin. A customer on a desktop, or who taps "Block", is stuck. | Code (small): allow the order without a pin, charge the base R40, and flag it "no pin: confirm distance" for the dispatcher. Needs founder OK |
 | 3 | **Liquor trading hours not enforced** | The Terms promise legal hours; the app takes orders 24 hours a day. | Founder: confirm Eastern Cape off-consumption hours (and Sunday/holiday rules). Then code (small): closed-hours message + server refusal |
 | 4 | **Legal pages have placeholders** | `privacy.html` and `terms.html` still say `[REGISTERED COMPANY NAME]`, `[REG NO]`, `[PHYSICAL ADDRESS]`, `[NAME]` (Information Officer), `[PRIVACY EMAIL]`, `[EMAIL]`, `[PHONE]`, `[DATE]`, `[X]`, `[EMAIL / WHATSAPP]`. POPIA needs a named Information Officer. | Founder sends details; 10-minute edit |
 | 5 | **No order has gone all the way through** | Live: 9 orders ever, **0 delivered**; 2 EFT orders waiting for payment (tests); 3 card checkouts started but never paid, so **no live card payment has ever completed**. | Founder: one real card order and one EFT order, through to "Delivered" with a real driver |
@@ -54,5 +54,5 @@ checked against Render's real proxy headers on 9 Nov.
 | Analytics | Cloudflare Web Analytics live (founder confirmed) |
 
 ## How to re-run
-- Unit tests: `node --test` (80).
-- Scenarios: see `staging/README.md` (25 scenarios; they now send a delivery pin, like real customers).
+- Unit tests: `node --test` (81).
+- Scenarios: see `staging/README.md` (26 scenarios; they now send a delivery pin, like real customers).

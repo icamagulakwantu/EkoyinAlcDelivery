@@ -120,12 +120,12 @@
           <span id="pinBtnText">Use my current location</span>
         </button>
         <div class="pin-status" id="pinStatus" style="display:none;"></div>
-        <div class="field-error">Pin your location so we can work out your delivery fee.</div>
-        <div class="field-hint">Only if you're at the delivery address now — it takes your driver straight to your gate.</div>
+        <div class="field-hint" id="pinHint">Only if you're at the delivery address now — it takes your driver straight to your gate.</div>
       </div>
-      <div class="field-group">
-        <label for="landmark">Landmark or directions (optional)</label>
-        <input type="text" id="landmark" maxlength="200" placeholder="e.g. Blue gate opposite the spaza">
+      <div class="field-group" id="fgLandmark">
+        <label for="landmark" id="landmarkLabel">Landmark or directions (optional)</label>
+        <input type="text" id="landmark" maxlength="200" placeholder="e.g. Blue gate opposite the spaza" oninput="setError('fgLandmark', false)">
+        <div class="field-error">Pin your location, or add a landmark so the driver can find you.</div>
       </div>
       <div class="field-group" style="margin-bottom:0">
         <label>Super Priority (optional)</label>
@@ -344,8 +344,15 @@
   }
 
   function renderPinRequirement() {
-    document.getElementById('pinLabel').textContent = quoteNeedsPin ? 'Exact location (required)' : 'Exact location (optional)';
-    if (!quoteNeedsPin || deliveryPin) setError('fgPin', false);
+    // No pin is fine (founder, 11 Nov): the base delivery fee applies and a
+    // landmark becomes required so the driver can still find the customer.
+    const noPin = quoteNeedsPin && !deliveryPin;
+    document.getElementById('pinLabel').textContent = quoteNeedsPin ? 'Exact location (recommended)' : 'Exact location (optional)';
+    document.getElementById('landmarkLabel').textContent = noPin ? 'Landmark or directions (required without a pin)' : 'Landmark or directions (optional)';
+    document.getElementById('pinHint').textContent = noPin
+      ? "Can't share your location? No problem: add a landmark below. You pay the base delivery fee and we'll call to confirm the distance."
+      : "Only if you're at the delivery address now — it takes your driver straight to your gate.";
+    if (!noPin) setError('fgLandmark', false);
   }
 
   function renderPriorityOptions() {
@@ -445,7 +452,7 @@
       return `<div class="bill-row"><span>Delivery &amp; Care<small>Working out your exact fee…</small></span><span>${formatRand(t.delivery)}</span></div>`;
     }
     const q = deliveryQuote;
-    const distanceNote = q.distanceKm != null ? `<small>About ${q.distanceKm.toFixed(1)} km away</small>` : (quoteNeedsPin ? '<small>Pin your location for the exact fee</small>' : '');
+    const distanceNote = q.distanceKm != null ? `<small>About ${q.distanceKm.toFixed(1)} km away</small>` : (quoteNeedsPin ? '<small>Base fee without a pin. We may call to confirm the distance.</small>' : '');
     const surgeLabel = q.surgeKey === 'LATE_NIGHT' ? 'Late-night fee' : 'Peak-hours fee';
     const distanceFee = q.distanceFee != null ? q.distanceFee : q.deliveryFee;
     return `
@@ -600,7 +607,7 @@
     const phone = document.getElementById('phoneNumber').value.trim();
     const checks = [
       ['fgAddress', address.length < 5],
-      ['fgPin', quoteNeedsPin && !deliveryPin],
+      ['fgLandmark', !!P.noPinProblem({ needsPin: quoteNeedsPin, hasPin: !!deliveryPin, landmark: document.getElementById('landmark').value })],
       ['fgName', !name],
       ['fgPhone', !isValidSaPhone(phone)],
       ['cbAge', !document.getElementById('ageConfirm').checked],

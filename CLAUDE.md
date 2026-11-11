@@ -16,8 +16,9 @@ These points replace anything older in the sections below.
 - **Founder prices (9 Nov, late)**: `lib/founder-prices-2026-11-09.js` holds FINAL prices that win over everything (Heineken dumpies R145, Castle Lite/Black Label cans R130, Savanna 500ml NRB six-pack R210, Appletiser R45, Red Bull 250ml single R30, Coke 500ml can R20, strategic spirits at Siba cost + 14%). Alcoholic can six-packs are never under R130 (Corona and Savanna excepted). Stock is bought at Siba; a test keeps every receipt item at or above its Siba cost.
 - **Six-packs only** for beer/cider/RTD cans, dumpies and 500ml NRBs; cold drinks, energy drinks, water and ice are loose (`packSizeFor()` in `lib/catalogue-2026-11.js`; Mofaya and Schweppes cans stay six-packs).
 - **Shelf order (9 Nov)**: `public/shelf-order.js` (shared by shop, `/api/products`, admin stock list). Water & Ice is one section; Mofaya + Red Bull are Energy Drinks; Ponchos Coffee is Tequila. Monin syrups are R230.99 and must never be under R230 (founder; a test enforces it).
-- **Service worker cache is `ekoyini-shell-v15`**. Bump it again when static pages change.
-- **Tests**: 80 (incl. `test/founder-prices.test.js`, `test/shelf-order.test.js`), including `test/reports-marketing.test.js`, `test/order-pricing.test.js` and `test/price-corrections.test.js`.
+- **Service worker cache is `ekoyini-shell-v16`**. Bump it again when static pages change.
+- **No GPS pin (11 Nov)**: checkout allows an order without a pin when a landmark is given (`noPinProblem()` in `public/pricing.js`); base delivery fee; admin card flags it. **Emails live (11 Nov)**: Resend domain verified, sender `orders@ekoyini.co.za`.
+- **Tests**: 81 (incl. `test/founder-prices.test.js`, `test/shelf-order.test.js`), including `test/reports-marketing.test.js`, `test/order-pricing.test.js` and `test/price-corrections.test.js`.
 
 ## 1. What this is
 Alcohol delivery app for Gqeberha townships (ride-along delivery). Founder: Thandu (Thanduxolo Makeleni), Ekoyini Group.
@@ -82,4 +83,4 @@ Stack: Node/Express 4, Prisma 5, Supabase Postgres, Yoco payments, vanilla HTML/
 - Do not touch the other Supabase projects. Do not delete order data. `OrderItem` snapshots name + price, so catalogue changes do not break history.
 - Commit trailer to use:
   `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>`
-- Verify on the LIVE site after each deploy (products API, a photo, a price). The service worker caches the shell (`ekoyini-shell-v15`), so bump the cache name when you change static pages.
+- Verify on the LIVE site after each deploy (products API, a photo, a price). The service worker caches the shell (`ekoyini-shell-v16`), so bump the cache name when you change static pages.

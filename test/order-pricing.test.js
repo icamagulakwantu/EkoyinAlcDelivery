@@ -83,3 +83,15 @@ test("priceOrder adds bottles & crates after every discount", () => {
   assert.equal(r.bottleDepositFee, 52);
   assert.equal(r.total, 2400 - 120 + 80 + 52);
 });
+
+test("No GPS pin: allowed with a landmark, refused without one", () => {
+  // Taverns have pins but the customer didn't share one.
+  assert.ok(P.noPinProblem({ needsPin: true, hasPin: false, landmark: "" }), "no pin and no landmark is refused");
+  assert.ok(P.noPinProblem({ needsPin: true, hasPin: false, landmark: "  ab " }), "a 2-letter landmark is too short");
+  assert.equal(P.noPinProblem({ needsPin: true, hasPin: false, landmark: "Blue gate opposite the spaza" }), null);
+  // With a pin, or before any tavern has a pin, nothing extra is asked.
+  assert.equal(P.noPinProblem({ needsPin: true, hasPin: true, landmark: "" }), null);
+  assert.equal(P.noPinProblem({ needsPin: false, hasPin: false, landmark: "" }), null);
+  // No pin means the base delivery fee (distance unknown).
+  assert.equal(P.distanceDeliveryFee(null), P.BASE_DELIVERY_FEE);
+});

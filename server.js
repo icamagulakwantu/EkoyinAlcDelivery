@@ -247,7 +247,7 @@ async function logAdminAction(req, action, targetId, detail) {
 
 // ── Pricing — shared with the browser via public/pricing.js, so the cart,
 // checkout and server can never disagree on discounts or the delivery fee.
-const { COOLER_ELIGIBLE, coolerDiscountPct, MIN_ORDER_SUBTOTAL, safetySealFeeFor, orderWeightKg, isReturnableQuart, bottleDepositFor } = require("./public/pricing.js");
+const { COOLER_ELIGIBLE, coolerDiscountPct, MIN_ORDER_SUBTOTAL, safetySealFeeFor, orderWeightKg, isReturnableQuart, bottleDepositFor, noPinProblem } = require("./public/pricing.js");
 // Shelf order (shared with the shop and admin): sensible sections, brands together.
 const { compareCatalogue } = require("./public/shelf-order.js");
 const { createQuoter } = require("./lib/delivery-quote.js");
@@ -650,9 +650,10 @@ async function validateAndPriceOrder({ address, items, customerName, customerPho
     weightKg: orderWeightKg(weighed),
   });
   if (delivery.error) return { error: delivery.error };
-  if (delivery.needsPin) {
-    return { error: "Please pin your delivery location so we can work out your delivery fee" };
-  }
+  // No pin (location blocked, laptop, ...): allowed with a landmark. The
+  // quote then charges the base fee and the admin card flags "no pin".
+  const pinProblem = noPinProblem({ needsPin: delivery.needsPin, hasPin: pin.deliveryLat != null, landmark: pin.landmark });
+  if (pinProblem) return { error: pinProblem };
 
   subtotal = Math.round(subtotal * 100) / 100;
   coolerSubtotal = Math.round(coolerSubtotal * 100) / 100;

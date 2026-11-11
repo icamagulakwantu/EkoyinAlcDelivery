@@ -138,6 +138,16 @@ const base = { address: '12 Vilakazi St, Zwide', customerName: 'Thandeka', custo
     check(r.status === 200 && !r.json.order.safetySealFee, `beer-only order seal fee: ${r.json?.order?.safetySealFee ?? 0}`);
   });
 
+  await scenario('2 Pricing', '2.5b', 'No GPS pin: refused without a landmark, accepted with one at the base delivery fee', async () => {
+    const noPin = { ...base, deliveryLat: null, deliveryLng: null, paymentMethod: 'eft', items: [{ skuId: beer6.id, quantity: 4 }] };
+    const bare = await call('POST', '/order', { body: noPin });
+    check(bare.status === 400 && /landmark/i.test(bare.json?.error), `no pin, no landmark refused: ${bare.json?.error}`);
+    const ok = await call('POST', '/order', { body: { ...noPin, landmark: 'Blue gate opposite the spaza' } });
+    const o = ok.json?.order;
+    check(ok.status === 200 && o && o.deliveryLat == null, `no pin + landmark accepted: ${ok.status}`);
+    check(o && o.deliveryFee >= P.BASE_DELIVERY_FEE && o.deliveryFee < P.BASE_DELIVERY_FEE + 10, `base delivery fee (plus any load): R${o?.deliveryFee}`);
+  });
+
   await scenario('2 Pricing', '2.6', 'Promo codes: valid, exhausted, below minimum, expired', async () => {
     sql(`delete from "PromoCode" where code like 'TEST%'`);
     sql(`insert into "PromoCode"(id,code,"discountPct","maxUses","usedCount",active) values ('p1','TEST10',10,1,0,true)`);

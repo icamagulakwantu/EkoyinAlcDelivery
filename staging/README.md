@@ -1,6 +1,6 @@
 # Staged scenarios (pre-release check)
 
-24 end-to-end scenarios that drive the real server over HTTP: catalogue, pricing
+26 end-to-end scenarios that drive the real server over HTTP: catalogue, pricing
 integrity, promo codes, card / EFT / cash payments, stock races, the full
 admin → driver → customer order lifecycle, security and resilience. Run them
 before every release. They need a **local** database; never point them at the
@@ -28,5 +28,5 @@ PORT=3000 node server.js &
 STAGING_DATABASE_URL="$DATABASE_URL" node staging/scenarios.js
 ```
 
-Expected today: 24/25 pass. 6.3 (rate limits vs a faked X-Forwarded-For)
+Expected today: 25/26 pass. 6.3 (rate limits vs a faked X-Forwarded-For)
 passes only once `TRUST_PROXY_HOPS` is set; see MARKET_READINESS.md.

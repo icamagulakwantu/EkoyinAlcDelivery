@@ -4,6 +4,11 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 11 Nov 2026: order without a GPS pin; order emails live
+- **No-pin checkout:** a customer who can't or won't share their location can still order. They pay the base delivery fee (R40, plus any load fee) and must give a landmark (3+ letters) so the driver can find them. The rule is `noPinProblem()` in `public/pricing.js`, used by checkout and the server. The admin order card shows "No GPS pin: call the customer to confirm the distance" in orange.
+- **Emails:** ekoyini.co.za verified in Resend (DKIM + SPF on Domains.co.za). Render has a new send-only `RESEND_API_KEY` and `RESEND_FROM_EMAIL=Ekoyini <orders@ekoyini.co.za>`. Test email delivered. Mailboxes admin@, orders@, support@ created (Domains.co.za Email Only 10).
+- Service worker cache bumped to `ekoyini-shell-v16`. Tests: 81. Staged scenarios: 25/26 (new 2.5b; 6.3 needs Render's real proxy).
+
 ### 10 Nov 2026 (late): full launch-readiness diagnosis
 - `MARKET_READINESS.md` rewritten: software about 95% ready, launch overall about 70%. Six blockers: order emails not sending (`RESEND_API_KEY` missing on Render), checkout needs a GPS pin (no fallback), trading hours not enforced, legal-page placeholders, no order ever delivered or paid by card, licence position to confirm.
 - Staged scenarios updated for the 10 Nov rules (customer pin, 328 products, bottles & crates): 24/25 pass (6.3 needs Render's real proxy). Tests: 80.
