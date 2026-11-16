@@ -226,3 +226,14 @@ body.hx-has-cart .hx { padding-bottom: calc(var(--bottom-h) + 96px); }
    tiles can show them larger and every product reads the same size. */
 .hx-prod-img img { width: 94%; height: 94%; }
 .hx-cat-img img { width: 92%; height: 92%; }
+
+/* Partner taverns (16 Nov 2026) */
+.hx-partner-lead { margin: -4px 0 12px; font-size: 14px; color: var(--muted, #6b6559); }
+.hx-partners { grid-auto-columns: 168px; }
+.hx-partner { background: var(--card, #fff); border: 1px solid var(--border, #ece5d6); border-radius: 18px; padding: 10px; display: flex; flex-direction: column; gap: 3px; scroll-snap-align: start; }
+.hx-partner-img { aspect-ratio: 4 / 3; border-radius: 12px; overflow: hidden; display: grid; place-items: center; background: linear-gradient(135deg, #2e6e4b, #4f9a6f); margin-bottom: 6px; }
+.hx-partner-img img { width: 100%; height: 100%; object-fit: cover; }
+.hx-partner-img span { color: #fff; font-weight: 800; font-size: 28px; letter-spacing: .04em; }
+.hx-partner b { font-size: 14px; line-height: 1.25; }
+.hx-partner small { display: flex; align-items: center; gap: 4px; font-size: 12px; opacity: .7; }
+.hx-partner em { font-style: normal; font-size: 11px; font-weight: 800; color: #f7682c; letter-spacing: .04em; text-transform: uppercase; margin-top: 2px; }

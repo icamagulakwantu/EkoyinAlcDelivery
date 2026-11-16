@@ -206,6 +206,13 @@
         <div class="hx-brands" id="hxBrands"></div>
       </section>
 
+      <!-- Partner taverns (shown once at least one tavern has signed; see /partner-taverns.json) -->
+      <section class="hx-sec" aria-labelledby="partnerTitle" id="hxPartnersSec" hidden>
+        <div class="hx-head"><h2 id="partnerTitle">Our partner taverns</h2></div>
+        <p class="hx-partner-lead">Every order is sold and packed by a licensed local tavern you know.</p>
+        <div class="hx-rail hx-partners" id="hxPartners"></div>
+      </section>
+
       <!-- Our promise -->
       <section class="hx-sec" aria-labelledby="promiseTitle">
         <div class="hx-head"><h2 id="promiseTitle">Why Ekoyini</h2></div>
@@ -524,6 +531,25 @@
     }
   }
   loadProducts();
+
+  // Partner taverns: only taverns that have signed (listed: true) are shown.
+  (async () => {
+    try {
+      const res = await fetch('/partner-taverns.json', { cache: 'no-cache' });
+      if (!res.ok) return;
+      const list = ((await res.json()).taverns || []).filter((t) => t.listed);
+      if (!list.length) return;
+      const initials = (n) => String(n).replace(/\(.*\)/, '').split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+      document.getElementById('hxPartners').innerHTML = list.map((t) => `
+        <div class="hx-partner">
+          <div class="hx-partner-img">${t.photo ? `<img src="${escapeHtml(t.photo)}" alt="${escapeHtml(t.name)}" loading="lazy">` : `<span>${escapeHtml(initials(t.name))}</span>`}</div>
+          <b>${escapeHtml(t.name)}</b>
+          <small><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>${escapeHtml(t.area)}</small>
+          <em>Partner tavern</em>
+        </div>`).join('');
+      document.getElementById('hxPartnersSec').hidden = false;
+    } catch (_) { /* the section simply stays hidden */ }
+  })();
   updateCartUi();
 
   // ── Brands with a story (tags mirror skus.csv) ──

@@ -1,0 +1,117 @@
+{
+  "_note": "Partner Taverns on the home page. Only rows with listed: true are shown. Set listed to true ONLY once the tavern has agreed in writing (founder rule: never show a tavern that has not signed). photo: a path under /images/taverns/ from photos the tavern sent us.",
+  "taverns": [
+    {
+      "id": "tav_oomcola",
+      "name": "Oom Cola's Place (Gqalane Tavern)",
+      "area": "Zwide",
+      "photo": null,
+      "listed": false
+    },
+    {
+      "id": "tav_mabaso",
+      "name": "Mabaso",
+      "area": "Soweto-on-Sea",
+      "photo": null,
+      "listed": false
+    },
+    {
+      "id": "tav_skwerini_nu2",
+      "name": "Skwerini NU2",
+      "area": "Motherwell NU2",
+      "photo": null,
+      "listed": false
+    },
+    {
+      "id": "tav_cokes",
+      "name": "Coke's Tavern",
+      "area": "Motherwell",
+      "photo": null,
+      "listed": false
+    },
+    {
+      "id": "tav_zwide_liquor",
+      "name": "Zwide Liquor Stores",
+      "area": "Zwide 4",
+      "photo": null,
+      "listed": false
+    },
+    {
+      "id": "tav_one_way",
+      "name": "One Way Bottle Store",
+      "area": "Zwide 3",
+      "photo": null,
+      "listed": false
+    },
+    {
+      "id": "tav_lifa_mafa",
+      "name": "KwaLifa and Mafa",
+      "area": "Zwide 3",
+      "photo": null,
+      "listed": false
+    },
+    {
+      "id": "tav_mondes",
+      "name": "Monde's Lounge (Mondes Lifestyle)",
+      "area": "Motherwell",
+      "photo": null,
+      "listed": false
+    },
+    {
+      "id": "tav_kwanceba",
+      "name": "KwaNceba",
+      "area": "New Brighton",
+      "photo": null,
+      "listed": false
+    },
+    {
+      "id": "tav_kwamagxaki_butchery",
+      "name": "KwaMagxaki Butchery",
+      "area": "KwaMagxaki",
+      "photo": null,
+      "listed": false
+    },
+    {
+      "id": "tav_maleidini",
+      "name": "Maleidini",
+      "area": "Ezinyoka",
+      "photo": null,
+      "listed": false
+    },
+    {
+      "id": "tav_skwerini_wells",
+      "name": "Skwerini",
+      "area": "Wells Estate",
+      "photo": null,
+      "listed": false
+    },
+    {
+      "id": "tav_kwamasinga",
+      "name": "KwaMasinga",
+      "area": "Wells Estate",
+      "photo": null,
+      "listed": false
+    },
+    {
+      "id": "tav_ekupholeni",
+      "name": "Ekupholeni Cocktail Lounge",
+      "area": "Zwide 4",
+      "photo": null,
+      "listed": false
+    },
+    {
+      "id": "tav_barbaras",
+      "name": "Barbara's Lounge",
+      "area": "KwaZakhele 3",
+      "photo": null,
+      "listed": false
+    },
+    {
+      "id": "tav_kwasiba",
+      "name": "KwaSiba",
+      "area": "Govan Mbeki",
+      "photo": null,
+      "listed": false
+    }
+  ]
+}

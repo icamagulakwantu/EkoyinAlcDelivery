@@ -4,6 +4,11 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 16 Nov 2026: partner pitch documents; Partner Taverns section
+- **Pitch PDFs** in `partner-pack/`: `Ekoyini-Partner-Tavern-Proposal.pdf` (5 pages) and `Ekoyini-Driver-Partner-Proposal.pdf` (4 pages), with the Ekoyini logo, charts and earnings examples built from the app's real fee rules (labelled as illustrations, not promises). The contact is the "Township Onboarding Liaison" with the business WhatsApp and support@ekoyini.co.za; the founder's details are not used. Tavern standards: valid licence, a dedicated Ekoyini WhatsApp number, a dedicated packer on busy nights, drivers never queue, 3-5 photos. Growth path: Partner Tavern, then Featured Store, then Full Ekoyini Store. Rebuild with `node partner-pack/build.js`.
+- **Home page: "Our partner taverns"** section, fed by `public/partner-taverns.json` (all 16 taverns, `listed: false`). Only taverns that have signed are switched to `listed: true`; the section stays hidden until then. Each card shows the tavern's photo (from `public/images/taverns/`, photos the tavern sends us) or a green card with its initials. No photos are taken from Google or elsewhere without permission.
+- Cache `ekoyini-shell-v21`. Tests: 87.
+
 ### 16 Nov 2026: Render on a paid instance
 - The founder moved `ekoyini-api` from the free instance to the $7/month Starter instance (0.5 CPU, 512 MB); the workspace stays on the free Hobby plan. The app no longer sleeps, so there is no 30-second first load, Yoco payment notices arrive on time and the 12:00 payout email goes out at 12:00.
 
