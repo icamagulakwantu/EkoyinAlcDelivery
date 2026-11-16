@@ -28,7 +28,7 @@ Stack: Node/Express 4, Prisma 5, Supabase Postgres, Yoco payments, vanilla HTML/
 
 ## 2. Where everything lives
 - Repo: `icamagulakwantu/EkoyinAlcDelivery`, branch `claude/ekoyini-alcohol-delivery-1xnmtz` (Render deploys this branch on every commit).
-- Render: workspace `tea-da2vkrflk1mc73f3do20`, service `ekoyini-api` = `srv-da5g9rbm8hqs73cjm1hg`, FREE plan (cold starts). Build `npm install && npx prisma generate`, start `node server.js`. The dashboard commands override `render.yaml`.
+- Render: workspace `tea-da2vkrflk1mc73f3do20`, service `ekoyini-api` = `srv-da5g9rbm8hqs73cjm1hg`, paid Starter instance (0.5 CPU, 512 MB, $7/month) since 16 Nov 2026: no more cold starts. Build `npm install && npx prisma generate`, start `node server.js`. The dashboard commands override `render.yaml`.
 - Supabase LIVE database: project `acmpbftpiwmdzwoxbjxp` ("ekoyini-2"). Do NOT write to `tvuyimcgspxyiuxwymjr` (old stale copy) or `czbwwofxbzukpwyvadrh`.
 - Source of truth for product photos: the founder's other app, repo `icamagulakwantu/I-Camagu` (live API `https://i-camagu.co.za/api/basket/catalogue`).
 - Live product list: `https://www.ekoyini.co.za/api/products`.
@@ -73,7 +73,7 @@ Stack: Node/Express 4, Prisma 5, Supabase Postgres, Yoco payments, vanilla HTML/
 3. Case reservations: customer-facing AND stock reservations (atomic, expiring, released on cancel). Needs a Prisma migration, so do it where tests can run.
 4. Driver pay: distance + load, configurable rates in settings, 100% of delivery/surge/priority fees, payout shown to admin before assigning a driver. Rand rates not decided yet.
 5. Dependency vulnerabilities (npm audit: 1 critical, 2 high, 1 moderate).
-6. Move Render off the free plan (cold starts can delay Yoco webhooks).
+6. ~~Move Render off the free plan~~ (done 16 Nov 2026: Starter instance; workspace stays on the free Hobby plan).
 7. Clean up junk-named image files in `public/images/brands` (e.g. `images (24).jpeg`, `download (n).webp`), updating the photo map at the same time.
 8. CSP header was deliberately NOT added (it could break the map and address lookup). Add only with testing.
 9. Optional: scan-to-pay (SnapScan/Zapper), soft drinks/water expansion, a real photo for any new product, restyle track + profile.

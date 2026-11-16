@@ -4,6 +4,9 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 16 Nov 2026: Render on a paid instance
+- The founder moved `ekoyini-api` from the free instance to the $7/month Starter instance (0.5 CPU, 512 MB); the workspace stays on the free Hobby plan. The app no longer sleeps, so there is no 30-second first load, Yoco payment notices arrive on time and the 12:00 payout email goes out at 12:00.
+
 ### 11 Nov 2026 (later): taverns are paid daily too
 - Founder: taverns and drivers are both paid daily at 12:00 for the previous day's deliveries. The Payouts tab and the 12:00 email now say so (the screen already opens on Yesterday).
 
