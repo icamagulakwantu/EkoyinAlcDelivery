@@ -4,6 +4,9 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 16 Nov 2026 (later): tavern proposal gets a "Fill the quiet days" page
+- New page 3 in `partner-pack/Ekoyini-Partner-Tavern-Proposal.pdf` (now 6 pages): a week chart of walk-in sales plus extra Ekoyini orders (biggest lift Monday to Thursday), why weekday orders are worth more (no extra fixed costs, staff busy, stock moving, daily cash flow), who orders when it's quiet (after work, mid-month, rain, at home, safety), and an example of 3 weekday orders adding about R28 380 a month. Illustrations, not promises.
+
 ### 16 Nov 2026: partner pitch documents; Partner Taverns section
 - **Pitch PDFs** in `partner-pack/`: `Ekoyini-Partner-Tavern-Proposal.pdf` (5 pages) and `Ekoyini-Driver-Partner-Proposal.pdf` (4 pages), with the Ekoyini logo, charts and earnings examples built from the app's real fee rules (labelled as illustrations, not promises). The contact is the "Township Onboarding Liaison" with the business WhatsApp and support@ekoyini.co.za; the founder's details are not used. Tavern standards: valid licence, a dedicated Ekoyini WhatsApp number, a dedicated packer on busy nights, drivers never queue, 3-5 photos. Growth path: Partner Tavern, then Featured Store, then Full Ekoyini Store. Rebuild with `node partner-pack/build.js`.
 - **Home page: "Our partner taverns"** section, fed by `public/partner-taverns.json` (all 16 taverns, `listed: false`). Only taverns that have signed are switched to `listed: true`; the section stays hidden until then. Each card shows the tavern's photo (from `public/images/taverns/`, photos the tavern sends us) or a green card with its initials. No photos are taken from Google or elsewhere without permission.

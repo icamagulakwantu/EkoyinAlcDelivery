@@ -44,6 +44,24 @@ function donut(parts, { size = 230, center = '' } = {}) {
   return `<svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}">${arcs}<text x="${cx}" y="${cy - 4}" text-anchor="middle" font-size="22" font-weight="800" fill="${C.ink}">${center}</text><text x="${cx}" y="${cy + 18}" text-anchor="middle" font-size="12" fill="${C.muted}">customer pays</text></svg>`;
 }
 
+// Stacked weekly bars: walk-in sales plus Ekoyini orders on top.
+function weekStack(days, { w = 640, h = 270 } = {}) {
+  const max = Math.max(...days.map((d) => d.walk + d.app)) * 1.12;
+  const pad = 40, bw = (w - pad * 2) / days.length, base = h - 52;
+  const sc = (v) => (v / max) * (base - 20);
+  const out = days.map((d, i) => {
+    const x = pad + i * bw + bw * 0.16, bwid = bw * 0.68;
+    const hw = sc(d.walk), ha = sc(d.app);
+    return `<rect x="${x}" y="${base - hw}" width="${bwid}" height="${hw}" rx="5" fill="${C.green3}"/>
+      <rect x="${x}" y="${base - hw - ha}" width="${bwid}" height="${ha}" rx="5" fill="${C.orange}"/>
+      <text x="${x + bwid / 2}" y="${base - hw - ha - 7}" text-anchor="middle" font-size="12" font-weight="800" fill="${C.ink}">+${Math.round((d.app / d.walk) * 100)}%</text>
+      <text x="${x + bwid / 2}" y="${base + 18}" text-anchor="middle" font-size="13" fill="${C.muted}">${d.label}</text>`;
+  }).join('');
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" role="img"><line x1="${pad}" x2="${w - pad}" y1="${base}" y2="${base}" stroke="${C.line}" stroke-width="2"/>${out}
+    <rect x="${pad}" y="${h - 22}" width="14" height="14" rx="3" fill="${C.green3}"/><text x="${pad + 20}" y="${h - 10}" font-size="12" fill="${C.ink}">Walk-in sales today</text>
+    <rect x="${pad + 190}" y="${h - 22}" width="14" height="14" rx="3" fill="${C.orange}"/><text x="${pad + 210}" y="${h - 10}" font-size="12" fill="${C.ink}">Extra Ekoyini orders</text></svg>`;
+}
+
 function hbars(rows, { w = 640 } = {}) {
   const max = Math.max(...rows.map((r) => r.v));
   const rowH = 44, h = rows.length * rowH + 10;
@@ -149,6 +167,7 @@ const tavernPages = [
         <li>The opportunity: the customers you are missing today</li>
         <li>How an Ekoyini order works, step by step</li>
         <li>What you can earn: real numbers, with charts</li>
+        <li>Fill the quiet days: what Ekoyini does for Monday to Thursday</li>
         <li>What we ask of every partner tavern</li>
         <li>From partner listing to your own Ekoyini store</li>
       </ul>
@@ -194,6 +213,41 @@ const tavernPages = [
   </section>`,
 
   `<section class="page">${top(T)}
+    <div class="kicker">Fill the quiet days</div>
+    <h2>Monday to Thursday don't have to be dead days</h2>
+    <p class="lead">Your fridges run, your lights are on and your staff are paid every day of the week, but most of your money comes in on Friday and Saturday. Ekoyini brings orders into the quiet hours, so the week pays for itself.</p>
+    ${weekStack([
+      { label: 'Mon', walk: 30, app: 9 },
+      { label: 'Tue', walk: 28, app: 9 },
+      { label: 'Wed', walk: 32, app: 10 },
+      { label: 'Thu', walk: 40, app: 11 },
+      { label: 'Fri', walk: 85, app: 16 },
+      { label: 'Sat', walk: 100, app: 18 },
+      { label: 'Sun', walk: 55, app: 13 },
+    ])}
+    <p class="note">Illustration only. A handful of app orders lifts a quiet Tuesday by about a third, while on a Saturday the same orders are a smaller share. That's why weekday orders matter most to your bottom line.</p>
+    <div class="grid2" style="margin-top:10px">
+      <div class="card"><h3 style="margin-top:0">Why weekday orders are worth more to you</h3>
+        <ul class="tick">
+          <li><b>No extra fixed costs</b>: rent, fridges, lights and staff are already paid for. Most of every extra rand is profit.</li>
+          <li><b>Your staff stay busy</b> packing orders instead of waiting for walk-ins.</li>
+          <li><b>Stock keeps moving</b>: less money stuck on the shelf between weekends, fresher stock in the fridge.</li>
+          <li><b>Steadier cash flow</b>: you are paid every day at 12:00, not only after a big weekend.</li>
+        </ul></div>
+      <div class="card"><h3 style="margin-top:0">The customers who buy when you're quiet</h3>
+        <ul class="tick">
+          <li><b>After work</b>: people who get home tired and won't walk to the tavern.</li>
+          <li><b>Mid-month</b>: card customers who still buy between paydays.</li>
+          <li><b>Bad weather</b>: rain and wind keep walk-ins away, but phones still order.</li>
+          <li><b>At home</b>: soccer on TV, visitors, a quiet braai, a birthday at home.</li>
+          <li><b>Safety</b>: customers who don't want to walk with money after dark.</li>
+        </ul></div>
+    </div>
+    <div class="card hl" style="margin-top:12px"><b>Example:</b> a tavern doing 3 Ekoyini orders on each quiet weekday (Monday to Thursday) adds about <b>${R(3 * 4 * 550)} a week</b>, or <b>${R(3 * 4 * 550 * 4.3)} a month</b>, in sales at its own shelf prices, on days that usually just cover costs.</div>
+    ${foot(3, T)}
+  </section>`,
+
+  `<section class="page">${top(T)}
     <div class="kicker">How it works</div>
     <h2>Five steps from order to gate</h2>
     <div class="steps">
@@ -211,7 +265,7 @@ const tavernPages = [
       { label: '15 orders a day', v: 15 * 550 * 30 },
     ])}
     <p class="note">Extra turnover through your till at your own shelf prices, at about R550 per order (your share of a typical order). Your normal profit margin applies to every one of these sales. These are illustrations, not a promise: real numbers depend on your area, stock, speed and how much you promote Ekoyini to your customers.</p>
-    ${foot(3, T)}
+    ${foot(4, T)}
   </section>`,
 
   `<section class="page">${top(T)}
@@ -234,7 +288,7 @@ const tavernPages = [
       <div class="card"><ul class="tick"><li>The app, website and customer support</li><li>Card payments (Yoco) and payment checks</li><li>Drivers, dispatch and live tracking</li></ul></div>
       <div class="card"><ul class="tick"><li>Marketing in your area: TikTok, WhatsApp, posters</li><li>Daily payout at 12:00, with a clear statement</li><li>Your tavern featured on the app</li></ul></div>
     </div>
-    ${foot(4, T)}
+    ${foot(5, T)}
   </section>`,
 
   `<section class="page">${top(T)}
@@ -256,7 +310,7 @@ const tavernPages = [
     <ul class="tick"><li>Reply on WhatsApp with your tavern name and area</li><li>Send your licence copy, Ekoyini WhatsApp number and photos</li><li>We visit, set you up and do a test order together</li></ul>
     ${LIAISON}
     <div class="sign"><div>Tavern name</div><div>Owner / manager</div><div>Ekoyini WhatsApp number</div><div>Signature &amp; date</div></div>
-    ${foot(5, T)}
+    ${foot(6, T)}
   </section>`,
 ];
 
