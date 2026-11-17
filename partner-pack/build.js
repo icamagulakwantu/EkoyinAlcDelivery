@@ -3,7 +3,8 @@
 //   partner-pack/Ekoyini-Driver-Partner-Proposal.pdf
 // Run: node partner-pack/build.js   (uses the preinstalled Playwright Chromium)
 //
-// Contact is the Township Onboarding Liaison, never the founder by name.
+// Contact: Thanduxolo Makeleni, Township Onboarding Liaison Officer (founder's
+// choice, 17 Nov 2026). Never call him the founder or owner in these documents.
 // Every earnings figure is an illustration from the app's real fee rules,
 // clearly labelled as "not a promise".
 const fs = require('fs');
@@ -132,7 +133,7 @@ td.n { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; 
 .sign div { border-bottom: 1px solid #999; height: 30px; font-size: 11px; color: ${C.muted}; display: flex; align-items: flex-end; }
 `;
 
-const LIAISON = `<div class="contact"><img src="${icon}" alt=""><div><b>Township Onboarding Liaison · Ekoyini</b><br><span>WhatsApp 064 004 5465 · support@ekoyini.co.za · www.ekoyini.co.za</span></div></div>`;
+const LIAISON = `<div class="contact"><img src="${icon}" alt=""><div><b>Thanduxolo Makeleni</b><br><span>Township Onboarding Liaison Officer · Ekoyini</span><br><span>WhatsApp 064 004 5465 · support@ekoyini.co.za · www.ekoyini.co.za</span></div></div>`;
 const top = (label) => `<div class="top"><img src="${logo}" alt="Ekoyini"><span>${label}</span></div>`;
 const foot = (n, label) => `<div class="foot"><span>Ekoyini Holdings · Gqeberha · ${label}</span><span>Page ${n}</span></div>`;
 const shell = (title, pages) => `<!doctype html><html><head><meta charset="utf-8"><title>${title}</title><style>${CSS}</style></head><body>${pages.join('')}</body></html>`;

@@ -4,6 +4,9 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 17 Nov 2026: partner documents show the liaison officer by name
+- Contact block on both proposals now reads "Thanduxolo Makeleni, Township Onboarding Liaison Officer", with the business WhatsApp 064 004 5465 and support@ekoyini.co.za (founder's choice). He is not described as founder or owner anywhere.
+
 ### 16 Nov 2026 (later): tavern proposal gets a "Fill the quiet days" page
 - New page 3 in `partner-pack/Ekoyini-Partner-Tavern-Proposal.pdf` (now 6 pages): a week chart of walk-in sales plus extra Ekoyini orders (biggest lift Monday to Thursday), why weekday orders are worth more (no extra fixed costs, staff busy, stock moving, daily cash flow), who orders when it's quiet (after work, mid-month, rain, at home, safety), and an example of 3 weekday orders adding about R28 380 a month. Illustrations, not promises.
 
