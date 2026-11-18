@@ -222,6 +222,7 @@ function renderOrderCard(order) {
                 ${order.landmark ? `<p><strong>Landmark:</strong> ${esc(order.landmark)}</p>` : ''}
                 ${mapsUrl ? `<p><strong>Pin:</strong> <a href="${esc(mapsUrl)}" target="_blank" rel="noopener">Open in Google Maps</a></p>` : `<p class="no-pin-flag" style="color:#b45309"><strong>⚠ No GPS pin:</strong> base delivery fee charged. Call the customer to confirm the distance before sending a driver.</p>`}
                 <p><strong>Customer:</strong> ${esc(order.customerName || 'N/A')} · ${esc(order.customerPhone || 'N/A')}</p>
+                ${order.collectionPin && order.status === 'PENDING' ? `<p><strong>Collection PIN:</strong> ${esc(order.collectionPin)} <small>(tavern gives it to the driver)</small></p>` : ''}
                 <p><strong>Date:</strong> ${esc(new Date(order.createdAt).toLocaleString())}</p>
                 ${order.status === 'CANCELLED' && order.cancelReason ? `<p><strong>Cancel reason:</strong> ${esc(order.cancelReason)}</p>` : ''}
             </div>
@@ -435,7 +436,12 @@ function sendTavernWhatsApp(orderCode, tavern, order) {
     // The tavern only needs what to pack and who collects it: no customer
     // address or phone (POPIA), no order total.
     const collector = order.driverName ? `${order.driverName}${order.driverVehicle ? ` (${order.driverVehicle})` : ''}` : 'our driver';
-    const message = `*Ekoyini Order - ${orderCode}* (for ${tavern.name})\n\n*Please pack this order:*\n${itemList}\n\n*Collected by:* ${collector}\nThe driver will quote order code *${orderCode}* at collection.\nPlease have it packed and cold. Thank you!`;
+    // Collection PIN (18 Nov 2026): the tavern reads it to the driver at the
+    // counter; the driver can't confirm pickup without it.
+    const pinLine = order.collectionPin
+        ? `\n*Collection PIN: ${order.collectionPin}*\nOnly give this PIN to ${collector} when you hand over the order. Never send it to anyone else.\n`
+        : '';
+    const message = `*Ekoyini Order - ${orderCode}* (for ${tavern.name})\n\n*Please pack this order:*\n${itemList}\n\n*Collected by:* ${collector}\n${pinLine}\nPlease have it packed and cold within 10 minutes. Thank you!`;
     window.open(`https://wa.me/${waNumber(tavern.phone)}?text=${encodeURIComponent(message)}`, '_blank');
 }
 
@@ -450,7 +456,7 @@ function sendDriverWhatsApp(orderCode, driverName, driverPhone, order) {
         : null;
     const mapsUrl = deliveryMapsUrl(order);
     const findIt = `${order.landmark ? `*Landmark:* ${order.landmark}\n` : ''}${mapsUrl ? `*Customer's pin:* ${mapsUrl}\n` : ''}`;
-    const message = `*Ekoyini Delivery - ${orderCode}*\n\nHi ${driverName}!\n\n*Pickup:* ${tavern.name} (${tavern.area})\n*Deliver to:* ${order.address}\n${findIt}\n*Order:*\n${order.items.map(item => `${item.name} x${item.quantity}`).join('\n')}\n\n*Total:* ${formatRand(order.total)}\n*Order Code:* ${orderCode}\n${shareLink ? `\n*Open this link once you've collected the order — confirm pickup, then share your live location so the customer can track you:*\n${shareLink}\n` : ''}\n*Customer will give you this code.*\nThe same link also lets you mark it delivered once it's dropped off.`;
+    const message = `*Ekoyini Delivery - ${orderCode}*\n\nHi ${driverName}!\n\n*Pickup:* ${tavern.name} (${tavern.area})\n*Deliver to:* ${order.address}\n${findIt}\n*Order:*\n${order.items.map(item => `${item.name} x${item.quantity}`).join('\n')}\n\n*Total:* ${formatRand(order.total)}\n*Order Code:* ${orderCode}\n${shareLink ? `\n*Your job link:*\n${shareLink}\n` : ''}\n*At the tavern:* ask for the 4-digit *collection PIN*, open your link, switch on location and confirm pickup. Your live location then goes to the customer.\n*At the gate:* check ID (18+), then ask the customer for their 4-digit *delivery PIN* and enter it to finish the job.`;
     window.open(`https://wa.me/${waNumber(driverPhone)}?text=${encodeURIComponent(message)}`, '_blank');
 }
 

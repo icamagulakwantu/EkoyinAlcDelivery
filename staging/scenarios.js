@@ -257,7 +257,7 @@ const base = { address: '12 Vilakazi St, Zwide', customerName: 'Thandeka', custo
   });
 
   // ───────── STAGE 5: order lifecycle (admin → driver → customer) ─────────
-  await scenario('5 Lifecycle', '5.1', 'EFT order → admin confirms payment → assign → driver pickup → live location → delivered → rating', async () => {
+  await scenario('5 Lifecycle', '5.1', 'EFT order → admin confirms payment → assign → driver pickup (tavern PIN + location) → live location → delivered (customer PIN) → rating', async () => {
     const o = (await call('POST', '/order', { headers: H('tok-life'), body: { ...base, paymentMethod: 'eft', items: [{ skuId: beer6.id, quantity: 4 }] } })).json.order;
     const noAuth = await call('PATCH', `/order/${o.code}/confirm-payment`, { headers: { 'Content-Type': 'application/json' } });
     check(noAuth.status === 401, `confirm-payment without admin login → ${noAuth.status}`);
@@ -269,8 +269,22 @@ const base = { address: '12 Vilakazi St, Zwide', customerName: 'Thandeka', custo
     const tok = as.json.driverShareToken;
     const bad = await call('POST', `/order/${o.code}/confirm-pickup`, { body: { token: 'wrong' } });
     check(bad.status === 403, `wrong driver link refused (${bad.status})`);
-    const pu = await call('POST', `/order/${o.code}/confirm-pickup`, { body: { token: tok } });
-    check(pu.status === 200, `driver confirms pickup (${pu.status})`);
+    // Proven pickup (18 Nov 2026): tavern's collection PIN + driver location.
+    const cpin = as.json.collectionPin;
+    check(/^\d{4}$/.test(cpin || ''), 'assigning creates a 4-digit collection PIN for the tavern');
+    const noPin = await call('POST', `/order/${o.code}/confirm-pickup`, { body: { token: tok, lat: -33.96, lng: 25.6 } });
+    check(noPin.status === 400 && /collection PIN/.test(noPin.json?.error), 'pickup refused without the tavern PIN');
+    const noLoc = await call('POST', `/order/${o.code}/confirm-pickup`, { body: { token: tok, pin: cpin } });
+    check(noLoc.status === 400 && /location/i.test(noLoc.json?.error), 'pickup refused without the driver location');
+    const pu = await call('POST', `/order/${o.code}/confirm-pickup`, { body: { token: tok, pin: cpin, lat: -33.96, lng: 25.6 } });
+    check(pu.status === 200, `driver confirms pickup with PIN + location (${pu.status})`);
+    const mineNow = (await call('GET', '/api/my-orders', { headers: H('tok-life') })).json.find((x) => x.code === o.code);
+    check(mineNow && !('collectionPin' in mineNow) && !('driverShareToken' in mineNow), 'customer never sees the collection PIN or the driver link');
+    const dpin = (await call('GET', `/api/order/${o.code}/delivery-pin`, { headers: H('tok-life') })).json.pin;
+    check(/^\d{4}$/.test(dpin || ''), 'customer sees their own delivery PIN');
+    const otherPin = await call('GET', `/api/order/${o.code}/delivery-pin`, { headers: H('tok-other') });
+    check(otherPin.status === 404, 'another customer cannot see the delivery PIN');
+    check(!('deliveryPin' in (await call('GET', `/api/order/${o.code}/track`)).json), 'public tracking never shows the delivery PIN');
     const cancel = await call('POST', `/order/${o.code}/cancel`, { headers: H('tok-life') });
     check(cancel.status === 400, `customer can't cancel once out for delivery (${cancel.json?.error})`);
     const loc = await call('POST', `/order/${o.code}/location`, { body: { token: tok, lat: -33.96, lng: 25.6 } });
@@ -280,8 +294,10 @@ const base = { address: '12 Vilakazi St, Zwide', customerName: 'Thandeka', custo
     check(!('driverPhone' in tr.json) && !('address' in tr.json) && !('customerPhone' in tr.json), 'public tracking hides phone numbers and address');
     const earlyRate = await call('POST', `/order/${o.code}/rate`, { headers: H('tok-life'), body: { rating: 5 } });
     check(earlyRate.status === 400, 'cannot rate before delivery');
-    const dl = await call('POST', `/order/${o.code}/confirm-delivered`, { body: { token: tok } });
-    check(dl.status === 200, `driver confirms delivery (${dl.status})`);
+    const wrongPin = await call('POST', `/order/${o.code}/confirm-delivered`, { body: { token: tok, pin: dpin === '0000' ? '1111' : '0000' } });
+    check(wrongPin.status === 400, 'delivery refused with the wrong customer PIN');
+    const dl = await call('POST', `/order/${o.code}/confirm-delivered`, { body: { token: tok, pin: dpin } });
+    check(dl.status === 200, `driver confirms delivery with the customer PIN (${dl.status})`);
     const locAfter = await call('POST', `/order/${o.code}/location`, { body: { token: tok, lat: -33.9, lng: 25.6 } });
     check(locAfter.status === 400 || locAfter.status === 403, `driver link stops sharing location after delivery (${locAfter.status})`);
     const intruder = await call('POST', `/order/${o.code}/rate`, { headers: H('tok-other'), body: { rating: 1 } });

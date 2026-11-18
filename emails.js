@@ -88,6 +88,11 @@ async function sendOrderConfirmationEmail(order, customerEmail) {
       <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.5px;">Order Code</div>
       <div style="font-family:monospace;font-size:20px;font-weight:700;color:${BRAND.terra};">${code}</div>
     </div>
+    ${order.deliveryPin ? `<div style="border:2px dashed ${BRAND.terra};border-radius:8px;padding:12px;margin:0 0 16px;text-align:center;">
+      <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.5px;">Your delivery PIN</div>
+      <div style="font-family:monospace;font-size:26px;font-weight:700;letter-spacing:6px;">${escapeHtml(order.deliveryPin)}</div>
+      <div style="font-size:12px;color:#666;">Give it to the driver only when you have your drinks in hand.</div>
+    </div>` : ""}
     <table style="width:100%;font-size:13px;color:#333;border-collapse:collapse;">${itemsHtml}</table>
     <div style="border-top:1px solid #e8dcc0;margin-top:10px;padding-top:10px;display:flex;justify-content:space-between;font-weight:700;font-size:14px;">
       <span>Total</span><span>R${order.total.toFixed(2)}</span>
@@ -180,7 +185,24 @@ async function sendPayoutSummaryEmail(day, p) {
   await sendEmail({ to, subject: `Ekoyini payouts for ${day}: drivers ${R(p.totals.toDrivers)}, taverns ${R(p.totals.toTaverns)}`, html });
 }
 
+// Delay alerts (18 Nov 2026). items: [{ order, alert }] from routes/dispatch-alerts.js.
+async function sendDispatchAlertEmail(items) {
+  const to = orderAlertEmailList();
+  if (!to.length || !items.length) return;
+  const reds = items.filter((x) => x.alert.level === "red").length;
+  const rows = items.map(({ order, alert }) => `<tr>
+      <td style="padding:6px 0;border-bottom:1px solid #f0ebe0"><b>${escapeHtml(order.code)}</b><br><span style="color:#999;font-size:12px">${escapeHtml(order.tavern?.name || "no tavern")} · ${escapeHtml(order.driverName || "no driver")}</span></td>
+      <td style="padding:6px 0;border-bottom:1px solid #f0ebe0;color:${alert.level === "red" ? "#b91c1c" : "#b45309"};font-weight:700">${escapeHtml(alert.text)}<br><span style="font-weight:400;font-size:12px">${alert.minutes} min</span></td>
+    </tr>`).join("");
+  const html = wrapper(`
+    <h2 style="font-size:18px;margin:0 0 6px">${reds ? "Urgent: " : ""}${items.length} order${items.length === 1 ? "" : "s"} need attention</h2>
+    <table style="width:100%;font-size:14px;border-collapse:collapse">${rows}</table>
+    <p style="font-size:13px;margin-top:14px">Open Admin to act: assign a driver, call the tavern or call the driver.</p>`);
+  await sendEmail({ to, subject: `${reds ? "URGENT " : ""}Ekoyini: ${items.length} order${items.length === 1 ? "" : "s"} delayed (${items.map((x) => x.order.code).join(", ")})`, html });
+}
+
 module.exports = {
+  sendDispatchAlertEmail,
   sendPayoutSummaryEmail,
   sendEmail,
   escapeHtml,

@@ -288,3 +288,14 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .po-undo { border: 0; background: none; color: inherit; text-decoration: underline; cursor: pointer; font-size: 12px; opacity: .7; }
 .po-warn { background: #fff7ed; border: 1px solid #fed7aa; color: #9a3412; border-radius: 12px; padding: 10px 12px; font-size: 13px; }
 .po-note { margin-top: 6px; }
+
+/* Delay alerts bar (18 Nov 2026) */
+.da-bar { background: #fff7ed; border: 1px solid #fdba74; border-radius: 14px; padding: 10px 12px; margin: 0 0 12px; font-size: 13px; }
+.da-bar.da-red { background: #fef2f2; border-color: #f87171; animation: daPulse 1.6s ease-in-out 3; }
+@keyframes daPulse { 50% { box-shadow: 0 0 0 4px rgba(248, 113, 113, .35); } }
+.da-bar > b { display: block; margin-bottom: 6px; }
+.da-row { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; padding: 6px 0; border-top: 1px dashed rgba(0,0,0,.12); }
+.da-code { font-weight: 800; font-family: monospace; }
+.da-amber .da-code { color: #b45309; }
+.da-red .da-code { color: #b91c1c; }
+.da-act { grid-column: 2; font-weight: 700; font-size: 12px; opacity: .8; }

@@ -227,6 +227,14 @@ model Order {
   safetySealFee Float? // optional R10 tamper-evident seals (spirits only)
   bottleDepositFee Float? // returnable quarts: R52 per crate of 12, R3 per loose bottle (founder, 10 Nov 2026)
   deliveredAt   DateTime? // set when the order is delivered (payouts are per delivery day)
+  // Proven pickup and delivery (founder, 18 Nov 2026): the tavern gives the
+  // driver the collection PIN; the customer gives the driver the delivery PIN.
+  collectionPin String?
+  deliveryPin   String?
+  paidAt        DateTime? // when the order became paid (PENDING)
+  assignedAt    DateTime? // when a tavern + driver were assigned
+  pickedUpAt    DateTime? // when the driver confirmed pickup
+  alertsSent    String?   // JSON: alert kinds/levels already emailed
 
   total         Float
   items         OrderItem[]

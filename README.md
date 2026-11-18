@@ -4,6 +4,14 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 18 Nov 2026 (later): proven pickup and delivery, live location required, delay alerts
+- **Collection PIN:** assigning a tavern and driver creates a 4-digit PIN that goes only in the tavern's WhatsApp (and on the Admin order card). At the counter the driver types it in and must allow location to confirm pickup. Pickup is refused without the right PIN or without location.
+- **Live tracking starts by itself** at pickup. The driver page warns if location stops reaching the server for a minute.
+- **Delivery PIN:** every order gets a 4-digit PIN that only the customer sees (Track page when signed in, and the order confirmation email). The driver must enter it at the gate to mark the order delivered. Public tracking, the driver link and other customers never see it; the customer's order list no longer includes the driver link or the collection PIN.
+- **Delay alerts** (`lib/dispatch.js`, `routes/dispatch-alerts.js`, `admin/dispatch-alerts.js`): paid with no driver after 10 min, assigned but not collected after 20 min, location silent for 3 min, out for delivery over 45 min. Amber at the limit, red at twice the limit. Shown in a bar on Admin → Orders (red plays a sound) and emailed once per level to the order-alert emails, checked every minute. Old open orders (over 2 hours) show in the bar but don't email.
+- **Database (founder approved):** migration `20261118120000_add_dispatch_proof` adds `collectionPin`, `deliveryPin`, `paidAt`, `assignedAt`, `pickedUpAt`, `alertsSent` to `Order`.
+- WhatsApp messages updated: tavern message carries the collection PIN; driver message explains both PINs. Cache `ekoyini-shell-v24`. Tests: 94 (new `test/dispatch.test.js`). Scenarios 25/26 (5.1 now checks both PINs, location and who can see them).
+
 ### 18 Nov 2026 (later): more still and sparkling waters
 - Founder: every water brand in still and sparkling, 500ml and 1.5L. Added the 4 that are really sold in SA shops: **Aquelle Sparkling 1.5L** (R21), **Thirsti Sparkling 1.5L** (R18.90), **Tsitsikamma Sparkling 1.5L** (R20.99) and **Valpre Sparkling 500ml** (R16.80), each priced like the same brand's still bottle (founder rule: the higher price). No photos yet.
 - Not added because no SA shop listing was found: Aquelle Still 500ml, Thirsti Still 500ml, plain Bonaqua Sparkling (only flavoured), plain Thirsti Sparkling 500ml (only flavoured) and Valpre Sparkling 1.5L. Founder to confirm on the shelf.

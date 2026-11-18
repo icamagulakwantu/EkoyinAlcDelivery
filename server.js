@@ -248,6 +248,7 @@ async function logAdminAction(req, action, targetId, detail) {
 // ── Pricing — shared with the browser via public/pricing.js, so the cart,
 // checkout and server can never disagree on discounts or the delivery fee.
 const { toSaWhatsApp } = require("./lib/phone.js");
+const { newPin, pinMatches } = require("./lib/dispatch.js");
 const { COOLER_ELIGIBLE, coolerDiscountPct, MIN_ORDER_SUBTOTAL, safetySealFeeFor, orderWeightKg, isReturnableQuart, bottleDepositFor, noPinProblem } = require("./public/pricing.js");
 // Shelf order (shared with the shop and admin): sensible sections, brands together.
 const { compareCatalogue } = require("./public/shelf-order.js");
@@ -752,6 +753,9 @@ async function createOrderTransaction({ userId, address, customerName, customerP
             bottleDepositFee: bottleDepositFee || null,
             total,
             status: status || undefined, // undefined = schema default (PAYMENT_PENDING)
+            // Proven delivery: only the customer sees this PIN (18 Nov 2026).
+            deliveryPin: newPin(),
+            paidAt: status === "PENDING" ? new Date() : null,
             codFlagged: !!codFlagged,
             codFlagReason: codFlagReason || null,
             items: { create: orderItems },
@@ -1122,7 +1126,9 @@ app.get("/api/my-orders", requireUser, async (req, res) => {
       include: { items: true, tavern: { select: { name: true, area: true } } },
       orderBy: { createdAt: "desc" },
     });
-    res.json(orders);
+    // The driver's link token and the tavern's collection PIN are not the
+    // customer's to see; the customer's own delivery PIN is.
+    res.json(orders.map(({ driverShareToken, collectionPin, alertsSent, ...o }) => o));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to load orders" });
@@ -1227,7 +1233,8 @@ app.patch("/order/:code/assign", requireAdmin, async (req, res) => {
     const driverShareToken = crypto.randomBytes(16).toString("hex");
     const order = await prisma.order.update({
       where: { code: req.params.code },
-      data: { tavernId, driverName, driverPhone: phone, driverVehicle, driverShareToken },
+      // A fresh collection PIN goes to the tavern only (18 Nov 2026).
+      data: { tavernId, driverName, driverPhone: phone, driverVehicle, driverShareToken, collectionPin: newPin(), assignedAt: new Date() },
       include: { tavern: true },
     });
     await logAdminAction(req, "ASSIGN_ORDER", order.code, `tavern=${order.tavern?.name || tavernId}, driver=${driverName}`);
@@ -1251,7 +1258,7 @@ app.patch("/order/:code/confirm-payment", requireAdmin, async (req, res) => {
     }
     const updated = await prisma.order.update({
       where: { code: req.params.code },
-      data: { status: "PENDING" },
+      data: { status: "PENDING", paidAt: new Date() },
     });
     await logAdminAction(req, "CONFIRM_PAYMENT", order.code, `EFT payment confirmed by ${req.user?.email || "api-token"}`);
     sendPaymentConfirmedEmail(updated, updated.customerEmail).catch((e) => console.error("[email] payment-confirmed failed:", e));
@@ -1292,7 +1299,7 @@ app.post("/order/:code/location", locationLimiter, async (req, res) => {
 // 🚚 DRIVER: CONFIRM PICKUP
 app.post("/order/:code/confirm-pickup", driverActionLimiter, async (req, res) => {
   try {
-    const { token } = req.body;
+    const { token, pin, lat, lng } = req.body || {};
     const order = await prisma.order.findUnique({ where: { code: req.params.code } });
     if (!driverTokenMatches(order, token)) {
       return res.status(403).json({ error: "Invalid or expired share link" });
@@ -1303,9 +1310,20 @@ app.post("/order/:code/confirm-pickup", driverActionLimiter, async (req, res) =>
     if (!order.tavernId) {
       return res.status(400).json({ error: "This order has no tavern assigned yet — contact dispatch" });
     }
+    // Proven pickup (18 Nov 2026): the tavern's collection PIN and the
+    // driver's location are both required; live tracking starts here.
+    if (order.collectionPin && !pinMatches(order.collectionPin, pin)) {
+      return res.status(400).json({ error: "Wrong collection PIN. Ask the tavern for the 4-digit PIN on their Ekoyini message." });
+    }
+    const parsedLat = parseFloat(lat);
+    const parsedLng = parseFloat(lng);
+    if (!Number.isFinite(parsedLat) || !Number.isFinite(parsedLng)) {
+      return res.status(400).json({ error: "Switch on your location to confirm pickup. Customers follow your trip live." });
+    }
+    const now = new Date();
     const { count } = await prisma.order.updateMany({
       where: { code: req.params.code, status: "PENDING" },
-      data: { status: "DISPATCHED" },
+      data: { status: "DISPATCHED", pickedUpAt: now, driverLat: parsedLat, driverLng: parsedLng, driverLocationAt: now },
     });
     if (count === 0) return res.status(409).json({ error: "This order was just updated — refresh the page" });
     res.json({ ok: true, status: "DISPATCHED" });
@@ -1318,13 +1336,17 @@ app.post("/order/:code/confirm-pickup", driverActionLimiter, async (req, res) =>
 // 🏁 DRIVER: CONFIRM DELIVERED
 app.post("/order/:code/confirm-delivered", driverActionLimiter, async (req, res) => {
   try {
-    const { token } = req.body;
+    const { token, pin } = req.body || {};
     const order = await prisma.order.findUnique({ where: { code: req.params.code } });
     if (!driverTokenMatches(order, token)) {
       return res.status(403).json({ error: "Invalid or expired share link" });
     }
     if (order.status !== "DISPATCHED") {
       return res.status(400).json({ error: "This order isn't out for delivery" });
+    }
+    // Proven delivery (18 Nov 2026): the customer's 4-digit delivery PIN.
+    if (order.deliveryPin && !pinMatches(order.deliveryPin, pin)) {
+      return res.status(400).json({ error: "Wrong delivery PIN. Ask the customer for the 4-digit PIN on their Ekoyini order." });
     }
     // Clearing the token makes the driver link dead once the job is done.
     const { count } = await prisma.order.updateMany({
@@ -1367,6 +1389,7 @@ app.patch("/order/:code/status", requireAdmin, async (req, res) => {
         status,
         // The driver link stops working once the order is finished.
         ...(status === "DELIVERED" ? { driverShareToken: null, deliveredAt: new Date() } : {}),
+        ...(status === "DISPATCHED" ? { pickedUpAt: new Date() } : {}),
       },
     });
     if (count === 0) {

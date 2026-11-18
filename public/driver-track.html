@@ -26,6 +26,11 @@
     @keyframes dtpulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
     .dt-error { color: var(--terra); font-size: 13px; margin-top: 8px; line-height: 1.5; }
     .dt-done { color: var(--green-light); font-size: 16px; font-weight: 700; }
+    .dt-pin { width: 100%; min-height: 58px; border: 2px solid var(--border); border-radius: 16px; font-size: 28px; font-weight: 800; letter-spacing: .5em; text-align: center; margin: 4px 0 12px; background: var(--surface, #fff); color: inherit; padding-left: .5em; }
+    .dt-pin:focus { outline: none; border-color: var(--terra-light); }
+    .dt-steps { text-align: left; font-size: 13px; color: var(--muted); margin: 0 0 14px; padding-left: 18px; line-height: 1.6; }
+    .dt-warn { display: none; background: #fef2f2; color: #b91c1c; border-radius: 12px; padding: 10px 12px; font-size: 13px; font-weight: 700; margin-bottom: 12px; }
+    .dt-warn.show { display: block; }
   </style>
   <link rel="stylesheet" href="premium.css">
   <link rel="stylesheet" href="app.css">
@@ -77,23 +82,29 @@
     if (watchId != null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
   }
 
+  // Proven pickup and delivery (18 Nov 2026): the tavern's collection PIN +
+  // the driver's location to collect; the customer's delivery PIN to finish.
+  const pinInput = (id, label) => `<label class="dt-label" for="${id}">${label}</label>
+        <input class="dt-pin" id="${id}" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="one-time-code" placeholder="••••">`;
   function render() {
     const body = document.getElementById('dtBody');
     if (currentStatus === 'PENDING') {
       body.innerHTML = `${codeHtml}
-        <p class="dt-status">This order is packed and ready. Tap below once you've collected it from the tavern.</p>
+        <ol class="dt-steps"><li>At the tavern, ask for the 4-digit <b>collection PIN</b>.</li><li>Enter it below and allow location when your phone asks.</li><li>Your live location then goes to the customer automatically.</li></ol>
+        ${pinInput('dtPickupPin', 'Collection PIN from the tavern')}
         <button class="dt-btn" id="dtPickupBtn">Confirm Pickup</button>
         <div class="dt-error" id="dtError"></div>`;
       document.getElementById('dtPickupBtn').onclick = confirmPickup;
     } else if (currentStatus === 'DISPATCHED') {
       body.innerHTML = `${codeHtml}
-        <p class="dt-status">Share your live location with the customer while you're on your way. Remember to check ID (18+) at the door.</p>
-        <button class="dt-btn" id="dtStartBtn">Start Sharing My Location</button>
-        <div class="dt-sharing" id="dtSharing"><span class="dt-pulse"></span> Sharing live location</div>
+        <div class="dt-sharing" id="dtSharing"><span class="dt-pulse"></span> Sharing live location with the customer</div>
+        <div class="dt-warn" id="dtWarn">Your location isn't reaching us. Keep this page open, screen on, and location switched on. Dispatch has been alerted.</div>
+        <p class="dt-status">Keep this page open while you drive. At the gate, check ID (18+), then ask the customer for their 4-digit <b>delivery PIN</b>.</p>
+        ${pinInput('dtDeliveryPin', 'Delivery PIN from the customer')}
         <button class="dt-btn dt-btn-secondary" id="dtDeliveredBtn">Mark as Delivered</button>
         <div class="dt-error" id="dtError"></div>`;
-      document.getElementById('dtStartBtn').onclick = startSharing;
       document.getElementById('dtDeliveredBtn').onclick = confirmDelivered;
+      startSharing();
     } else if (currentStatus === 'DELIVERED') {
       stopWatching();
       body.innerHTML = `${codeHtml}<p class="dt-done">Delivered — thanks for driving with Ekoyini!</p>`;
@@ -109,14 +120,14 @@
     document.getElementById('dtBody').innerHTML = `${codeHtml}<div class="dt-error">${escapeHtml(msg)}</div>`;
   }
 
-  async function postDriverAction(path, btn, idleLabel) {
+  async function postDriverAction(path, btn, idleLabel, extra) {
     btn.disabled = true;
     btn.textContent = 'Confirming…';
     try {
       const res = await fetch(`/order/${encodeURIComponent(code)}/${path}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token }),
+        body: JSON.stringify({ token, ...(extra || {}) }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Something went wrong');
@@ -130,39 +141,57 @@
     }
   }
 
+  const pinValue = (id) => (document.getElementById(id).value || '').replace(/\D/g, '');
+  function showError(msg) { const el = document.getElementById('dtError'); if (el) el.textContent = msg; }
   function confirmPickup() {
-    postDriverAction('confirm-pickup', document.getElementById('dtPickupBtn'), 'Confirm Pickup');
+    const pin = pinValue('dtPickupPin');
+    if (pin.length !== 4) { showError('Enter the 4-digit collection PIN the tavern gives you.'); return; }
+    if (!navigator.geolocation) { showError("This phone can't share location. Call dispatch."); return; }
+    const btn = document.getElementById('dtPickupBtn');
+    btn.disabled = true;
+    btn.textContent = 'Getting your location…';
+    navigator.geolocation.getCurrentPosition(
+      (pos) => postDriverAction('confirm-pickup', btn, 'Confirm Pickup', { pin, lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      (err) => {
+        btn.disabled = false;
+        btn.textContent = 'Confirm Pickup';
+        showError(err.code === 1
+          ? 'Location is blocked. Allow location for this site in your browser settings, then try again. Pickup needs your location.'
+          : "Couldn't get your location. Step outside or switch on GPS, then try again.");
+      },
+      { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
+    );
   }
   function confirmDelivered() {
-    postDriverAction('confirm-delivered', document.getElementById('dtDeliveredBtn'), 'Mark as Delivered');
+    const pin = pinValue('dtDeliveryPin');
+    if (pin.length !== 4) { showError('Ask the customer for their 4-digit delivery PIN and enter it.'); return; }
+    postDriverAction('confirm-delivered', document.getElementById('dtDeliveredBtn'), 'Mark as Delivered', { pin });
   }
-
+  // Live location starts by itself once the order is collected; a warning
+  // shows if updates stop reaching the server for a minute.
+  let lastOk = Date.now();
+  let warnTimer = null;
   function startSharing() {
-    if (!navigator.geolocation) {
-      document.getElementById('dtError').textContent = 'Your browser doesn\'t support location sharing.';
-      return;
-    }
-    const startBtn = document.getElementById('dtStartBtn');
-    startBtn.disabled = true;
-    startBtn.textContent = 'Requesting location access…';
-
+    if (watchId != null) return;
+    if (!navigator.geolocation) { showError("This phone can't share location. Call dispatch."); return; }
     watchId = navigator.geolocation.watchPosition(
       (pos) => {
-        startBtn.style.display = 'none';
-        document.getElementById('dtSharing').classList.add('active');
-        document.getElementById('dtError').textContent = '';
+        const s = document.getElementById('dtSharing');
+        if (s) s.classList.add('active');
         postLocation(pos.coords.latitude, pos.coords.longitude);
       },
       (err) => {
         console.error(err);
-        startBtn.disabled = false;
-        startBtn.textContent = 'Start Sharing My Location';
-        document.getElementById('dtError').textContent = err.code === 1 ? 'Location access was denied — enable it in your browser settings and try again.' : 'Couldn\'t get your location. Try again.';
+        showError(err.code === 1 ? 'Location is blocked. Allow location for this site so the customer can follow you.' : "Couldn't get your location. Switch on GPS.");
       },
       { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 }
     );
+    clearInterval(warnTimer);
+    warnTimer = setInterval(() => {
+      const w = document.getElementById('dtWarn');
+      if (w) w.classList.toggle('show', Date.now() - lastOk > 60000);
+    }, 10000);
   }
-
   let lastSent = 0;
   async function postLocation(lat, lng) {
     // Throttle to ~10s; the server's rate limit allows this comfortably.
@@ -175,6 +204,7 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token, lat, lng }),
       });
+      if (res.ok) lastOk = Date.now();
       // Order was cancelled or delivered elsewhere — stop broadcasting.
       if (res.status === 400) { stopWatching(); init(); }
     } catch (err) {

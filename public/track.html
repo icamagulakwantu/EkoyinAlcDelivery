@@ -206,6 +206,29 @@
     </div>`;
   }
 
+  // Delivery PIN (18 Nov 2026): only the signed-in owner sees it; the driver
+  // needs it to finish the delivery, so the customer only gives it at the gate.
+  const pinCache = {};
+  async function showDeliveryPin(order) {
+    const box = document.getElementById('trackPin');
+    if (!box || !['PAYMENT_PENDING', 'PENDING', 'DISPATCHED'].includes(order.status)) return;
+    try {
+      if (!(order.code in pinCache)) {
+        const session = await getSession();
+        if (!session) return;
+        const res = await authedFetch(`/api/order/${encodeURIComponent(order.code)}/delivery-pin`);
+        pinCache[order.code] = res.ok ? (await res.json()).pin : null;
+      }
+      const pin = pinCache[order.code];
+      if (!pin) return;
+      box.innerHTML = `<div class="track-pin">
+        <small>Your delivery PIN</small>
+        <b>${escapeHtml(pin)}</b>
+        <span>Give it to the driver only when you have your drinks in hand. Never share it before.</span>
+      </div>`;
+    } catch {}
+  }
+
   // What was ordered and what it cost.
   function summaryHTML(order) {
     const items = (order.items || []).map((i) => `<div class="bill-row"><span>${escapeHtml(i.name)}</span><span>× ${Number(i.quantity)}</span></div>`).join('');
@@ -274,6 +297,7 @@
       document.getElementById('trackMine').hidden = true;
       result.innerHTML = `
         ${heroHTML(order)}
+        <div id="trackPin"></div>
         <div class="track-result-card">
           <div class="track-result-meta">${itemCount} item${itemCount !== 1 ? 's' : ''} · placed ${new Date(order.createdAt).toLocaleString('en-ZA')}</div>
           ${isCancelled ? '' : driverBlock(order)}
@@ -290,6 +314,7 @@
         ${FINAL_STATUSES.has(order.status) ? '' : '<div class="track-autorefresh">Refreshing automatically every 30s</div>'}
         <div id="ratingSlot"></div>
       `;
+      showDeliveryPin(order);
 
       if (!isCancelled) updateDriverMap(order);
 

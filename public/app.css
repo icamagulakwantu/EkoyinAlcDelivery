@@ -234,3 +234,9 @@ button.pill-tag { font-family: inherit; cursor: pointer; color: var(--white); }
 .co-sum-text span { font-size: 12px; color: var(--muted); }
 .review-line .rl-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .review-line small { display: block; font-size: 11px; color: var(--muted); }
+
+/* Delivery PIN on the Track page (18 Nov 2026) */
+.track-pin { margin: 12px 0; border: 2px dashed var(--terra, #c2410c); border-radius: 18px; padding: 14px; text-align: center; background: color-mix(in srgb, var(--terra, #c2410c) 6%, transparent); }
+.track-pin small { display: block; font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; opacity: .75; }
+.track-pin b { display: block; font-size: 38px; letter-spacing: .3em; font-family: monospace; margin: 4px 0; padding-left: .3em; }
+.track-pin span { display: block; font-size: 13px; opacity: .8; }
