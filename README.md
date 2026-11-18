@@ -4,6 +4,9 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 18 Nov 2026 (later): Google Business Profile cover image
+- `marketing/ekoyini-google-cover.png` (2048 x 1152, 16:9): logo, "Cold drinks, to your gate.", the three promises (licensed local taverns, live driver tracking, sealed and ID checked), real product photos and the 18+ line. Rebuild with `node marketing/build-cover.js`. Not part of the website.
+
 ### 18 Nov 2026 (later): address suggestions while typing (Google Places, Nelson Mandela Bay)
 - New `public/address-suggest.js`: as customers type an address (home, shop, cart and checkout address boxes), up to 5 Google suggestions appear, limited to Nelson Mandela Bay and South Africa. Tapping one fills in the clean address. Uses Places API (New) with session tokens (one billed session per address).
 - Switched off until `GOOGLE_MAPS_API_KEY` is set on Render (served by `GET /api/maps-config`); without it the plain address box works as before. The key must be restricted to ekoyini.co.za and to the Maps JavaScript API and Places API (New).
