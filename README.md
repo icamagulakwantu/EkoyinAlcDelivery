@@ -4,6 +4,11 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 18 Nov 2026 (later): every brand sits together on the shelf
+- Founder: products of the same brand must be together. `public/shelf-order.js` now sorts each section by brand first (the brand in brackets, e.g. "(Butlers)", or the first word of the name), then name with numbers in order, pack, and size small to big.
+- Fixed: Aquelle, Tsitsikamma and Valpre were split (all still water listed before all sparkling); the 9 Butlers liqueurs were scattered by flavour; KWV ran 10, 12, 15, 3, 5 (now 3, 5, 10, 12, 15); water sizes now go 500ml, 1L, 1.5L. A sold-out item now drops to the end of its own brand instead of the end of the section.
+- New test: no brand may ever be split within a section. Used by the shop, `/api/products` and the admin stock list. Cache `ekoyini-shell-v23`. Tests: 89.
+
 ### 18 Nov 2026 (later): Schweppes 1L bottles instead of cans; Coke can photo
 - Founder: the two Schweppes 200ml cans are replaced by **Schweppes Soda Water 1L** and **Schweppes Dry Lemon 1L**, each R19.94 (Checkers R18.99 + 5%), sold one bottle at a time. Renamed in place in `scripts/ensure-schema.js` before the seed (same product ids, order history kept, still 344 products; rehearsed on a copy).
 - Photos added from the founder: Coca-Cola Original 500ml can, Schweppes Soda Water 1L and Schweppes Dry Lemon 1L (black background made white), normalised like the rest.
