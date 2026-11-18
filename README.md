@@ -4,6 +4,11 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 18 Nov 2026 (later): more still and sparkling waters
+- Founder: every water brand in still and sparkling, 500ml and 1.5L. Added the 4 that are really sold in SA shops: **Aquelle Sparkling 1.5L** (R21), **Thirsti Sparkling 1.5L** (R18.90), **Tsitsikamma Sparkling 1.5L** (R20.99) and **Valpre Sparkling 500ml** (R16.80), each priced like the same brand's still bottle (founder rule: the higher price). No photos yet.
+- Not added because no SA shop listing was found: Aquelle Still 500ml, Thirsti Still 500ml, plain Bonaqua Sparkling (only flavoured), plain Thirsti Sparkling 500ml (only flavoured) and Valpre Sparkling 1.5L. Founder to confirm on the shelf.
+- Catalogue: 349 products. Rehearsed. Tests: 89.
+
 ### 18 Nov 2026 (later): Schweppes Tonic Water 1L; no more stock photos
 - New: **Schweppes Tonic Water 1L**, R19.94 (Checkers R18.99 + 5%), sold one bottle at a time. No photo yet. Catalogue: 345 products.
 - `prisma/seed.js` no longer gives soft drinks without a photo a generic stock picture (founder rule: better no photo than a wrong one). Products without their own photo show the shop's neutral placeholder. Rehearsed: 0 stock photos.
