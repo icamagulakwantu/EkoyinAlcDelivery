@@ -247,6 +247,7 @@ async function logAdminAction(req, action, targetId, detail) {
 
 // ── Pricing — shared with the browser via public/pricing.js, so the cart,
 // checkout and server can never disagree on discounts or the delivery fee.
+const { toSaWhatsApp } = require("./lib/phone.js");
 const { COOLER_ELIGIBLE, coolerDiscountPct, MIN_ORDER_SUBTOTAL, safetySealFeeFor, orderWeightKg, isReturnableQuart, bottleDepositFor, noPinProblem } = require("./public/pricing.js");
 // Shelf order (shared with the shop and admin): sensible sections, brands together.
 const { compareCatalogue } = require("./public/shelf-order.js");
@@ -1220,10 +1221,13 @@ app.patch("/order/:code/assign", requireAdmin, async (req, res) => {
     if (!tavernId || !(await prisma.tavern.findUnique({ where: { id: tavernId } }))) {
       return res.status(400).json({ error: "Please choose a valid tavern" });
     }
+    // Save the driver's number as 27... so WhatsApp links always work.
+    const phone = driverPhone ? toSaWhatsApp(driverPhone) : null;
+    if (driverPhone && !phone) return res.status(400).json({ error: "Enter the driver's cell number, e.g. 071 234 5678" });
     const driverShareToken = crypto.randomBytes(16).toString("hex");
     const order = await prisma.order.update({
       where: { code: req.params.code },
-      data: { tavernId, driverName, driverPhone, driverVehicle, driverShareToken },
+      data: { tavernId, driverName, driverPhone: phone, driverVehicle, driverShareToken },
       include: { tavern: true },
     });
     await logAdminAction(req, "ASSIGN_ORDER", order.code, `tavern=${order.tavern?.name || tavernId}, driver=${driverName}`);

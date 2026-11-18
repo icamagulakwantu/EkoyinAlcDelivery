@@ -2,6 +2,7 @@
 // (tavern locations and the surge on/off switch).
 const rateLimit = require("express-rate-limit");
 const { isValidPin, cartWeightKg } = require("../lib/delivery-quote.js");
+const { toSaWhatsApp } = require("../lib/phone.js");
 
 // Checkout re-quotes on every priority tap, so this is looser than the
 // order-creation limiter.
@@ -90,10 +91,11 @@ module.exports = function mountDelivery(app, { prisma, requireAdmin, requireSupe
       const clean = (v, max) => (typeof v === "string" ? v.trim() : "").slice(0, max);
       const name = clean(req.body?.name, 80);
       const area = clean(req.body?.area, 60);
-      const phone = clean(req.body?.phone, 20).replace(/[\s-]/g, "");
+      const typedPhone = clean(req.body?.phone, 20);
+      const phone = typedPhone ? toSaWhatsApp(typedPhone) : "";
       if (name.length < 2 || area.length < 2) return res.status(400).json({ error: "Enter the tavern's name and area" });
       if (/[\u0000-\u001f\u007f<>]/.test(name + area)) return res.status(400).json({ error: "The name or area has characters we can't accept" });
-      if (phone && !/^(\+27|0)\d{9}$/.test(phone)) return res.status(400).json({ error: "Enter a South African phone number, e.g. 072 123 4567" });
+      if (typedPhone && !phone) return res.status(400).json({ error: "Enter a South African phone number, e.g. 072 123 4567" });
       let lat = null;
       let lng = null;
       const loc = clean(req.body?.location, 60);

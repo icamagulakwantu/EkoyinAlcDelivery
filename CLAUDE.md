@@ -21,7 +21,8 @@ These points replace anything older in the sections below.
 - **Business model + Payouts (11 Nov)**: Ekoyini is the platform; partner taverns SELL the alcohol. Tavern payout = item price / (1 + markup) + bottles; driver = delivery + surge + priority (100%) less cash collected; Ekoyini keeps the rest. Taverns AND drivers are paid daily at 12:00 for yesterday. Admin → Payouts tab (`admin/payouts.js`, `routes/payouts.js`, `lib/payouts.js`), `Payout` table, `Order.deliveredAt`, 12:00 SA summary email (`sendPayoutSummaryEmail`).
 - **Partners (16 Nov)**: pitch PDFs in `partner-pack/` (build.js; contact = "Thanduxolo Makeleni, Township Onboarding Liaison Officer" with the business WhatsApp and support@; NEVER call him founder/owner). Home "Our partner taverns" section reads `public/partner-taverns.json`; set `listed: true` only for taverns that signed; photos only from the tavern itself, in `public/images/taverns/`.
 - **No GPS pin (11 Nov)**: checkout allows an order without a pin when a landmark is given (`noPinProblem()` in `public/pricing.js`); base delivery fee; admin card flags it. **Emails live (11 Nov)**: Resend domain verified, sender `orders@ekoyini.co.za`.
-- **Tests**: 87 (incl. `test/founder-prices.test.js`, `test/shelf-order.test.js`), including `test/reports-marketing.test.js`, `test/order-pricing.test.js` and `test/price-corrections.test.js`.
+- **Phone numbers (18 Nov)**: driver and tavern numbers are saved as `27XXXXXXXXX` (`lib/phone.js`); admin WhatsApp buttons also convert with `waNumber()`.
+- **Tests**: 88 (incl. `test/founder-prices.test.js`, `test/shelf-order.test.js`), including `test/reports-marketing.test.js`, `test/order-pricing.test.js` and `test/price-corrections.test.js`.
 
 ## 1. What this is
 Alcohol delivery app for Gqeberha townships (ride-along delivery). Founder: Thandu (Thanduxolo Makeleni), Ekoyini Group.

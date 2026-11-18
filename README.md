@@ -4,6 +4,11 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 18 Nov 2026 (later): phone numbers saved as +27 automatically
+- Founder: the app should add +27 itself so a busy dispatcher never has to. Driver numbers (Assign form) and tavern numbers (Delivery tab) are now saved as `27XXXXXXXXX`, however they are typed (071..., +27 71..., with spaces or dashes), via `lib/phone.js` (`toSaWhatsApp`, tested in `test/phone.test.js`). A number that isn't a South African number is refused with a clear message.
+- The 4 driver numbers already saved on live orders were converted to the same format (no data removed).
+- Tests: 88.
+
 ### 18 Nov 2026: WhatsApp buttons accept local numbers; KwaSiba's number saved
 - The tavern and driver WhatsApp buttons failed when a number was typed the local way (0719736683): WhatsApp links need 27719736683. Admin now converts any 0..., +27 or spaced number automatically (`waNumber()` in `admin/admin-api.js`), and the assign form's hint shows a normal cell number.
 - KwaSiba's Ekoyini WhatsApp number (076 519 4607) saved on the live tavern and in `prisma/seed.js`; the seed no longer blanks a tavern's phone when it creates it.
