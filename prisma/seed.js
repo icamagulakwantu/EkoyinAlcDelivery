@@ -395,11 +395,11 @@ async function main() {
     { id: 'tav_kwamasinga', name: 'KwaMasinga', area: 'Wells Estate', latitude: -33.8021, longitude: 25.6359 },
     { id: 'tav_ekupholeni', name: 'Ekupholeni Cocktail Lounge', area: 'Zwide 4', latitude: -33.8661, longitude: 25.5701 },
     { id: 'tav_barbaras', name: "Barbara's Lounge", area: 'KwaZakhele 3', latitude: -33.8763, longitude: 25.5912 },
-    { id: 'tav_kwasiba', name: 'KwaSiba', area: 'Govan Mbeki', latitude: -33.8471, longitude: 25.5432 },
+    { id: 'tav_kwasiba', name: 'KwaSiba', area: 'Govan Mbeki', phone: '27765194607', latitude: -33.8471, longitude: 25.5432 },
   ];
   for (const t of taverns) {
     const existing = await prisma.tavern.findUnique({ where: { id: t.id } });
-    if (!existing) await prisma.tavern.create({ data: { ...t, phone: '' } });
+    if (!existing) await prisma.tavern.create({ data: { ...t, phone: t.phone || '' } });
   }
 
   // The five made-up sample taverns from the first setup (no location, no

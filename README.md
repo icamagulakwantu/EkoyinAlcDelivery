@@ -4,6 +4,10 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 18 Nov 2026: WhatsApp buttons accept local numbers; KwaSiba's number saved
+- The tavern and driver WhatsApp buttons failed when a number was typed the local way (0719736683): WhatsApp links need 27719736683. Admin now converts any 0..., +27 or spaced number automatically (`waNumber()` in `admin/admin-api.js`), and the assign form's hint shows a normal cell number.
+- KwaSiba's Ekoyini WhatsApp number (076 519 4607) saved on the live tavern and in `prisma/seed.js`; the seed no longer blanks a tavern's phone when it creates it.
+
 ### 17 Nov 2026: partner documents show the liaison officer by name
 - Contact block on both proposals now reads "Thanduxolo Makeleni, Township Onboarding Liaison Officer", with the business WhatsApp 064 004 5465 and support@ekoyini.co.za (founder's choice). He is not described as founder or owner anywhere.
 

@@ -419,6 +419,15 @@ async function dispatchOrder() {
 // ============================================
 // WHATSAPP MESSAGES
 // ============================================
+// WhatsApp links need the full international number with no 0, + or spaces:
+// "071 973 6683" and "+27 71 973 6683" both become 27719736683.
+function waNumber(phone) {
+    const d = String(phone || '').replace(/\D/g, '');
+    if (d.length === 10 && d.startsWith('0')) return '27' + d.slice(1);
+    if (d.length === 9) return '27' + d;
+    return d;
+}
+window.waNumber = waNumber;
 // These are plain-text messages passed through encodeURIComponent, so no
 // HTML escaping is needed here — only consistent 2-decimal money.
 function sendTavernWhatsApp(orderCode, tavern, order) {
@@ -427,7 +436,7 @@ function sendTavernWhatsApp(orderCode, tavern, order) {
     // address or phone (POPIA), no order total.
     const collector = order.driverName ? `${order.driverName}${order.driverVehicle ? ` (${order.driverVehicle})` : ''}` : 'our driver';
     const message = `*Ekoyini Order - ${orderCode}* (for ${tavern.name})\n\n*Please pack this order:*\n${itemList}\n\n*Collected by:* ${collector}\nThe driver will quote order code *${orderCode}* at collection.\nPlease have it packed and cold. Thank you!`;
-    window.open(`https://wa.me/${tavern.phone}?text=${encodeURIComponent(message)}`, '_blank');
+    window.open(`https://wa.me/${waNumber(tavern.phone)}?text=${encodeURIComponent(message)}`, '_blank');
 }
 
 function sendDriverWhatsApp(orderCode, driverName, driverPhone, order) {
@@ -442,7 +451,7 @@ function sendDriverWhatsApp(orderCode, driverName, driverPhone, order) {
     const mapsUrl = deliveryMapsUrl(order);
     const findIt = `${order.landmark ? `*Landmark:* ${order.landmark}\n` : ''}${mapsUrl ? `*Customer's pin:* ${mapsUrl}\n` : ''}`;
     const message = `*Ekoyini Delivery - ${orderCode}*\n\nHi ${driverName}!\n\n*Pickup:* ${tavern.name} (${tavern.area})\n*Deliver to:* ${order.address}\n${findIt}\n*Order:*\n${order.items.map(item => `${item.name} x${item.quantity}`).join('\n')}\n\n*Total:* ${formatRand(order.total)}\n*Order Code:* ${orderCode}\n${shareLink ? `\n*Open this link once you've collected the order — confirm pickup, then share your live location so the customer can track you:*\n${shareLink}\n` : ''}\n*Customer will give you this code.*\nThe same link also lets you mark it delivered once it's dropped off.`;
-    window.open(`https://wa.me/${driverPhone}?text=${encodeURIComponent(message)}`, '_blank');
+    window.open(`https://wa.me/${waNumber(driverPhone)}?text=${encodeURIComponent(message)}`, '_blank');
 }
 
 // Job post for the drivers' WhatsApp group. Deliberately NO customer name,
