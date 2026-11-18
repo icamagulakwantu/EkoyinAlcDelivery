@@ -2,6 +2,10 @@
 // Mirrors I-Camagu's live catalogue photo for every exact pack. Photos that I-Camagu serves
 // from a CDN (the founder photos and retailer packshots) were downloaded into public/images/brands.
 const FORMAT_PHOTO_MAP = {
+  // 18 Nov 2026: founder's photos
+  "[\"Coca-Cola Original\",\"Can (500ml)\"]": "/images/brands/coca-cola-original-can-500ml.webp",
+  "[\"Schweppes Soda Water\",\"1L\"]": "/images/brands/schweppes-soda-water-1l.webp",
+  "[\"Schweppes Dry Lemon\",\"1L\"]": "/images/brands/schweppes-dry-lemon-1l.webp",
   // 11 Nov 2026: new products, photos cut from the founder's Shoprite screenshots
   "[\"KWV 3 Year Old\",\"750ml Bottle\"]": "/images/brands/kwv-3-year-brandy.webp",
   "[\"KWV 5 Year Old\",\"750ml Bottle\"]": "/images/brands/kwv-5-year-brandy.webp",

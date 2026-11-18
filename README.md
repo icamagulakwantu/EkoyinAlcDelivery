@@ -4,6 +4,11 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 18 Nov 2026 (later): Schweppes 1L bottles instead of cans; Coke can photo
+- Founder: the two Schweppes 200ml cans are replaced by **Schweppes Soda Water 1L** and **Schweppes Dry Lemon 1L**, each R19.94 (Checkers R18.99 + 5%), sold one bottle at a time. Renamed in place in `scripts/ensure-schema.js` before the seed (same product ids, order history kept, still 344 products; rehearsed on a copy).
+- Photos added from the founder: Coca-Cola Original 500ml can, Schweppes Soda Water 1L and Schweppes Dry Lemon 1L (black background made white), normalised like the rest.
+- Cache `ekoyini-shell-v22`. Tests: 88.
+
 ### 18 Nov 2026 (later): phone numbers saved as +27 automatically
 - Founder: the app should add +27 itself so a busy dispatcher never has to. Driver numbers (Assign form) and tavern numbers (Delivery tab) are now saved as `27XXXXXXXXX`, however they are typed (071..., +27 71..., with spaces or dashes), via `lib/phone.js` (`toSaWhatsApp`, tested in `test/phone.test.js`). A number that isn't a South African number is refused with a clear message.
 - The 4 driver numbers already saved on live orders were converted to the same format (no data removed).

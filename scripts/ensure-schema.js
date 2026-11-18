@@ -91,6 +91,14 @@ const STATEMENTS = [
   `UPDATE "SkuItem" SET "bottleFormat" = 'Dumpy (275ml)'
    WHERE "name" = 'Extreme Energy' AND "bottleFormat" = 'Dumpy (330ml)'
      AND NOT EXISTS (SELECT 1 FROM "SkuItem" WHERE "name" = 'Extreme Energy' AND "bottleFormat" = 'Dumpy (275ml)')`,
+  // 18 Nov 2026 (founder): Schweppes 200ml cans are replaced by 1L bottles
+  // (Soda Water, Dry Lemon). Renamed in place so ids and order history stay.
+  `UPDATE "SkuItem" SET "name" = 'Schweppes Soda Water', "bottleFormat" = '1L', "packSize" = 1
+   WHERE "name" = 'Schweppes Tonic Water' AND "bottleFormat" = 'Can (200ml)'
+     AND NOT EXISTS (SELECT 1 FROM "SkuItem" WHERE "name" = 'Schweppes Soda Water' AND "bottleFormat" = '1L')`,
+  `UPDATE "SkuItem" SET "name" = 'Schweppes Dry Lemon', "bottleFormat" = '1L', "packSize" = 1
+   WHERE "name" = 'Schweppes Lemonade' AND "bottleFormat" = 'Can (200ml)'
+     AND NOT EXISTS (SELECT 1 FROM "SkuItem" WHERE "name" = 'Schweppes Dry Lemon' AND "bottleFormat" = '1L')`,
   `CREATE TABLE IF NOT EXISTS "DriverReport" (
      "id" TEXT NOT NULL PRIMARY KEY,
      "orderCode" TEXT NOT NULL,

@@ -55,7 +55,7 @@ test('six-packs for beer, cider and RTD cans, dumpies and 500ml NRBs; cold drink
   assert.equal(C.packSizeFor('Red Bull Energy Drink', 'Can (250ml)', 'ENERGY_DRINK'), 1);
   assert.equal(C.packSizeFor('Coca-Cola Original', 'Can (500ml)', 'MIXER'), 1);
   assert.equal(C.packSizeFor('Mofaya Original', 'Can (500ml)', 'ENERGY_DRINK'), 6);
-  assert.equal(C.packSizeFor('Schweppes Tonic Water', 'Can (200ml)', 'MIXER'), 6);
+  assert.equal(C.packSizeFor('Schweppes Soda Water', '1L', 'MIXER'), 1); // 1L bottles are sold one at a time (18 Nov 2026)
 });
 
 test('Monin syrups stay R230 or more (founder: they are expensive); shelf categories are sensible', () => {
