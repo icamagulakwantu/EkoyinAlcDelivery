@@ -4,6 +4,10 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 18 Nov 2026 (later): Schweppes Tonic Water 1L; no more stock photos
+- New: **Schweppes Tonic Water 1L**, R19.94 (Checkers R18.99 + 5%), sold one bottle at a time. No photo yet. Catalogue: 345 products.
+- `prisma/seed.js` no longer gives soft drinks without a photo a generic stock picture (founder rule: better no photo than a wrong one). Products without their own photo show the shop's neutral placeholder. Rehearsed: 0 stock photos.
+
 ### 18 Nov 2026 (later): every brand sits together on the shelf
 - Founder: products of the same brand must be together. `public/shelf-order.js` now sorts each section by brand first (the brand in brackets, e.g. "(Butlers)", or the first word of the name), then name with numbers in order, pack, and size small to big.
 - Fixed: Aquelle, Tsitsikamma and Valpre were split (all still water listed before all sparkling); the 9 Butlers liqueurs were scattered by flavour; KWV ran 10, 12, 15, 3, 5 (now 3, 5, 10, 12, 15); water sizes now go 500ml, 1L, 1.5L. A sold-out item now drops to the end of its own brand instead of the end of the section.

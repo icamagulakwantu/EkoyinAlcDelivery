@@ -315,7 +315,10 @@ async function main() {
     const photoCandidates = [FORMAT_PHOTO_MAP[JSON.stringify([row.name, row.bottleFormat])], BRAND_PHOTO_MAP[row.name]];
     const localPhoto = photoCandidates.find(candidate => candidate && candidate.startsWith('/images/') &&
       fs.existsSync(path.join(__dirname, '..', 'public', 'images', decodeURIComponent(candidate.slice('/images/'.length)))));
-    const imageUrl = localPhoto || (isAlcohol ? null : CATEGORY_IMAGE_MAP[category] || CATEGORY_IMAGE_MAP.BEER);
+    // Founder rule: better no photo than a wrong one. No generic stock
+    // photos for any product (18 Nov 2026; before this, soft drinks without
+    // a photo got a random category picture).
+    const imageUrl = localPhoto || null;
 
     const data = {
       category,
@@ -335,7 +338,7 @@ async function main() {
       retailCaseDiscountPct,
       retailCaseZAR,
 
-      // Alcohol uses a verified local product image or no image; never a generic remote category photo.
+      // A verified local product image or no image; never a generic remote category photo.
       imageUrl,
 
       // Brand story tags — see the comment on SkuItem.brandTags in
