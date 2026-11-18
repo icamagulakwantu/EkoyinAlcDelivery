@@ -843,6 +843,13 @@ app.post("/order", writeLimiter, requireUser, async (req, res) => {
 });
 
 // 💳 PAYMENT CONFIG — lets checkout.html know whether to enable card.
+// Google Places key for address suggestions (18 Nov 2026). A browser key is
+// public by design; it must be restricted to ekoyini.co.za in Google Cloud.
+app.get("/api/maps-config", (req, res) => {
+  res.set("Cache-Control", "public, max-age=300");
+  res.json({ key: process.env.GOOGLE_MAPS_API_KEY || null });
+});
+
 app.get("/api/payment-config", (req, res) => {
   res.json({ cardEnabled: isYocoConfigured() });
 });

@@ -106,7 +106,7 @@
       </div>
       <div class="field-group" id="fgAddress">
         <label for="deliveryAddress">Street address</label>
-        <input type="text" id="deliveryAddress" autocomplete="street-address" maxlength="300" placeholder="e.g. 12 Vilakazi St, Orlando West">
+        <input type="text" id="deliveryAddress" data-address-suggest autocomplete="street-address" maxlength="300" placeholder="e.g. 12 Vilakazi St, Zwide">
         <div class="field-error">Please enter your full street address.</div>
       </div>
       <!-- GPS pin — township and new-development addresses are often hard to
@@ -814,5 +814,6 @@
   loadCheckout();
   </script>
   <script src="/analytics.js" defer></script>
+  <script src="address-suggest.js" defer></script>
 </body>
 </html>

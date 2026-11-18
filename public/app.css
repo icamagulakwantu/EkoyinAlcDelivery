@@ -240,3 +240,11 @@ button.pill-tag { font-family: inherit; cursor: pointer; color: var(--white); }
 .track-pin small { display: block; font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; opacity: .75; }
 .track-pin b { display: block; font-size: 38px; letter-spacing: .3em; font-family: monospace; margin: 4px 0; padding-left: .3em; }
 .track-pin span { display: block; font-size: 13px; opacity: .8; }
+
+/* Address suggestions (18 Nov 2026) */
+.addr-suggest { position: absolute; left: 0; right: 0; top: 100%; z-index: 80; margin-top: 4px; background: var(--card, #fff); border: 1px solid var(--border, #e7e2d6); border-radius: 14px; box-shadow: 0 12px 30px rgba(23,20,14,.14); overflow: hidden; }
+.addr-suggest button { display: block; width: 100%; text-align: left; border: 0; background: none; padding: 10px 14px; font: inherit; color: inherit; cursor: pointer; border-top: 1px solid var(--border, #eee); }
+.addr-suggest button:first-child { border-top: 0; }
+.addr-suggest button:hover, .addr-suggest button:focus { background: color-mix(in srgb, var(--terra, #c2410c) 8%, transparent); outline: none; }
+.addr-suggest b { display: block; font-size: 14px; }
+.addr-suggest span { display: block; font-size: 12px; opacity: .65; }

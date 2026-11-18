@@ -4,6 +4,11 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 18 Nov 2026 (later): address suggestions while typing (Google Places, Nelson Mandela Bay)
+- New `public/address-suggest.js`: as customers type an address (home, shop, cart and checkout address boxes), up to 5 Google suggestions appear, limited to Nelson Mandela Bay and South Africa. Tapping one fills in the clean address. Uses Places API (New) with session tokens (one billed session per address).
+- Switched off until `GOOGLE_MAPS_API_KEY` is set on Render (served by `GET /api/maps-config`); without it the plain address box works as before. The key must be restricted to ekoyini.co.za and to the Maps JavaScript API and Places API (New).
+- Address examples changed from "Orlando West" (Soweto) to "Zwide". Cache `ekoyini-shell-v25`.
+
 ### 18 Nov 2026 (later): proven pickup and delivery, live location required, delay alerts
 - **Collection PIN:** assigning a tavern and driver creates a 4-digit PIN that goes only in the tavern's WhatsApp (and on the Admin order card). At the counter the driver types it in and must allow location to confirm pickup. Pickup is refused without the right PIN or without location.
 - **Live tracking starts by itself** at pickup. The driver page warns if location stops reaching the server for a minute.

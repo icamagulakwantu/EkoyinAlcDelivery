@@ -107,7 +107,7 @@
       </div>
       <form class="hx-addr-edit" id="addrEdit" onsubmit="event.preventDefault(); saveAddress();">
         <label for="addressInput" class="sr-only">Delivery address</label>
-        <input type="text" id="addressInput" placeholder="e.g. 12 Vilakazi St, Motherwell NU10" autocomplete="street-address">
+        <input type="text" id="addressInput" data-address-suggest placeholder="e.g. 12 Vilakazi St, Motherwell NU10" autocomplete="street-address">
         <button type="submit">Save</button>
       </form>
 
@@ -656,5 +656,6 @@
 
   </script>
   <script src="/analytics.js" defer></script>
+  <script src="address-suggest.js" defer></script>
 </body>
 </html>

@@ -50,7 +50,7 @@
       <div class="modal-handle"></div>
       <h3 id="addrModalTitle">Where should we deliver?</h3>
       <form onsubmit="event.preventDefault(); saveAddressModal();">
-        <input type="text" id="addressModalInput" placeholder="e.g. 12 Vilakazi St, Orlando West" autocomplete="street-address" maxlength="300" enterkeyhint="done">
+        <input type="text" id="addressModalInput" data-address-suggest placeholder="e.g. 12 Vilakazi St, Zwide" autocomplete="street-address" maxlength="300" enterkeyhint="done">
         <div class="modal-btns">
           <button type="button" class="btn-cancel" onclick="closeAddressModal()">Cancel</button>
           <button type="submit" class="btn-save">Save address</button>
@@ -486,5 +486,6 @@
   if (requireAgeGate()) loadCart();
   </script>
   <script src="/analytics.js" defer></script>
+  <script src="address-suggest.js" defer></script>
 </body>
 </html>
