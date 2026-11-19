@@ -4,6 +4,13 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 19 Nov 2026 (midnight, later): size corrections from the founder
+- Founder confirmed the photos for Brutal Fruit (can and dumpy) are right and only the sizes were wrong; Brutal Fruit already has Can (500ml) and Dumpy (275ml) and no 330ml row any more, so nothing to change there.
+- **Smirnoff Storm Citrus and Pine Twist:** dumpy is **300ml** (was labelled 250ml), 6 x 300ml shelf R119.99, customer price **R128.39** (was R106.99). Citrus now shows the founder's Storm bottle photo (`smirnoff-storm-dumpy-300ml.webp`); Pine Twist keeps its current photo.
+- **Stella Artois can** is **410ml** (was labelled 500ml): shops sell 6 x 410ml at R109.99, so the price stays at the R130 alcoholic-can floor.
+- Done with `FORMAT_FIXES` in `lib/catalogue-2026-11.js` (renames the live rows in place, so ids and past orders are untouched), `skus.csv`, the price-corrections rows and the photo map (old keys kept). Test added in `test/founder-prices.test.js`. Tests: 126.
+- Not changed (no instruction yet): Breezer Blueberry 500ml can (no 500ml can found in shops), Hunter's Iced 330ml, Redd's 330ml.
+
 ### 19 Nov 2026 (midnight): real shelf prices from TinyFish research (highest regular price, promos ignored)
 - Two TinyFish deep-research runs (spirits/wine and beer/cider/RTD) looked up the products that still had estimate prices. Rule used: the HIGHEST regular shelf price of the exact pack, crossed-out price when a promo is running, no card or "any 2 for" deals, no Makro Business trade prices. Source for each row is in `lib/price-corrections-2026-11-08.js`.
 - **Applied (customer price = shelf + 7% wine/beer/cider, 5% spirits/mixers):** Beyerskloof Pinotage R144.44, Cape Velvet R188.99, Count Pushkin R204.74, Firstwatch R220.49, Grand Marnier R723.45, Grey Goose R629.99, Malibu R209.99, Moet Imperial Brut R802.49, Nederburg Baronne R106.99, Strawberry Lips R183.74, Wellington VO R220.49, 4th Street Sweet Red 750ml R58.84, Liqui Fruit Cranberry 1L R41.99, Amstel quart R26.74, Breezer Blackberry 6 x 275ml R138.03, Flying Fish Lemon and Dry Apple 6 x 330ml R106.99.
@@ -29,7 +36,7 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 ### 19 Nov 2026 (night): real shelf prices from the founder's check
 - Founder checked 38 estimate prices on real shelves. 35 were applied as shelf price + the usual markup (7% beer/cider/RTD/wine, 5% spirits/liqueurs/mixers): e.g. Amstel 500ml cans R141.18, Sol cans R147.60, Savanna Dry cans R218.28, Chivas 12 R439.95, Jack Daniel's R387.45, Monin Agave R313.95, Drostdy-Hof Adelpracht R65.26, 4th Street 5L R203.29, Smirnoff Red R208.95. They are marked `verified` in `lib/price-corrections-2026-11-08.js`.
 - Not applied: Valpre 1.5L (shelf R24.99, stays at the R25 water rule) and Monin Almond Orgeat and White Chocolate (shelf R225 would be R236.25, they stay at the flat R230.99 Monin price). Founder to confirm either way.
-- Tests: 125.
+- Tests: 126.
 
 ### 19 Nov 2026 (late night): diagnosis fixes
 - **Sign-up email link**: `signUp()` now sends `emailRedirectTo` = this site's `/login.html`. Supabase only honours it when the address is allowed, so the founder must set Authentication > URL Configuration: Site URL `https://www.ekoyini.co.za` and Redirect URLs `https://www.ekoyini.co.za/**` (the old default pointed at localhost).
@@ -38,7 +45,7 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 - **Photos**: 7 packs that were showing another pack's photo now show the placeholder (Flying Fish Dry Apple quart, Bernini Ruby Berry can, Breezer Blueberry can, Kopparberg Mixed Fruit dumpy, Kopparberg Raspberry can, Grenadine Syrup Cordial jug). Hunter's Dry and the two Strongbow quarts/dumpies still share one photo each: founder to say which pack the photo shows.
 - **Removed stale code**: `GET /api/stats`, `POST /admin/enrich-images` (+ status), `GET /admin/client-ip`, `sendDispatchWhatsApp()`. `GET /api/taverns` stays (the staging script uses it).
 - Grenadine Syrup Cordial's borrowed Monin photo is also removed from the brand photo list in `prisma/seed.js`.
-- Cache `ekoyini-shell-v32`. Tests: 125.
+- Cache `ekoyini-shell-v32`. Tests: 126.
 
 ### 19 Nov 2026 (night): home category links keep the whole shop; full water range
 - **Home category tiles and "See all" links no longer hide the rest of the shop.** `shop.html?cats=...` now opens the full shop and jumps to that shelf (the category bar shows every section). Curated collections (Braai, Festive, Stokvel, Chill) and brand-story filters still filter on purpose.

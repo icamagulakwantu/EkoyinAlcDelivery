@@ -90,3 +90,13 @@ test('nothing sells below its supplier case price per unit', () => {
     assert.ok(price >= cost - 0.005, `${c[0]} ${c[2]}: R${price} is below supplier R${cost.toFixed(2)}`);
   }
 });
+
+test('size corrections (founder + shelf research, 19 Nov 2026): Storm is a 300ml dumpy, Stella a 410ml can', () => {
+  const csv = fs.readFileSync(path.join(__dirname, '../prisma/data/skus.csv'), 'utf8');
+  assert.ok(!/Smirnoff Storm [^,]+,CIDER_RTD,Dumpy \(250ml\)/.test(csv));
+  assert.ok(/Smirnoff Storm Citrus,CIDER_RTD,Dumpy \(300ml\)/.test(csv));
+  assert.ok(/Stella Artois,BEER,Can \(410ml\)/.test(csv) && !/Stella Artois,BEER,Can \(500ml\)/.test(csv));
+  assert.equal(C.finalPriceFor('Smirnoff Storm Citrus', 'Dumpy (300ml)'), 128.39); // R119.99 + 7%
+  assert.equal(C.finalPriceFor('Smirnoff Storm Pine Twist', 'Dumpy (300ml)'), 128.39);
+  assert.equal(C.finalPriceFor('Stella Artois', 'Can (410ml)'), 130); // R109.99 + 7% is under the R130 can floor
+});
