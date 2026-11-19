@@ -72,10 +72,10 @@ test('Monin syrups stay R230 or more (founder: they are expensive); shelf catego
   for (const r of rows.filter((x) => /Cordial|Syrup/.test(x[0]))) assert.equal(r[11], 'NON_ALCOHOL', r[0]);
 });
 
-test('every 1.5L water is R20 (founder, 19 Nov 2026)', () => {
+test('every 1.5L water is R25 (founder, 19 Nov 2026; taverns sell it at R20)', () => {
   const rows = csvRows.filter((r) => r.category === 'WATER' && r.bottleFormat === '1.5L');
   assert.ok(rows.length >= 10, 'all five brands, still and sparkling');
-  for (const r of rows) assert.equal(C.finalPriceFor(r.name, r.bottleFormat), 20, `${r.name} 1.5L`);
+  for (const r of rows) assert.equal(C.finalPriceFor(r.name, r.bottleFormat), 25, `${r.name} 1.5L`);
 });
 
 test('nothing sells below its supplier case price per unit', () => {
