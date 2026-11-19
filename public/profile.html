@@ -481,23 +481,12 @@
   };
 
   // "Buy Again" — merges a past order's items into the current cart.
-  function reorder(code) {
+  async function reorder(code) {
     const order = myOrders.find((o) => o.code === code);
     if (!order) return;
-    const cart = EkoyiniCart.get();
-    let added = 0;
-    order.items.forEach((item) => {
-      if (!item.skuId) return;
-      cart[item.skuId] = (cart[item.skuId] || 0) + item.quantity;
-      added += item.quantity;
-    });
-    if (added === 0) {
-      showToast('Those items are no longer available');
-      return;
-    }
-    EkoyiniCart.save(cart);
-    showToast('Added to cart');
-    setTimeout(() => { window.location.href = 'cart.html'; }, 800);
+    const result = await EkoyiniReorder.add(order.items);
+    showToast(EkoyiniReorder.message(result), 3200);
+    if (result.added) setTimeout(() => { window.location.href = 'cart.html'; }, 900);
   }
 
   window.addEventListener('ekoyini:auth-changed', init);

@@ -4,6 +4,13 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 20 Nov 2026: customer round 1 (habit features, no database change)
+- **Your usuals (home):** a rail above "Popular right now" showing the drinks a customer hearted plus what they order most (from `/api/my-orders`), with an "Order your last again" link. Hidden until there is something to show.
+- **Order again, one shared helper:** `EkoyiniReorder` in `public/script.js`, used by Profile, Track and Home. It checks today's catalogue, skips retired or out-of-stock items and says so, uses today's prices, and never doubles the cart (a second tap changes nothing).
+- **Track page:** "Share live tracking on WhatsApp" while an order is active (free wa.me link, no WhatsApp Business Platform), "Order the same again" on delivered orders for signed-in customers, and the rating button now matches the dark shop style.
+- **Bug caught:** the home "Popular right now" rail looked for `Bacardi Breezer Watermelon|Can (500ml)`, which is now the 440ml can, so it would have vanished from the rail. Fixed, and `test/home-rails.test.js` now fails if any home-page pick is not in the catalogue.
+- Audit note: Reorder, favourites (hearts + filter in the shop) and star ratings already existed; Track was already in the new style. Cache is now `ekoyini-shell-v33`. 129 tests.
+
 ### 20 Nov 2026 (early): the last three size mistakes ("fix all of them")
 - **Bacardi Breezer cans (Blackberry, Blueberry, Watermelon)** are **440ml**, not 500ml (shops sell Blackberry 6 x 440ml at R164.99). Renamed to `Can (440ml)`, customer price **R176.54** (R164.99 + 7%, was R160.50 for Watermelon and R224.70 for Blackberry/Blueberry). Note: the founder's Siba receipt of 9 Nov said 500ml R150; a test still keeps the price above that Siba cost. The Blueberry can has no shop listing (only the 275ml bottle), so it follows Blackberry and Watermelon; its old wrong photo stays cleared.
 - **Hunter's Iced Apple and Watermelon**: no 330ml dumpy exists in shops (only the 500ml can), and the photos show a tall bottle, so the rows are now **Quart (660ml)**, priced like the other Hunter's quarts (supplier cost + 7% = **R37.36**, was R192.60 for the dumpy). The 500ml cans are unchanged.

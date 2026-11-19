@@ -55,6 +55,9 @@
     .rating-submit { background: var(--terra-light); color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 700; }
     .rating-submit:disabled { opacity: 0.4; }
     .rating-comment-display { font-size: 12px; color: var(--muted); font-style: italic; margin-top: 4px; }
+    .track-again { display: block; width: 100%; margin: 4px 0 16px; padding: 14px; border: 0; border-radius: 999px; background: #17140e; color: #faf6ee; font-size: 14.5px; font-weight: 700; cursor: pointer; }
+    .track-again:disabled { opacity: .6; }
+    .rating-submit { background: #17140e !important; border-radius: 999px !important; padding: 12px 26px !important; }
     .track-autorefresh { text-align: center; font-size: 10px; color: var(--muted); margin: -8px 12px 12px; }
   </style>
   <link rel="stylesheet" href="premium.css">
@@ -242,6 +245,40 @@
     </div>`;
   }
 
+  // Share live tracking on WhatsApp (free), and one-tap Order again for signed-in customers.
+  async function renderActions(order) {
+    const slot = document.getElementById('trackActions');
+    if (!slot) return;
+    const link = `${location.origin}/track.html?code=${encodeURIComponent(order.code)}`;
+    const active = !['DELIVERED', 'CANCELLED'].includes(order.status);
+    let html = '';
+    if (active) {
+      const text = `Follow my Ekoyini order ${order.code} live: ${link}`;
+      html += `<a class="track-help" href="https://wa.me/?text=${encodeURIComponent(text)}" target="_blank" rel="noopener">Share live tracking on WhatsApp</a>`;
+    }
+    slot.innerHTML = html;
+    if (order.status !== 'DELIVERED') return;
+    try {
+      if (!(await getSession())) return;
+      const res = await authedFetch('/api/my-orders');
+      if (!res.ok) return;
+      const mine = (await res.json()).find((o) => o.code === order.code);
+      if (!mine) return;
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'track-again';
+      btn.textContent = 'Order the same again';
+      btn.onclick = async () => {
+        btn.disabled = true;
+        const result = await EkoyiniReorder.add(mine.items);
+        showToast(EkoyiniReorder.message(result), 3200);
+        btn.disabled = false;
+        if (result.added) setTimeout(() => { window.location.href = 'cart.html'; }, 900);
+      };
+      slot.appendChild(btn);
+    } catch (_) { /* the button simply does not show */ }
+  }
+
   // Signed-in customers see their active orders as one-tap shortcuts.
   async function showMyActiveOrders() {
     try {
@@ -309,6 +346,7 @@
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 21l2.1-5.5A8.4 8.4 0 1 1 21 11.5z"/></svg>
           WhatsApp us about this order
         </a>
+        <div id="trackActions"></div>
         ${isCancelled
           ? `<div class="track-cancelled"><h3>Order cancelled</h3><p>${CANCELLED_DESC}</p><p style="margin-top:14px;"><a href="shop.html" style="color:var(--terra-light);font-weight:700;">Shop again</a></p></div>`
           : `<div class="track-map" id="trackMap"></div>
@@ -317,6 +355,7 @@
         <div id="ratingSlot"></div>
       `;
       showDeliveryPin(order);
+      renderActions(order);
 
       if (!isCancelled) updateDriverMap(order);
 

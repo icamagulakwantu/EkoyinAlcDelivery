@@ -179,6 +179,12 @@
         <div class="hx-cats" id="hxCats"></div>
       </section>
 
+      <!-- Your usuals (favourites + what you order most; hidden until there is something to show) -->
+      <section class="hx-sec" id="hxUsualsSec" aria-labelledby="usualsTitle" hidden>
+        <div class="hx-head"><h2 id="usualsTitle">Your usuals</h2><a href="#" id="hxReorderLast" hidden>Order your last again</a></div>
+        <div class="hx-rail" id="hxUsuals"></div>
+      </section>
+
       <!-- Best sellers -->
       <section class="hx-sec" aria-labelledby="bestTitle">
         <div class="hx-head"><h2 id="bestTitle">Popular right now</h2><a href="shop.html">See all</a></div>
@@ -413,7 +419,7 @@
   ];
   // Fast movers from the founder's stock receipts.
   const BEST = ['Carling Black Label|Can (500ml)', 'Castle Lite|Can (500ml)', 'Savanna Dry|Dumpy (330ml)', 'Heineken|Dumpy (330ml)',
-    'Bernini Blush|Can (500ml)', 'Brutal Fruit Ruby Apple|Can (500ml)', 'Corona Extra|Dumpy (355ml)', 'Bacardi Breezer Watermelon|Can (500ml)',
+    'Bernini Blush|Can (500ml)', 'Brutal Fruit Ruby Apple|Can (500ml)', 'Corona Extra|Dumpy (355ml)', 'Bacardi Breezer Watermelon|Can (440ml)',
     'Red Bull Energy Drink|Can (250ml)', 'Ekoyini Ice Bag|2kg'];
   const SPIRITS = ['Hennessy VS|750ml Bottle', 'Jameson Original Irish|750ml Bottle', 'Klipdrift Premium|750ml Bottle', 'Jagermeister Herbal Liqueur|750ml Bottle',
     'Tanqueray London Dry Export|750ml Bottle', 'Ponchos Tequila Coffee|750ml Bottle', 'Johnnie Walker Black Label|750ml Bottle', 'Amarula Original Cream|750ml Bottle',
@@ -536,6 +542,7 @@
       EkoyiniCart.reconcile(products);
       renderAll();
       updateCartUi();
+      loadUsuals();
     } catch (err) {
       console.error('Failed to load products:', err);
       ['hxBest', 'hxSpirits'].forEach((id) => {
@@ -544,6 +551,37 @@
     }
   }
   loadProducts();
+
+  // ── Your usuals: hearted drinks first, then what this customer orders most ──
+  let lastOrderItems = null;
+  async function loadUsuals() {
+    const ids = [...EkoyiniFavorites.get()];
+    lastOrderItems = null;
+    try {
+      const session = await getSession();
+      if (session) {
+        const res = await authedFetch('/api/my-orders');
+        if (res.ok) {
+          const orders = (await res.json()).filter((o) => o.status !== 'CANCELLED' && o.status !== 'PAYMENT_PENDING');
+          const counts = new Map();
+          orders.forEach((o) => (o.items || []).forEach((i) => { if (i.skuId) counts.set(i.skuId, (counts.get(i.skuId) || 0) + i.quantity); }));
+          [...counts.entries()].sort((a, b) => b[1] - a[1]).forEach(([id]) => ids.push(id));
+          if (orders[0] && (orders[0].items || []).some((i) => i.skuId)) lastOrderItems = orders[0].items;
+        }
+      }
+    } catch (_) { /* usuals simply stay hidden */ }
+    const list = [...new Set(ids)].map((id) => byId.get(id)).filter(priced).slice(0, 10);
+    document.getElementById('hxUsuals').innerHTML = list.map(cardHtml).join('');
+    document.getElementById('hxUsualsSec').hidden = !list.length;
+    document.getElementById('hxReorderLast').hidden = !lastOrderItems;
+  }
+  document.getElementById('hxReorderLast').onclick = async (e) => {
+    e.preventDefault();
+    const result = await EkoyiniReorder.add(lastOrderItems);
+    showToastTop(EkoyiniReorder.message(result));
+    if (result.added) setTimeout(() => { window.location.href = 'cart.html'; }, 900);
+  };
+  window.addEventListener('ekoyini:auth-changed', () => { if (products.length) loadUsuals(); });
 
   // Partner taverns: only taverns that have signed (listed: true) are shown.
   (async () => {

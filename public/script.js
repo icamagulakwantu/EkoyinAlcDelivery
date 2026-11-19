@@ -76,6 +76,37 @@ const EkoyiniFavorites = {
   }
 };
 
+// ── Order again (shared by Profile, Track and Home) ──
+// Adds the items of a past order that are still on sale, at TODAY's prices. Items
+// already in the cart are not doubled (a second tap on Order again changes nothing).
+const EkoyiniReorder = {
+  async add(items) {
+    let products;
+    try {
+      const res = await fetch('/api/products');
+      if (!res.ok) throw new Error('catalogue');
+      products = await res.json();
+    } catch { return { ok: false, added: 0, skipped: 0 }; }
+    const live = new Map((Array.isArray(products) ? products : []).map((p) => [String(p.id), p]));
+    const cart = EkoyiniCart.get();
+    let added = 0, skipped = 0;
+    for (const item of Array.isArray(items) ? items : []) {
+      const p = live.get(String(item && item.skuId));
+      const qty = Number(item && item.quantity);
+      if (!p || !(p.retailSingleZAR > 0) || !(p.stock > 0) || !Number.isSafeInteger(qty) || qty < 1) { skipped++; continue; }
+      cart[p.id] = Math.min(Math.max(Number(cart[p.id]) || 0, qty), p.stock || 99);
+      added += qty;
+    }
+    if (added) EkoyiniCart.save(cart);
+    return { ok: true, added, skipped };
+  },
+  message(r) {
+    if (!r.ok) return 'Could not load the drinks. Please try again.';
+    if (!r.added) return 'Those drinks are not available right now.';
+    return r.skipped ? `Added to your cart. ${r.skipped} item${r.skipped > 1 ? 's are' : ' is'} no longer available.` : 'Added to your cart';
+  },
+};
+
 // ── Cross-tab live sync ──────────────────────────
 // Any page that mutates the cart calls broadcastCartChange(). Pages
 // listening for 'ekoyini:cart-updated' re-render without a refresh. The
