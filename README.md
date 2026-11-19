@@ -4,6 +4,12 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 20 Nov 2026 (early): the last three size mistakes ("fix all of them")
+- **Bacardi Breezer cans (Blackberry, Blueberry, Watermelon)** are **440ml**, not 500ml (shops sell Blackberry 6 x 440ml at R164.99). Renamed to `Can (440ml)`, customer price **R176.54** (R164.99 + 7%, was R160.50 for Watermelon and R224.70 for Blackberry/Blueberry). Note: the founder's Siba receipt of 9 Nov said 500ml R150; a test still keeps the price above that Siba cost. The Blueberry can has no shop listing (only the 275ml bottle), so it follows Blackberry and Watermelon; its old wrong photo stays cleared.
+- **Hunter's Iced Apple and Watermelon**: no 330ml dumpy exists in shops (only the 500ml can), and the photos show a tall bottle, so the rows are now **Quart (660ml)**, priced like the other Hunter's quarts (supplier cost + 7% = **R37.36**, was R192.60 for the dumpy). The 500ml cans are unchanged.
+- **Redd's 330ml dumpies are real** (Pick n Pay sells Original and Dry 6 x 330ml), so they stay as they are.
+- Done with `FORMAT_FIXES` (renames live rows in place, ids and past orders untouched), `skus.csv`, price corrections, `WAS_BELOW_COST` and the photo map. 127 tests.
+
 ### 19 Nov 2026 (midnight, later): size corrections from the founder
 - Founder confirmed the photos for Brutal Fruit (can and dumpy) are right and only the sizes were wrong; Brutal Fruit already has Can (500ml) and Dumpy (275ml) and no 330ml row any more, so nothing to change there.
 - **Smirnoff Storm Citrus and Pine Twist:** dumpy is **300ml** (was labelled 250ml), 6 x 300ml shelf R119.99, customer price **R128.39** (was R106.99). Citrus now shows the founder's Storm bottle photo (`smirnoff-storm-dumpy-300ml.webp`); Pine Twist keeps its current photo.

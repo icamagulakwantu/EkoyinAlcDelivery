@@ -100,3 +100,13 @@ test('size corrections (founder + shelf research, 19 Nov 2026): Storm is a 300ml
   assert.equal(C.finalPriceFor('Smirnoff Storm Pine Twist', 'Dumpy (300ml)'), 128.39);
   assert.equal(C.finalPriceFor('Stella Artois', 'Can (410ml)'), 130); // R109.99 + 7% is under the R130 can floor
 });
+
+test('size corrections 2 (19 Nov 2026): Breezer cans are 440ml, Hunter\'s Iced is a 660ml quart', () => {
+  const csv = fs.readFileSync(path.join(__dirname, '../prisma/data/skus.csv'), 'utf8');
+  assert.ok(!/Bacardi Breezer [^,]+,CIDER_RTD,Can \(500ml\)/.test(csv));
+  assert.ok(/Bacardi Breezer Blueberry,CIDER_RTD,Can \(440ml\)/.test(csv));
+  assert.ok(!/Hunter's Iced [^,]+,CIDER_RTD,Dumpy \(330ml\)/.test(csv));
+  assert.ok(/Hunter's Iced Apple,CIDER_RTD,Quart \(660ml\)/.test(csv));
+  assert.equal(C.finalPriceFor('Bacardi Breezer Blackberry', 'Can (440ml)'), 176.54); // R164.99 + 7%
+  assert.equal(C.finalPriceFor("Hunter's Iced Apple", 'Quart (660ml)'), 37.36); // supplier cost + 7%, like Hunter's Dry and Gold
+});

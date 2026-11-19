@@ -94,7 +94,7 @@ test('the app never sells below what the stock costs at Siba', () => {
   const siba = [
     ['Bernini Blush', 'Can (500ml)', 125], ['Bernini Classic', 'Can (500ml)', 125],
     ['Jagermeister Herbal Liqueur', '750ml Bottle', 360],
-    ['Bacardi Breezer Blackberry', 'Can (500ml)', 150], ['Bacardi Breezer Watermelon', 'Can (500ml)', 150],
+    ['Bacardi Breezer Blackberry', 'Can (440ml)', 150], ['Bacardi Breezer Watermelon', 'Can (440ml)', 150],
     ['Castle Lite', 'Can (500ml)', 115], ['Carling Black Label', 'Can (500ml)', 115],
     ['Savanna Dry', 'NRB (500ml)', 165 / 6], ['Savanna Dry', 'Dumpy (330ml)', 120],
     ['Brutal Fruit Ruby Apple', 'Can (500ml)', 135], ['Brutal Fruit Strawberry Rouge', 'Can (500ml)', 135],
