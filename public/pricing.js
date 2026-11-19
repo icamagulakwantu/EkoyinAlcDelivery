@@ -34,6 +34,9 @@
   const COOLER_DISCOUNT_PCT = 0.025;
   const COOLER_TOP_SUBTOTAL = 2000; // single tier (equal to COOLER_MIN_SUBTOTAL)
   const COOLER_TOP_DISCOUNT_PCT = 0.025;
+  // Big-order protection (founder, 19 Nov 2026): the discount is 2.5% but
+  // never more than R50, so a very large order cannot wipe out our margin.
+  const COOLER_MAX_DISCOUNT = 50;
   const COOLER_CUTOFF_HOUR = 20;
   const COOLER_RESUME_HOUR = 4;
 
@@ -53,6 +56,12 @@
     if (!coolerDiscountAvailable(now)) return 0;
     if (coolerSubtotal >= COOLER_TOP_SUBTOTAL) return COOLER_TOP_DISCOUNT_PCT;
     return coolerSubtotal >= COOLER_MIN_SUBTOTAL ? COOLER_DISCOUNT_PCT : 0;
+  }
+
+  // The Cooler Box discount in rand: the percentage, capped at R50.
+  function coolerDiscountFor(coolerSubtotal, now) {
+    const raw = Math.round(Number(coolerSubtotal) * coolerDiscountPct(coolerSubtotal, now) * 100) / 100;
+    return Number.isFinite(raw) ? Math.min(raw, COOLER_MAX_DISCOUNT) : 0;
   }
 
   // Orders below this (pre-discount) subtotal don't qualify for delivery.
@@ -82,6 +91,12 @@
   const CARE_FEE_PCT = 0.03;
   const CARE_FEE_MIN = 10;
   const CARE_FEE_MAX = 40;
+  // Big-order protection (founder, 19 Nov 2026): a card payment costs us
+  // 3.25% + R2.50 of the whole total, so on BIG CARD orders (items R2000 or
+  // more) the Care & Handling cap is R75 instead of R40. EFT and cash orders
+  // keep the R40 cap.
+  const CARE_FEE_MAX_BIG_CARD = 75;
+  const BIG_ORDER_SUBTOTAL = 2000;
   // Kept for any older code that still reads the band list.
   const CARE_FEE_BANDS = [{ upTo: Infinity, pct: CARE_FEE_PCT, min: CARE_FEE_MIN, max: CARE_FEE_MAX }];
   const SERVICE_FEE_BANDS = CARE_FEE_BANDS;
@@ -199,18 +214,20 @@
 
   // Care & Handling fee for an order, by its pre-discount subtotal.
   // Returns a rand amount (percentage of subtotal, rounded to cents).
-  function careFeeFor(subtotal) {
+  // paymentMethod: only 'card' on a big order gets the higher R75 cap.
+  function careFeeFor(subtotal, paymentMethod) {
     const value = Number(subtotal);
     const amount = Number.isFinite(value) ? value : 0;
     if (amount <= 0) return 0;
-    return round2(Math.min(CARE_FEE_MAX, Math.max(CARE_FEE_MIN, amount * CARE_FEE_PCT)));
+    const cap = paymentMethod === 'card' && amount >= BIG_ORDER_SUBTOTAL ? CARE_FEE_MAX_BIG_CARD : CARE_FEE_MAX;
+    return round2(Math.min(cap, Math.max(CARE_FEE_MIN, amount * CARE_FEE_PCT)));
   }
   // Alias so existing callers keep working during the rename.
-  function serviceFeeFor(subtotal) {
-    return careFeeFor(subtotal);
+  function serviceFeeFor(subtotal, paymentMethod) {
+    return careFeeFor(subtotal, paymentMethod);
   }
 
-  function buildDeliveryQuote({ subtotal, distanceKm, priorityFee, now, surgesEnabled, weightKg }) {
+  function buildDeliveryQuote({ subtotal, distanceKm, priorityFee, now, surgesEnabled, weightKg, paymentMethod }) {
     const km = Number.isFinite(distanceKm) ? distanceKm : null;
     const surge = surgesEnabled === false ? { key: null, fee: 0 } : surgeWindow(now || new Date());
     const priority = PRIORITY_OPTIONS.includes(priorityFee) ? priorityFee : 0;
@@ -221,7 +238,7 @@
     // Order.deliveryFee, 100% to the driver); the parts are returned too so
     // pages can explain it.
     const deliveryFee = round2(distanceFee + loadFee);
-    const careFee = careFeeFor(subtotal);
+    const careFee = careFeeFor(subtotal, paymentMethod);
     return {
       distanceKm: km,
       distanceFee,
@@ -298,7 +315,7 @@
     subtotal = round2(subtotal);
     coolerSubtotal = round2(coolerSubtotal);
     const coolerPct = coolerDiscountPct(coolerSubtotal, now);
-    const coolerDiscount = round2(coolerSubtotal * coolerPct);
+    const coolerDiscount = coolerDiscountFor(coolerSubtotal, now);
     const pct = Number(promoPct) > 0 ? Number(promoPct) : 0;
     const promoDiscount = round2((subtotal - coolerDiscount) * (pct / 100));
     const delivery = roundCurrency(deliveryTotal);
@@ -355,6 +372,10 @@
     COOLER_DISCOUNT_PCT,
     COOLER_TOP_SUBTOTAL,
     COOLER_TOP_DISCOUNT_PCT,
+    COOLER_MAX_DISCOUNT,
+    coolerDiscountFor,
+    CARE_FEE_MAX_BIG_CARD,
+    BIG_ORDER_SUBTOTAL,
     CRATE_SIZE,
     BOTTLE_DEPOSIT_IN_CRATE,
     CRATE_FEE,

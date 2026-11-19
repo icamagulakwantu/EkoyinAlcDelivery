@@ -47,7 +47,7 @@
       <div class="ob-slide" data-slide="1">
         <div class="ob-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h20M12 2v20M20 16l-4-4 4-4M4 8l4 4-4 4M16 4l-4 4-4-4M8 20l4-4 4 4"/></svg></div>
         <h2>Build Your Cooler Box</h2>
-        <p>Beer, spirits, mixers, ice — bundle them up in Shop and get 2.5% off automatically once your cooler box reaches R2000, until 8pm.</p>
+        <p>Beer, spirits, mixers, ice — bundle them up in Shop and get 2.5% off (up to R50) automatically once your cooler box reaches R2000, until 8pm.</p>
       </div>
       <div class="ob-slide" data-slide="2">
         <div class="ob-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></div>
@@ -113,7 +113,7 @@
             <span class="hx-addr-value" id="addrValue">Add your address<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span>
           </span>
         </button>
-        <span class="hx-status" id="hxStatus"><span class="dot" aria-hidden="true"></span><span id="hxStatusText">Delivering now · 30–45 min</span></span>
+        <span class="hx-status" id="hxStatus"><span class="dot" aria-hidden="true"></span><span id="hxStatusText">Delivering now · 20–45 min after pickup</span></span>
       </div>
       <form class="hx-addr-edit" id="addrEdit" onsubmit="event.preventDefault(); saveAddress();">
         <label for="addressInput" class="sr-only">Delivery address</label>
@@ -135,7 +135,7 @@
           <div class="hx-promo-copy">
             <div class="hx-promo-kicker" id="coolerKicker">Cooler Box deal</div>
             <h2><span class="js-cooler-pct">2.5%</span> off from R<span class="js-cooler-min">2000</span></h2>
-            <p>On beer, ciders, spirits, wine and mixers. Applied automatically at checkout. <span class="hx-promo-timer" id="coolerTimer"></span></p>
+            <p>On beer, ciders, spirits, wine and mixers, up to R50 off. Applied automatically at checkout. <span class="hx-promo-timer" id="coolerTimer"></span></p>
           </div>
           <span class="hx-promo-cta">Fill your cooler <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span>
           <div class="hx-promo-art" aria-hidden="true"><img src="images/promo/hennessy-vs.webp" alt=""><img src="images/promo/corona.webp" alt=""><img src="images/promo/savanna-dry.webp" alt=""></div>
@@ -227,7 +227,7 @@
       <section class="hx-sec" aria-labelledby="promiseTitle">
         <div class="hx-head"><h2 id="promiseTitle">Why Ekoyini</h2></div>
         <div class="hx-promise">
-          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><b>30–45 minutes</b><span>A driver already on your route brings it.</span></div>
+          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><b>20–45 minutes</b><span>After your driver picks up. A driver already on your route brings it.</span></div>
           <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg><b>Live tracking</b><span>Follow your order from shelf to gate.</span></div>
           <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg><b>Sealed &amp; checked</b><span>Safety Seal on spirits. ID checked at the door.</span></div>
           <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg><b>Pay your way</b><span>Card, Apple Pay, Google Pay or EFT.</span></div>
@@ -347,7 +347,7 @@
     }
     const hour = t.getUTCHours();
     document.getElementById('hxStatusText').textContent =
-      (hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening') + ' · 30–45 min';
+      (hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening') + ' · 20–45 min after pickup';
   }
   updateClock();
   setInterval(updateClock, 30000);

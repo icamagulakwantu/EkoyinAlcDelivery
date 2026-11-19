@@ -258,7 +258,7 @@ async function logAdminAction(req, action, targetId, detail) {
 // checkout and server can never disagree on discounts or the delivery fee.
 const { toSaWhatsApp } = require("./lib/phone.js");
 const { newPin, pinMatches } = require("./lib/dispatch.js");
-const { COOLER_ELIGIBLE, coolerDiscountPct, MIN_ORDER_SUBTOTAL, safetySealFeeFor, orderWeightKg, isReturnableQuart, bottleDepositFor, noPinProblem } = require("./public/pricing.js");
+const { COOLER_ELIGIBLE, coolerDiscountPct, coolerDiscountFor, MIN_ORDER_SUBTOTAL, safetySealFeeFor, orderWeightKg, isReturnableQuart, bottleDepositFor, noPinProblem } = require("./public/pricing.js");
 // Shelf order (shared with the shop and admin): sensible sections, brands together.
 const { compareCatalogue } = require("./public/shelf-order.js");
 const { createQuoter } = require("./lib/delivery-quote.js");
@@ -659,6 +659,7 @@ async function validateAndPriceOrder({ address, items, customerName, customerPho
     priorityFee,
     now: pricedAt,
     weightKg: orderWeightKg(weighed),
+    paymentMethod,
   });
   if (delivery.error) return { error: delivery.error };
   // No pin (location blocked, laptop, ...): allowed with a landmark. The
@@ -668,7 +669,7 @@ async function validateAndPriceOrder({ address, items, customerName, customerPho
 
   subtotal = Math.round(subtotal * 100) / 100;
   coolerSubtotal = Math.round(coolerSubtotal * 100) / 100;
-  const coolerDiscount = Math.round(coolerSubtotal * coolerDiscountPct(coolerSubtotal, pricedAt) * 100) / 100;
+  const coolerDiscount = coolerDiscountFor(coolerSubtotal, pricedAt);
   // Only charged when the order really contains a spirit.
   const safetySealFee = safetySealFeeFor(safetySeal === true, categories);
   const bottles = bottleDepositFor(returnableBottles, crate !== false);

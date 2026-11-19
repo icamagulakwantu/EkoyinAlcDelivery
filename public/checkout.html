@@ -103,7 +103,7 @@
       <h2 id="hDelivery"><span class="h-num">1</span>Delivery</h2>
       <div class="eta-note">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        Arrives in about 30–45 min
+        Arrives 20–45 min after your driver picks up
       </div>
       <div class="field-group" id="fgAddress">
         <label for="deliveryAddress">Street address</label>
@@ -308,7 +308,7 @@
     const lines = cartLines();
     const subtotal = P.roundCurrency(lines.reduce((s, l) => s + l.total, 0));
     // Until the server's quote lands, preview the base fee + load + Care & Handling.
-    const deliveryTotal = deliveryQuote ? deliveryQuote.total : P.BASE_DELIVERY_FEE + P.loadFeeFor(cartWeight(lines)) + P.careFeeFor(subtotal);
+    const deliveryTotal = deliveryQuote ? deliveryQuote.total : P.BASE_DELIVERY_FEE + P.loadFeeFor(cartWeight(lines)) + P.careFeeFor(subtotal, selectedPayment);
     const bottles = P.bottleDepositFor(returnableCount(lines), crate);
     return { lines, bottles, ...P.priceOrder({ lines, promoPct: appliedPromo ? appliedPromo.discountPct : 0, deliveryTotal, safetySeal, bottleDeposit: bottles.fee }) };
   }
@@ -328,6 +328,7 @@
           deliveryLat: deliveryPin ? deliveryPin.lat : null,
           deliveryLng: deliveryPin ? deliveryPin.lng : null,
           priorityFee,
+          paymentMethod: selectedPayment,
         }),
       });
       if (!res.ok) throw new Error('quote failed');
@@ -490,7 +491,7 @@
         ${hidden > 0 ? `<button type="button" class="review-toggle" onclick="showAllItems=true;renderOrderReview()">Show ${hidden} more item${hidden === 1 ? '' : 's'}</button>` : ''}
       </div>
       <div class="bill-row is-total" style="font-size:14px;font-weight:600;padding:10px 0 6px"><span>Items</span><span>${formatRand(t.subtotal)}</span></div>
-      ${t.coolerDiscount > 0 ? `<div class="bill-row is-saving"><span>Cooler Box (${P.pctLabel(t.coolerPct)} off)</span><span>−${formatRand(t.coolerDiscount)}</span></div>` : ''}
+      ${t.coolerDiscount > 0 ? `<div class="bill-row is-saving"><span>Cooler Box (${P.pctLabel(t.coolerPct)} off${t.coolerDiscount >= P.COOLER_MAX_DISCOUNT ? ', max R' + P.COOLER_MAX_DISCOUNT : ''})</span><span>−${formatRand(t.coolerDiscount)}</span></div>` : ''}
       ${appliedPromo ? `<div class="bill-row is-saving"><span>Promo ${escapeHtml(appliedPromo.code)}</span><span>−${formatRand(t.promoDiscount)}</span></div>` : ''}
       ${deliveryRowsHTML(t)}
       ${t.safetySealFee ? `<div class="bill-row"><span>Safety Seal stickers</span><span>${formatRand(t.safetySealFee)}</span></div>` : ''}
@@ -531,7 +532,10 @@
   function selectPayment(method) {
     const opt = document.querySelector(`.payment-option[data-method="${method}"]`);
     if (!opt || opt.classList.contains('disabled')) return;
+    const changed = selectedPayment !== method;
     selectedPayment = method;
+    // Care & Handling depends on card or not (big card orders), so ask again.
+    if (changed) refreshQuote();
     document.querySelectorAll('.payment-option').forEach((o) => {
       const on = o.dataset.method === method;
       o.classList.toggle('selected', on);

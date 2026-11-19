@@ -4,15 +4,22 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 19 Nov 2026 (afternoon): big-order profit protection, delivery promise, Triple Sec cost
+- **Care & Handling** is still 3% (min R10, max R40), but on **big CARD orders** (items R2,000 or more, paid by card) the cap is **R75** (`CARE_FEE_MAX_BIG_CARD`, `BIG_ORDER_SUBTOTAL` in `public/pricing.js`; founder, 19 Nov). EFT and cash orders keep R40. The server, `/api/delivery-quote`, cart and checkout all pass the payment method; checkout re-quotes when the customer switches payment. The cart shows the card figure because card is the default.
+- **Cooler Box** stays 2.5% from R2,000 until 20:00 but is **capped at R50** (`COOLER_MAX_DISCOUNT`, `coolerDiscountFor()`), so a big order cannot wipe out our margin. Home, cart and checkout say "up to R50". Result: a R2,000 spirits card order now keeps about R35 (was R16) and a R5,860 one about R107 (was R32).
+- **Delivery promise** is now "20–45 min after the driver confirms pickup" on the home page, checkout, confirmation and track page (was a flat 30–45 min).
+- **Triple Sec Premium (San Basile)**: the workbook cost of R460.80 was wrong; the founder says the cost is about R240. Case cost in `prisma/data/skus.csv` corrected to R2,880 and R240 added to the Siba cost test. The R336 price stays.
+- Cache `ekoyini-shell-v28`. Tests: 118.
+
 ### 19 Nov 2026: SEO and pay-one-order card QR
 - **SEO:** `public/robots.txt` and `public/sitemap.xml` (home, shop, terms, privacy); canonical + Open Graph/Twitter tags on home and shop; JSON-LD (WebSite + LiquorStore, Gqeberha) on the home page; one real `<h1>` on the home page (the age gate heading is now a styled `div`); a short "we deliver in Gqeberha" line on the home page; `noindex` on every private page (cart, checkout, track, profile, login, signup, password pages, order confirmation, unsubscribe, 404). Tests in `test/seo.test.js`. After deploy: add the site in Google Search Console, submit `/sitemap.xml`, and claim the Google Business Profile.
-- **Pay one order by card QR:** `lib/order-payment.js` + `routes/pay-qr.js`. `GET /pay/:code` starts a Yoco checkout for that order's exact total and redirects; `GET /pay/:code/qr.png` is the QR; `POST /api/order/:code/pay-check` settles right after the customer returns. Works for unpaid EFT and cash-on-delivery orders (not paid, cancelled or delivered). `completePaidCheckout` recognises these payments (marker `kind: "order-payment"` in `PendingCheckout.payload`) and marks the existing order paid by card (EFT orders move to PENDING); it never creates a second order, and a duplicate or wrong-amount payment is flagged for refund. Admin order card has a **Card payment QR** button; the track page shows **Pay R… by card**. No schema change. Not yet tested against live Yoco: do one real payment. `sendPaymentConfirmedEmail` takes `{ method: "card" }`. `/pay` is never cached by the service worker (cache `ekoyini-shell-v27`).
+- **Pay one order by card QR:** `lib/order-payment.js` + `routes/pay-qr.js`. `GET /pay/:code` starts a Yoco checkout for that order's exact total and redirects; `GET /pay/:code/qr.png` is the QR; `POST /api/order/:code/pay-check` settles right after the customer returns. Works for unpaid EFT and cash-on-delivery orders (not paid, cancelled or delivered). `completePaidCheckout` recognises these payments (marker `kind: "order-payment"` in `PendingCheckout.payload`) and marks the existing order paid by card (EFT orders move to PENDING); it never creates a second order, and a duplicate or wrong-amount payment is flagged for refund. Admin order card has a **Card payment QR** button; the track page shows **Pay R… by card**. No schema change. Not yet tested against live Yoco: do one real payment. `sendPaymentConfirmedEmail` takes `{ method: "card" }`. `/pay` is never cached by the service worker (cache `ekoyini-shell-v28`).
 
 ### 19 Nov 2026: order alerts that ring when the app is closed (web push)
 - Problem: new-order emails arrived but nothing buzzed, and the dashboard only rang while its tab was open.
 - New `lib/push.js` + `routes/push.js` + table `PushSubscription` (migration `20261119120000_add_push_subscriptions`, new table only). Each device that taps **Turn on order alerts** in the dashboard saves a push subscription; the server sends a notification to every device of every current admin for each new order (card, COD and EFT) and for the delay alerts (amber/red). Works with the dashboard closed or the phone in another app. Notifications show the area only, never customer name, phone or street.
 - Needs Render env `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` (optional `VAPID_SUBJECT`); without them it quietly does nothing and email still works. Devices of removed admins are dropped on the next send; dead devices (HTTP 404/410) are dropped too.
-- `public/sw.js` handles `push` (cache `ekoyini-shell-v27`). The dashboard has its own manifest (`admin/manifest.json`) so an iPhone user can Add to Home Screen and open Ekoyini Admin, which iPhone requires for push.
+- `public/sw.js` handles `push` (cache `ekoyini-shell-v28`). The dashboard has its own manifest (`admin/manifest.json`) so an iPhone user can Add to Home Screen and open Ekoyini Admin, which iPhone requires for push.
 - New-order email recipients are now `ORDER_ALERT_EMAILS` = orders@ekoyini.co.za + the Gmail (set on Render 19 Nov).
 - Tests: `test/push.test.js`.
 
@@ -181,13 +188,13 @@ Founder: 96 quarts (8 crates) paid the same R40 delivery as one six-pack, while 
 
 ### 9 Nov 2026 (night): a new home screen, built like a top-tier delivery app
 Founder: "nothing wow… I still don't feel like this is a top tier app." The old home page was a long brochure (8 phone screens, about 7,000px) with no products on it, so it took two taps to see anything to buy. The new home (`public/index.html` + `public/home-app.css`) works like Uber Eats, Sixty60 and Bolt Food:
-- **Top:** "Deliver to" address chip (tap to change) and a live greeting with the 30–45 min promise; a big search bar.
+- **Top:** "Deliver to" address chip (tap to change) and a live greeting with the 20–45 min after pickup promise; a big search bar.
 - **Deals carousel** (swipe): Cooler Box (5%/8% with a live countdown to 8pm, or "back at 4am"), the R10 spirits Safety Seal, and Black-owned brands. Real product photos.
 - **Live Cooler Box card:** reads the real cart and says exactly how much more unlocks 5% or 8%.
 - **Shop by category:** 14 photo tiles (beer, ciders, whisky, brandy, cognac, gin, vodka, tequila, liqueurs, wine, bubbly, cold drinks, energy, water & ice).
 - **Popular right now** and **Top shelf** rails: real products, prices and pack sizes from `/api/products`, with a one-tap **+** that turns into a − 1 + stepper. Picked from the founder's Siba fast movers.
 - **Floating "View cart" bar** with item count and total, like the shop.
-- Occasion packs, brands with a story, "Why Ekoyini" (30–45 min, live tracking, Safety Seal + ID check, pay your way), a 3-line "How it works", the 18+ note and the footer.
+- Occasion packs, brands with a story, "Why Ekoyini" (20–45 min after pickup, live tracking, Safety Seal + ID check, pay your way), a 3-line "How it works", the 18+ note and the footer.
 - Removed: the long ride-along explainer, the animated example cooler, the taverns list and the closing banner (the shared-stock model means customers don't pick a tavern).
 - Onboarding, age gate, install prompt and bottom nav are unchanged. Page is about 3,100px on a phone (was about 7,000px). Checked on a phone-sized and a desktop browser against a local copy of the deploy: no page errors, no sideways scroll, add-to-cart and the Cooler Box card work.
 - Service worker cache `ekoyini-shell-v10`.

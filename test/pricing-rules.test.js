@@ -18,6 +18,32 @@ test('Care & Handling is 3% of items, at least R10 and at most R40, with no jump
   for (let r = 300; r <= 3000; r += 7) { const f = P.careFeeFor(r); assert.ok(f >= last, `R${r}`); last = f; }
 });
 
+test('big-order protection: R75 Care & Handling only on big CARD orders (founder, 19 Nov 2026)', () => {
+  // Small or non-card orders keep the R40 cap.
+  assert.equal(P.careFeeFor(1999, 'card'), 40);
+  assert.equal(P.careFeeFor(5000, 'eft'), 40);
+  assert.equal(P.careFeeFor(5000, 'cod'), 40);
+  assert.equal(P.careFeeFor(5000), 40);
+  // Big card orders pay 3%, capped at R75 (no jump back down, 3% of R2000 = R60).
+  assert.equal(P.careFeeFor(2000, 'card'), 60);
+  assert.equal(P.careFeeFor(2500, 'card'), 75);
+  assert.equal(P.careFeeFor(9000, 'card'), 75);
+  const card = P.buildDeliveryQuote({ subtotal: 5000, distanceKm: 3, priorityFee: 0, now: at('08:00'), paymentMethod: 'card' });
+  const eft = P.buildDeliveryQuote({ subtotal: 5000, distanceKm: 3, priorityFee: 0, now: at('08:00'), paymentMethod: 'eft' });
+  assert.equal(card.careFee, 75);
+  assert.equal(eft.careFee, 40);
+});
+
+test('big-order protection: the Cooler Box discount is 2.5% but never more than R50', () => {
+  const noon = at('10:00');
+  assert.equal(P.COOLER_MAX_DISCOUNT, 50);
+  assert.equal(P.coolerDiscountFor(1999, noon), 0);
+  assert.equal(P.coolerDiscountFor(2000, noon), 50);
+  assert.equal(P.coolerDiscountFor(2200, noon), 50);
+  assert.equal(P.coolerDiscountFor(5860, noon), 50);
+  assert.equal(P.coolerDiscountFor(5860, at('18:30')), 0); // after 20:00 SA time
+});
+
 test('there is no free delivery: a big order still pays the distance fee', () => {
   assert.equal(P.FREE_DELIVERY_THRESHOLD, undefined);
   assert.equal(P.deliveryFee(5000), 40);

@@ -25,7 +25,7 @@ module.exports = function mountDelivery(app, { prisma, requireAdmin, requireSupe
   // server when the order is placed, so nothing sent here can lower the price.
   app.post("/api/delivery-quote", quoteLimiter, async (req, res) => {
     try {
-      const { subtotal, deliveryLat, deliveryLng, priorityFee, items } = req.body || {};
+      const { subtotal, deliveryLat, deliveryLng, priorityFee, items, paymentMethod } = req.body || {};
       const parsedSubtotal = parseFloat(subtotal);
       if (!Number.isFinite(parsedSubtotal) || parsedSubtotal < 0) {
         return res.status(400).json({ error: "subtotal is required" });
@@ -38,6 +38,7 @@ module.exports = function mountDelivery(app, { prisma, requireAdmin, requireSupe
         deliveryLat: pinOk ? lat : null,
         deliveryLng: pinOk ? lng : null,
         priorityFee,
+        paymentMethod: paymentMethod === "card" ? "card" : undefined,
         weightKg: await cartWeightKg(prisma, items),
       });
       if (result.error) return res.status(400).json({ error: result.error });

@@ -109,6 +109,8 @@ test('the app never sells below what the stock costs at Siba', () => {
     ['KWV 12 Year', '750ml Bottle', 480], ['Skyy Vodka Original', '750ml Bottle', 300],
     ['Corona Extra', 'Dumpy (355ml)', 120], ['Extreme Energy', 'Dumpy (330ml)', 125],
     ['Heineken', 'Dumpy (330ml)', 130], ['Robertson Chapel Dry Red', '1.5L Bottle', 105],
+    // Founder, 19 Nov 2026: San Basile Triple Sec costs about R240 (the old workbook cost of R460.80 was wrong).
+    ['Triple Sec Premium (San Basile)', '750ml Bottle', 240],
   ];
   for (const [name, format, cost] of siba) {
     const price = C.finalPriceFor(name, format);

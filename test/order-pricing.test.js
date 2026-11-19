@@ -23,10 +23,10 @@ test("priceOrder: subtotal, Cooler Box, promo on the remainder, delivery, seal",
     now: DAY,
   });
   assert.equal(r.subtotal, 2200);
-  assert.equal(r.coolerDiscount, 55); // 2.5% of 2200 (2.5% starts at R2000)
-  assert.equal(r.promoDiscount, 214.5); // 10% of 2145
+  assert.equal(r.coolerDiscount, 50); // 2.5% of 2200 = 55, capped at R50
+  assert.equal(r.promoDiscount, 215); // 10% of 2150
   assert.equal(r.safetySealFee, 10);
-  assert.equal(r.total, 2200 - 55 - 214.5 + 117 + 10);
+  assert.equal(r.total, 2200 - 50 - 215 + 117 + 10);
 });
 
 test("priceOrder: no Cooler Box discount after 20:00 SA time", () => {
@@ -78,9 +78,9 @@ test("only returnable quarts carry the bottle charge", () => {
 
 test("priceOrder adds bottles & crates after every discount", () => {
   const r = P.priceOrder({ lines: [{ category: "BEER", total: 2400 }], deliveryTotal: 80, bottleDeposit: 52, now: DAY });
-  assert.equal(r.coolerDiscount, 60); // 2.5% of the drinks only, never of the bottles
+  assert.equal(r.coolerDiscount, 50); // 2.5% of the drinks only (R60), capped at R50, never of the bottles
   assert.equal(r.bottleDepositFee, 52);
-  assert.equal(r.total, 2400 - 60 + 80 + 52);
+  assert.equal(r.total, 2400 - 50 + 80 + 52);
 });
 
 test("No GPS pin: allowed with a landmark, refused without one", () => {
