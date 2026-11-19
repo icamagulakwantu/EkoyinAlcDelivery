@@ -2,7 +2,7 @@
 // app shell loading on flaky township data. Deliberately NEVER caches
 // API, order, admin or webhook requests: prices, stock and order status
 // must always be live.
-const CACHE = 'ekoyini-shell-v26';
+const CACHE = 'ekoyini-shell-v27';
 const SHELL = ['/index.html', '/shop.html', '/cart.html', '/track.html', '/profile.html', '/style.css', '/premium.css', '/home.css', '/home-app.css', '/app.css', '/script.js', '/auth.js', '/pricing.js', '/shelf-order.js', '/images/brand/ekoyini-icon.png'];
 
 self.addEventListener('install', (e) => {
@@ -18,7 +18,7 @@ self.addEventListener('activate', (e) => {
 
 function isLiveRequest(url) {
   return url.origin !== self.location.origin ||
-    /^\/(api|order|orders|admin|webhooks)(\/|$)/.test(url.pathname);
+    /^\/(api|order|orders|admin|webhooks|pay)(\/|$)/.test(url.pathname);
 }
 
 // Network first, cache as fallback — customers always get the newest

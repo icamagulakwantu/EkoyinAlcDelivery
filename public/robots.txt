@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /order/
+Disallow: /orders/
+Disallow: /pay/
+Disallow: /webhooks/
+
+Sitemap: https://www.ekoyini.co.za/sitemap.xml

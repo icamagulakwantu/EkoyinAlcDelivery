@@ -4,11 +4,15 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 19 Nov 2026: SEO and pay-one-order card QR
+- **SEO:** `public/robots.txt` and `public/sitemap.xml` (home, shop, terms, privacy); canonical + Open Graph/Twitter tags on home and shop; JSON-LD (WebSite + LiquorStore, Gqeberha) on the home page; one real `<h1>` on the home page (the age gate heading is now a styled `div`); a short "we deliver in Gqeberha" line on the home page; `noindex` on every private page (cart, checkout, track, profile, login, signup, password pages, order confirmation, unsubscribe, 404). Tests in `test/seo.test.js`. After deploy: add the site in Google Search Console, submit `/sitemap.xml`, and claim the Google Business Profile.
+- **Pay one order by card QR:** `lib/order-payment.js` + `routes/pay-qr.js`. `GET /pay/:code` starts a Yoco checkout for that order's exact total and redirects; `GET /pay/:code/qr.png` is the QR; `POST /api/order/:code/pay-check` settles right after the customer returns. Works for unpaid EFT and cash-on-delivery orders (not paid, cancelled or delivered). `completePaidCheckout` recognises these payments (marker `kind: "order-payment"` in `PendingCheckout.payload`) and marks the existing order paid by card (EFT orders move to PENDING); it never creates a second order, and a duplicate or wrong-amount payment is flagged for refund. Admin order card has a **Card payment QR** button; the track page shows **Pay R… by card**. No schema change. Not yet tested against live Yoco: do one real payment. `sendPaymentConfirmedEmail` takes `{ method: "card" }`. `/pay` is never cached by the service worker (cache `ekoyini-shell-v27`).
+
 ### 19 Nov 2026: order alerts that ring when the app is closed (web push)
 - Problem: new-order emails arrived but nothing buzzed, and the dashboard only rang while its tab was open.
 - New `lib/push.js` + `routes/push.js` + table `PushSubscription` (migration `20261119120000_add_push_subscriptions`, new table only). Each device that taps **Turn on order alerts** in the dashboard saves a push subscription; the server sends a notification to every device of every current admin for each new order (card, COD and EFT) and for the delay alerts (amber/red). Works with the dashboard closed or the phone in another app. Notifications show the area only, never customer name, phone or street.
 - Needs Render env `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` (optional `VAPID_SUBJECT`); without them it quietly does nothing and email still works. Devices of removed admins are dropped on the next send; dead devices (HTTP 404/410) are dropped too.
-- `public/sw.js` handles `push` (cache `ekoyini-shell-v26`). The dashboard has its own manifest (`admin/manifest.json`) so an iPhone user can Add to Home Screen and open Ekoyini Admin, which iPhone requires for push.
+- `public/sw.js` handles `push` (cache `ekoyini-shell-v27`). The dashboard has its own manifest (`admin/manifest.json`) so an iPhone user can Add to Home Screen and open Ekoyini Admin, which iPhone requires for push.
 - New-order email recipients are now `ORDER_ALERT_EMAILS` = orders@ekoyini.co.za + the Gmail (set on Render 19 Nov).
 - Tests: `test/push.test.js`.
 

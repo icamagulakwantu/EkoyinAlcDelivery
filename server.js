@@ -111,6 +111,7 @@ const {
   yocoKeyMode,
   isYocoConfigured,
 } = require("./payments.js");
+const { parseOrderPayment, settleOrderPayment, isPayable: isOrderPayable } = require("./lib/order-payment.js");
 const { sendOrderConfirmationEmail, sendAdminOrderAlertEmail, sendPaymentFailureAlertEmail, sendPaymentConfirmedEmail } = require("./emails.js");
 
 // Basic browser security headers. A Content-Security-Policy is deliberately
@@ -1073,6 +1074,25 @@ async function completePaidCheckout(pending, via) {
       return "FAILED_NEEDS_REFUND";
     }
 
+    // A card payment for an order that already exists (pay-by-QR): mark that
+    // order paid, never create a second one.
+    const orderPayment = parseOrderPayment(pending.payload);
+    if (orderPayment) {
+      const settled = await settleOrderPayment({ prisma, pending, orderCode: orderPayment.orderCode });
+      if (!settled.ok) {
+        console.error(`[yoco ${via}] Order payment for ${orderPayment.orderCode} needs a human: ${settled.reason}`);
+        await flagPaidCheckoutForReview(pending, settled.reason);
+        return "FAILED_NEEDS_REFUND";
+      }
+      await prisma.pendingCheckout.update({
+        where: { id: pending.id },
+        data: { status: "COMPLETED", orderCode: settled.order.code, completedAt: new Date() },
+      });
+      console.log(`[yoco ${via}] Order ${settled.order.code} paid by card QR (checkout ${checkoutId})`);
+      sendPaymentConfirmedEmail(settled.order, settled.order.customerEmail, { method: "card" }).catch((e) => console.error("[email] payment-confirmed failed:", e));
+      return "COMPLETED";
+    }
+
     const payload = JSON.parse(pending.payload);
     const priced = await validateAndPriceOrder({
       address: payload.address,
@@ -1173,11 +1193,15 @@ app.get("/api/order/:code/track", trackLimiter, async (req, res) => {
         driverLocationAt: true,
         rating: true,
         ratingComment: true,
+        paidAt: true,
         tavern: { select: { name: true, area: true } },
         items: { select: { name: true, quantity: true } },
       },
     });
     if (!order) return res.status(404).json({ error: "Order not found" });
+    // Lets the tracking page offer "Pay by card" only when it would work.
+    order.payable = isYocoConfigured() && isOrderPayable(order);
+    delete order.paidAt;
 
     const isFresh = order.driverLocationAt && Date.now() - new Date(order.driverLocationAt).getTime() < LOCATION_STALE_AFTER_MS;
     if (!isFresh) {
@@ -1649,7 +1673,7 @@ app.get("/admin/audit-log", requireAdmin, requireSuperAdmin, async (req, res) =>
 });
 
 // Feature routes that live in their own files (driver reports, delivery fees, ...).
-require("./routes/index.js")(app, { prisma, requireUser, requireAdmin, requireSuperAdmin, writeLimiter, trackLimiter, logAdminAction, quoteDelivery, push });
+require("./routes/index.js")(app, { prisma, requireUser, requireAdmin, requireSuperAdmin, writeLimiter, trackLimiter, logAdminAction, quoteDelivery, push, completePaidCheckout, appBaseUrl, yoco: { isConfigured: isYocoConfigured, createCheckout: createYocoCheckout } });
 
 // Malformed JSON or an oversized body gets a clear JSON answer the pages can
 // show, instead of Express's default HTML error page.

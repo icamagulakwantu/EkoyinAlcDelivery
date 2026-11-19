@@ -278,6 +278,12 @@ function getActionButtons(order) {
     if (order.status === 'PENDING' && !order.driverName) {
         buttons += `<button class="btn btn-post-job" onclick="postDriverJob('${code}')">Post job to drivers group</button>`;
     }
+    // Card payment by QR: for an order that is not paid yet (EFT waiting, or
+    // cash on delivery). The customer scans, pays on Yoco, and the order is
+    // marked paid by card automatically.
+    if (['PAYMENT_PENDING', 'PENDING', 'DISPATCHED'].includes(order.status) && ['eft', 'cod'].includes(order.paymentMethod) && !order.paidAt) {
+        buttons += `<button class="btn btn-assign" onclick="showPayQr('${code}', ${Number(order.total) || 0})">Card payment QR</button>`;
+    }
     if (order.status === 'PAYMENT_PENDING' || order.status === 'PENDING') {
         buttons += `<button class="btn btn-assign" onclick="openAssignModal('${code}')">Assign</button>`;
     }
@@ -812,3 +818,25 @@ async function removeAdmin(id) {
     }
 }
 window.removeAdmin = removeAdmin;
+
+
+// Shows the QR a customer scans to pay this one order by card (Yoco).
+function showPayQr(orderCode, total) {
+    const old = document.getElementById('payQrOverlay');
+    if (old) old.remove();
+    const code = encodeURIComponent(orderCode);
+    const url = `${location.origin}/pay/${code}`;
+    const o = document.createElement('div');
+    o.id = 'payQrOverlay';
+    o.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+    o.innerHTML = `<div style="background:#fff;color:#17140e;border-radius:20px;padding:24px;max-width:340px;width:100%;text-align:center">
+        <div style="font-weight:800;font-size:18px">Pay by card</div>
+        <div style="font-size:13px;opacity:.7;margin:4px 0 12px">${esc(orderCode)} · R${(Number(total) || 0).toFixed(2)}</div>
+        <img src="/pay/${code}/qr.png" alt="QR code to pay ${esc(orderCode)} by card" width="260" height="260" style="max-width:100%">
+        <div style="font-size:12px;opacity:.7;margin:10px 0">The customer scans this with their camera and pays on Yoco. The order is marked paid automatically.</div>
+        <input readonly value="${esc(url)}" onclick="this.select()" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:8px;font-size:12px;margin-bottom:12px">
+        <button class="btn btn-assign" onclick="document.getElementById('payQrOverlay').remove()">Close</button>
+    </div>`;
+    o.addEventListener('click', (e) => { if (e.target === o) o.remove(); });
+    document.body.appendChild(o);
+}

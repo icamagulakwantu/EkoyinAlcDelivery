@@ -7,6 +7,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/images/brand/favicon-32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/images/brand/favicon-16.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/images/brand/favicon-180.png">
+  <meta name="robots" content="noindex, nofollow">
   <title>Track your order — Ekoyini</title>
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
@@ -237,6 +238,7 @@
       ${items}
       ${order.total != null ? `<div class="bill-row is-total"><span>Total</span><span>${formatRand(order.total)}</span></div>` : ''}
       ${pay ? `<div class="bill-note" style="padding-bottom:10px">${escapeHtml(pay)}</div>` : ''}
+      ${order.payable ? `<a href="/pay/${encodeURIComponent(order.code)}" style="display:block;margin:4px 14px 14px;padding:13px;border-radius:999px;background:#17140e;color:#faf6ee;text-align:center;font-weight:700;text-decoration:none">Pay ${formatRand(order.total)} by card</a>` : ''}
     </div>`;
   }
 
@@ -425,7 +427,12 @@
   const prefillCode = params.get('code');
   if (prefillCode) {
     document.getElementById('codeInput').value = prefillCode;
-    lookup();
+    // Back from paying by card: settle the payment now, then show the order.
+    if (params.get('paid')) {
+      fetch('/api/order/' + encodeURIComponent(prefillCode) + '/pay-check', { method: 'POST' }).catch(() => {}).finally(lookup);
+    } else {
+      lookup();
+    }
   } else {
     showMyActiveOrders();
   }

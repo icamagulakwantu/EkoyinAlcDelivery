@@ -138,12 +138,13 @@ async function sendAdminOrderAlertEmail(order) {
   await sendEmail({ to: adminEmails, subject: `New order ${order.code}: R${order.total.toFixed(2)}, ${area || "see address"}, ${payment}`, html });
 }
 
-async function sendPaymentConfirmedEmail(order, customerEmail) {
+async function sendPaymentConfirmedEmail(order, customerEmail, { method = "eft" } = {}) {
   if (!customerEmail) return;
+  const how = method === "card" ? "card payment" : "EFT payment";
   const code = escapeHtml(order.code);
   const html = wrapper(`
     <h1 style="font-size:18px;color:#222;margin:0 0 8px;">Payment received — packing your order</h1>
-    <p style="font-size:14px;color:#555;line-height:1.5;">Thanks${order.customerName ? `, ${escapeHtml(order.customerName)}` : ""}! We've confirmed your EFT payment for order <strong>${code}</strong> — it's being packed now, and a driver will collect it soon.</p>
+    <p style="font-size:14px;color:#555;line-height:1.5;">Thanks${order.customerName ? `, ${escapeHtml(order.customerName)}` : ""}! We've confirmed your ${how} for order <strong>${code}</strong> — it's being packed now, and a driver will collect it soon.</p>
     <div style="background:#f7f4ec;border-radius:8px;padding:14px;margin:16px 0;text-align:center;">
       <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.5px;">Order Code</div>
       <div style="font-family:monospace;font-size:20px;font-weight:700;color:${BRAND.terra};">${code}</div>

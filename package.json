@@ -35,6 +35,7 @@
     "express": "^4.22.1",
     "express-rate-limit": "^7.4.1",
     "prisma": "^5.20.0",
+    "qrcode": "^1.5.4",
     "sharp": "^0.34.0",
     "web-push": "^4.0.0"
   }

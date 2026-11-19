@@ -467,7 +467,7 @@
 }
 .age-gate.hidden { display: none; }
 .age-gate .ag-numeral { font-family: var(--font-display); font-weight: 700; font-size: 104px; line-height: 1; color: #e6c47c; margin-bottom: 12px; letter-spacing: -0.04em; }
-.age-gate h1 { font-family: var(--font-display); font-size: 24px; font-weight: 700; color: #fff; margin-bottom: 12px; max-width: 340px; letter-spacing: -0.01em; }
+.age-gate .ag-title { font-family: var(--font-display); font-size: 24px; font-weight: 700; color: #fff; margin-bottom: 12px; max-width: 340px; letter-spacing: -0.01em; }
 .age-gate p { font-size: 15px; color: #d8d0c2; max-width: 330px; line-height: 1.6; margin-bottom: 32px; }
 .age-gate .ag-actions { width: 100%; max-width: 330px; display: flex; flex-direction: column; gap: 12px; }
 .age-gate .ag-yes { background: #cc3700; color: #fff; border: none; min-height: 56px; border-radius: 999px; font-size: 16px; font-weight: 700; }
@@ -475,7 +475,7 @@
 .age-gate .ag-no { background: transparent; color: #cfc6b6; border: 1.5px solid #4a4036; min-height: 50px; border-radius: 999px; font-size: 14px; font-weight: 600; }
 .age-gate .ag-legal { margin-top: 22px; font-size: 11px; color: #9a9084; max-width: 300px; line-height: 1.55; }
 .age-gate .ag-blocked { display: none; }
-.age-gate.blocked .ag-numeral, .age-gate.blocked h1, .age-gate.blocked p, .age-gate.blocked .ag-actions, .age-gate.blocked .ag-legal { display: none; }
+.age-gate.blocked .ag-numeral, .age-gate.blocked .ag-title, .age-gate.blocked p, .age-gate.blocked .ag-actions, .age-gate.blocked .ag-legal { display: none; }
 .age-gate.blocked .ag-blocked { display: block; font-size: 16px; color: #fff; max-width: 300px; line-height: 1.6; }
 
 /* ── ONBOARDING (first run, before the age gate) ── */

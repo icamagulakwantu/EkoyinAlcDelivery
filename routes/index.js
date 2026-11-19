@@ -6,4 +6,5 @@ module.exports = function mountRoutes(app, deps) {
   require("./payouts.js")(app, deps);
   require("./dispatch-alerts.js")(app, deps);
   require("./push.js")(app, deps);
+  require("./pay-qr.js")(app, deps);
 };
