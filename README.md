@@ -4,6 +4,11 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 19 Nov 2026 (night): real shelf prices from the founder's check
+- Founder checked 38 estimate prices on real shelves. 35 were applied as shelf price + the usual markup (7% beer/cider/RTD/wine, 5% spirits/liqueurs/mixers): e.g. Amstel 500ml cans R141.18, Sol cans R147.60, Savanna Dry cans R218.28, Chivas 12 R439.95, Jack Daniel's R387.45, Monin Agave R313.95, Drostdy-Hof Adelpracht R65.26, 4th Street 5L R203.29, Smirnoff Red R208.95. They are marked `verified` in `lib/price-corrections-2026-11-08.js`.
+- Not applied: Valpre 1.5L (shelf R24.99, stays at the R25 water rule) and Monin Almond Orgeat and White Chocolate (shelf R225 would be R236.25, they stay at the flat R230.99 Monin price). Founder to confirm either way.
+- Tests: 125.
+
 ### 19 Nov 2026 (late night): diagnosis fixes
 - **Sign-up email link**: `signUp()` now sends `emailRedirectTo` = this site's `/login.html`. Supabase only honours it when the address is allowed, so the founder must set Authentication > URL Configuration: Site URL `https://www.ekoyini.co.za` and Redirect URLs `https://www.ekoyini.co.za/**` (the old default pointed at localhost).
 - **One discount only**: a promo code and the Cooler Box discount no longer stack. The customer gets whichever is bigger (tie = Cooler Box); a promo that loses is not redeemed. Same rule in `priceOrder` (cart, checkout) and the server (`resolveOneDiscount`).

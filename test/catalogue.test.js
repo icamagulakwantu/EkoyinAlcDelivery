@@ -73,7 +73,7 @@ test('final customer prices override legacy list-price uplift when configured', 
   // Values are pinned by the 8 Nov shelf-price correction (shelf + markup).
   assert.equal(C.newSinglePrice({ name: 'Bombay Sapphire', bottleFormat: '750ml Bottle', packSize: 1, listPriceZAR: 310 }), 398.99);
 
-  assert.equal(C.newSinglePrice({ name: 'Castle Lager', bottleFormat: 'Dumpy (330ml)', packSize: 6, listPriceZAR: 14 }), 96.29);
+  assert.equal(C.newSinglePrice({ name: 'Castle Lager', bottleFormat: 'Dumpy (330ml)', packSize: 6, listPriceZAR: 14 }), 109.08);
   // No base price at all: stays "Price coming soon"
   assert.equal(C.newSinglePrice({ name: 'Unknown', bottleFormat: '750ml Bottle', packSize: 1, listPriceZAR: 0 }), null);
 });
@@ -171,7 +171,7 @@ test('runner: an old-label duplicate is removed, not kept twice', async () => {
   const { log } = await run(prisma);
   assert.equal(prisma.db.length, 1);
   assert.equal(prisma.db[0].bottleFormat, 'Dumpy (330ml)');
-  assert.equal(prisma.db[0].retailSingleZAR, 96.29);
+  assert.equal(prisma.db[0].retailSingleZAR, 109.08);
   assert.ok(log.some((l) => l.startsWith('removed duplicate:')));
 });
 

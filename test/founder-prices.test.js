@@ -43,7 +43,7 @@ test('no alcoholic six-pack of cans is under R130, except Corona and Savanna', (
     assert.ok(C.finalPriceFor(r.name, r.bottleFormat) >= 130, `${r.name} ${r.bottleFormat} R${C.finalPriceFor(r.name, r.bottleFormat)}`);
   }
   assert.equal(C.finalPriceFor('Lion Lager', 'Can (500ml)'), 130);
-  assert.ok(C.finalPriceFor('Corona Extra', 'Can (410ml)') < 130, 'Corona keeps its own price');
+  assert.equal(F.applyCanFloor('Corona Extra', 'Can (410ml)', 100), 100, 'Corona is exempt from the R130 floor');
   assert.ok(C.finalPriceFor('Mofaya Original', 'Can (500ml)') < 130, 'mixers are not covered');
 });
 
