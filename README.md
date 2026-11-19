@@ -4,6 +4,11 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 19 Nov 2026 (11 pm): founder's corrected size/price sheet checked
+- Checked all 59 rows of the founder's corrected sheet against the catalogue. Sizes already match for Belgravia, Chillers, Hunter's, Redd's MXD and Strongbow cans (440ml), Corona can (410ml) and the 275ml/330ml dumpies. Prices already match (shelf + 7%/5%) for 34 rows.
+- **Applied:** Hunter's Gold 6 x 330ml NRB shelf R131.94 (Shoprite, R21.99 each) so the customer price is **R141.18** (was R112.34 from an older Checkers R104.99; the highest shelf price wins).
+- **Left as they are (reason):** 4th Street Sweet Red 5L (founder's own shelf check R189.99 beats the sheet's "prior rerun" R248); Butlers liqueurs (Shoprite R229.99 is higher than the sheet's R209); Monin (flat R230.99 founder rule); Valpre 1.5L and Bonaqua 1.5L (R25 water rule); Bonaqua 500ml (deal price); Ponchos Coffee (ours is already higher). Not in the catalogue: Red Bull 355ml single (we sell 250ml at R30) and Schweppes Lemonade 6 x 200ml.
+
 ### 19 Nov 2026 (late night): Care & Handling is 5%, cap R75, for everyone
 - **Care & Handling:** now **5% of the items, minimum R10, maximum R75**, the same for card, EFT and cash (was 3% / R10 / R40, with a card-only R75 cap). Founder decision, to cover card costs, running costs and cash flow. The markup was left alone so item prices stay close to the tavern shelf price.
 - **Why not card-only:** a fee that only card payers pay is a card surcharge, which South African card rules (PASA, Visa, Mastercard, enforced by Yoco) and the Consumer Protection Act (section 23) do not allow. The card-only R75 cap from earlier today is gone: `careFeeFor(subtotal)` ignores the payment method.
