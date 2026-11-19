@@ -123,7 +123,6 @@ const BRAND_PHOTO_MAP = {
   'Gordons London Dry': '/images/brands/gordons-london-dry.jpg',
   'Gordons Premium Pink': '/images/brands/gordons-pink-berry.png',
   'Grand Marnier Cordon Rouge': '/images/brands/grand-marnier-cordon-rouge.jpg',
-  'Grenadine Syrup Cordial': '/images/brands/monin-grenadine.png',
   'Grey Goose Luxury': '/images/brands/grey-goose-luxury.jpg',
   'Guinness Foreign Extra': '/images/brands/guinness-foreign-extra.png',
   'Hansa Pilsener': '/images/brands/hansa-pilsener.png',

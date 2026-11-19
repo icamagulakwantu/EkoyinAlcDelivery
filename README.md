@@ -10,6 +10,7 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 - **Prices**: every 1.5L water is R20 (founder: tavern selling price). Ten items that sold below supplier cost now sell at supplier price + markup: Hansa quart R23.87, Hunter's Dry and Gold quarts R37.36, Redd's Original and Berry quarts R32.99, Strongbow Gold Apple and Red Berries quarts R35.29, Coca-Cola Less Sugar 2L R30.45, Liqui Fruit Cranberry 1L R37.54, Valpre Sparkling 1L R19.69. A test now fails if anything sells below its supplier case price per unit.
 - **Photos**: 7 packs that were showing another pack's photo now show the placeholder (Flying Fish Dry Apple quart, Bernini Ruby Berry can, Breezer Blueberry can, Kopparberg Mixed Fruit dumpy, Kopparberg Raspberry can, Grenadine Syrup Cordial jug). Hunter's Dry and the two Strongbow quarts/dumpies still share one photo each: founder to say which pack the photo shows.
 - **Removed stale code**: `GET /api/stats`, `POST /admin/enrich-images` (+ status), `GET /admin/client-ip`, `sendDispatchWhatsApp()`. `GET /api/taverns` stays (the staging script uses it).
+- Grenadine Syrup Cordial's borrowed Monin photo is also removed from the brand photo list in `prisma/seed.js`.
 - Cache `ekoyini-shell-v31`. Tests: 125.
 
 ### 19 Nov 2026 (night): home category links keep the whole shop; full water range
