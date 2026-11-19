@@ -516,23 +516,6 @@ function sendDriverOnly(orderCode) {
     // The order moves to DISPATCHED when the driver taps "Confirm Pickup" on their link.
 }
 
-function sendDispatchWhatsApp(orderCode) {
-    const order = allOrders.find(o => o.code === orderCode);
-    if (!order || !order.tavern || !order.driverName) {
-        alert('Please assign tavern and driver first');
-        return;
-    }
-    sendTavernWhatsApp(orderCode, order.tavern, order);
-    sendDriverWhatsApp(orderCode, order.driverName, order.driverPhone, order);
-
-    // No status change here — the order moves to DISPATCHED when the
-    // driver taps "Confirm Pickup" on their own driver-track.html link
-    // (POST /order/:code/confirm-pickup), not just because a message was
-    // sent. See markPickedUpManually() for the fallback when a driver
-    // can't use that link.
-    alert('WhatsApp messages sent to tavern and driver! The order moves to Dispatched once the driver confirms pickup on their link.');
-}
-
 // Fallback for a driver who can't use the driver-track.html link (no
 // smartphone, bad signal) — an admin can still move the order forward
 // manually instead of it being stuck waiting on a confirmation that will

@@ -37,7 +37,14 @@ async function requireAuth(redirectTo) {
 }
 
 async function signUp(email, password) {
-  const { data, error } = await ekoyiniAuth.auth.signUp({ email, password });
+  // The confirmation link must open THIS site, not whatever Supabase has as its
+  // default Site URL (a new customer once got a localhost link). Supabase only
+  // honours it when this address is in Authentication > URL Configuration >
+  // Redirect URLs; otherwise it falls back to the Site URL.
+  const { data, error } = await ekoyiniAuth.auth.signUp({
+    email, password,
+    options: { emailRedirectTo: window.location.origin + '/login.html' },
+  });
   if (error) throw error;
   return data;
 }

@@ -51,7 +51,6 @@ const FORMAT_PHOTO_MAP = {
   "[\"Bernini Classic\",\"Can (500ml)\"]": "/images/brands/bernini-classic-can.png",
   "[\"Bernini Classic\",\"Dumpy (275ml)\"]": "/images/brands/bernini-classic.png",
   "[\"Bernini Classic/Blush/Ruby\",\"Can (330ml)\"]": "/images/brands/bernini-classic-can.png",
-  "[\"Bernini Ruby Berry\",\"Can (500ml)\"]": "/images/brands/bernini-ruby-berry.png",
   "[\"Bernini Ruby Berry\",\"Dumpy (275ml)\"]": "/images/brands/bernini-ruby-berry.png",
   "[\"Beyerskloof Pinotage\",\"750ml Bottle\"]": "/images/brands/beyerskloof-pinotage.png",
   "[\"Bisquit & Dubouche VS\",\"750ml Bottle\"]": "/images/brands/bisquit-dubouche-vs.jpg",
@@ -67,7 +66,6 @@ const FORMAT_PHOTO_MAP = {
   "[\"Breezer (Red/Watermelon)\",\"Dumpy (275ml)\"]": "/images/brands/breezer-watermelon.png",
   "[\"Breezer Blackberry\",\"Can (500ml)\"]": "/images/brands/breezer-blackberry-can.png",
   "[\"Breezer Blackberry\",\"Dumpy (275ml)\"]": "/images/brands/breezer-blackberry.png",
-  "[\"Breezer Blueberry\",\"Can (500ml)\"]": "/images/brands/breezer-blueberry.png",
   "[\"Breezer Blueberry\",\"Dumpy (275ml)\"]": "/images/brands/breezer-blueberry.png",
   "[\"Breezer Watermelon\",\"Can (500ml)\"]": "/images/brands/breezer-watermelon-can.png",
   "[\"Breezer Watermelon\",\"Dumpy (275ml)\"]": "/images/brands/breezer-watermelon.png",
@@ -140,13 +138,11 @@ const FORMAT_PHOTO_MAP = {
   "[\"Flying Fish Chill\",\"Can (500ml)\"]": "/images/brands/flying-fish-chill-can.png",
   "[\"Flying Fish Dry Apple\",\"Can (500ml)\"]": "/images/brands/flying-fish-dry-apple-can.png",
   "[\"Flying Fish Dry Apple\",\"Dumpy (330ml)\"]": "/images/brands/flying-fish-dry-apple.png",
-  "[\"Flying Fish Dry Apple\",\"Quart (660ml)\"]": "/images/brands/flying-fish-dry-apple.png",
   "[\"Flying Fish Lemon\",\"Dumpy (330ml)\"]": "/images/brands/flying-fish-lemon-apple.png",
   "[\"Frangelico Hazelnut Liqueur\",\"750ml Bottle\"]": "/images/brands/frangelico-hazelnut.png",
   "[\"Gordons London Dry\",\"750ml Bottle\"]": "/images/brands/gordons-london-dry.jpg",
   "[\"Gordons Pink Berry\",\"750ml Bottle\"]": "/images/brands/gordons-pink-berry.png",
   "[\"Grand Marnier Cordon Rouge\",\"750ml Bottle\"]": "/images/brands/grand-marnier-cordon-rouge.jpg",
-  "[\"Grenadine Syrup Cordial\",\"1 Litre Jug\"]": "/images/brands/monin-grenadine.png",
   "[\"Grey Goose Luxury\",\"750ml Bottle\"]": "/images/brands/grey-goose-luxury.jpg",
   "[\"Guinness Foreign Extra\",\"325ml Bottle\"]": "/images/brands/guinness-foreign-extra.png",
   "[\"Hansa Pilsener\",\"Dumpy (330ml)\"]": "/images/brands/hansa-pilsener.png",
@@ -359,10 +355,8 @@ const FORMAT_PHOTO_MAP = {
   "[\"Extreme Energy\",\"Dumpy (330ml)\"]": "/images/brands/extreme-energy.png",
   "[\"Extreme Energy\",\"Dumpy (275ml)\"]": "/images/brands/extreme-energy.png",
   "[\"Kopparberg Mixed Fruit\",\"Can (440ml)\"]": "/images/brands/kopparberg-mixed-fruit-can.png",
-  "[\"Kopparberg Mixed Fruit\",\"Dumpy (330ml)\"]": "/images/brands/kopparberg-mixed-fruit-can.png",
   "[\"Kopparberg Pear\",\"Can (440ml)\"]": "/images/brands/kopparberg-pear-can.png",
   "[\"Kopparberg Pear\",\"Dumpy (330ml)\"]": "/images/brands/kopparberg-pear.png",
-  "[\"Kopparberg Raspberry\",\"Can (440ml)\"]": "/images/brands/kopparberg-raspberry.png",
   "[\"Kopparberg Raspberry\",\"Dumpy (330ml)\"]": "/images/brands/kopparberg-raspberry.png",
   "[\"Kopparberg Strawberry & Lime\",\"Can (440ml)\"]": "/images/brands/kopparberg-strawberry-lime-can.png",
   "[\"Kopparberg Strawberry & Lime\",\"Dumpy (330ml)\"]": "/images/brands/kopparberg-strawberry-lime.png",
@@ -393,7 +387,6 @@ const FORMAT_PHOTO_MAP = {
   "[\"Carling Black Label\",\"Quart (750ml)\"]": "/images/brands/carling-black-label.png",
   "[\"Bacardi Breezer Blackberry\",\"Can (500ml)\"]": "/images/brands/breezer-blackberry-can.png",
   "[\"Bacardi Breezer Blackberry\",\"Dumpy (275ml)\"]": "/images/brands/breezer-blackberry.png",
-  "[\"Bacardi Breezer Blueberry\",\"Can (500ml)\"]": "/images/brands/breezer-blueberry.png",
   "[\"Bacardi Breezer Blueberry\",\"Dumpy (275ml)\"]": "/images/brands/breezer-blueberry.png",
   "[\"Bacardi Breezer Watermelon\",\"Can (500ml)\"]": "/images/brands/breezer-watermelon-can.png",
   "[\"Bacardi Breezer Watermelon\",\"Dumpy (275ml)\"]": "/images/brands/breezer-watermelon.png",
@@ -422,4 +415,17 @@ const FORMAT_PHOTO_MAP = {
 
 const UNPRICED_PRODUCTS = [];
 
-module.exports = { FORMAT_PHOTO_MAP, UNPRICED_PRODUCTS };
+// Packs that used to share another pack's photo (founder rule: exact pack photos only,
+// better a missing photo than a wrong one). Removed from the map on 19 Nov 2026; the
+// sync clears any photo already stored on these rows.
+const WRONG_PACK_PHOTOS = [
+  ['Flying Fish Dry Apple', 'Quart (660ml)'],
+  ['Bernini Ruby Berry', 'Can (500ml)'],
+  ['Breezer Blueberry', 'Can (500ml)'],
+  ['Bacardi Breezer Blueberry', 'Can (500ml)'],
+  ['Kopparberg Mixed Fruit', 'Dumpy (330ml)'],
+  ['Kopparberg Raspberry', 'Can (440ml)'],
+  ['Grenadine Syrup Cordial', '1 Litre Jug'],
+];
+
+module.exports = { FORMAT_PHOTO_MAP, UNPRICED_PRODUCTS, WRONG_PACK_PHOTOS };

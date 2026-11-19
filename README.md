@@ -4,6 +4,14 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 19 Nov 2026 (late night): diagnosis fixes
+- **Sign-up email link**: `signUp()` now sends `emailRedirectTo` = this site's `/login.html`. Supabase only honours it when the address is allowed, so the founder must set Authentication > URL Configuration: Site URL `https://www.ekoyini.co.za` and Redirect URLs `https://www.ekoyini.co.za/**` (the old default pointed at localhost).
+- **One discount only**: a promo code and the Cooler Box discount no longer stack. The customer gets whichever is bigger (tie = Cooler Box); a promo that loses is not redeemed. Same rule in `priceOrder` (cart, checkout) and the server (`resolveOneDiscount`).
+- **Prices**: every 1.5L water is R20 (founder: tavern selling price). Ten items that sold below supplier cost now sell at supplier price + markup: Hansa quart R23.87, Hunter's Dry and Gold quarts R37.36, Redd's Original and Berry quarts R32.99, Strongbow Gold Apple and Red Berries quarts R35.29, Coca-Cola Less Sugar 2L R30.45, Liqui Fruit Cranberry 1L R37.54, Valpre Sparkling 1L R19.69. A test now fails if anything sells below its supplier case price per unit.
+- **Photos**: 7 packs that were showing another pack's photo now show the placeholder (Flying Fish Dry Apple quart, Bernini Ruby Berry can, Breezer Blueberry can, Kopparberg Mixed Fruit dumpy, Kopparberg Raspberry can, Grenadine Syrup Cordial jug). Hunter's Dry and the two Strongbow quarts/dumpies still share one photo each: founder to say which pack the photo shows.
+- **Removed stale code**: `GET /api/stats`, `POST /admin/enrich-images` (+ status), `GET /admin/client-ip`, `sendDispatchWhatsApp()`. `GET /api/taverns` stays (the staging script uses it).
+- Cache `ekoyini-shell-v31`. Tests: 125.
+
 ### 19 Nov 2026 (night): home category links keep the whole shop; full water range
 - **Home category tiles and "See all" links no longer hide the rest of the shop.** `shop.html?cats=...` now opens the full shop and jumps to that shelf (the category bar shows every section). Curated collections (Braai, Festive, Stokvel, Chill) and brand-story filters still filter on purpose.
 - **Water: every brand now has still and sparkling in 500ml and 1.5L** (Aquelle, Bonaqua, Thirsti, Tsitsikamma, Valpre). Added 6: Aquelle Still 500ml R15.75, Bonaqua Sparkling 500ml R15.75 and 1.5L R18.89, Thirsti Still and Sparkling 500ml R15.75, Valpre Sparkling 1.5L R19.94. All are ESTIMATES (5% markup, priced like the brand's nearest bottle; no shelf listing found for some, e.g. plain Bonaqua Sparkling), so check them on the shelf. No photos yet (the shop shows a letter tile). The older Valpre and Tsitsikamma Sparkling 1L rows stay (their photos are correct 1L bottles).

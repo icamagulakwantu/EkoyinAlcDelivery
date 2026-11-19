@@ -87,3 +87,10 @@ test('every exact pack-format photo mapping points to an existing local asset', 
 test('no extra unpriced SKUs override the canonical iCamagu catalogue', () => {
   assert.deepEqual(UNPRICED_PRODUCTS, []);
 });
+
+test('packs that used to borrow another pack photo have none mapped (19 Nov 2026)', () => {
+  const { WRONG_PACK_PHOTOS } = require('../prisma/catalogue-photo-config');
+  for (const [name, format] of WRONG_PACK_PHOTOS) {
+    assert.equal(FORMAT_PHOTO_MAP[JSON.stringify([name, format])], undefined, `${name} ${format}`);
+  }
+});

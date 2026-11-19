@@ -71,3 +71,20 @@ test('Monin syrups stay R230 or more (founder: they are expensive); shelf catego
   assert.equal(cat('Extreme Energy'), 'CIDER_RTD'); // alcoholic, not an energy drink
   for (const r of rows.filter((x) => /Cordial|Syrup/.test(x[0]))) assert.equal(r[11], 'NON_ALCOHOL', r[0]);
 });
+
+test('every 1.5L water is R20 (founder, 19 Nov 2026)', () => {
+  const rows = csvRows.filter((r) => r.category === 'WATER' && r.bottleFormat === '1.5L');
+  assert.ok(rows.length >= 10, 'all five brands, still and sparkling');
+  for (const r of rows) assert.equal(C.finalPriceFor(r.name, r.bottleFormat), 20, `${r.name} 1.5L`);
+});
+
+test('nothing sells below its supplier case price per unit', () => {
+  const lines = fs.readFileSync(path.join(__dirname, '../prisma/data/skus.csv'), 'utf8').trim().split(/\r?\n/).slice(1);
+  for (const line of lines) {
+    const c = line.split(',');
+    const cost = parseFloat(c[6]) / parseFloat(c[4]);
+    if (!(cost > 0)) continue;
+    const price = C.finalPriceFor(c[0], c[2]);
+    assert.ok(price >= cost - 0.005, `${c[0]} ${c[2]}: R${price} is below supplier R${cost.toFixed(2)}`);
+  }
+});

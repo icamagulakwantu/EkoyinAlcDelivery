@@ -14,19 +14,20 @@ test("Safety Seal is only charged when the order has a spirit", () => {
   assert.equal(P.safetySealFeeFor("yes", ["GIN"]), 0, "only a real true opts in");
 });
 
-test("priceOrder: subtotal, Cooler Box, promo on the remainder, delivery, seal", () => {
-  const r = P.priceOrder({
-    lines: [{ category: "BEER", total: 1200 }, { category: "GIN", total: 1000 }],
-    promoPct: 10,
-    deliveryTotal: 117,
-    safetySeal: true,
-    now: DAY,
-  });
-  assert.equal(r.subtotal, 2200);
-  assert.equal(r.coolerDiscount, 50); // 2.5% of 2200 = 55, capped at R50
-  assert.equal(r.promoDiscount, 215); // 10% of 2150
-  assert.equal(r.safetySealFee, 10);
-  assert.equal(r.total, 2200 - 50 - 215 + 117 + 10);
+test("priceOrder: ONE discount only, the bigger of Cooler Box and promo (founder rule)", () => {
+  const lines = [{ category: "BEER", total: 1200 }, { category: "GIN", total: 1000 }];
+  // A 10% promo beats the capped R50 Cooler Box discount, so only the promo applies.
+  const big = P.priceOrder({ lines, promoPct: 10, deliveryTotal: 117, safetySeal: true, now: DAY });
+  assert.equal(big.subtotal, 2200);
+  assert.equal(big.coolerDiscount, 0);
+  assert.equal(big.promoDiscount, 220); // 10% of 2200, never stacked on the Cooler Box
+  assert.equal(big.safetySealFee, 10);
+  assert.equal(big.total, 2200 - 220 + 117 + 10);
+  // A tiny promo loses to the Cooler Box (R50): Cooler Box applies, promo is zero.
+  const small = P.priceOrder({ lines, promoPct: 1, deliveryTotal: 117, safetySeal: true, now: DAY });
+  assert.equal(small.coolerDiscount, 50);
+  assert.equal(small.promoDiscount, 0);
+  assert.equal(small.total, 2200 - 50 + 117 + 10);
 });
 
 test("priceOrder: no Cooler Box discount after 20:00 SA time", () => {

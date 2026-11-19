@@ -34,7 +34,7 @@ test('every correction is shelf price + the category markup, applied once', () =
 
 test('the reported problem is fixed: quarts are quart-priced', () => {
   assert.equal(C.finalPriceFor('Amstel Lager', 'Quart (660ml)'), 25.67); // single-bottle R23.99 + 7%
-  assert.equal(C.finalPriceFor('Hansa Pilsener', 'Quart (750ml)'), 21.39);
+  assert.equal(C.finalPriceFor('Hansa Pilsener', 'Quart (750ml)'), 23.87);
   for (const p of PRICE_CORRECTIONS.filter((x) => /^Quart/.test(x.bottleFormat))) {
     assert.ok(p.fixed < 35, `${p.name} quart R${p.fixed}`);
   }

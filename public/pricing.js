@@ -301,7 +301,7 @@
   // lines: [{ category, total }] (line totals already priced).
   // promoPct: 0-100. deliveryTotal: the whole delivery quote total
   // (delivery + surge + priority + care fee). Order of operations:
-  //   subtotal -> minus Cooler Box -> minus promo (on what is left)
+  //   subtotal -> minus ONE discount (the bigger of Cooler Box and promo)
   //   -> plus delivery quote -> plus Safety Seal -> plus bottles & crates.
   // bottleDeposit: rand amount from bottleDepositFor() (never discounted).
   function priceOrder({ lines, promoPct, deliveryTotal, safetySeal, now, bottleDeposit, coolerAllowed }) {
@@ -318,10 +318,12 @@
     coolerSubtotal = round2(coolerSubtotal);
     // coolerAllowed: false once the customer has used their first 5 orders.
     const allowed = coolerAllowed !== false;
-    const coolerPct = allowed ? coolerDiscountPct(coolerSubtotal, now) : 0;
-    const coolerDiscount = allowed ? coolerDiscountFor(coolerSubtotal, now) : 0;
+    let coolerPct = allowed ? coolerDiscountPct(coolerSubtotal, now) : 0;
+    let coolerDiscount = allowed ? coolerDiscountFor(coolerSubtotal, now) : 0;
     const pct = Number(promoPct) > 0 ? Number(promoPct) : 0;
-    const promoDiscount = round2((subtotal - coolerDiscount) * (pct / 100));
+    // ONE discount only (founder): the bigger of promo and Cooler Box wins, a tie goes to the Cooler Box.
+    let promoDiscount = round2(subtotal * (pct / 100));
+    if (promoDiscount > coolerDiscount) { coolerDiscount = 0; coolerPct = 0; } else { promoDiscount = 0; }
     const delivery = roundCurrency(deliveryTotal);
     const safetySealFee = safetySealFeeFor(safetySeal, categories);
     const bottleDepositFee = roundCurrency(bottleDeposit);

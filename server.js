@@ -13,7 +13,7 @@ const prisma = new PrismaClient();
 // for express-rate-limit to read the real client IP instead of Render's.
 // TRUST_PROXY_HOPS = how many proxies Render puts in front of the app. With
 // `true` (the default, unchanged) a client can put any IP in X-Forwarded-For
-// and dodge the per-IP rate limits. Once /admin/client-ip has shown the real
+// and dodge the per-IP rate limits. Once the [proxy] log lines have shown the real
 // hop count on the live site, set TRUST_PROXY_HOPS on Render (usually 1).
 const trustProxyHops = parseInt(process.env.TRUST_PROXY_HOPS, 10);
 app.set("trust proxy", Number.isInteger(trustProxyHops) && trustProxyHops > 0 ? trustProxyHops : true);
@@ -274,9 +274,13 @@ function computeOrderTotal(subtotal, coolerDiscount, promoDiscount, deliveryTota
   return Math.round((subtotal - coolerDiscount - promoDiscount + deliveryTotal + safetySealFee + bottleDepositFee) * 100) / 100;
 }
 
-function computePromoDiscount(subtotal, coolerDiscount, promo) {
-  if (!promo) return 0;
-  return Math.round((subtotal - coolerDiscount) * (promo.discountPct / 100) * 100) / 100;
+// Founder rule (11 Nov): ONE discount only. A promo code and the Cooler Box
+// discount never stack: the customer gets whichever is bigger (a tie goes to the
+// Cooler Box), and a promo that loses is not redeemed.
+function resolveOneDiscount(subtotal, coolerDiscount, promo) {
+  const promoOnSubtotal = promo ? Math.round(subtotal * (promo.discountPct / 100) * 100) / 100 : 0;
+  if (promoOnSubtotal > coolerDiscount) return { coolerDiscount: 0, promoDiscount: promoOnSubtotal, promo };
+  return { coolerDiscount, promoDiscount: 0, promo: null };
 }
 
 // ── Delivery pin + landmark (all optional) ─────────────────────────
@@ -361,70 +365,10 @@ app.get("/api/taverns", async (req, res) => {
   }
 });
 
-// 📊 STATS — real, computed trust-signal numbers for the homepage.
-app.get("/api/stats", async (req, res) => {
-  try {
-    const [products, taverns, areas] = await Promise.all([
-      prisma.skuItem.count(),
-      prisma.tavern.count(),
-      prisma.tavern.findMany({ distinct: ["area"], select: { area: true } }),
-    ]);
-    res.json({ products, taverns, areas: areas.length });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to load stats" });
-  }
-});
-
 // 🏪 ADMIN: full tavern records (includes phone)
 app.get("/admin/taverns", requireAdmin, async (req, res) => {
   const taverns = await prisma.tavern.findMany({ orderBy: { name: "asc" } });
   res.json(taverns);
-});
-
-// 🖼️ ADMIN: one-off image enrichment job (Open Food Facts, no API key).
-let enrichStatus = { running: false, checked: 0, updated: 0, total: 0 };
-
-app.post("/admin/enrich-images", requireAdmin, async (req, res) => {
-  if (enrichStatus.running) {
-    return res.status(409).json({ error: "Enrichment already running", status: enrichStatus });
-  }
-
-  const skus = await prisma.skuItem.findMany();
-  const names = [...new Set(skus.map((s) => s.name))];
-  enrichStatus = { running: true, checked: 0, updated: 0, total: names.length };
-  res.json({ message: `Started — enriching ${names.length} distinct product names.`, status: enrichStatus });
-
-  (async () => {
-    for (const name of names) {
-      try {
-        const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(
-          name
-        )}&search_simple=1&action=process&json=1&page_size=1`;
-        const r = await fetch(url);
-        const data = await r.json();
-        const product = data.products?.[0];
-        const image = product?.image_front_url || product?.image_url;
-        if (image) {
-          await prisma.skuItem.updateMany({ where: { name }, data: { imageUrl: image } });
-          enrichStatus.updated++;
-          console.log(`[enrich] ✓ ${name}`);
-        } else {
-          console.log(`[enrich] — no match for ${name}`);
-        }
-      } catch (err) {
-        console.error(`[enrich] error for ${name}:`, err.message);
-      }
-      enrichStatus.checked++;
-      await new Promise((r) => setTimeout(r, 300));
-    }
-    enrichStatus.running = false;
-    console.log(`[enrich] Done — updated ${enrichStatus.updated}/${names.length} distinct product names.`);
-  })();
-});
-
-app.get("/admin/enrich-images/status", requireAdmin, (req, res) => {
-  res.json(enrichStatus);
 });
 
 // 🏷️ PROMO CODES — shared validation. subtotal here is pre-delivery, pre-discount.
@@ -571,7 +515,8 @@ async function estimateOrderTotal({ subtotal, coolerDiscount, quote, safetySealF
     const result = await checkPromoCode(promoCode, subtotal - coolerDiscount);
     promo = result.promo || null;
   }
-  return computeOrderTotal(subtotal, coolerDiscount, computePromoDiscount(subtotal, coolerDiscount, promo), quote.total, safetySealFee, bottleDepositFee);
+  const one = resolveOneDiscount(subtotal, coolerDiscount, promo);
+  return computeOrderTotal(subtotal, one.coolerDiscount, one.promoDiscount, quote.total, safetySealFee, bottleDepositFee);
 }
 
 // ── Order pricing + validation — shared by COD/EFT and the card path.
@@ -700,20 +645,21 @@ function generateOrderCode() {
 }
 
 async function createOrderTransaction({ userId, address, customerName, customerPhone, customerEmail, paymentMethod, promoCode, status, priced, codFlagged, codFlagReason, location }) {
-  const { orderItems, stockNeeded, subtotal, coolerDiscount, quote, safetySealFee = 0, bottleDepositFee = 0 } = priced;
+  const { orderItems, stockNeeded, subtotal, quote, safetySealFee = 0, bottleDepositFee = 0 } = priced;
   const { landmark, deliveryLat, deliveryLng } = parseDeliveryLocation(location || {});
 
-  let promo = null;
+  let checkedPromo = null;
   if (promoCode) {
-    const result = await checkPromoCode(promoCode, subtotal - coolerDiscount);
+    const result = await checkPromoCode(promoCode, subtotal - priced.coolerDiscount);
     if (result.error) {
       const err = new Error("PROMO_INVALID");
       err.detail = result.error;
       throw err;
     }
-    promo = result.promo;
+    checkedPromo = result.promo;
   }
-  const promoDiscount = computePromoDiscount(subtotal, coolerDiscount, promo);
+  // One discount only: the promo is dropped (and not redeemed) if the Cooler Box is better.
+  const { coolerDiscount, promoDiscount, promo } = resolveOneDiscount(subtotal, priced.coolerDiscount, checkedPromo);
   const total = computeOrderTotal(subtotal, coolerDiscount, promoDiscount, quote.total, safetySealFee, bottleDepositFee);
 
   return prisma.$transaction(async (tx) => {
@@ -951,8 +897,8 @@ app.post("/order/checkout-session", writeLimiter, requireUser, async (req, res) 
       if (result.error) return res.status(400).json({ error: result.error });
       promo = result.promo;
     }
-    const promoDiscount = computePromoDiscount(priced.subtotal, priced.coolerDiscount, promo);
-    const total = computeOrderTotal(priced.subtotal, priced.coolerDiscount, promoDiscount, priced.quote.total, priced.safetySealFee, priced.bottleDepositFee);
+    const one = resolveOneDiscount(priced.subtotal, priced.coolerDiscount, promo);
+    const total = computeOrderTotal(priced.subtotal, one.coolerDiscount, one.promoDiscount, priced.quote.total, priced.safetySealFee, priced.bottleDepositFee);
     const amountCents = Math.round(total * 100);
     const location = parseDeliveryLocation({ landmark, deliveryLat, deliveryLng });
 
@@ -1869,18 +1815,6 @@ app.get("/analytics.js", (req, res) => {
   const token = String(process.env.CF_ANALYTICS_TOKEN || "").replace(/[^a-zA-Z0-9]/g, "");
   if (!token) return res.send("/* analytics off */");
   res.send(`(function(){var s=document.createElement('script');s.defer=true;s.src='https://static.cloudflareinsights.com/beacon.min.js';s.setAttribute('data-cf-beacon',JSON.stringify({token:'${token}'}));document.head.appendChild(s);})();`);
-});
-
-// Admin-only: shows what the proxy chain sends, to choose TRUST_PROXY_HOPS.
-app.get("/admin/client-ip", requireAdmin, (req, res) => {
-  res.json({
-    xForwardedFor: req.headers["x-forwarded-for"] || null,
-    trueClientIp: req.headers["true-client-ip"] || null,
-    cfConnectingIp: req.headers["cf-connecting-ip"] || null,
-    socketAddress: req.socket.remoteAddress,
-    reqIp: req.ip,
-    trustProxy: app.get("trust proxy"),
-  });
 });
 
 // Anything not matched above: a friendly page for people, JSON for code.

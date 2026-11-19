@@ -13,7 +13,7 @@ const fs = require('fs');
 const path = require('path');
 const { PrismaClient } = require('@prisma/client');
 const { buildPhotoPlan, parseBrandPhotoMap } = require('./catalogue-photo-matching');
-const { FORMAT_PHOTO_MAP, UNPRICED_PRODUCTS } = require('./catalogue-photo-config');
+const { FORMAT_PHOTO_MAP, UNPRICED_PRODUCTS, WRONG_PACK_PHOTOS } = require('./catalogue-photo-config');
 
 const prisma = new PrismaClient();
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
@@ -50,6 +50,15 @@ async function syncPhotos({ dryRun = false } = {}) {
       });
     }
     updated++;
+  }
+
+  // Packs that were showing another pack's photo: clear it (a placeholder beats a wrong picture).
+  const assigned = new Set(plan.assignments.map((a) => a.id));
+  for (const [wrongName, wrongFormat] of WRONG_PACK_PHOTOS) {
+    const row = rows.find((r) => r.name === wrongName && r.bottleFormat === wrongFormat);
+    if (!row || !row.imageUrl || assigned.has(row.id)) continue;
+    if (!dryRun) await prisma.skuItem.update({ where: { id: row.id }, data: { imageUrl: null } });
+    clearedUnsafeFallbacks++;
   }
 
   // If an older sync stored a brand photo on a multi-format SKU, clear only
