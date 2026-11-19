@@ -24,12 +24,13 @@ test("server counts orders for the offer and defaults cash to 10 delivered order
   assert.match(s, /const cashSpot = !!\(venue && venue\.cash\)/);
 });
 
-test("venues file: ids are unique, Lifa and Mafa and KwaMagxaki Butchery take cash, others do not", () => {
+test("venues file: ids are unique, all three spots take cash and have map pins", () => {
   const all = loadVenues();
   assert.equal(new Set(all.map((v) => v.id)).size, all.length);
   assert.equal(findVenue("lifa-and-mafa").cash, true);
   assert.equal(findVenue("kwamagxaki-butchery").cash, true);
-  assert.equal(findVenue("patzar-butchery").cash, false);
+  assert.equal(findVenue("patzar-butchery").cash, true);
+  for (const v of all) { assert.ok(Number.isFinite(v.lat) && Number.isFinite(v.lng), v.id + " needs a pin"); }
   assert.equal(findVenue("nope"), null);
   assert.equal(findVenue(undefined), null);
 });
@@ -43,7 +44,7 @@ test("choosing a spot overrides the address and pin, and keeps the customer's no
   assert.equal(r.fields.address, findVenue("lifa-and-mafa").address);
   assert.equal(r.fields.landmark, "Lifa and Mafa — by the blue tent");
   // The customer's own pin is ignored: cash at a spot cannot go to another address.
-  assert.equal(r.fields.deliveryLat, null);
-  assert.equal(r.fields.deliveryLng, null);
+  assert.equal(r.fields.deliveryLat, findVenue("lifa-and-mafa").lat);
+  assert.equal(r.fields.deliveryLng, findVenue("lifa-and-mafa").lng);
   assert.equal(applyVenue({ venueId: "lifa-and-mafa" }).fields.landmark, "Lifa and Mafa");
 });

@@ -4,6 +4,9 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 19 Nov 2026 (evening, later): spot pins and cash at all three spots
+- Founder sent map pins: Lifa and Mafa (-33.8642829, 25.5595724), KwaMagxaki Butchery (-33.841218, 25.533170), Patzar Butchery (-33.817659, 25.585839). All three are public and safe, so **cash on delivery is allowed at all three** (Patzar now included). Delivery fee is now worked out from the pins. R300 to R1,500 cash limits still apply. A test requires every spot to have a pin.
+
 ### 19 Nov 2026 (evening): first-5-orders discount, cash rules, hangout spots
 - **Cooler Box discount is for a customer's first 5 orders** (cancelled orders do not count). The server decides (`COOLER_FIRST_ORDERS`, `countOrdersForOffers` in `server.js`, `coolerAllowed` in `priceOrder`); `GET /api/my-offers` + `public/offers.js` keep home, shop, cart and checkout honest (the Cooler Box cards and nudges disappear after order 5). Home says "for your first 5 orders".
 - **Cash on delivery now needs 10 delivered orders** (was 2). Default of `COD_MIN_DELIVERED_ORDERS` is 10; if that variable is set on Render it overrides the default. The R300 to R1,500 cash limits are unchanged.

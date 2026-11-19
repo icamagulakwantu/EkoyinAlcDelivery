@@ -1,8 +1,38 @@
 {
   "_readme": "Hangout spots we deliver to (not taverns). cash: true = cash on delivery is allowed for orders to this spot even for new customers (founder, 19 Nov 2026). lat/lng are the spot's map pin: until they are filled in, the order gets the base delivery fee and the admin card flags 'no pin'. Set listed: false to hide a spot. Customers see name, area and note only.",
   "venues": [
-    { "id": "lifa-and-mafa", "name": "Lifa and Mafa", "area": "Gqeberha", "address": "Lifa and Mafa tshisanyama, Gqeberha", "lat": null, "lng": null, "cash": true, "listed": true, "note": "Tshisanyama spot" },
-    { "id": "kwamagxaki-butchery", "name": "KwaMagxaki Butchery", "area": "KwaMagxaki", "address": "KwaMagxaki Butchery, KwaMagxaki, Gqeberha", "lat": null, "lng": null, "cash": true, "listed": true, "note": "Butchery and braai spot" },
-    { "id": "patzar-butchery", "name": "Patzar Butchery", "area": "Motherwell", "address": "Patzar Butchery, Motherwell, Gqeberha", "lat": null, "lng": null, "cash": false, "listed": true, "note": "Butchery and braai spot" }
+    {
+      "id": "lifa-and-mafa",
+      "name": "Lifa and Mafa",
+      "area": "Gqeberha",
+      "address": "Lifa and Mafa tshisanyama, Gqeberha",
+      "lat": -33.8642829,
+      "lng": 25.5595724,
+      "cash": true,
+      "listed": true,
+      "note": "Tshisanyama spot"
+    },
+    {
+      "id": "kwamagxaki-butchery",
+      "name": "KwaMagxaki Butchery",
+      "area": "KwaMagxaki",
+      "address": "KwaMagxaki Butchery, KwaMagxaki, Gqeberha",
+      "lat": -33.841218,
+      "lng": 25.53317,
+      "cash": true,
+      "listed": true,
+      "note": "Butchery and braai spot"
+    },
+    {
+      "id": "patzar-butchery",
+      "name": "Patzar Butchery",
+      "area": "Motherwell",
+      "address": "Patzar Butchery, Motherwell, Gqeberha",
+      "lat": -33.817659,
+      "lng": 25.585839,
+      "cash": true,
+      "listed": true,
+      "note": "Butchery and braai spot"
+    }
   ]
 }
