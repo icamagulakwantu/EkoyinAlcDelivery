@@ -138,11 +138,11 @@ const top = (label) => `<div class="top"><img src="${logo}" alt="Ekoyini"><span>
 const foot = (n, label) => `<div class="foot"><span>Ekoyini Holdings · Gqeberha · ${label}</span><span>Page ${n}</span></div>`;
 const shell = (title, pages) => `<!doctype html><html><head><meta charset="utf-8"><title>${title}</title><style>${CSS}</style></head><body>${pages.join('')}</body></html>`;
 
-// ── example order split (app rules: 7% beer markup, 3% Care & Handling,
+// ── example order split (app rules: 7% beer markup, 5% Care & Handling,
 //    R40 for 3 km + R6/km, R20 peak surge) ───────────────────────────────
 const items = 600; // what the customer pays for the drinks
 const tavernShare = items / 1.07; // the tavern's own shelf price
-const care = Math.min(40, Math.max(10, items * 0.03));
+const care = Math.min(75, Math.max(10, items * 0.05));
 const driverShare = 40 + 2 * 6 + 20; // 5 km in the evening peak
 const ekoyiniShare = items - tavernShare + care;
 const customerTotal = items + care + driverShare;

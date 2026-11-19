@@ -80,25 +80,22 @@
   //                      of the delivery line. 100% to the driver.
   //   3. Surge fee     — time of day (South African time), 100% to the driver
   //   4. Priority fee  — optional "Super Priority" the customer adds
-  //   5. Care & Handling fee — 3% of items, min R10, max R40
+  //   5. Care & Handling fee — 5% of items, min R10, max R75, same for every payment method
   //
   // There is no free delivery: every order pays the distance fee.
 
   // Care & Handling fee (formerly "service fee"), framed as customer
   // protection: order checks so the right products arrive sealed and correct.
-  // Founder decision 10 Nov 2026: "let's not charge too much on care and
-  // handling". Now 3% of the items, at least R10 and never more than R40
-  // (was 5%, R15–R75). Heavy orders pay for the driver's work through the
-  // load fee instead. One rate, no jumps between bands.
-  const CARE_FEE_PCT = 0.03;
+  // Founder decision 19 Nov 2026 (late): 5% of the items, at least R10 and
+  // never more than R75, THE SAME for card, EFT and cash. (Earlier: 3%/R10/R40
+  // on 10 Nov, with a card-only R75 cap added 19 Nov. A card-only fee is a card
+  // surcharge, which South African card rules and the CPA do not allow, so the
+  // fee is uniform.) Heavy orders pay for the driver's work through the load
+  // fee instead. One rate, no jumps between bands. The R10 Safety Seal for
+  // spirits is a separate line and is NOT part of this fee.
+  const CARE_FEE_PCT = 0.05;
   const CARE_FEE_MIN = 10;
-  const CARE_FEE_MAX = 40;
-  // Big-order protection (founder, 19 Nov 2026): a card payment costs us
-  // 3.25% + R2.50 of the whole total, so on BIG CARD orders (items R2000 or
-  // more) the Care & Handling cap is R75 instead of R40. EFT and cash orders
-  // keep the R40 cap.
-  const CARE_FEE_MAX_BIG_CARD = 75;
-  const BIG_ORDER_SUBTOTAL = 2000;
+  const CARE_FEE_MAX = 75;
   // Kept for any older code that still reads the band list.
   const CARE_FEE_BANDS = [{ upTo: Infinity, pct: CARE_FEE_PCT, min: CARE_FEE_MIN, max: CARE_FEE_MAX }];
   const SERVICE_FEE_BANDS = CARE_FEE_BANDS;
@@ -216,17 +213,17 @@
 
   // Care & Handling fee for an order, by its pre-discount subtotal.
   // Returns a rand amount (percentage of subtotal, rounded to cents).
-  // paymentMethod: only 'card' on a big order gets the higher R75 cap.
-  function careFeeFor(subtotal, paymentMethod) {
+  // The second argument (payment method) is accepted but ignored: the fee is
+  // the same for every way of paying.
+  function careFeeFor(subtotal) {
     const value = Number(subtotal);
     const amount = Number.isFinite(value) ? value : 0;
     if (amount <= 0) return 0;
-    const cap = paymentMethod === 'card' && amount >= BIG_ORDER_SUBTOTAL ? CARE_FEE_MAX_BIG_CARD : CARE_FEE_MAX;
-    return round2(Math.min(cap, Math.max(CARE_FEE_MIN, amount * CARE_FEE_PCT)));
+    return round2(Math.min(CARE_FEE_MAX, Math.max(CARE_FEE_MIN, amount * CARE_FEE_PCT)));
   }
   // Alias so existing callers keep working during the rename.
-  function serviceFeeFor(subtotal, paymentMethod) {
-    return careFeeFor(subtotal, paymentMethod);
+  function serviceFeeFor(subtotal) {
+    return careFeeFor(subtotal);
   }
 
   function buildDeliveryQuote({ subtotal, distanceKm, priorityFee, now, surgesEnabled, weightKg, paymentMethod }) {
@@ -381,8 +378,6 @@
     COOLER_MAX_DISCOUNT,
     COOLER_FIRST_ORDERS,
     coolerDiscountFor,
-    CARE_FEE_MAX_BIG_CARD,
-    BIG_ORDER_SUBTOTAL,
     CRATE_SIZE,
     BOTTLE_DEPOSIT_IN_CRATE,
     CRATE_FEE,

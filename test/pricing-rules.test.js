@@ -8,30 +8,28 @@ const C = require('../lib/catalogue-2026-11.js');
 // South Africa is UTC+2 all year, so 17:59Z is 19:59 and 18:00Z is 20:00 there.
 const at = (hhmmUtc) => new Date(`2026-11-04T${hhmmUtc}:00Z`);
 
-test('Care & Handling is 3% of items, at least R10 and at most R40, with no jumps (founder, 10 Nov 2026)', () => {
-  const cases = [[100, 10], [300, 10], [500, 15], [1000, 30], [1333.33, 40], [2000, 40], [5000, 40]];
+test('Care & Handling is 5% of items, at least R10 and at most R75, with no jumps (founder, 19 Nov 2026)', () => {
+  const cases = [[100, 10], [300, 15], [500, 25], [1000, 50], [1500, 75], [2000, 75], [5000, 75]];
   for (const [subtotal, fee] of cases) assert.equal(P.serviceFeeFor(subtotal), fee, `R${subtotal}`);
   assert.equal(P.serviceFeeFor('abc'), 0);
   assert.equal(P.careFeeFor(0), 0);
+  assert.equal(P.CARE_FEE_PCT, 0.05);
+  assert.equal(P.CARE_FEE_MIN, 10);
+  assert.equal(P.CARE_FEE_MAX, 75);
   // Never goes down as the basket grows.
   let last = 0;
   for (let r = 300; r <= 3000; r += 7) { const f = P.careFeeFor(r); assert.ok(f >= last, `R${r}`); last = f; }
 });
 
-test('big-order protection: R75 Care & Handling only on big CARD orders (founder, 19 Nov 2026)', () => {
-  // Small or non-card orders keep the R40 cap.
-  assert.equal(P.careFeeFor(1999, 'card'), 40);
-  assert.equal(P.careFeeFor(5000, 'eft'), 40);
-  assert.equal(P.careFeeFor(5000, 'cod'), 40);
-  assert.equal(P.careFeeFor(5000), 40);
-  // Big card orders pay 3%, capped at R75 (no jump back down, 3% of R2000 = R60).
-  assert.equal(P.careFeeFor(2000, 'card'), 60);
-  assert.equal(P.careFeeFor(2500, 'card'), 75);
-  assert.equal(P.careFeeFor(9000, 'card'), 75);
-  const card = P.buildDeliveryQuote({ subtotal: 5000, distanceKm: 3, priorityFee: 0, now: at('08:00'), paymentMethod: 'card' });
-  const eft = P.buildDeliveryQuote({ subtotal: 5000, distanceKm: 3, priorityFee: 0, now: at('08:00'), paymentMethod: 'eft' });
-  assert.equal(card.careFee, 75);
-  assert.equal(eft.careFee, 40);
+test('Care & Handling is the same for card, EFT and cash (no card-only surcharge)', () => {
+  for (const subtotal of [300, 800, 1999, 2000, 2500, 5000]) {
+    const base = P.careFeeFor(subtotal);
+    for (const method of ['card', 'eft', 'cod', undefined]) assert.equal(P.careFeeFor(subtotal, method), base, `R${subtotal} ${method}`);
+  }
+  const quote = (paymentMethod) => P.buildDeliveryQuote({ subtotal: 5000, distanceKm: 3, priorityFee: 0, now: at('08:00'), paymentMethod });
+  assert.equal(quote('card').careFee, 75);
+  assert.equal(quote('eft').careFee, 75);
+  assert.equal(quote('cod').careFee, 75);
 });
 
 test('big-order protection: the Cooler Box discount is 2.5% but never more than R50', () => {
@@ -49,8 +47,8 @@ test('there is no free delivery: a big order still pays the distance fee', () =>
   assert.equal(P.deliveryFee(5000), 40);
   const q = P.buildDeliveryQuote({ subtotal: 2500, distanceKm: 3, priorityFee: 0, now: at('08:00') });
   assert.equal(q.deliveryFee, 40);
-  assert.equal(q.serviceFee, 40); // capped
-  assert.equal(q.total, 80);
+  assert.equal(q.serviceFee, 75); // capped
+  assert.equal(q.total, 115);
 });
 
 test('distance like the delivery apps: R40 covers 3 km, then R6 a km, no jumps (founder, 10 Nov 2026)', () => {
@@ -82,18 +80,18 @@ test('heavy loads pay the driver more: R1.50 a kg above 20 kg', () => {
   assert.equal(q.distanceFee, 40);
   assert.equal(q.loadFee, P.loadFeeFor(kg));
   assert.equal(q.deliveryFee, Math.round((40 + q.loadFee) * 100) / 100);
-  assert.equal(q.total, Math.round((q.deliveryFee + 40) * 100) / 100);
+  assert.equal(q.total, Math.round((q.deliveryFee + 75) * 100) / 100);
   // No weight given: no load fee.
   assert.equal(P.buildDeliveryQuote({ subtotal: 500, distanceKm: 1, priorityFee: 0, now: at('08:00') }).loadFee, 0);
 });
 
 test('service fee no longer depends on distance or surge, and surge stays separate', () => {
   const day = P.buildDeliveryQuote({ subtotal: 600, distanceKm: 12, priorityFee: 0, now: at('08:00') });
-  assert.equal(day.serviceFee, 18);
+  assert.equal(day.serviceFee, 30);
   const night = P.buildDeliveryQuote({ subtotal: 600, distanceKm: 1, priorityFee: 10, now: at('21:00') }); // 23:00 SA
-  assert.equal(night.serviceFee, 18);
+  assert.equal(night.serviceFee, 30);
   assert.equal(night.surgeFee, 30);
-  assert.equal(night.total, 40 + 30 + 10 + 18);
+  assert.equal(night.total, 40 + 30 + 10 + 30);
 });
 
 test('Cooler Box: a flat 2.5% from R2000 (founder, 11 Nov 2026)', () => {

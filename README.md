@@ -4,6 +4,14 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 19 Nov 2026 (late night): Care & Handling is 5%, cap R75, for everyone
+- **Care & Handling:** now **5% of the items, minimum R10, maximum R75**, the same for card, EFT and cash (was 3% / R10 / R40, with a card-only R75 cap). Founder decision, to cover card costs, running costs and cash flow. The markup was left alone so item prices stay close to the tavern shelf price.
+- **Why not card-only:** a fee that only card payers pay is a card surcharge, which South African card rules (PASA, Visa, Mastercard, enforced by Yoco) and the Consumer Protection Act (section 23) do not allow. The card-only R75 cap from earlier today is gone: `careFeeFor(subtotal)` ignores the payment method.
+- The R10 Safety Seal on spirits is still its own line, not part of Care & Handling.
+- Examples: R300 order R15, R500 R25, R1000 R50, R1500 and above R75.
+- Partner-pack example (`partner-pack/build.js`) now uses 5% / R75. The PDFs in `partner-pack/` were rebuilt with `node partner-pack/build.js` (rebuilt 19 Nov).
+- Service worker cache `ekoyini-shell-v32` (pricing.js is a cached static file). Tests: 125 passing.
+
 ### 19 Nov 2026 (night): real shelf prices from the founder's check
 - Founder checked 38 estimate prices on real shelves. 35 were applied as shelf price + the usual markup (7% beer/cider/RTD/wine, 5% spirits/liqueurs/mixers): e.g. Amstel 500ml cans R141.18, Sol cans R147.60, Savanna Dry cans R218.28, Chivas 12 R439.95, Jack Daniel's R387.45, Monin Agave R313.95, Drostdy-Hof Adelpracht R65.26, 4th Street 5L R203.29, Smirnoff Red R208.95. They are marked `verified` in `lib/price-corrections-2026-11-08.js`.
 - Not applied: Valpre 1.5L (shelf R24.99, stays at the R25 water rule) and Monin Almond Orgeat and White Chocolate (shelf R225 would be R236.25, they stay at the flat R230.99 Monin price). Founder to confirm either way.
@@ -16,7 +24,7 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 - **Photos**: 7 packs that were showing another pack's photo now show the placeholder (Flying Fish Dry Apple quart, Bernini Ruby Berry can, Breezer Blueberry can, Kopparberg Mixed Fruit dumpy, Kopparberg Raspberry can, Grenadine Syrup Cordial jug). Hunter's Dry and the two Strongbow quarts/dumpies still share one photo each: founder to say which pack the photo shows.
 - **Removed stale code**: `GET /api/stats`, `POST /admin/enrich-images` (+ status), `GET /admin/client-ip`, `sendDispatchWhatsApp()`. `GET /api/taverns` stays (the staging script uses it).
 - Grenadine Syrup Cordial's borrowed Monin photo is also removed from the brand photo list in `prisma/seed.js`.
-- Cache `ekoyini-shell-v31`. Tests: 125.
+- Cache `ekoyini-shell-v32`. Tests: 125.
 
 ### 19 Nov 2026 (night): home category links keep the whole shop; full water range
 - **Home category tiles and "See all" links no longer hide the rest of the shop.** `shop.html?cats=...` now opens the full shop and jumps to that shelf (the category bar shows every section). Curated collections (Braai, Festive, Stokvel, Chill) and brand-story filters still filter on purpose.
@@ -33,7 +41,7 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 - Cache `ekoyini-shell-v30`. Tests: 122.
 
 ### 19 Nov 2026 (afternoon): big-order profit protection, delivery promise, Triple Sec cost
-- **Care & Handling** is still 3% (min R10, max R40), but on **big CARD orders** (items R2,000 or more, paid by card) the cap is **R75** (`CARE_FEE_MAX_BIG_CARD`, `BIG_ORDER_SUBTOTAL` in `public/pricing.js`; founder, 19 Nov). EFT and cash orders keep R40. The server, `/api/delivery-quote`, cart and checkout all pass the payment method; checkout re-quotes when the customer switches payment. The cart shows the card figure because card is the default.
+- **Care & Handling** is 5% of the items, minimum R10, maximum R75, the same for card, EFT and cash (`CARE_FEE_PCT/MIN/MAX` in `public/pricing.js`; founder, 19 Nov late). The R10 Safety Seal on spirits is charged separately.
 - **Cooler Box** stays 2.5% from R2,000 until 20:00 but is **capped at R50** (`COOLER_MAX_DISCOUNT`, `coolerDiscountFor()`), so a big order cannot wipe out our margin. Home, cart and checkout say "up to R50". Result: a R2,000 spirits card order now keeps about R35 (was R16) and a R5,860 one about R107 (was R32).
 - **Delivery promise** is now "20–45 min after the driver confirms pickup" on the home page, checkout, confirmation and track page (was a flat 30–45 min).
 - **Triple Sec Premium (San Basile)**: the workbook cost of R460.80 was wrong; the founder says the cost is about R240. Case cost in `prisma/data/skus.csv` corrected to R2,880 and R240 added to the Siba cost test. The R336 price stays.
