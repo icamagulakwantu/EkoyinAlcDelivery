@@ -105,6 +105,12 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         Arrives 20–45 min after your driver picks up
       </div>
+      <!-- Hangout spots (tshisanyama places, butcheries): tap one and we bring it there -->
+      <div class="field-group" id="fgVenue" hidden>
+        <label id="venueLabel">Chilling at a spot? We bring it to you there</label>
+        <div id="venueChips" style="display:flex;flex-wrap:wrap;gap:8px" role="group" aria-label="Delivery spots"></div>
+        <div class="field-hint" id="venueHint"></div>
+      </div>
       <div class="field-group" id="fgAddress">
         <label for="deliveryAddress">Street address</label>
         <input type="text" id="deliveryAddress" data-address-suggest autocomplete="street-address" maxlength="300" placeholder="e.g. 12 Vilakazi St, Zwide">
@@ -254,6 +260,7 @@
   <script src="auth.js"></script>
   <script src="script.js"></script>
   <script src="pricing.js"></script>
+  <script src="offers.js"></script>
   <script>
   // Every amount here is a preview built with pricing.js. The server
   // recomputes the real total with the same functions and ignores any
@@ -277,6 +284,8 @@
   let promoOpen = false;
   let showAllItems = false;
   let deliveryPin = null;    // { lat, lng, accuracy }
+  let selectedVenue = null;  // a hangout spot from /venues.json (cash allowed at some)
+  let pinBeforeVenue = null;
   let priorityFee = 0;
   let deliveryQuote = null;  // latest quote from the server
   let quoteNeedsPin = false; // stores have locations but there's no pin yet
@@ -310,7 +319,7 @@
     // Until the server's quote lands, preview the base fee + load + Care & Handling.
     const deliveryTotal = deliveryQuote ? deliveryQuote.total : P.BASE_DELIVERY_FEE + P.loadFeeFor(cartWeight(lines)) + P.careFeeFor(subtotal, selectedPayment);
     const bottles = P.bottleDepositFor(returnableCount(lines), crate);
-    return { lines, bottles, ...P.priceOrder({ lines, promoPct: appliedPromo ? appliedPromo.discountPct : 0, deliveryTotal, safetySeal, bottleDeposit: bottles.fee }) };
+    return { lines, bottles, ...P.priceOrder({ lines, promoPct: appliedPromo ? appliedPromo.discountPct : 0, deliveryTotal, safetySeal, bottleDeposit: bottles.fee, coolerAllowed: EkoyiniOffers.coolerAllowed }) };
   }
 
   // ── Delivery quote ── re-asked whenever the pin or priority changes; a
@@ -343,6 +352,59 @@
     }
     renderOrderReview();
     renderPinRequirement();
+  }
+
+  // ── Hangout spots ──
+  async function loadVenues() {
+    try {
+      const res = await fetch('/venues.json', { cache: 'no-cache' });
+      if (!res.ok) return;
+      const list = ((await res.json()).venues || []).filter((v) => v && v.id && v.name && v.listed !== false);
+      if (!list.length) return;
+      const box = document.getElementById('venueChips');
+      box.innerHTML = list.map((v) => `<button type="button" class="pin-btn" style="width:auto;padding:9px 14px" data-venue="${escapeHtml(v.id)}" aria-pressed="false">${escapeHtml(v.name)}${v.area ? ` <small style="opacity:.7">· ${escapeHtml(v.area)}</small>` : ''}</button>`).join('');
+      box.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => chooseVenue(list.find((v) => v.id === b.dataset.venue))));
+      document.getElementById('fgVenue').hidden = false;
+      window.__venues = list;
+    } catch (e) { /* the street address still works */ }
+  }
+  function chooseVenue(v) {
+    const same = selectedVenue && v && selectedVenue.id === v.id;
+    const addr = document.getElementById('deliveryAddress');
+    if (same || !v) {
+      selectedVenue = null;
+      addr.readOnly = false;
+      addr.value = checkoutData.address || EkoyiniAddress.get() || '';
+      deliveryPin = pinBeforeVenue;
+    } else {
+      if (!selectedVenue) pinBeforeVenue = deliveryPin;
+      selectedVenue = v;
+      addr.readOnly = true;
+      addr.value = v.address || v.name;
+      deliveryPin = Number.isFinite(v.lat) && Number.isFinite(v.lng) ? { lat: v.lat, lng: v.lng, accuracy: 0 } : null;
+    }
+    document.querySelectorAll('#venueChips button').forEach((b) => {
+      const on = !!selectedVenue && b.dataset.venue === selectedVenue.id;
+      b.setAttribute('aria-pressed', String(on));
+      b.style.borderStyle = on ? 'solid' : 'dashed';
+      b.style.fontWeight = on ? '800' : '600';
+    });
+    document.getElementById('fgPin').hidden = !!selectedVenue;
+    document.getElementById('venueHint').textContent = selectedVenue
+      ? (selectedVenue.cash ? 'Cash on delivery is available at this spot. Add where you are standing in the landmark box.' : 'Add where you are standing in the landmark box so the driver finds you.')
+      : '';
+    setError('fgAddress', false);
+    renderPinStatus();
+    loadCodEligibility();
+    refreshQuote();
+  }
+  function loadCodEligibility() {
+    const q = selectedVenue ? '?venue=' + encodeURIComponent(selectedVenue.id) : '';
+    return authedFetch('/api/cod-eligibility' + q).then((r) => r.json()).then((data) => {
+      if (data.error) return;
+      codEligibility = data;
+      updateCodAvailability(computeTotals().total);
+    }).catch(() => {});
   }
 
   function renderPinRequirement() {
@@ -517,7 +579,7 @@
     let reason = null;
     if (total > maxOrderTotal) reason = `Not available over R${maxOrderTotal}, for our drivers' safety.`;
     else if (total < minOrderTotal) reason = `Needs an order of at least R${minOrderTotal}.`;
-    else if (!trackRecordOk) reason = trackRecordMessage || 'Cash on delivery unlocks after a few delivered orders.';
+    else if (!trackRecordOk) reason = trackRecordMessage || 'Cash on delivery unlocks after 10 delivered orders, or at our cash spots.';
     setPaymentEnabled('cod', !reason);
     document.getElementById('codPaymentDesc').textContent = reason || 'Pay the driver in cash when they arrive';
   }
@@ -612,7 +674,7 @@
     const phone = document.getElementById('phoneNumber').value.trim();
     const checks = [
       ['fgAddress', address.length < 5],
-      ['fgLandmark', !!P.noPinProblem({ needsPin: quoteNeedsPin, hasPin: !!deliveryPin, landmark: document.getElementById('landmark').value })],
+      ['fgLandmark', !!P.noPinProblem({ needsPin: quoteNeedsPin, hasPin: !!deliveryPin, landmark: selectedVenue ? selectedVenue.name : document.getElementById('landmark').value })],
       ['fgName', !name],
       ['fgPhone', !isValidSaPhone(phone)],
       ['cbAge', !document.getElementById('ageConfirm').checked],
@@ -666,6 +728,7 @@
       priorityFee,
       safetySeal,
       crate,
+      venueId: selectedVenue ? selectedVenue.id : undefined,
       // Only sent once we know their current choice, so a slow network never
       // switches someone's specials off by accident.
       marketingOptIn: marketingChoiceLoaded ? document.getElementById('marketingOptIn').checked : undefined,
@@ -785,11 +848,8 @@
       }).catch(() => {});
       document.getElementById('marketingOptIn').addEventListener('change', () => { marketingChoiceLoaded = true; });
 
-      authedFetch('/api/cod-eligibility').then((r) => r.json()).then((data) => {
-        if (data.error) return;
-        codEligibility = data;
-        updateCodAvailability(computeTotals().total);
-      }).catch(() => {});
+      loadCodEligibility();
+      loadVenues();
 
       const savedCode = localStorage.getItem('ekoyini_promo_code');
       if (savedCode) await validatePromo(savedCode, { silent: true });
@@ -809,6 +869,8 @@
     renderOrderReview();
     refreshQuote();
   });
+
+  window.addEventListener('ekoyini:offers', () => { if (!submitting && products.length) { renderOrderReview(); } });
 
   // Signed out in another tab mid-checkout → back to login.
   window.addEventListener('ekoyini:auth-changed', async () => {

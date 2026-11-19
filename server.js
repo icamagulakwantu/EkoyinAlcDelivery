@@ -111,6 +111,7 @@ const {
   yocoKeyMode,
   isYocoConfigured,
 } = require("./payments.js");
+const { applyVenue, findVenue } = require("./lib/venues.js");
 const { parseOrderPayment, settleOrderPayment, isPayable: isOrderPayable } = require("./lib/order-payment.js");
 const { sendOrderConfirmationEmail, sendAdminOrderAlertEmail, sendPaymentFailureAlertEmail, sendPaymentConfirmedEmail } = require("./emails.js");
 
@@ -258,7 +259,7 @@ async function logAdminAction(req, action, targetId, detail) {
 // checkout and server can never disagree on discounts or the delivery fee.
 const { toSaWhatsApp } = require("./lib/phone.js");
 const { newPin, pinMatches } = require("./lib/dispatch.js");
-const { COOLER_ELIGIBLE, coolerDiscountPct, coolerDiscountFor, MIN_ORDER_SUBTOTAL, safetySealFeeFor, orderWeightKg, isReturnableQuart, bottleDepositFor, noPinProblem } = require("./public/pricing.js");
+const { COOLER_ELIGIBLE, COOLER_FIRST_ORDERS, coolerDiscountPct, coolerDiscountFor, MIN_ORDER_SUBTOTAL, safetySealFeeFor, orderWeightKg, isReturnableQuart, bottleDepositFor, noPinProblem } = require("./public/pricing.js");
 // Shelf order (shared with the shop and admin): sensible sections, brands together.
 const { compareCatalogue } = require("./public/shelf-order.js");
 const { createQuoter } = require("./lib/delivery-quote.js");
@@ -466,7 +467,7 @@ app.post("/api/promo/validate", promoLimiter, async (req, res) => {
 //      first months after launch. Delivered orders are a much better trust
 //      signal than placed orders, so the bar can be far lower.
 //      Both thresholds can be tuned on Render without a code change:
-//        COD_MIN_DELIVERED_ORDERS (default 2)
+//        COD_MIN_DELIVERED_ORDERS (default 10; founder, 19 Nov 2026)
 //        COD_MIN_ACCOUNT_AGE_MONTHS (default 0)
 //   2. This order's amount — must be at least R300 and is always capped at
 //      R1500 so a driver is never holding more cash than that.
@@ -478,7 +479,7 @@ function intFromEnv(name, fallback) {
 }
 
 const COD_MIN_ACCOUNT_AGE_MONTHS = intFromEnv("COD_MIN_ACCOUNT_AGE_MONTHS", 0);
-const COD_MIN_DELIVERED_ORDERS = intFromEnv("COD_MIN_DELIVERED_ORDERS", 2);
+const COD_MIN_DELIVERED_ORDERS = intFromEnv("COD_MIN_DELIVERED_ORDERS", 10);
 const COD_MIN_ORDER_TOTAL = 300;
 const COD_MAX_ORDER_TOTAL = 1500;
 
@@ -512,7 +513,7 @@ function codTrackRecordMessage(accountAgeMonths, deliveredOrderCount) {
   return `Cash on delivery unlocks after ${needs.join(" and ")} (you're at ${have.join(", ")}). Please pay by card or EFT for now.`;
 }
 
-async function assessCodEligibility({ userId, userCreatedAt, orderTotal, skuIds }) {
+async function assessCodEligibility({ userId, userCreatedAt, orderTotal, skuIds, venue }) {
   if (orderTotal > COD_MAX_ORDER_TOTAL) {
     return {
       eligible: false,
@@ -530,7 +531,9 @@ async function assessCodEligibility({ userId, userCreatedAt, orderTotal, skuIds 
     countConfirmedOrders(userId),
   ]);
 
-  if (accountAgeMonths < COD_MIN_ACCOUNT_AGE_MONTHS || deliveredOrderCount < COD_MIN_DELIVERED_ORDERS) {
+  // Cash spots (e.g. Lifa and Mafa, KwaMagxaki Butchery) take cash from anyone.
+  const cashSpot = !!(venue && venue.cash);
+  if (!cashSpot && (accountAgeMonths < COD_MIN_ACCOUNT_AGE_MONTHS || deliveredOrderCount < COD_MIN_DELIVERED_ORDERS)) {
     return { eligible: false, error: codTrackRecordMessage(accountAgeMonths, deliveredOrderCount) };
   }
 
@@ -577,7 +580,7 @@ async function estimateOrderTotal({ subtotal, coolerDiscount, quote, safetySealF
 // priority, service fee), which is always calculated here on the server.
 // `crate`: for returnable quarts, false = "No crate, loose" (R3 a bottle);
 // anything else = full dozens in a crate (R2 a bottle + R28 a crate).
-async function validateAndPriceOrder({ address, items, customerName, customerPhone, paymentMethod, allowedPaymentMethods, location, priorityFee, safetySeal, crate, now }) {
+async function validateAndPriceOrder({ userId, address, items, customerName, customerPhone, paymentMethod, allowedPaymentMethods, location, priorityFee, safetySeal, crate, now }) {
   const pricedAt = now instanceof Date && !Number.isNaN(now.getTime()) ? now : new Date();
   if (!address || typeof address !== "string" || address.trim().length < 5) {
     return { error: "Please enter a valid delivery address" };
@@ -669,7 +672,9 @@ async function validateAndPriceOrder({ address, items, customerName, customerPho
 
   subtotal = Math.round(subtotal * 100) / 100;
   coolerSubtotal = Math.round(coolerSubtotal * 100) / 100;
-  const coolerDiscount = coolerDiscountFor(coolerSubtotal, pricedAt);
+  // The Cooler Box discount is for a customer's first 5 orders (founder, 19 Nov 2026).
+  const coolerAllowed = userId ? (await countOrdersForOffers(userId)) < COOLER_FIRST_ORDERS : true;
+  const coolerDiscount = coolerAllowed ? coolerDiscountFor(coolerSubtotal, pricedAt) : 0;
   // Only charged when the order really contains a spirit.
   const safetySealFee = safetySealFeeFor(safetySeal === true, categories);
   const bottles = bottleDepositFor(returnableBottles, crate !== false);
@@ -789,8 +794,11 @@ const DIRECT_PAYMENT_METHODS = new Set(["cod", "eft"]);
 // 📦 CREATE ORDER (customer, auth-gated) — COD/EFT only.
 app.post("/order", writeLimiter, requireUser, async (req, res) => {
   try {
-    const { address, items, customerName, customerPhone, paymentMethod, promoCode, landmark, deliveryLat, deliveryLng, priorityFee, safetySeal, crate, marketingOptIn } = req.body || {};
+    const venueChoice = applyVenue(req.body || {});
+    if (venueChoice.error) return res.status(400).json({ error: venueChoice.error });
+    const { address, items, customerName, customerPhone, paymentMethod, promoCode, landmark, deliveryLat, deliveryLng, priorityFee, safetySeal, crate, marketingOptIn } = { ...(req.body || {}), ...(venueChoice.fields || {}) };
     const priced = await validateAndPriceOrder({
+      userId: req.user.id,
       address,
       items,
       customerName,
@@ -813,6 +821,7 @@ app.post("/order", writeLimiter, requireUser, async (req, res) => {
         userCreatedAt: req.user.created_at,
         orderTotal: estimatedTotal,
         skuIds: priced.orderItems.map((i) => i.skuId).filter(Boolean),
+        venue: venueChoice.venue,
       });
       if (!cod.eligible) return res.status(400).json({ error: cod.error });
       codFlagged = cod.flagged;
@@ -871,8 +880,11 @@ app.get("/api/cod-eligibility", requireUser, async (req, res) => {
   try {
     const accountAgeMonths = monthsSince(req.user.created_at);
     const deliveredOrderCount = await countDeliveredOrders(req.user.id);
-    const trackRecordOk = accountAgeMonths >= COD_MIN_ACCOUNT_AGE_MONTHS && deliveredOrderCount >= COD_MIN_DELIVERED_ORDERS;
+    const venue = findVenue(typeof req.query.venue === "string" ? req.query.venue : "");
+    const cashSpot = !!(venue && venue.cash);
+    const trackRecordOk = cashSpot || (accountAgeMonths >= COD_MIN_ACCOUNT_AGE_MONTHS && deliveredOrderCount >= COD_MIN_DELIVERED_ORDERS);
     res.json({
+      cashSpot,
       trackRecordOk,
       trackRecordMessage: trackRecordOk ? null : codTrackRecordMessage(accountAgeMonths, deliveredOrderCount),
       accountAgeMonths,
@@ -888,6 +900,24 @@ app.get("/api/cod-eligibility", requireUser, async (req, res) => {
   }
 });
 
+// Orders that count towards the "first 5 orders" Cooler Box offer: everything
+// the customer has placed except cancelled orders.
+async function countOrdersForOffers(userId) {
+  return prisma.order.count({ where: { userId, status: { not: "CANCELLED" } } });
+}
+
+// What this customer's offers look like, for the pages (home, shop, cart, checkout).
+app.get("/api/my-offers", requireUser, async (req, res) => {
+  try {
+    const count = await countOrdersForOffers(req.user.id);
+    res.set("Cache-Control", "no-store");
+    res.json({ orderCount: count, coolerAllowed: count < COOLER_FIRST_ORDERS, coolerOrdersLeft: Math.max(0, COOLER_FIRST_ORDERS - count), coolerFirstOrders: COOLER_FIRST_ORDERS });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to load offers" });
+  }
+});
+
 function appBaseUrl(req) {
   return process.env.APP_BASE_URL || `${req.protocol}://${req.get("host")}`;
 }
@@ -897,8 +927,11 @@ function appBaseUrl(req) {
 app.post("/order/checkout-session", writeLimiter, requireUser, async (req, res) => {
   if (!isYocoConfigured()) return res.status(400).json({ error: "Card payment isn't available yet" });
   try {
-    const { address, items, customerName, customerPhone, promoCode, landmark, deliveryLat, deliveryLng, priorityFee, safetySeal, crate, marketingOptIn } = req.body || {};
+    const venueChoice = applyVenue(req.body || {});
+    if (venueChoice.error) return res.status(400).json({ error: venueChoice.error });
+    const { address, items, customerName, customerPhone, promoCode, landmark, deliveryLat, deliveryLng, priorityFee, safetySeal, crate, marketingOptIn } = { ...(req.body || {}), ...(venueChoice.fields || {}) };
     const priced = await validateAndPriceOrder({
+      userId: req.user.id,
       address,
       items,
       customerName,
@@ -1096,6 +1129,7 @@ async function completePaidCheckout(pending, via) {
 
     const payload = JSON.parse(pending.payload);
     const priced = await validateAndPriceOrder({
+      userId: pending.userId,
       address: payload.address,
       items: payload.items,
       customerName: payload.customerName,

@@ -37,6 +37,8 @@
   // Big-order protection (founder, 19 Nov 2026): the discount is 2.5% but
   // never more than R50, so a very large order cannot wipe out our margin.
   const COOLER_MAX_DISCOUNT = 50;
+  // Founder, 19 Nov 2026: the Cooler Box discount is for a customer's first 5 orders only.
+  const COOLER_FIRST_ORDERS = 5;
   const COOLER_CUTOFF_HOUR = 20;
   const COOLER_RESUME_HOUR = 4;
 
@@ -302,7 +304,7 @@
   //   subtotal -> minus Cooler Box -> minus promo (on what is left)
   //   -> plus delivery quote -> plus Safety Seal -> plus bottles & crates.
   // bottleDeposit: rand amount from bottleDepositFor() (never discounted).
-  function priceOrder({ lines, promoPct, deliveryTotal, safetySeal, now, bottleDeposit }) {
+  function priceOrder({ lines, promoPct, deliveryTotal, safetySeal, now, bottleDeposit, coolerAllowed }) {
     let subtotal = 0;
     let coolerSubtotal = 0;
     const categories = [];
@@ -314,8 +316,10 @@
     });
     subtotal = round2(subtotal);
     coolerSubtotal = round2(coolerSubtotal);
-    const coolerPct = coolerDiscountPct(coolerSubtotal, now);
-    const coolerDiscount = coolerDiscountFor(coolerSubtotal, now);
+    // coolerAllowed: false once the customer has used their first 5 orders.
+    const allowed = coolerAllowed !== false;
+    const coolerPct = allowed ? coolerDiscountPct(coolerSubtotal, now) : 0;
+    const coolerDiscount = allowed ? coolerDiscountFor(coolerSubtotal, now) : 0;
     const pct = Number(promoPct) > 0 ? Number(promoPct) : 0;
     const promoDiscount = round2((subtotal - coolerDiscount) * (pct / 100));
     const delivery = roundCurrency(deliveryTotal);
@@ -373,6 +377,7 @@
     COOLER_TOP_SUBTOTAL,
     COOLER_TOP_DISCOUNT_PCT,
     COOLER_MAX_DISCOUNT,
+    COOLER_FIRST_ORDERS,
     coolerDiscountFor,
     CARE_FEE_MAX_BIG_CARD,
     BIG_ORDER_SUBTOTAL,
