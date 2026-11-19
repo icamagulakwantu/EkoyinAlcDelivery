@@ -180,6 +180,14 @@ async function resolveAdminRole(email) {
   return record ? record.role : null;
 }
 
+// Phone and computer order alerts (web push, 19 Nov 2026). Needs
+// VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY on Render; does nothing without them.
+const push = require("./lib/push.js").createPusher({
+  prisma,
+  webpush: require("web-push"),
+  isAdmin: async (email) => !!email && !!(await resolveAdminRole(email)),
+});
+
 // The shared ADMIN_API_TOKEN (for scripts) is only honoured when it is long
 // enough to be unguessable, is compared in constant time, and repeated wrong
 // guesses from one address are locked out for 15 minutes.
@@ -828,6 +836,7 @@ app.post("/order", writeLimiter, requireUser, async (req, res) => {
     saveMarketingChoice(req.user, marketingOptIn, { name: customerName, phone: customerPhone, source: "checkout" });
     sendOrderConfirmationEmail(order, req.user.email).catch((e) => console.error("[email] confirmation failed:", e));
     sendAdminOrderAlertEmail(order).catch((e) => console.error("[email] admin alert failed:", e));
+    push.notifyNewOrder(order);
     res.json({ message: "Order received", order });
   } catch (err) {
     if (err.message === "PROMO_INVALID") return res.status(400).json({ error: err.detail });
@@ -1110,6 +1119,7 @@ async function completePaidCheckout(pending, via) {
 
     sendOrderConfirmationEmail(order, payload.customerEmail).catch((e) => console.error("[email] confirmation failed:", e));
     sendAdminOrderAlertEmail(order).catch((e) => console.error("[email] admin alert failed:", e));
+    push.notifyNewOrder(order);
     return "COMPLETED";
   } catch (err) {
     // A Yoco lookup that failed is not a failed payment: let the next
@@ -1639,7 +1649,7 @@ app.get("/admin/audit-log", requireAdmin, requireSuperAdmin, async (req, res) =>
 });
 
 // Feature routes that live in their own files (driver reports, delivery fees, ...).
-require("./routes/index.js")(app, { prisma, requireUser, requireAdmin, requireSuperAdmin, writeLimiter, trackLimiter, logAdminAction, quoteDelivery });
+require("./routes/index.js")(app, { prisma, requireUser, requireAdmin, requireSuperAdmin, writeLimiter, trackLimiter, logAdminAction, quoteDelivery, push });
 
 // Malformed JSON or an oversized body gets a clear JSON answer the pages can
 // show, instead of Express's default HTML error page.

@@ -5,4 +5,5 @@ module.exports = function mountRoutes(app, deps) {
   require("./delivery.js")(app, deps);
   require("./payouts.js")(app, deps);
   require("./dispatch-alerts.js")(app, deps);
+  require("./push.js")(app, deps);
 };

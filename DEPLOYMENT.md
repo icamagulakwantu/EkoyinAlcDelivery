@@ -82,6 +82,8 @@ commit `package-lock.json` so every deploy installs the same versions.
 | `ADMIN_API_TOKEN` | A long random string — fallback for scripts/curl and for bootstrapping before any admin account exists |
 | `PORT` | Set automatically by Render, no action needed |
 | `RESEND_API_KEY` | Optional, order emails |
+| `ORDER_ALERT_EMAILS` | Optional, comma-separated: who gets new-order emails (falls back to `ADMIN_EMAILS`) |
+| `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` | Optional, phone alerts that ring when the dashboard is closed. Make the pair with `npx web-push generate-vapid-keys` |
 
 `npm install` triggers `prisma generate` via the `postinstall` script, and
 `render.yaml` also runs `npx prisma generate` explicitly as a safety net.

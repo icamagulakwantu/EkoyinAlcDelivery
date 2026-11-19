@@ -4,6 +4,14 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 19 Nov 2026: order alerts that ring when the app is closed (web push)
+- Problem: new-order emails arrived but nothing buzzed, and the dashboard only rang while its tab was open.
+- New `lib/push.js` + `routes/push.js` + table `PushSubscription` (migration `20261119120000_add_push_subscriptions`, new table only). Each device that taps **Turn on order alerts** in the dashboard saves a push subscription; the server sends a notification to every device of every current admin for each new order (card, COD and EFT) and for the delay alerts (amber/red). Works with the dashboard closed or the phone in another app. Notifications show the area only, never customer name, phone or street.
+- Needs Render env `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` (optional `VAPID_SUBJECT`); without them it quietly does nothing and email still works. Devices of removed admins are dropped on the next send; dead devices (HTTP 404/410) are dropped too.
+- `public/sw.js` handles `push` (cache `ekoyini-shell-v26`). The dashboard has its own manifest (`admin/manifest.json`) so an iPhone user can Add to Home Screen and open Ekoyini Admin, which iPhone requires for push.
+- New-order email recipients are now `ORDER_ALERT_EMAILS` = orders@ekoyini.co.za + the Gmail (set on Render 19 Nov).
+- Tests: `test/push.test.js`.
+
 ### 18 Nov 2026 (later): Google Business Profile cover image
 - `marketing/ekoyini-google-cover.png` (2048 x 1152, 16:9): logo, "Cold drinks, to your gate.", the three promises (licensed local taverns, live driver tracking, sealed and ID checked), real product photos and the 18+ line. Rebuild with `node marketing/build-cover.js`. Not part of the website.
 

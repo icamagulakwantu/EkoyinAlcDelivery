@@ -12,8 +12,9 @@
 // Browsers only allow sound and notifications after a tap, so each person
 // taps "Turn on order alerts" once per device. The choice is remembered.
 //
-// Limit: this works while the dashboard is open in a tab (it can be in the
-// background). A closed browser gets nothing; email alerts cover that.
+// While the dashboard is open this page rings by itself. With the app
+// closed, the server sends the same alerts as web push (lib/push.js) to every
+// device that turned alerts on; email stays as the backup.
 
 (function () {
   const STORE_SEEN = 'ekoyini_admin_seen_orders';
@@ -120,6 +121,7 @@
   // Called by admin-api.js after every /orders load.
   function onOrders(orders) {
     if (!Array.isArray(orders)) return;
+    syncPushOnce();
     const first = seen === null;
     if (first) seen = readSeen();
 
@@ -157,14 +159,79 @@
     }
   }
 
+  // ── Phone alerts that ring when the app is closed (web push) ──
+  // Each device that taps "Turn on order alerts" also saves a push
+  // subscription on the server (routes/push.js). The server then sends a
+  // notification for every new order, even with the dashboard closed.
+  let pushState = ''; // on | iphone | unsupported | blocked | off | server-off | error
+  let pushSynced = false;
+
+  const PUSH_NOTES = {
+    on: 'Phone alerts on: this device rings even when the app is closed',
+    iphone: 'iPhone: tap Share, then Add to Home Screen. Open Ekoyini Admin from your home screen and turn alerts on there, so it rings when closed',
+    unsupported: 'This browser cannot ring when closed. Use Chrome, or add the app to your home screen',
+    blocked: 'Notifications are blocked in this browser: sound and banner only while the dashboard is open',
+    off: 'Allow notifications to get alerts when the app is closed',
+    'server-off': 'Closed-app alerts are not switched on at the server yet',
+    error: 'Could not turn on closed-app alerts. Switch alerts off and on to try again',
+  };
+
+  function pushSupported() {
+    return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+  }
+  function isIphone() { return /iPhone|iPad|iPod/.test(navigator.userAgent); }
+  function isInstalledApp() {
+    return window.navigator.standalone === true || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+  }
+  function keyBytes(b64) {
+    const pad = '='.repeat((4 - (b64.length % 4)) % 4);
+    const raw = atob((b64 + pad).replace(/-/g, '+').replace(/_/g, '/'));
+    return Uint8Array.from(raw, (c) => c.charCodeAt(0));
+  }
+
+  // Saves this device for order alerts. Returns the status for the note.
+  async function enablePush() {
+    if (!pushSupported()) return isIphone() && !isInstalledApp() ? 'iphone' : 'unsupported';
+    if (Notification.permission !== 'granted') return Notification.permission === 'denied' ? 'blocked' : 'off';
+    try {
+      const api = window.adminFetch;
+      const cfgRes = await api('/admin/push/config');
+      const cfg = cfgRes.ok ? await cfgRes.json() : null;
+      if (!cfg || !cfg.enabled || !cfg.publicKey) return 'server-off';
+      const reg = await navigator.serviceWorker.register('/sw.js');
+      await navigator.serviceWorker.ready;
+      const want = keyBytes(cfg.publicKey);
+      let sub = await reg.pushManager.getSubscription();
+      // A subscription made with a different server key can never receive: start over.
+      if (sub && sub.options && sub.options.applicationServerKey) {
+        const have = new Uint8Array(sub.options.applicationServerKey);
+        if (have.length !== want.length || have.some((b, i) => b !== want[i])) { await sub.unsubscribe(); sub = null; }
+      }
+      if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: want });
+      const saved = await api('/admin/push/subscribe', { method: 'POST', body: JSON.stringify(sub.toJSON()) });
+      return saved.ok ? 'on' : 'error';
+    } catch {
+      return 'error';
+    }
+  }
+
+  // Runs once after the first successful orders load (so the admin is logged
+  // in): devices that already had alerts on get their phone alerts saved too.
+  function syncPushOnce() {
+    if (pushSynced || !alertsOn()) return;
+    pushSynced = true;
+    enablePush().then((state) => { pushState = state; renderSwitch(); });
+  }
+
   // ── "Turn on order alerts" switch in the dashboard header ──
   function renderSwitch() {
     const holder = document.getElementById('orderAlertSwitch');
     if (!holder) return;
     const on = alertsOn();
     const blocked = 'Notification' in window && Notification.permission === 'denied';
+    const note = on ? (PUSH_NOTES[pushState] || (blocked ? PUSH_NOTES.blocked : '')) : '';
     holder.innerHTML = on
-      ? `<button type="button" class="alert-switch on" title="Tap to turn off on this device">🔔 Order alerts on</button>${blocked ? '<small>Notifications are blocked in this browser: sound and banner only</small>' : ''}`
+      ? `<button type="button" class="alert-switch on" title="Tap to turn off on this device">🔔 Order alerts on</button>${note ? `<small>${note}</small>` : ''}`
       : '<button type="button" class="alert-switch">🔕 Turn on order alerts</button>';
     holder.querySelector('button').onclick = on ? turnOff : turnOn;
   }
@@ -176,12 +243,25 @@
     if ('Notification' in window && Notification.permission === 'default') {
       try { await Notification.requestPermission(); } catch {}
     }
+    pushSynced = true;
     renderSwitch();
     if (typeof window.startAutoRefresh === 'function') window.startAutoRefresh();
-  }
-  function turnOff() {
-    try { localStorage.setItem(STORE_ON, 'false'); } catch {}
+    pushState = await enablePush();
     renderSwitch();
+  }
+
+  async function turnOff() {
+    try { localStorage.setItem(STORE_ON, 'false'); } catch {}
+    pushState = '';
+    renderSwitch();
+    try {
+      const reg = pushSupported() ? await navigator.serviceWorker.getRegistration() : null;
+      const sub = reg ? await reg.pushManager.getSubscription() : null;
+      if (sub) {
+        await window.adminFetch('/admin/push/unsubscribe', { method: 'POST', body: JSON.stringify({ endpoint: sub.endpoint }) });
+        await sub.unsubscribe();
+      }
+    } catch {}
   }
 
   window.EkoyiniOrderAlerts = { onOrders, alertsOn, renderSwitch, areaOf };

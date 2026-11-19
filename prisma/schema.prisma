@@ -58,6 +58,23 @@ model AdminUser {
   createdAt DateTime  @default(now())
 }
 
+// One row per device (phone or computer) that tapped "Turn on order alerts"
+// in the admin dashboard, so new orders can ring it even when the app is
+// closed (web push, lib/push.js). Devices of people who stop being admins
+// are removed the next time an alert is sent.
+model PushSubscription {
+  id         String   @id @default(cuid())
+  endpoint   String   @unique
+  p256dh     String
+  auth       String
+  adminEmail String
+  userAgent  String?
+  createdAt  DateTime @default(now())
+  lastSeenAt DateTime @default(now())
+
+  @@index([adminEmail])
+}
+
 // Every consequential admin action gets a row here — who, what, on what,
 // when. Nothing reads or enforces against this table; it exists purely as
 // a record, so "who deleted order EKO-XXXXX" or "who zeroed out this

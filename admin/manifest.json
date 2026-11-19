@@ -1,0 +1,14 @@
+{
+  "name": "Ekoyini Admin",
+  "short_name": "Ekoyini Admin",
+  "description": "Dispatch dashboard for Ekoyini orders.",
+  "start_url": "/admin/admin.html",
+  "scope": "/admin/",
+  "display": "standalone",
+  "background_color": "#faf6ee",
+  "theme_color": "#faf6ee",
+  "icons": [
+    { "src": "/images/brand/favicon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/images/brand/favicon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

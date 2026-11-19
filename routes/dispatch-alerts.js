@@ -20,7 +20,7 @@ async function openAlerts(prisma, now = new Date()) {
     .sort((a, b) => (a.alert.level === b.alert.level ? b.alert.minutes - a.alert.minutes : a.alert.level === "red" ? -1 : 1));
 }
 
-module.exports = function mountDispatchAlerts(app, { prisma, requireAdmin, requireUser }) {
+module.exports = function mountDispatchAlerts(app, { prisma, requireAdmin, requireUser, push }) {
   app.get("/admin/alerts", requireAdmin, async (req, res) => {
     try {
       const list = await openAlerts(prisma);
@@ -61,7 +61,11 @@ module.exports = function mountDispatchAlerts(app, { prisma, requireAdmin, requi
         await prisma.order.update({ where: { code: order.code }, data: { alertsSent: JSON.stringify(sent) } });
         fresh.push({ order, alert });
       }
-      if (fresh.length) await sendDispatchAlertEmail(fresh);
+      if (fresh.length) {
+        // Phone alert first (never throws, never blocks the email).
+        if (push) push.notifyDispatchAlerts(fresh);
+        await sendDispatchAlertEmail(fresh);
+      }
     } catch (err) {
       console.error("[alerts] check failed:", err);
     }

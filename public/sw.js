@@ -2,7 +2,7 @@
 // app shell loading on flaky township data. Deliberately NEVER caches
 // API, order, admin or webhook requests: prices, stock and order status
 // must always be live.
-const CACHE = 'ekoyini-shell-v25';
+const CACHE = 'ekoyini-shell-v26';
 const SHELL = ['/index.html', '/shop.html', '/cart.html', '/track.html', '/profile.html', '/style.css', '/premium.css', '/home.css', '/home-app.css', '/app.css', '/script.js', '/auth.js', '/pricing.js', '/shelf-order.js', '/images/brand/ekoyini-icon.png'];
 
 self.addEventListener('install', (e) => {
@@ -39,13 +39,32 @@ self.addEventListener('fetch', (e) => {
   );
 });
 
-// Tapping a new-order notification (admin dashboard) opens or focuses it.
+// Order alerts from the server (web push, lib/push.js). They arrive even
+// when the dashboard is closed or the phone is in another app. Every push
+// must show a notification (iPhone cancels alerts that stay silent).
+self.addEventListener('push', (e) => {
+  let data = {};
+  try { data = e.data ? e.data.json() : {}; } catch (err) { data = { body: e.data ? e.data.text() : '' }; }
+  e.waitUntil(self.registration.showNotification(data.title || 'Ekoyini', {
+    body: data.body || '',
+    tag: data.tag || 'ekoyini',
+    renotify: true,
+    requireInteraction: !!data.urgent,
+    vibrate: [200, 100, 200, 100, 200],
+    icon: '/images/brand/favicon-192.png',
+    badge: '/images/brand/favicon-192.png',
+    data: { url: data.url || '/admin/admin.html' },
+  }));
+});
+
+// Tapping an order alert (admin dashboard) opens or focuses it.
 self.addEventListener('notificationclick', (e) => {
   e.notification.close();
+  const target = (e.notification.data && e.notification.data.url) || '/admin/admin.html';
   e.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
       const open = list.find((c) => c.url.includes('/admin/'));
-      return open ? open.focus() : self.clients.openWindow('/admin/admin.html');
+      return open ? open.focus() : self.clients.openWindow(target);
     })
   );
 });
