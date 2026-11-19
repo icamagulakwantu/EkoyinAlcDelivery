@@ -4,6 +4,13 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 20 Nov 2026 (later): driver app gaps closed, no database change
+- **Closed-app job alerts for drivers:** the driver app has a "Turn on job alerts" switch (web push, same mechanism as admin alerts). When a paid order has a tavern and no driver, every active driver who turned alerts on and has fewer than 3 jobs gets "New job in <area>" with earnings, distance and items only (no address, no customer). Fired from card checkout, cash/EFT order creation and EFT payment confirmation (`lib/driver-push.js`, `driverPush.notifyNewJob` in `server.js`). Alerts stop when a driver signs out, is paused or has the PIN reset.
+- **No new table:** driver phones are stored in `PushSubscription` with `adminEmail = "driver:<driver id>"`. Admin alerts skip and never delete those rows (`isDriverKey` in `lib/push.js`). A phone that already gets admin alerts cannot also be a driver phone (it says so); use another phone or browser to test.
+- **iPhone:** needs the driver page added to the Home Screen first (the app tells the driver). Notification taps now focus the page the alert is for (service worker `ekoyini-shell-v35`).
+- **Admin assign form:** a "Pick a driver from the app" dropdown fills name, phone and vehicle from Admin → Drivers (active drivers only). Typing a driver by hand still works.
+- 146 tests (`test/driver-push.test.js`).
+
 ### 20 Nov 2026: driver app (new `Driver` table, founder approved)
 - **Driver app at `/driver.html`** (installable, works on weak data): sign in with cell number + 6-digit PIN. Tabs: **My jobs** (collect from tavern, then deliver; opens the existing PIN-proven page `driver-track.html`, so the collection PIN, delivery PIN, live location and delivered checks are unchanged), **Job board** (paid orders with no driver: area, distance, what the driver earns, items; NO street address or customer until the job is taken; "Take this job", first driver wins atomically, max 3 active jobs), **Earnings** (today and last 7 days, cash collected taken off, payouts daily at 12:00). New jobs on the board buzz and beep while the app is open.
 - **Taking a job** does what admin Assign does: tavern (the order's, else the nearest one with a pin), driver name, phone, vehicle, link token and a fresh collection PIN. Admin gets a push alert "Driver took EKO-..." and still sends the tavern its collection PIN. Admin can still assign or reassign any order as before.

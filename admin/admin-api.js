@@ -381,6 +381,7 @@ async function openAssignModal(orderCode) {
     document.getElementById('driverPhone').value = '';
     document.getElementById('driverVehicle').value = '';
     document.getElementById('assignModal').style.display = 'flex';
+    loadDriverPicker();
 
     try {
         const res = await adminFetch('/admin/taverns');
@@ -392,6 +393,32 @@ async function openAssignModal(orderCode) {
         select.innerHTML = '<option value="">Failed to load taverns</option>';
     }
 }
+
+// Drivers added in the Drivers tab can be picked instead of typed. Typing still works.
+let pickableDrivers = [];
+async function loadDriverPicker() {
+    const pick = document.getElementById('driverPick');
+    if (!pick) return;
+    pick.style.display = 'none';
+    try {
+        const res = await adminFetch('/admin/drivers');
+        if (!res.ok) return;
+        pickableDrivers = (await res.json()).filter(d => d.active);
+        if (!pickableDrivers.length) return;
+        pick.innerHTML = '<option value="">-- Pick a driver from the app --</option>' +
+            pickableDrivers.map(d => `<option value="${esc(d.id)}">${esc(d.name)}${d.vehicle ? ' (' + esc(d.vehicle) + ')' : ''}</option>`).join('');
+        pick.style.display = 'block';
+    } catch (err) { /* typing the driver in still works */ }
+}
+
+function pickDriver() {
+    const d = pickableDrivers.find(x => x.id === document.getElementById('driverPick').value);
+    if (!d) return;
+    document.getElementById('driverName').value = d.name;
+    document.getElementById('driverPhone').value = d.phone;
+    document.getElementById('driverVehicle').value = d.vehicle || '';
+}
+window.pickDriver = pickDriver;
 
 function closeAssignModal() {
     document.getElementById('assignModal').style.display = 'none';

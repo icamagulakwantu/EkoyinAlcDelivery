@@ -93,6 +93,7 @@ function makeApp() {
       updateMany: async ({ where, data }) => { const hit = db.orders.filter((o) => match(o, where)); hit.forEach((o) => Object.assign(o, data)); return { count: hit.length }; },
     },
     tavern: { findMany: async () => db.taverns },
+    pushSubscription: { deleteMany: async () => ({ count: 0 }) },
   };
   const app = express();
   app.use(express.json());

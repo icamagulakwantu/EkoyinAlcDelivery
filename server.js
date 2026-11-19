@@ -189,6 +189,8 @@ const push = require("./lib/push.js").createPusher({
   webpush: require("web-push"),
   isAdmin: async (email) => !!email && !!(await resolveAdminRole(email)),
 });
+// Closed-app "new job" alerts for drivers who turned them on in the driver app.
+const driverPush = require("./lib/driver-push.js").createDriverPush({ prisma, push });
 
 // The shared ADMIN_API_TOKEN (for scripts) is only honoured when it is long
 // enough to be unguessable, is compared in constant time, and repeated wrong
@@ -794,6 +796,7 @@ app.post("/order", writeLimiter, requireUser, async (req, res) => {
     sendOrderConfirmationEmail(order, req.user.email).catch((e) => console.error("[email] confirmation failed:", e));
     sendAdminOrderAlertEmail(order).catch((e) => console.error("[email] admin alert failed:", e));
     push.notifyNewOrder(order);
+    driverPush.notifyNewJob(order);
     res.json({ message: "Order received", order });
   } catch (err) {
     if (err.message === "PROMO_INVALID") return res.status(400).json({ error: err.detail });
@@ -1121,6 +1124,7 @@ async function completePaidCheckout(pending, via) {
     sendOrderConfirmationEmail(order, payload.customerEmail).catch((e) => console.error("[email] confirmation failed:", e));
     sendAdminOrderAlertEmail(order).catch((e) => console.error("[email] admin alert failed:", e));
     push.notifyNewOrder(order);
+    driverPush.notifyNewJob(order);
     return "COMPLETED";
   } catch (err) {
     // A Yoco lookup that failed is not a failed payment: let the next
@@ -1284,6 +1288,7 @@ app.patch("/order/:code/confirm-payment", requireAdmin, async (req, res) => {
     });
     await logAdminAction(req, "CONFIRM_PAYMENT", order.code, `EFT payment confirmed by ${req.user?.email || "api-token"}`);
     sendPaymentConfirmedEmail(updated, updated.customerEmail).catch((e) => console.error("[email] payment-confirmed failed:", e));
+    driverPush.notifyNewJob(updated); // EFT order is now paid and ready for a driver
     res.json(updated);
   } catch (err) {
     console.error(err);

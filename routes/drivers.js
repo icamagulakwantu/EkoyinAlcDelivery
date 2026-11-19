@@ -8,7 +8,9 @@ const rateLimit = require("express-rate-limit");
 const { toSaWhatsApp } = require("../lib/phone.js");
 const { newPin } = require("../lib/dispatch.js");
 const D = require("../lib/driver-app.js");
+const { isPushEndpoint, isConfigured, DRIVER_KEY_PREFIX } = require("../lib/push.js");
 
+const MAX_DEVICES_PER_DRIVER = 5;
 const short = (v, n) => (typeof v === "string" ? v.trim().slice(0, n) : "");
 
 module.exports = function mountDrivers(app, { prisma, requireAdmin, writeLimiter, logAdminAction, push }) {
@@ -68,6 +70,46 @@ module.exports = function mountDrivers(app, { prisma, requireAdmin, writeLimiter
 
   app.post("/api/driver/logout", requireDriver, async (req, res) => {
     await prisma.driver.update({ where: { id: req.driver.id }, data: { sessionHash: null, sessionExpiresAt: null } }).catch(() => {});
+    // A signed-out phone must stop buzzing.
+    await prisma.pushSubscription.deleteMany({ where: { adminEmail: DRIVER_KEY_PREFIX + req.driver.id } }).catch(() => {});
+    res.json({ ok: true });
+  });
+
+  // ── Closed-app job alerts (web push) ─────────────────────────────────
+  app.get("/api/driver/push/config", requireDriver, (req, res) => {
+    res.json({ enabled: isConfigured(), publicKey: process.env.VAPID_PUBLIC_KEY || null });
+  });
+
+  app.post("/api/driver/push/subscribe", writeLimiter, requireDriver, async (req, res) => {
+    try {
+      const { endpoint, keys } = req.body || {};
+      if (!isPushEndpoint(endpoint) || !keys || typeof keys.p256dh !== "string" || typeof keys.auth !== "string" || keys.p256dh.length > 200 || keys.auth.length > 100) {
+        return res.status(400).json({ error: "That phone could not be saved for job alerts" });
+      }
+      const owner = DRIVER_KEY_PREFIX + req.driver.id;
+      const existing = await prisma.pushSubscription.findUnique({ where: { endpoint } });
+      if (existing && existing.adminEmail !== owner && !existing.adminEmail.startsWith(DRIVER_KEY_PREFIX)) {
+        return res.status(409).json({ error: "This phone already gets admin alerts, so it cannot also get driver alerts. Use a different phone or browser." });
+      }
+      const data = { p256dh: keys.p256dh, auth: keys.auth, adminEmail: owner, userAgent: short(req.headers["user-agent"], 200), lastSeenAt: new Date() };
+      await prisma.pushSubscription.upsert({ where: { endpoint }, create: { endpoint, ...data }, update: data });
+      // Keep the newest few phones per driver.
+      const mine = await prisma.pushSubscription.findMany({ where: { adminEmail: owner }, orderBy: { lastSeenAt: "desc" }, select: { id: true } });
+      if (mine.length > MAX_DEVICES_PER_DRIVER) {
+        await prisma.pushSubscription.deleteMany({ where: { id: { in: mine.slice(MAX_DEVICES_PER_DRIVER).map((m) => m.id) } } });
+      }
+      res.json({ ok: true });
+    } catch (err) {
+      console.error("[driver push] subscribe failed:", err);
+      res.status(500).json({ error: "Could not turn on job alerts" });
+    }
+  });
+
+  app.post("/api/driver/push/unsubscribe", writeLimiter, requireDriver, async (req, res) => {
+    const endpoint = req.body && req.body.endpoint;
+    if (typeof endpoint === "string") {
+      await prisma.pushSubscription.deleteMany({ where: { endpoint, adminEmail: DRIVER_KEY_PREFIX + req.driver.id } }).catch(() => {});
+    }
     res.json({ ok: true });
   });
 
@@ -181,6 +223,9 @@ module.exports = function mountDrivers(app, { prisma, requireAdmin, writeLimiter
         Object.assign(data, { pinHash: D.hashPin(pin), failedLogins: 0, lockedUntil: null, sessionHash: null, sessionExpiresAt: null });
       }
       const updated = await prisma.driver.update({ where: { id: driver.id }, data });
+      if (data.active === false || body.resetPin === true) {
+        await prisma.pushSubscription.deleteMany({ where: { adminEmail: DRIVER_KEY_PREFIX + driver.id } }).catch(() => {});
+      }
       await logAdminAction(req, "UPDATE_DRIVER", driver.id, `driver=${driver.name}${pin ? ", pin reset" : ""}${typeof body.active === "boolean" ? `, active=${body.active}` : ""}`);
       res.json({ driver: adminView(updated), pin });
     } catch (err) {

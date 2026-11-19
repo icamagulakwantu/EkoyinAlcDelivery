@@ -71,6 +71,11 @@
     nav button { flex: 1; background: none; border: 0; padding: 8px 4px; font-size: 12px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--mute); position: relative; }
     nav button.on { color: var(--hot); }
     nav .badge { display: inline-block; margin-left: 5px; background: var(--hot); color: #fff; border-radius: 999px; min-width: 18px; padding: 1px 6px; font-size: 11px; line-height: 1.5; vertical-align: 1px; }
+    .alerts { margin: 12px 16px 0; padding: 12px 14px; border-radius: 18px; background: #fff; border: 1px solid var(--line); font-size: 13.5px; line-height: 1.45; color: var(--mute); }
+    .alerts b { color: var(--ink); }
+    .alerts.on { background: #dff3e8; border-color: #bfe3cf; color: var(--go); }
+    .alerts button { margin-top: 8px; min-height: 44px; padding: 0 18px; border: 0; border-radius: 999px; background: var(--ink); color: var(--cream); font-weight: 800; font-size: 14.5px; }
+    .alerts .link { margin: 0 0 0 8px; min-height: 0; padding: 0; background: none; color: inherit; text-decoration: underline; font-weight: 700; font-size: 13px; }
     .toast { position: fixed; left: 16px; right: 16px; bottom: calc(96px + env(safe-area-inset-bottom)); background: var(--ink); color: var(--cream); padding: 14px 16px; border-radius: 16px; font-size: 14.5px; z-index: 9; text-align: center; }
   </style>
 </head>
@@ -96,6 +101,8 @@
       <div><h1 id="hello">Hello</h1><small id="sub"></small></div>
       <button class="out" id="outBtn" type="button">Sign out</button>
     </header>
+
+    <div class="alerts hidden" id="alertsBar"></div>
 
     <section class="pane on" id="paneJobs" aria-label="My jobs"></section>
     <section class="pane" id="paneBoard" aria-label="Job board"></section>
@@ -226,6 +233,78 @@
       else { toast(r.body.error || 'Could not take that job.', 4200); await refresh(); }
     });
 
+
+    // ── closed-app job alerts (web push) ──
+    let alertState = 'checking', alertNote = '';
+    const pushSupported = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+    const isIphone = /iPhone|iPad|iPod/.test(navigator.userAgent);
+    const isInstalled = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+    function keyBytes(b64) {
+      const pad = '='.repeat((4 - (b64.length % 4)) % 4);
+      const raw = atob((b64 + pad).replace(/-/g, '+').replace(/_/g, '/'));
+      return Uint8Array.from(raw, (c) => c.charCodeAt(0));
+    }
+    async function enablePush(ask) {
+      if (!pushSupported()) return isIphone && !isInstalled ? 'iphone' : 'unsupported';
+      if (Notification.permission === 'denied') return 'blocked';
+      if (!ask && localStorage.getItem('ekoyini_driver_alerts') !== '1') return 'off'; // only phones that chose alerts
+      if (Notification.permission !== 'granted') {
+        if (!ask) return 'off';
+        const p = await Notification.requestPermission();
+        if (p !== 'granted') return p === 'denied' ? 'blocked' : 'off';
+      }
+      try {
+        const cfg = await api('/api/driver/push/config');
+        if (!cfg.ok || !cfg.body.enabled || !cfg.body.publicKey) return 'server-off';
+        const reg = await navigator.serviceWorker.register('/sw.js');
+        await navigator.serviceWorker.ready;
+        const want = keyBytes(cfg.body.publicKey);
+        let sub = await reg.pushManager.getSubscription();
+        if (sub && sub.options && sub.options.applicationServerKey) {
+          const have = new Uint8Array(sub.options.applicationServerKey);
+          if (have.length !== want.length || have.some((b, i) => b !== want[i])) { await sub.unsubscribe(); sub = null; }
+        }
+        if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: want });
+        const saved = await api('/api/driver/push/subscribe', { method: 'POST', body: JSON.stringify(sub.toJSON()) });
+        if (saved.status === 409) { alertNote = saved.body.error || ''; return 'conflict'; }
+        if (saved.ok) localStorage.setItem('ekoyini_driver_alerts', '1');
+        return saved.ok ? 'on' : 'error';
+      } catch (_) { return 'error'; }
+    }
+    async function disablePush() {
+      try {
+        const reg = await navigator.serviceWorker.getRegistration();
+        const sub = reg && await reg.pushManager.getSubscription();
+        if (sub) { await api('/api/driver/push/unsubscribe', { method: 'POST', body: JSON.stringify({ endpoint: sub.endpoint }) }); await sub.unsubscribe(); }
+      } catch (_) {}
+      localStorage.removeItem('ekoyini_driver_alerts');
+      alertState = 'off'; renderAlerts();
+    }
+    function renderAlerts() {
+      const bar = $('alertsBar');
+      const msgs = {
+        iphone: '<b>Job alerts on iPhone:</b> tap Share, then Add to Home Screen, and open Ekoyini Driver from your home screen.',
+        unsupported: 'This browser cannot send job alerts. Keep this app open to hear about new jobs.',
+        blocked: '<b>Job alerts are blocked.</b> Allow notifications for this site in your phone settings, then come back.',
+        'server-off': 'Job alerts are not switched on yet. Please tell dispatch.',
+        conflict: alertNote || 'This phone already gets admin alerts.',
+        error: 'Could not turn on job alerts. Check your data and try again.',
+      };
+      if (alertState === 'checking') { bar.classList.add('hidden'); return; }
+      bar.classList.remove('hidden');
+      bar.classList.toggle('on', alertState === 'on');
+      if (alertState === 'on') bar.innerHTML = '&#128276; <b>Job alerts are on.</b> Your phone will buzz for new jobs, even when this app is closed.<button type="button" class="link" id="alertOff">Turn off</button>';
+      else if (alertState === 'off') bar.innerHTML = '<b>Get a buzz for new jobs.</b> Works even when the app is closed.<br><button type="button" id="alertOn">Turn on job alerts</button>';
+      else bar.innerHTML = msgs[alertState] || msgs.error;
+      const on = $('alertOn'), off = $('alertOff');
+      if (on) on.onclick = async () => { on.disabled = true; alertState = await enablePush(true); renderAlerts(); };
+      if (off) off.onclick = disablePush;
+    }
+    async function syncAlerts() {
+      alertState = await enablePush(false); // never asks by itself; only saves a phone that already allowed alerts
+      renderAlerts();
+    }
+
     async function refresh() {
       const r = await api('/api/driver/home');
       if (!r.ok) { if (r.status !== 401) toast('No signal. Trying again…', 2000); return; }
@@ -236,7 +315,7 @@
       render();
     }
     function start() {
-      showApp(); refresh();
+      showApp(); refresh(); syncAlerts();
       clearInterval(timer); timer = setInterval(() => { if (!document.hidden) refresh(); }, 15000);
     }
     document.addEventListener('visibilitychange', () => { if (!document.hidden && token) refresh(); });
