@@ -4,6 +4,14 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 19 Nov 2026 (midnight): real shelf prices from TinyFish research (highest regular price, promos ignored)
+- Two TinyFish deep-research runs (spirits/wine and beer/cider/RTD) looked up the products that still had estimate prices. Rule used: the HIGHEST regular shelf price of the exact pack, crossed-out price when a promo is running, no card or "any 2 for" deals, no Makro Business trade prices. Source for each row is in `lib/price-corrections-2026-11-08.js`.
+- **Applied (customer price = shelf + 7% wine/beer/cider, 5% spirits/mixers):** Beyerskloof Pinotage R144.44, Cape Velvet R188.99, Count Pushkin R204.74, Firstwatch R220.49, Grand Marnier R723.45, Grey Goose R629.99, Malibu R209.99, Moet Imperial Brut R802.49, Nederburg Baronne R106.99, Strawberry Lips R183.74, Wellington VO R220.49, 4th Street Sweet Red 750ml R58.84, Liqui Fruit Cranberry 1L R41.99, Amstel quart R26.74, Breezer Blackberry 6 x 275ml R138.03, Flying Fish Lemon and Dry Apple 6 x 330ml R106.99.
+- **Below Siba cost, so cost + 5% instead (`WAS_BELOW_COST`):** Casamigos Reposado R856.80 (shelf R749.99, Siba R816) and Ciroc Pineapple R443.52 (shelf R369, Siba R422.40). The old Casamigos estimate was R1,259.99 and Ciroc Pineapple R629.99.
+- **Not found or unclear, left unchanged:** Ciroc Apple, Jose Cuervo Silver, Kanonkop Kadette, Nachtmusik, Nederburg Sauvignon Blanc, Pongracz (bundle price only), Tequila Rose, Tia Maria, Ponchos Blanco/Caramel, Robertson Chapel 1.5L, Appletiser 1L, Flowstone, all Kopparberg, Guinness, Redd's cans/dumpies, Budweiser, Bernini Classic and Ruby Berry.
+- **Suspected size mistakes in the catalogue (research found no such pack in SA shops), NOT changed yet:** Bacardi Breezer Blueberry 6 x 500ml can (shops sell 6 x 275ml at R124.99), Smirnoff Storm 6 x 250ml (shops sell 6 x 300ml R119.99), Stella Artois 6 x 500ml can (shops sell 6 x 410ml R109.99), Brutal Fruit 330ml (shops sell 275ml and 500ml cans), Hunter's Iced Apple/Watermelon 330ml, Redd's 330ml.
+- Tests: 125 passing.
+
 ### 19 Nov 2026 (11 pm): founder's corrected size/price sheet checked
 - Checked all 59 rows of the founder's corrected sheet against the catalogue. Sizes already match for Belgravia, Chillers, Hunter's, Redd's MXD and Strongbow cans (440ml), Corona can (410ml) and the 275ml/330ml dumpies. Prices already match (shelf + 7%/5%) for 34 rows.
 - **Applied:** Hunter's Gold 6 x 330ml NRB shelf R131.94 (Shoprite, R21.99 each) so the customer price is **R141.18** (was R112.34 from an older Checkers R104.99; the highest shelf price wins).
