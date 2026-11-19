@@ -379,7 +379,7 @@ const FORMAT_PHOTO_MAP = {
   "[\"Tsitsikamma Sparkling Water\",\"500ml\"]": "/images/brands/tsitsikamma-sparkling-500ml.webp",
   "[\"Coca-Cola Original Taste Less Sugar\",\"2L\"]": "/images/brands/coca-cola-original-less-sugar-2l.webp",
   "[\"Liqui Fruit Cranberry Cooler\",\"1L\"]": "/images/brands/liqui-fruit-cranberry-cooler-1l.webp",
-  "[\"Red Bull Energy Drink\",\"Can (250ml)\"]": "/images/brands/red-bull-energy-drink-can-355ml.webp",
+  "[\"Red Bull Energy Drink\",\"Can (355ml)\"]": "/images/brands/red-bull-energy-drink-can-355ml.webp",
   "[\"Appletiser Sparkling Apple Juice\",\"1L\"]": "/images/brands/appletiser-sparkling-apple-juice-1l.webp",
   "[\"Amstel Lager\",\"Quart (660ml)\"]": "/images/brands/amstel-lager-quart-750ml.jpg",
   "[\"Carling Black Label\",\"Can (500ml)\"]": "/images/brands/carling-black-label-can.png",
@@ -426,6 +426,7 @@ const WRONG_PACK_PHOTOS = [
   ['Kopparberg Mixed Fruit', 'Dumpy (330ml)'],
   ['Kopparberg Raspberry', 'Can (440ml)'],
   ['Grenadine Syrup Cordial', '1 Litre Jug'],
+  ['Red Bull Energy Drink', 'Can (250ml)'], // the photo is the 355ml can; it now belongs to the 355ml row
 ];
 
 module.exports = { FORMAT_PHOTO_MAP, UNPRICED_PRODUCTS, WRONG_PACK_PHOTOS };

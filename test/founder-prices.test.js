@@ -19,6 +19,8 @@ test('founder prices are final and win over every other list', () => {
   assert.equal(C.finalPriceFor('Savanna Dry', 'NRB (500ml)'), 210);
   assert.equal(C.finalPriceFor('Appletiser Sparkling Apple Juice', '1L'), 45);
   assert.equal(C.finalPriceFor('Red Bull Energy Drink', 'Can (250ml)'), 30);
+  assert.equal(C.finalPriceFor('Red Bull Energy Drink', 'Can (355ml)'), 35); // hard to find in taverns (founder, 19 Nov)
+  assert.equal(C.finalPriceFor("Hunter's Dry", 'Dumpy (330ml)'), 141.18); // same pack and price as Hunter's Gold
   assert.equal(C.finalPriceFor('Coca-Cola Original', 'Can (500ml)'), 20);
 });
 
