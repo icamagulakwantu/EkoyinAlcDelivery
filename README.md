@@ -4,6 +4,14 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 20 Nov 2026: driver app (new `Driver` table, founder approved)
+- **Driver app at `/driver.html`** (installable, works on weak data): sign in with cell number + 6-digit PIN. Tabs: **My jobs** (collect from tavern, then deliver; opens the existing PIN-proven page `driver-track.html`, so the collection PIN, delivery PIN, live location and delivered checks are unchanged), **Job board** (paid orders with no driver: area, distance, what the driver earns, items; NO street address or customer until the job is taken; "Take this job", first driver wins atomically, max 3 active jobs), **Earnings** (today and last 7 days, cash collected taken off, payouts daily at 12:00). New jobs on the board buzz and beep while the app is open.
+- **Taking a job** does what admin Assign does: tavern (the order's, else the nearest one with a pin), driver name, phone, vehicle, link token and a fresh collection PIN. Admin gets a push alert "Driver took EKO-..." and still sends the tavern its collection PIN. Admin can still assign or reassign any order as before.
+- **Admin → Drivers tab** (`admin/drivers.js`): add a driver (PIN made by the server and shown once, with a WhatsApp send button), Reset PIN, Pause/Resume (pausing signs the driver out at once). Logged in the activity log.
+- **Security:** PIN stored as a salted scrypt hash, session token stored as a SHA-256 hash (one device at a time, 14 days), 5 wrong PINs lock the account for 15 minutes, login rate limit per IP, the driver endpoints never return the collection or delivery PIN.
+- **Database:** migration `20261120120000_add_drivers` adds the table only. `lib/driver-app.js` (logic), `routes/drivers.js`, `test/driver-app.test.js` (10 tests). Service worker cache `ekoyini-shell-v34` (driver page cached for flaky data).
+- Not built yet: closed-app driver push alerts (drivers must have the app open to hear a new job) and a driver picker on the admin assign form.
+
 ### 20 Nov 2026: customer round 1 (habit features, no database change)
 - **Your usuals (home):** a rail above "Popular right now" showing the drinks a customer hearted plus what they order most (from `/api/my-orders`), with an "Order your last again" link. Hidden until there is something to show.
 - **Order again, one shared helper:** `EkoyiniReorder` in `public/script.js`, used by Profile, Track and Home. It checks today's catalogue, skips retired or out-of-stock items and says so, uses today's prices, and never doubles the cart (a second tap changes nothing).

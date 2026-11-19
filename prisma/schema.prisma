@@ -75,6 +75,27 @@ model PushSubscription {
   @@index([adminEmail])
 }
 
+// ── Driver app ─────────────────────────────────────────────────────────
+// Drivers sign in with their phone number (saved as 27XXXXXXXXX, the same
+// value as Order.driverPhone) and a 6-digit PIN that admin creates. Only a
+// scrypt hash of the PIN and a hash of the session token are stored.
+model Driver {
+  id               String    @id @default(cuid())
+  phone            String    @unique
+  name             String
+  vehicle          String?
+  pinHash          String
+  active           Boolean   @default(true)
+  failedLogins     Int       @default(0)
+  lockedUntil      DateTime?
+  sessionHash      String?
+  sessionExpiresAt DateTime?
+  lastLoginAt      DateTime?
+  createdAt        DateTime  @default(now())
+
+  @@index([sessionHash])
+}
+
 // Every consequential admin action gets a row here — who, what, on what,
 // when. Nothing reads or enforces against this table; it exists purely as
 // a record, so "who deleted order EKO-XXXXX" or "who zeroed out this

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#17140e">
+  <link rel="manifest" href="/driver-manifest.json">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/brand/favicon-32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/brand/favicon-180.png">
+  <title>Ekoyini Driver</title>
+  <style>
+    :root { --ink:#17140e; --cream:#faf6ee; --card:#fff; --line:#ece4d4; --mute:#6b6354; --go:#1f7a4d; --hot:#cc3300; --gold:#c9a24b; }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--cream); color: var(--ink); min-height: 100vh; padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
+    h1, h2, .serif { font-family: Georgia, "Times New Roman", serif; letter-spacing: -.01em; }
+    button { font: inherit; cursor: pointer; }
+    .hidden { display: none !important; }
+
+    /* sign in */
+    .login { min-height: 100vh; background: var(--ink); color: var(--cream); display: flex; flex-direction: column; justify-content: center; padding: 28px 24px; }
+    .login img { width: 64px; height: 64px; border-radius: 16px; margin-bottom: 18px; }
+    .login h1 { font-size: 32px; line-height: 1.1; margin-bottom: 8px; }
+    .login p { color: #bdb4a0; font-size: 15px; line-height: 1.5; margin-bottom: 26px; }
+    .login label { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #bdb4a0; display: block; margin: 14px 0 6px; }
+    .login input { width: 100%; padding: 16px 18px; border-radius: 16px; border: 1.5px solid #3a342a; background: #221e15; color: var(--cream); font-size: 20px; letter-spacing: .08em; }
+    .login input:focus { outline: none; border-color: var(--gold); }
+    .login .go { width: 100%; margin-top: 22px; min-height: 56px; border: 0; border-radius: 999px; background: var(--hot); color: #fff; font-size: 17px; font-weight: 800; }
+    .login .go:disabled { opacity: .6; }
+    .err { color: #ff9b85; font-size: 14px; margin-top: 12px; line-height: 1.45; min-height: 20px; }
+
+    /* app */
+    .top { position: sticky; top: 0; z-index: 5; background: var(--cream); border-bottom: 1px solid var(--line); padding: calc(12px + env(safe-area-inset-top)) 18px 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .top h1 { font-size: 22px; }
+    .top small { display: block; color: var(--mute); font-size: 12.5px; margin-top: 2px; }
+    .out { background: none; border: 1.5px solid var(--line); border-radius: 999px; padding: 8px 14px; font-size: 13px; font-weight: 700; color: var(--mute); }
+    .pane { padding: 16px 16px 8px; display: none; }
+    .pane.on { display: block; }
+    .empty { text-align: center; color: var(--mute); padding: 44px 20px; line-height: 1.55; font-size: 15px; }
+    .empty b { display: block; font-family: Georgia, serif; font-size: 20px; color: var(--ink); margin-bottom: 6px; }
+
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 22px; padding: 16px; margin-bottom: 14px; }
+    .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .chip { display: inline-block; font-size: 11.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; padding: 5px 11px; border-radius: 999px; background: #f1e8d6; color: #6a4d00; }
+    .chip.go { background: #dff3e8; color: var(--go); }
+    .code { font-family: ui-monospace, Menlo, monospace; font-weight: 800; letter-spacing: .05em; font-size: 15px; }
+    .earn { font-family: Georgia, serif; font-size: 26px; font-weight: 700; }
+    .earn small { font-family: -apple-system, sans-serif; font-size: 12px; color: var(--mute); font-weight: 600; margin-left: 4px; }
+    .meta { color: var(--mute); font-size: 14px; line-height: 1.5; margin-top: 8px; }
+    .meta b { color: var(--ink); }
+    .cash { margin-top: 10px; padding: 10px 12px; border-radius: 14px; background: #fff3d6; color: #6a4d00; font-size: 13.5px; font-weight: 700; }
+    .btns { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+    .btn { flex: 1 1 auto; min-height: 50px; padding: 0 18px; border-radius: 999px; border: 0; background: var(--ink); color: var(--cream); font-weight: 800; font-size: 15.5px; text-align: center; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
+    .btn.alt { background: #fff; color: var(--ink); border: 1.5px solid var(--line); }
+    .btn.big { background: var(--go); }
+    .btn:disabled { opacity: .55; }
+    details { margin-top: 10px; font-size: 14px; color: var(--mute); }
+    summary { cursor: pointer; font-weight: 700; color: var(--ink); }
+    details ul { margin: 6px 0 0 18px; line-height: 1.6; }
+
+    .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+    .stat { background: var(--ink); color: var(--cream); border-radius: 22px; padding: 16px; }
+    .stat span { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #bdb4a0; }
+    .stat b { display: block; font-family: Georgia, serif; font-size: 28px; margin: 6px 0 2px; }
+    .stat small { color: #bdb4a0; font-size: 12.5px; }
+    .note { font-size: 13px; color: var(--mute); line-height: 1.5; margin: 4px 4px 14px; }
+    .list-row { display: flex; justify-content: space-between; padding: 12px 4px; border-bottom: 1px solid var(--line); font-size: 14.5px; }
+    .list-row:last-child { border-bottom: 0; }
+
+    nav { position: fixed; left: 0; right: 0; bottom: 0; background: rgba(250,246,238,.97); border-top: 1px solid var(--line); display: flex; padding: 8px 8px calc(8px + env(safe-area-inset-bottom)); z-index: 6; }
+    nav button { flex: 1; background: none; border: 0; padding: 8px 4px; font-size: 12px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--mute); position: relative; }
+    nav button.on { color: var(--hot); }
+    nav .badge { display: inline-block; margin-left: 5px; background: var(--hot); color: #fff; border-radius: 999px; min-width: 18px; padding: 1px 6px; font-size: 11px; line-height: 1.5; vertical-align: 1px; }
+    .toast { position: fixed; left: 16px; right: 16px; bottom: calc(96px + env(safe-area-inset-bottom)); background: var(--ink); color: var(--cream); padding: 14px 16px; border-radius: 16px; font-size: 14.5px; z-index: 9; text-align: center; }
+  </style>
+</head>
+<body>
+  <!-- SIGN IN -->
+  <section class="login hidden" id="login">
+    <img src="/images/brand/ekoyini-icon.png" alt="Ekoyini">
+    <h1>Ekoyini Driver</h1>
+    <p>Take jobs, deliver, and see what you have earned. Dispatch gives you your PIN.</p>
+    <form id="loginForm" autocomplete="on">
+      <label for="phone">Cell number</label>
+      <input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="071 234 5678" required>
+      <label for="pin">6-digit PIN</label>
+      <input id="pin" name="pin" type="password" inputmode="numeric" autocomplete="current-password" maxlength="6" pattern="[0-9]{6}" placeholder="••••••" required>
+      <div class="err" id="loginErr" role="alert"></div>
+      <button class="go" id="loginBtn" type="submit">Sign in</button>
+    </form>
+  </section>
+
+  <!-- APP -->
+  <main class="hidden" id="app">
+    <header class="top">
+      <div><h1 id="hello">Hello</h1><small id="sub"></small></div>
+      <button class="out" id="outBtn" type="button">Sign out</button>
+    </header>
+
+    <section class="pane on" id="paneJobs" aria-label="My jobs"></section>
+    <section class="pane" id="paneBoard" aria-label="Job board"></section>
+    <section class="pane" id="paneEarn" aria-label="Earnings"></section>
+
+    <nav aria-label="Driver">
+      <button type="button" data-tab="Jobs" class="on">My jobs<span class="badge hidden" id="badgeJobs"></span></button>
+      <button type="button" data-tab="Board">Job board<span class="badge hidden" id="badgeBoard"></span></button>
+      <button type="button" data-tab="Earn">Earnings</button>
+    </nav>
+  </main>
+  <div class="toast hidden" id="toast" role="status"></div>
+
+  <script>
+  (function () {
+    const KEY = 'ekoyini_driver_token';
+    const $ = (id) => document.getElementById(id);
+    const rand = (n) => 'R' + Number(n || 0).toFixed(2).replace(/\.00$/, '');
+    const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const phoneHref = (p) => 'tel:' + String(p || '').replace(/[^\d+]/g, '');
+    let token = null, timer = null, tab = 'Jobs', data = null, knownBoard = new Set(), firstLoad = true;
+
+    function toast(msg, ms = 3200) {
+      const t = $('toast'); t.textContent = msg; t.classList.remove('hidden');
+      clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.add('hidden'), ms);
+    }
+    function ping() {
+      try { if (navigator.vibrate) navigator.vibrate([180, 90, 180]); } catch (_) {}
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.connect(g); g.connect(ctx.destination); o.frequency.value = 880; g.gain.value = 0.12;
+        o.start(); o.stop(ctx.currentTime + 0.22);
+      } catch (_) {}
+    }
+    async function api(path, opts = {}) {
+      const res = await fetch(path, { ...opts, headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) } });
+      let body = {}; try { body = await res.json(); } catch (_) {}
+      if (res.status === 401 && token) { signOutLocal(); }
+      return { ok: res.ok, status: res.status, body };
+    }
+
+    function showLogin() { $('login').classList.remove('hidden'); $('app').classList.add('hidden'); }
+    function showApp() { $('login').classList.add('hidden'); $('app').classList.remove('hidden'); }
+    function signOutLocal() { token = null; localStorage.removeItem(KEY); clearInterval(timer); data = null; firstLoad = true; knownBoard = new Set(); showLogin(); }
+
+    $('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      $('loginErr').textContent = ''; $('loginBtn').disabled = true;
+      const r = await api('/api/driver/login', { method: 'POST', body: JSON.stringify({ phone: $('phone').value, pin: $('pin').value }) });
+      $('loginBtn').disabled = false;
+      if (!r.ok) { $('loginErr').textContent = r.body.error || 'Could not sign in. Check your data and try again.'; return; }
+      token = r.body.token; localStorage.setItem(KEY, token); $('pin').value = '';
+      start();
+    });
+    $('outBtn').addEventListener('click', async () => { await api('/api/driver/logout', { method: 'POST' }); signOutLocal(); });
+
+    document.querySelectorAll('nav button').forEach((b) => b.addEventListener('click', () => setTab(b.dataset.tab)));
+    function setTab(name) {
+      tab = name;
+      document.querySelectorAll('nav button').forEach((b) => b.classList.toggle('on', b.dataset.tab === name));
+      ['Jobs', 'Board', 'Earn'].forEach((n) => $('pane' + n).classList.toggle('on', n === name));
+      window.scrollTo(0, 0);
+    }
+
+    // ── render ──
+    function jobCard(j) {
+      const onWay = j.status === 'DISPATCHED';
+      const nav = j.lat != null && j.lng != null
+        ? `https://www.google.com/maps/dir/?api=1&destination=${j.lat},${j.lng}`
+        : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(j.address)}`;
+      return `<article class="card">
+        <div class="row"><span class="chip${onWay ? ' go' : ''}">${onWay ? 'On the way' : 'Collect from tavern'}</span><span class="code">${esc(j.code)}</span></div>
+        <div class="earn" style="margin-top:10px">${rand(j.earn)}<small>you earn</small></div>
+        ${j.tavern && !onWay ? `<div class="meta"><b>Collect at ${esc(j.tavern.name)}</b>, ${esc(j.tavern.area)}. Ask the tavern for the 4-digit collection PIN.</div>` : ''}
+        <div class="meta"><b>Deliver to:</b> ${esc(j.address)}${j.landmark ? `<br><b>Landmark:</b> ${esc(j.landmark)}` : ''}</div>
+        ${j.cash ? `<div class="cash">Cash on delivery: collect ${rand(j.cash)} from the customer.</div>` : ''}
+        <details><summary>${j.items.reduce((n, i) => n + i.quantity, 0)} items</summary><ul>${j.items.map((i) => `<li>${esc(i.quantity)} × ${esc(i.name)}</li>`).join('')}</ul></details>
+        <div class="btns">
+          ${j.link ? `<a class="btn big" href="${esc(j.link)}">${onWay ? 'Finish delivery' : 'Confirm pickup'}</a>` : ''}
+          <a class="btn alt" href="${esc(nav)}" target="_blank" rel="noopener">Navigate</a>
+          ${!onWay && j.tavern && j.tavern.phone ? `<a class="btn alt" href="${esc(phoneHref(j.tavern.phone))}">Call tavern</a>` : ''}
+          ${onWay && j.customerPhone ? `<a class="btn alt" href="${esc(phoneHref(j.customerPhone))}">Call customer</a>` : ''}
+        </div>
+      </article>`;
+    }
+    function boardCard(b) {
+      return `<article class="card">
+        <div class="row"><span class="chip">${esc(b.area)}</span><span class="meta" style="margin:0">waiting ${b.waitingMin} min</span></div>
+        <div class="earn" style="margin-top:10px">${rand(b.earn)}<small>you earn</small></div>
+        <div class="meta">${b.distanceKm != null ? `<b>${b.distanceKm} km</b> from the tavern · ` : ''}${b.items} item${b.items === 1 ? '' : 's'}${b.tavern ? ` · collect at <b>${esc(b.tavern.name)}</b>` : ''}</div>
+        ${b.cash ? `<div class="cash">Cash on delivery: you collect ${rand(b.cash)} at the door.</div>` : ''}
+        <div class="btns"><button class="btn big" type="button" data-take="${esc(b.id)}"${b.canTake ? '' : ' disabled'}>${b.canTake ? 'Take this job' : 'Dispatch will assign'}</button></div>
+      </article>`;
+    }
+    function render() {
+      if (!data) return;
+      $('hello').textContent = 'Hi ' + (data.driver.name || '').split(' ')[0];
+      $('sub').textContent = data.driver.vehicle || data.driver.phone;
+      const jobs = data.jobs, board = data.board;
+      $('badgeJobs').textContent = jobs.length; $('badgeJobs').classList.toggle('hidden', !jobs.length);
+      $('badgeBoard').textContent = board.length; $('badgeBoard').classList.toggle('hidden', !board.length);
+
+      $('paneJobs').innerHTML = jobs.length ? jobs.map(jobCard).join('')
+        : `<div class="empty"><b>No jobs yet</b>Open the Job board to take one, or wait for dispatch to send you one.</div>`;
+
+      const full = jobs.length >= data.maxJobs;
+      $('paneBoard').innerHTML = (full ? `<p class="note">You have ${data.maxJobs} jobs. Finish one to take more.</p>` : '')
+        + (board.length ? board.map(boardCard).join('') : `<div class="empty"><b>Nothing waiting</b>New jobs show here the moment a paid order needs a driver.</div>`);
+
+      const e = data.earnings;
+      $('paneEarn').innerHTML = `
+        <div class="stats">
+          <div class="stat"><span>Today</span><b>${rand(e.today.earned)}</b><small>${e.today.deliveries} deliver${e.today.deliveries === 1 ? 'y' : 'ies'}</small></div>
+          <div class="stat"><span>Last 7 days</span><b>${rand(e.week.earned)}</b><small>${e.week.deliveries} deliver${e.week.deliveries === 1 ? 'y' : 'ies'}</small></div>
+        </div>
+        ${e.week.cash ? `<div class="cash" style="margin-bottom:12px">Cash you collected this week: ${rand(e.week.cash)}. It is taken off what you are owed, so you will be paid ${rand(e.week.net)} for the week.</div>` : ''}
+        <p class="note">Earnings are the delivery, surge and priority fees (100% yours). Payouts are made daily at 12:00 for yesterday.</p>
+        <div class="card">${e.recent.length ? e.recent.map((o) => `<div class="list-row"><span><span class="code">${esc(o.code)}</span><br><small style="color:var(--mute)">${esc(o.day)}${o.cash ? ' · cash ' + rand(o.cash) : ''}</small></span><b>${rand(o.earned)}</b></div>`).join('') : '<div class="empty" style="padding:24px 10px">Your deliveries will show here.</div>'}</div>`;
+    }
+
+    $('paneBoard').addEventListener('click', async (e) => {
+      const btn = e.target.closest('[data-take]');
+      if (!btn) return;
+      btn.disabled = true;
+      const r = await api('/api/driver/jobs/' + encodeURIComponent(btn.dataset.take) + '/take', { method: 'POST' });
+      if (r.ok) { toast('Job is yours. Collect it from the tavern.'); await refresh(); setTab('Jobs'); }
+      else { toast(r.body.error || 'Could not take that job.', 4200); await refresh(); }
+    });
+
+    async function refresh() {
+      const r = await api('/api/driver/home');
+      if (!r.ok) { if (r.status !== 401) toast('No signal. Trying again…', 2000); return; }
+      data = r.body;
+      const ids = new Set(data.board.map((b) => b.id));
+      if (!firstLoad && [...ids].some((id) => !knownBoard.has(id))) { ping(); toast('New job on the board'); }
+      knownBoard = ids; firstLoad = false;
+      render();
+    }
+    function start() {
+      showApp(); refresh();
+      clearInterval(timer); timer = setInterval(() => { if (!document.hidden) refresh(); }, 15000);
+    }
+    document.addEventListener('visibilitychange', () => { if (!document.hidden && token) refresh(); });
+
+    token = localStorage.getItem(KEY);
+    if (token) start(); else showLogin();
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
+  })();
+  </script>
+</body>
+</html>

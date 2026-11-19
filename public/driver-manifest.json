@@ -1,0 +1,14 @@
+{
+  "name": "Ekoyini Driver",
+  "short_name": "Driver",
+  "description": "Take jobs, deliver and track your earnings.",
+  "start_url": "/driver.html",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#17140e",
+  "theme_color": "#17140e",
+  "icons": [
+    { "src": "/images/brand/favicon-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "/images/brand/ekoyini-icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
