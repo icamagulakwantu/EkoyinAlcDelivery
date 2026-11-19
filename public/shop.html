@@ -407,8 +407,11 @@
   let searchQuery = (params.get('q') || '').trim();
   let categoryFilter = null; // null = show every category
   let collectionLabel = null;
+  // A category link from the home page (?cats=...) keeps the WHOLE shop and
+  // just jumps to that shelf (founder 19 Nov). Only curated collections filter.
+  let jumpCats = [];
   if (params.get('cats')) {
-    categoryFilter = new Set(params.get('cats').split(',').map((c) => c.trim()).filter(Boolean));
+    jumpCats = params.get('cats').split(',').map((c) => c.trim()).filter(Boolean);
   } else if (params.get('collection') && COLLECTIONS[params.get('collection')]) {
     const c = COLLECTIONS[params.get('collection')];
     categoryFilter = new Set(c.cats);
@@ -757,6 +760,21 @@
     const firstCat = Object.keys(byCategory)[0];
     if (firstCat) setAisle(aisleIndexForCategory(firstCat));
     observeSections();
+
+    // Home-page category link: land on that shelf, everything else stays below/above.
+    if (jumpCats.length) {
+      const target = jumpCats.map((c) => shelfOf(c)).find((sh) => document.getElementById('sec-' + sh));
+      jumpCats = [];
+      if (target) {
+        setActivePill(target);
+        setAisle(aisleIndexForCategory(target));
+        setTimeout(() => {
+          const sec = document.getElementById('sec-' + target);
+          if (sec) window.scrollTo({ top: sec.getBoundingClientRect().top + window.scrollY - stickyOffset(), behavior: 'auto' });
+          spyPausedUntil = Date.now() + 900;
+        }, 60);
+      }
+    }
   }
 
   // ── Category bar follows your scroll (scroll-spy) ──
