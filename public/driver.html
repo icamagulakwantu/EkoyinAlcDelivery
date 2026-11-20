@@ -175,7 +175,7 @@
         ? `https://www.google.com/maps/dir/?api=1&destination=${j.lat},${j.lng}`
         : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(j.address)}`;
       return `<article class="card">
-        <div class="row"><span class="chip${onWay ? ' go' : ''}">${onWay ? 'On the way' : 'Collect from tavern'}</span><span class="code">${esc(j.code)}</span></div>
+        <div class="row"><span class="chip${onWay || j.ready ? ' go' : ''}">${onWay ? 'On the way' : (j.ready ? 'Ready to collect' : 'Collect from tavern')}</span><span class="code">${esc(j.code)}</span></div>
         <div class="earn" style="margin-top:10px">${rand(j.earn)}<small>you earn</small></div>
         ${j.tavern && !onWay ? `<div class="meta"><b>Collect at ${esc(j.tavern.name)}</b>, ${esc(j.tavern.area)}. Ask the tavern for the 4-digit collection PIN.</div>` : ''}
         <div class="meta"><b>Deliver to:</b> ${esc(j.address)}${j.landmark ? `<br><b>Landmark:</b> ${esc(j.landmark)}` : ''}</div>

@@ -118,3 +118,7 @@ module.exports = function mountPayouts(app, { prisma, requireAdmin, requireSuper
     setTimeout(maybeSendNoonEmail, 60 * 1000).unref();
   }
 };
+
+// The tavern portal reads each tavern's own money through the same calculation.
+module.exports.payoutsFor = payoutsFor;
+module.exports.yesterdaySA = yesterdaySA;

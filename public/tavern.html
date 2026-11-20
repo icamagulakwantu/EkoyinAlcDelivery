@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#17140e">
+  <link rel="manifest" href="/tavern-manifest.json">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/brand/favicon-32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/brand/favicon-180.png">
+  <title>Ekoyini Tavern</title>
+  <style>
+    :root { --ink:#17140e; --cream:#faf6ee; --card:#fff; --line:#ece4d4; --mute:#6b6354; --go:#1f7a4d; --hot:#cc3300; --gold:#c9a24b; }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--cream); color: var(--ink); min-height: 100vh; padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
+    h1, h2, .serif { font-family: Georgia, "Times New Roman", serif; letter-spacing: -.01em; }
+    button { font: inherit; cursor: pointer; }
+    .hidden { display: none !important; }
+
+    /* sign in */
+    .login { min-height: 100vh; background: var(--ink); color: var(--cream); display: flex; flex-direction: column; justify-content: center; padding: 28px 24px; }
+    .login img { width: 64px; height: 64px; border-radius: 16px; margin-bottom: 18px; }
+    .login h1 { font-size: 32px; line-height: 1.1; margin-bottom: 8px; }
+    .login p { color: #bdb4a0; font-size: 15px; line-height: 1.5; margin-bottom: 26px; }
+    .login label { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #bdb4a0; display: block; margin: 14px 0 6px; }
+    .login input { width: 100%; padding: 16px 18px; border-radius: 16px; border: 1.5px solid #3a342a; background: #221e15; color: var(--cream); font-size: 20px; letter-spacing: .08em; }
+    .login input:focus { outline: none; border-color: var(--gold); }
+    .login .go { width: 100%; margin-top: 22px; min-height: 56px; border: 0; border-radius: 999px; background: var(--hot); color: #fff; font-size: 17px; font-weight: 800; }
+    .login .go:disabled { opacity: .6; }
+    .err { color: #ff9b85; font-size: 14px; margin-top: 12px; line-height: 1.45; min-height: 20px; }
+
+    /* app */
+    .top { position: sticky; top: 0; z-index: 5; background: var(--cream); border-bottom: 1px solid var(--line); padding: calc(12px + env(safe-area-inset-top)) 18px 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .top h1 { font-size: 22px; }
+    .top small { display: block; color: var(--mute); font-size: 12.5px; margin-top: 2px; }
+    .out { background: none; border: 1.5px solid var(--line); border-radius: 999px; padding: 8px 14px; font-size: 13px; font-weight: 700; color: var(--mute); }
+    .pane { padding: 16px 16px 8px; display: none; }
+    .pane.on { display: block; }
+    .empty { text-align: center; color: var(--mute); padding: 44px 20px; line-height: 1.55; font-size: 15px; }
+    .empty b { display: block; font-family: Georgia, serif; font-size: 20px; color: var(--ink); margin-bottom: 6px; }
+
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 22px; padding: 16px; margin-bottom: 14px; }
+    .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .chip { display: inline-block; font-size: 11.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; padding: 5px 11px; border-radius: 999px; background: #f1e8d6; color: #6a4d00; }
+    .chip.go { background: #dff3e8; color: var(--go); }
+    .code { font-family: ui-monospace, Menlo, monospace; font-weight: 800; letter-spacing: .05em; font-size: 15px; }
+    .earn { font-family: Georgia, serif; font-size: 26px; font-weight: 700; }
+    .earn small { font-family: -apple-system, sans-serif; font-size: 12px; color: var(--mute); font-weight: 600; margin-left: 4px; }
+    .meta { color: var(--mute); font-size: 14px; line-height: 1.5; margin-top: 8px; }
+    .meta b { color: var(--ink); }
+    .cash { margin-top: 10px; padding: 10px 12px; border-radius: 14px; background: #fff3d6; color: #6a4d00; font-size: 13.5px; font-weight: 700; }
+    .btns { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+    .btn { flex: 1 1 auto; min-height: 50px; padding: 0 18px; border-radius: 999px; border: 0; background: var(--ink); color: var(--cream); font-weight: 800; font-size: 15.5px; text-align: center; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
+    .btn.alt { background: #fff; color: var(--ink); border: 1.5px solid var(--line); }
+    .btn.big { background: var(--go); }
+    .btn:disabled { opacity: .55; }
+    details { margin-top: 10px; font-size: 14px; color: var(--mute); }
+    summary { cursor: pointer; font-weight: 700; color: var(--ink); }
+    details ul { margin: 6px 0 0 18px; line-height: 1.6; }
+
+    .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+    .stat { background: var(--ink); color: var(--cream); border-radius: 22px; padding: 16px; }
+    .stat span { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #bdb4a0; }
+    .stat b { display: block; font-family: Georgia, serif; font-size: 28px; margin: 6px 0 2px; }
+    .stat small { color: #bdb4a0; font-size: 12.5px; }
+    .note { font-size: 13px; color: var(--mute); line-height: 1.5; margin: 4px 4px 14px; }
+    .list-row { display: flex; justify-content: space-between; padding: 12px 4px; border-bottom: 1px solid var(--line); font-size: 14.5px; }
+    .list-row:last-child { border-bottom: 0; }
+
+    nav { position: fixed; left: 0; right: 0; bottom: 0; background: rgba(250,246,238,.97); border-top: 1px solid var(--line); display: flex; padding: 8px 8px calc(8px + env(safe-area-inset-bottom)); z-index: 6; }
+    nav button { flex: 1; background: none; border: 0; padding: 8px 4px; font-size: 12px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--mute); position: relative; }
+    nav button.on { color: var(--hot); }
+    nav .badge { display: inline-block; margin-left: 5px; background: var(--hot); color: #fff; border-radius: 999px; min-width: 18px; padding: 1px 6px; font-size: 11px; line-height: 1.5; vertical-align: 1px; }
+    .alerts { margin: 12px 16px 0; padding: 12px 14px; border-radius: 18px; background: #fff; border: 1px solid var(--line); font-size: 13.5px; line-height: 1.45; color: var(--mute); }
+    .alerts b { color: var(--ink); }
+    .alerts.on { background: #dff3e8; border-color: #bfe3cf; color: var(--go); }
+    .alerts button { margin-top: 8px; min-height: 44px; padding: 0 18px; border: 0; border-radius: 999px; background: var(--ink); color: var(--cream); font-weight: 800; font-size: 14.5px; }
+    .alerts .link { margin: 0 0 0 8px; min-height: 0; padding: 0; background: none; color: inherit; text-decoration: underline; font-weight: 700; font-size: 13px; }
+    .toast { position: fixed; left: 16px; right: 16px; bottom: calc(96px + env(safe-area-inset-bottom)); background: var(--ink); color: var(--cream); padding: 14px 16px; border-radius: 16px; font-size: 14.5px; z-index: 9; text-align: center; }
+  
+    .pin { margin-top: 12px; padding: 14px; border-radius: 18px; background: var(--ink); color: var(--cream); text-align: center; }
+    .pin span { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #bdb4a0; }
+    .pin b { display: block; font-family: ui-monospace, Menlo, monospace; font-size: 38px; letter-spacing: .25em; margin: 4px 0 2px; }
+    .pin small { color: #bdb4a0; font-size: 12.5px; }
+    .chip.hot { background: #fde3da; color: var(--hot); }
+    .items { margin: 12px 0 0 18px; line-height: 1.7; font-size: 15.5px; }
+    .search { width: 100%; padding: 14px 16px; border-radius: 16px; border: 1.5px solid var(--line); background: #fff; font-size: 16px; margin-bottom: 12px; }
+    .search:focus { outline: none; border-color: var(--gold); }
+    .item-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 4px; border-bottom: 1px solid var(--line); font-size: 15px; }
+    .item-row:last-child { border-bottom: 0; }
+    .item-row small { display: block; color: var(--mute); font-size: 12.5px; }
+    .tog { flex: none; min-height: 40px; padding: 0 14px; border-radius: 999px; border: 1.5px solid var(--line); background: #fff; font-weight: 800; font-size: 13px; }
+    .tog.out { background: #fde3da; border-color: #f4bfae; color: var(--hot); }
+    h2.sec { font-size: 15px; letter-spacing: .02em; margin: 6px 4px 10px; color: var(--mute); font-family: -apple-system, sans-serif; text-transform: uppercase; font-weight: 800; }
+    .paid { color: var(--go); font-weight: 800; font-size: 13px; }
+</style>
+</head>
+<body>
+  <!-- SIGN IN -->
+  <section class="login hidden" id="login">
+    <img src="/images/brand/ekoyini-icon.png" alt="Ekoyini">
+    <h1>Ekoyini Tavern</h1>
+    <p>See the orders to pack, give drivers their collection PIN, mark what you have run out of, and see what you are owed. Ekoyini gives you your PIN.</p>
+    <form id="loginForm" autocomplete="on">
+      <label for="phone">Tavern cell number</label>
+      <input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="071 234 5678" required>
+      <label for="pin">6-digit PIN</label>
+      <input id="pin" name="pin" type="password" inputmode="numeric" autocomplete="current-password" maxlength="6" pattern="[0-9]{6}" placeholder="••••••" required>
+      <div class="err" id="loginErr" role="alert"></div>
+      <button class="go" id="loginBtn" type="submit">Sign in</button>
+    </form>
+  </section>
+
+  <!-- APP -->
+  <main class="hidden" id="app">
+    <header class="top">
+      <div><h1 id="hello">Tavern</h1><small id="sub"></small></div>
+      <button class="out" id="outBtn" type="button">Sign out</button>
+    </header>
+
+    <div class="alerts hidden" id="alertsBar"></div>
+
+    <section class="pane on" id="paneOrders" aria-label="Orders"></section>
+    <section class="pane" id="paneItems" aria-label="Items"></section>
+    <section class="pane" id="paneMoney" aria-label="Money"></section>
+
+    <nav aria-label="Tavern">
+      <button type="button" data-tab="Orders" class="on">Orders<span class="badge hidden" id="badgeOrders"></span></button>
+      <button type="button" data-tab="Items">Items</button>
+      <button type="button" data-tab="Money">Money</button>
+    </nav>
+  </main>
+  <div class="toast hidden" id="toast" role="status"></div>
+
+  <script>
+  (function () {
+    const KEY = 'ekoyini_tavern_token';
+    const $ = (id) => document.getElementById(id);
+    const rand = (n) => 'R' + Number(n || 0).toFixed(2);
+    const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    let token = null, timer = null, tab = 'Orders', data = null, money = null, knownPack = new Set(), knownIncoming = -1, searchTimer = null, lastQ = '';
+
+    function toast(msg, ms = 3200) {
+      const t = $('toast'); t.textContent = msg; t.classList.remove('hidden');
+      clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.add('hidden'), ms);
+    }
+    function ping() {
+      try { if (navigator.vibrate) navigator.vibrate([180, 90, 180]); } catch (_) {}
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.connect(g); g.connect(ctx.destination); o.frequency.value = 880; g.gain.value = 0.12;
+        o.start(); o.stop(ctx.currentTime + 0.22);
+      } catch (_) {}
+    }
+    async function api(path, opts = {}) {
+      const res = await fetch(path, { ...opts, headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) } });
+      let body = {}; try { body = await res.json(); } catch (_) {}
+      if (res.status === 401 && token) { signOutLocal(); }
+      return { ok: res.ok, status: res.status, body };
+    }
+
+    function showLogin() { $('login').classList.remove('hidden'); $('app').classList.add('hidden'); }
+    function showApp() { $('login').classList.add('hidden'); $('app').classList.remove('hidden'); }
+    function signOutLocal() { token = null; localStorage.removeItem(KEY); clearInterval(timer); data = null; money = null; knownPack = new Set(); knownIncoming = -1; showLogin(); }
+
+    $('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      $('loginErr').textContent = ''; $('loginBtn').disabled = true;
+      const r = await api('/api/tavern/login', { method: 'POST', body: JSON.stringify({ phone: $('phone').value, pin: $('pin').value }) });
+      $('loginBtn').disabled = false;
+      if (!r.ok) { $('loginErr').textContent = r.body.error || 'Could not sign in. Check your data and try again.'; return; }
+      token = r.body.token; localStorage.setItem(KEY, token); $('pin').value = '';
+      start();
+    });
+    $('outBtn').addEventListener('click', async () => { await api('/api/tavern/logout', { method: 'POST' }); signOutLocal(); });
+
+    document.querySelectorAll('nav button').forEach((b) => b.addEventListener('click', () => setTab(b.dataset.tab)));
+    function setTab(name) {
+      tab = name;
+      document.querySelectorAll('nav button').forEach((b) => b.classList.toggle('on', b.dataset.tab === name));
+      ['Orders', 'Items', 'Money'].forEach((n) => $('pane' + n).classList.toggle('on', n === name));
+      window.scrollTo(0, 0);
+      if (name === 'Items') loadStock();
+      if (name === 'Money') loadMoney();
+    }
+
+    // ── orders ──
+    function packCard(o) {
+      const drv = o.driver ? `${esc(o.driver.name)}${o.driver.vehicle ? ' (' + esc(o.driver.vehicle) + ')' : ''}` : 'A driver';
+      return `<article class="card">
+        <div class="row"><span class="chip${o.ready ? ' go' : ' hot'}">${o.ready ? 'Ready' : 'Pack now'}</span><span class="code">${esc(o.code)}</span></div>
+        <ul class="items">${o.items.map((i) => `<li><b>${esc(i.quantity)} ×</b> ${esc(i.name)}</li>`).join('')}</ul>
+        <div class="meta"><b>${drv}</b> collects this${o.assignedMin != null ? ` · assigned ${o.assignedMin} min ago` : ''}. Please have it packed and cold.</div>
+        ${o.collectionPin ? `<div class="pin"><span>Collection PIN</span><b>${esc(o.collectionPin)}</b><small>Read it out only when you hand the order to ${esc(o.driver ? o.driver.name : 'the driver')}.</small></div>` : ''}
+        <div class="btns"><button class="btn ${o.ready ? 'alt' : 'big'}" type="button" data-ready="${esc(o.code)}" data-state="${o.ready ? '0' : '1'}">${o.ready ? 'Not ready yet' : 'Ready for collection'}</button></div>
+      </article>`;
+    }
+    function incomingCard(o) {
+      return `<article class="card">
+        <div class="row"><span class="chip">${esc(o.area)}</span><span class="meta" style="margin:0">waiting ${o.waitingMin} min</span></div>
+        <ul class="items">${o.items.map((i) => `<li><b>${esc(i.quantity)} ×</b> ${esc(i.name)}</li>`).join('')}</ul>
+        <div class="meta">A driver has not taken this yet. You can start packing. You will get the collection PIN as soon as a driver is on the way.</div>
+      </article>`;
+    }
+    function renderOrders() {
+      if (!data) return;
+      $('hello').textContent = data.tavern.name;
+      $('sub').textContent = data.tavern.area;
+      $('badgeOrders').textContent = data.toPack.length + data.incoming.length;
+      $('badgeOrders').classList.toggle('hidden', !(data.toPack.length + data.incoming.length));
+      let html = '';
+      if (data.toPack.length) html += '<h2 class="sec">Pack these now</h2>' + data.toPack.map(packCard).join('');
+      if (data.incoming.length) html += '<h2 class="sec">Coming your way</h2>' + data.incoming.map(incomingCard).join('');
+      if (!data.toPack.length && !data.incoming.length) html += '<div class="empty"><b>No orders right now</b>New orders show here and your phone buzzes if alerts are on.</div>';
+      if (data.collected.length) html += '<h2 class="sec">Collected in the last 24 hours</h2><div class="card">' + data.collected.map((o) => `<div class="list-row"><span><span class="code">${esc(o.code)}</span><br><small style="color:var(--mute)">${o.driver ? esc(o.driver.name) : ''} · ${o.itemCount} item${o.itemCount === 1 ? '' : 's'}</small></span><span class="chip go">Collected</span></div>`).join('') + '</div>';
+      $('paneOrders').innerHTML = html;
+    }
+    $('paneOrders').addEventListener('click', async (e) => {
+      const btn = e.target.closest('[data-ready]');
+      if (!btn) return;
+      btn.disabled = true;
+      const r = await api('/api/tavern/orders/' + encodeURIComponent(btn.dataset.ready) + '/ready', { method: 'POST', body: JSON.stringify({ ready: btn.dataset.state === '1' }) });
+      toast(r.ok ? (btn.dataset.state === '1' ? 'Marked ready. The driver can see it.' : 'Marked not ready.') : (r.body.error || 'Could not update that order.'), 3600);
+      await refresh();
+    });
+
+    // ── sold-out items ──
+    function itemRow(s, out) {
+      return `<div class="item-row"><div>${esc(s.name)}<small>${esc(s.pack)}</small></div><button class="tog${out ? ' out' : ''}" type="button" data-sku="${esc(s.skuId)}" data-out="${out ? '0' : '1'}">${out ? 'Back in stock' : 'Sold out'}</button></div>`;
+    }
+    async function loadStock() {
+      const q = $('q') ? $('q').value.trim() : '';
+      lastQ = q;
+      const r = await api('/api/tavern/stock?q=' + encodeURIComponent(q));
+      if (!r.ok) { toast(r.body.error || 'Could not load items.'); return; }
+      if (lastQ !== q) return;
+      const { soldOut, results } = r.body;
+      $('stockOut').innerHTML = soldOut.length
+        ? '<h2 class="sec">Sold out at your tavern</h2><div class="card">' + soldOut.map((s) => itemRow(s, true)).join('') + '</div>'
+        : '<p class="note">Nothing is marked sold out. When you run out of something, search for it and tap Sold out. Ekoyini will send orders with that item to the next nearest tavern.</p>';
+      $('stockResults').innerHTML = q.length < 2 ? '' : (results.length
+        ? '<h2 class="sec">Search results</h2><div class="card">' + results.map((s) => itemRow(s, s.soldOut)).join('') + '</div>'
+        : '<div class="empty" style="padding:24px 10px">No items match that.</div>');
+    }
+    $('paneItems').innerHTML = '<input class="search" id="q" type="search" placeholder="Search an item, e.g. Heineken" autocomplete="off" maxlength="60"><div id="stockOut"></div><div id="stockResults"></div>';
+    $('q').addEventListener('input', () => { clearTimeout(searchTimer); searchTimer = setTimeout(loadStock, 300); });
+    $('paneItems').addEventListener('click', async (e) => {
+      const btn = e.target.closest('[data-sku]');
+      if (!btn) return;
+      btn.disabled = true;
+      const r = await api('/api/tavern/stock', { method: 'POST', body: JSON.stringify({ skuId: btn.dataset.sku, soldOut: btn.dataset.out === '1' }) });
+      toast(r.ok ? (btn.dataset.out === '1' ? 'Marked sold out.' : 'Back in stock.') : (r.body.error || 'Could not save that.'));
+      await loadStock(); refresh();
+    });
+
+    // ── money ──
+    async function loadMoney() {
+      const r = await api('/api/tavern/money');
+      if (!r.ok) { $('paneMoney').innerHTML = '<div class="empty"><b>Could not load</b>' + esc(r.body.error || 'Try again in a moment.') + '</div>'; return; }
+      money = r.body;
+      const y = money.yesterday, t = money.today;
+      $('paneMoney').innerHTML = `
+        <div class="stats">
+          <div class="stat"><span>Yesterday</span><b>${rand(y.owed)}</b><small>${y.paid ? 'Paid' : (y.owed ? 'Paid at 12:00 today' : 'No orders')}</small></div>
+          <div class="stat"><span>Today so far</span><b>${rand(t.owed)}</b><small>${t.orders} order${t.orders === 1 ? '' : 's'} delivered</small></div>
+        </div>
+        <p class="note">This is the tavern's share of each delivered order: your shelf prices plus bottle and crate charges. Ekoyini pays every day at 12:00 for the day before.</p>
+        <div class="card">${money.days.map((d) => `<div class="list-row"><span>${esc(d.day)}<br><small style="color:var(--mute)">${d.orders} order${d.orders === 1 ? '' : 's'}</small></span><span style="text-align:right"><b>${rand(d.owed)}</b>${d.paid ? '<br><span class="paid">Paid</span>' : ''}</span></div>`).join('')}</div>
+        <p class="note">Last 7 days: ${rand(money.weekOwed)}${money.weekUnpaid ? ` · still to be paid: ${rand(money.weekUnpaid)}` : ''}</p>`;
+    }
+
+    // ── closed-app alerts (web push) ──
+    let alertState = 'checking', alertNote = '';
+    const pushSupported = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+    const isIphone = /iPhone|iPad|iPod/.test(navigator.userAgent);
+    const isInstalled = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+    function keyBytes(b64) {
+      const pad = '='.repeat((4 - (b64.length % 4)) % 4);
+      const raw = atob((b64 + pad).replace(/-/g, '+').replace(/_/g, '/'));
+      return Uint8Array.from(raw, (c) => c.charCodeAt(0));
+    }
+    async function enablePush(ask) {
+      if (!pushSupported()) return isIphone && !isInstalled ? 'iphone' : 'unsupported';
+      if (Notification.permission === 'denied') return 'blocked';
+      if (!ask && localStorage.getItem('ekoyini_tavern_alerts') !== '1') return 'off';
+      if (Notification.permission !== 'granted') {
+        if (!ask) return 'off';
+        const p = await Notification.requestPermission();
+        if (p !== 'granted') return p === 'denied' ? 'blocked' : 'off';
+      }
+      try {
+        const cfg = await api('/api/tavern/push/config');
+        if (!cfg.ok || !cfg.body.enabled || !cfg.body.publicKey) return 'server-off';
+        const reg = await navigator.serviceWorker.register('/sw.js');
+        await navigator.serviceWorker.ready;
+        const want = keyBytes(cfg.body.publicKey);
+        let sub = await reg.pushManager.getSubscription();
+        if (sub && sub.options && sub.options.applicationServerKey) {
+          const have = new Uint8Array(sub.options.applicationServerKey);
+          if (have.length !== want.length || have.some((b, i) => b !== want[i])) { await sub.unsubscribe(); sub = null; }
+        }
+        if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: want });
+        const saved = await api('/api/tavern/push/subscribe', { method: 'POST', body: JSON.stringify(sub.toJSON()) });
+        if (saved.status === 409) { alertNote = saved.body.error || ''; return 'conflict'; }
+        if (saved.ok) localStorage.setItem('ekoyini_tavern_alerts', '1');
+        return saved.ok ? 'on' : 'error';
+      } catch (_) { return 'error'; }
+    }
+    async function disablePush() {
+      try {
+        const reg = await navigator.serviceWorker.getRegistration();
+        const sub = reg && await reg.pushManager.getSubscription();
+        if (sub) { await api('/api/tavern/push/unsubscribe', { method: 'POST', body: JSON.stringify({ endpoint: sub.endpoint }) }); await sub.unsubscribe(); }
+      } catch (_) {}
+      localStorage.removeItem('ekoyini_tavern_alerts');
+      alertState = 'off'; renderAlerts();
+    }
+    function renderAlerts() {
+      const bar = $('alertsBar');
+      const msgs = {
+        iphone: '<b>Order alerts on iPhone:</b> tap Share, then Add to Home Screen, and open Ekoyini Tavern from your home screen.',
+        unsupported: 'This browser cannot send order alerts. Keep this app open to hear about new orders.',
+        blocked: '<b>Order alerts are blocked.</b> Allow notifications for this site in your phone settings, then come back.',
+        'server-off': 'Order alerts are not switched on yet. Please tell Ekoyini.',
+        conflict: alertNote || 'This phone already gets admin alerts.',
+        error: 'Could not turn on order alerts. Check your data and try again.',
+      };
+      if (alertState === 'checking') { bar.classList.add('hidden'); return; }
+      bar.classList.remove('hidden');
+      bar.classList.toggle('on', alertState === 'on');
+      if (alertState === 'on') bar.innerHTML = '&#128276; <b>Order alerts are on.</b> Your phone will buzz for new orders, even when this app is closed.<button type="button" class="link" id="alertOff">Turn off</button>';
+      else if (alertState === 'off') bar.innerHTML = '<b>Get a buzz for new orders.</b> Works even when the app is closed.<br><button type="button" id="alertOn">Turn on order alerts</button>';
+      else bar.innerHTML = msgs[alertState] || msgs.error;
+      const on = $('alertOn'), off = $('alertOff');
+      if (on) on.onclick = async () => { on.disabled = true; alertState = await enablePush(true); renderAlerts(); };
+      if (off) off.onclick = disablePush;
+    }
+    async function syncAlerts() { alertState = await enablePush(false); renderAlerts(); }
+
+    async function refresh() {
+      const r = await api('/api/tavern/home');
+      if (!r.ok) { if (r.status !== 401) toast('No signal. Trying again…', 2000); return; }
+      data = r.body;
+      const packIds = new Set(data.toPack.map((o) => o.code));
+      const newPack = [...packIds].some((c) => !knownPack.has(c));
+      const newIncoming = knownIncoming >= 0 && data.incoming.length > knownIncoming;
+      if (knownIncoming >= 0 && (newPack || newIncoming)) { ping(); toast(newPack ? 'A driver is coming. Pack the order.' : 'New order coming your way'); }
+      knownPack = packIds; knownIncoming = data.incoming.length;
+      renderOrders();
+    }
+    function start() {
+      showApp(); refresh(); syncAlerts();
+      clearInterval(timer); timer = setInterval(() => { if (!document.hidden) refresh(); }, 15000);
+    }
+    document.addEventListener('visibilitychange', () => { if (!document.hidden && token) refresh(); });
+
+    token = localStorage.getItem(KEY);
+    if (token) start(); else showLogin();
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
+  })();
+  </script>
+</body>
+</html>

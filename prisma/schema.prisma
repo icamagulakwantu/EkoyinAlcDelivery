@@ -96,6 +96,37 @@ model Driver {
   @@index([sessionHash])
 }
 
+// Tavern portal (founder approved 21 Nov 2026). A partner tavern signs in with
+// the tavern phone number (Tavern.phone, saved 27XXXXXXXXX) and a 6-digit PIN
+// that admin creates. Kept in its own table so the hashes can never ride along
+// when a Tavern is included in an order response. Only scrypt hashes are stored.
+model TavernAccess {
+  id               String    @id @default(cuid())
+  tavernId         String    @unique
+  pinHash          String
+  active           Boolean   @default(true)
+  failedLogins     Int       @default(0)
+  lockedUntil      DateTime?
+  sessionHash      String?
+  sessionExpiresAt DateTime?
+  lastLoginAt      DateTime?
+  createdAt        DateTime  @default(now())
+
+  @@index([sessionHash])
+}
+
+// An item a tavern has told us it cannot supply right now. Stock stays shared
+// and prices stay platform-wide; this only steers which tavern an order goes to.
+model TavernSoldOut {
+  id        String   @id @default(cuid())
+  tavernId  String
+  skuId     String
+  createdAt DateTime @default(now())
+
+  @@unique([tavernId, skuId])
+  @@index([skuId])
+}
+
 // Every consequential admin action gets a row here — who, what, on what,
 // when. Nothing reads or enforces against this table; it exists purely as
 // a record, so "who deleted order EKO-XXXXX" or "who zeroed out this
@@ -272,6 +303,7 @@ model Order {
   paidAt        DateTime? // when the order became paid (PENDING)
   assignedAt    DateTime? // when a tavern + driver were assigned
   pickedUpAt    DateTime? // when the driver confirmed pickup
+  readyAt       DateTime? // when the tavern marked the order ready for collection
   alertsSent    String?   // JSON: alert kinds/levels already emailed
 
   total         Float

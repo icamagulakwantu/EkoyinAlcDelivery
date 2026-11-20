@@ -59,6 +59,7 @@ async function loadDrivers() {
         if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Failed');
         driversList = await res.json();
         renderDrivers();
+        loadTavernAccess();
     } catch (err) {
         body.innerHTML = `<div class="no-orders">Could not load drivers: ${escapeHtml(err.message)}</div>`;
     }
@@ -91,7 +92,79 @@ async function toggleDriver(id, active) {
     await loadDrivers();
 }
 
-Object.assign(window, { addDriver, resetDriverPin, toggleDriver });
+// ── Tavern portal access (founder approved 21 Nov 2026) ─────────────────────
+// Switch a tavern's portal on, pause it, reset its PIN. The PIN shows once with a WhatsApp button.
+let tavernAccessList = [];
+let tavernPinBox = null; // { name, phone, pin }
+
+function tavernAppUrl() { return `${window.location.origin}/tavern.html`; }
+
+function tavernInviteText(t) {
+    return `Hi, welcome to Ekoyini Tavern for ${t.name}.\nOpen: ${tavernAppUrl()}\nCell: ${t.phone}\nPIN: ${t.pin}\nHere you see the orders to pack and the collection PIN for drivers, mark items you have run out of, and see your daily payout. Please keep your PIN private.`;
+}
+
+function tavernWaLink(t) {
+    return `https://wa.me/${String(t.phone).replace(/\D/g, '')}?text=${encodeURIComponent(tavernInviteText(t))}`;
+}
+
+function tavernAccessRow(t) {
+    const a = t.access;
+    const status = !a ? 'Not on' : (a.active ? 'Active' : 'Paused');
+    const last = a ? (a.lastLoginAt ? 'last signed in ' + new Date(a.lastLoginAt).toLocaleString('en-ZA') : 'never signed in') : (t.signInOk ? 'portal is off' : 'save a valid cell number first');
+    const buttons = !a
+        ? `<button type="button" class="dispatch-btn po-btn"${t.signInOk ? '' : ' disabled'} onclick="tavernAccessAction('${escapeHtml(t.id)}', 'enable')">Switch on</button>`
+        : `<button type="button" class="dispatch-btn po-btn" onclick="tavernAccessAction('${escapeHtml(t.id)}', 'reset')">Reset PIN</button>
+           <button type="button" class="dispatch-btn po-btn" onclick="tavernAccessAction('${escapeHtml(t.id)}', '${a.active ? 'pause' : 'resume'}')">${a.active ? 'Pause' : 'Resume'}</button>`;
+    return `
+        <div class="po-row${a && a.active ? '' : ' is-paid'}">
+            <div class="po-who"><b>${escapeHtml(t.name)}</b><span>${escapeHtml(t.phone || 'no cell number')}</span><small>${escapeHtml(t.area || '')} · ${escapeHtml(last)}${a ? ` · ${t.alertPhones} alert phone${t.alertPhones === 1 ? '' : 's'} · ${t.soldOut} sold out` : ''}</small></div>
+            <div class="po-amt">${status}</div>
+            <div class="po-act">${buttons}</div>
+        </div>`;
+}
+
+function renderTavernAccess() {
+    const body = document.getElementById('tavernAccessBody');
+    if (!body) return;
+    const pin = tavernPinBox;
+    body.innerHTML = `
+        ${pin ? `
+        <div class="po-card" style="border:2px solid #1f7a4d;border-radius:16px;padding:14px;margin-bottom:14px;">
+            <b>${escapeHtml(pin.name)}'s sign-in</b>
+            <p style="margin:6px 0;font-size:14px;">Cell <b>${escapeHtml(pin.phone)}</b> &middot; PIN <b style="font-size:20px;letter-spacing:.1em;">${escapeHtml(pin.pin)}</b></p>
+            <p style="margin:0 0 10px;font-size:12.5px;opacity:.8;">This PIN is shown once. Send it now.</p>
+            <a class="dispatch-btn" href="${escapeHtml(tavernWaLink(pin))}" target="_blank" rel="noopener">Send on WhatsApp</a>
+        </div>` : ''}
+        <p style="font-size:13px;opacity:.8;margin:0 0 12px;">Taverns sign in at <b>${escapeHtml(tavernAppUrl())}</b> with their saved cell number and a PIN. They see the orders to pack and the collection PIN, mark items sold out and see their daily payout. Orders with a sold-out item go to the next nearest tavern.</p>
+        ${tavernAccessList.length ? tavernAccessList.map(tavernAccessRow).join('') : '<div class="no-orders">No taverns yet. Add them in the Delivery tab.</div>'}`;
+}
+
+async function loadTavernAccess() {
+    const body = document.getElementById('tavernAccessBody');
+    if (!body) return;
+    try {
+        const res = await adminFetch('/admin/tavern-access');
+        if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Failed');
+        tavernAccessList = await res.json();
+        renderTavernAccess();
+    } catch (err) {
+        body.innerHTML = `<div class="no-orders">Could not load taverns: ${escapeHtml(err.message)}</div>`;
+    }
+}
+
+async function tavernAccessAction(id, action) {
+    const t = tavernAccessList.find((x) => x.id === id);
+    if (!t) return;
+    if (action === 'reset' && !confirm(`Make a new PIN for ${t.name}? Their old PIN stops working and they are signed out.`)) return;
+    if (action === 'pause' && !confirm(`Pause the portal for ${t.name}? They are signed out straight away.`)) return;
+    const res = await adminFetch(`/admin/tavern-access/${encodeURIComponent(id)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action }) });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) { alert(data.error || 'Could not update the tavern'); return; }
+    tavernPinBox = data.pin ? { name: t.name, phone: t.phone, pin: data.pin } : null;
+    await loadTavernAccess();
+}
+
+Object.assign(window, { addDriver, resetDriverPin, toggleDriver, tavernAccessAction });
 
 const baseShowSectionForDrivers = window.showSection;
 window.showSection = function (name, tabEl) {

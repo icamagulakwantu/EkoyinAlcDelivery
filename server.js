@@ -191,6 +191,7 @@ const push = require("./lib/push.js").createPusher({
 });
 // Closed-app "new job" alerts for drivers who turned them on in the driver app.
 const driverPush = require("./lib/driver-push.js").createDriverPush({ prisma, push });
+const tavernPush = require("./lib/tavern-push.js").createTavernPush({ prisma, push });
 
 // The shared ADMIN_API_TOKEN (for scripts) is only honoured when it is long
 // enough to be unguessable, is compared in constant time, and repeated wrong
@@ -797,6 +798,7 @@ app.post("/order", writeLimiter, requireUser, async (req, res) => {
     sendAdminOrderAlertEmail(order).catch((e) => console.error("[email] admin alert failed:", e));
     push.notifyNewOrder(order);
     driverPush.notifyNewJob(order);
+    tavernPush.notifyIncoming(order); // the tavern it will go to can start packing
     res.json({ message: "Order received", order });
   } catch (err) {
     if (err.message === "PROMO_INVALID") return res.status(400).json({ error: err.detail });
@@ -1125,6 +1127,7 @@ async function completePaidCheckout(pending, via) {
     sendAdminOrderAlertEmail(order).catch((e) => console.error("[email] admin alert failed:", e));
     push.notifyNewOrder(order);
     driverPush.notifyNewJob(order);
+    tavernPush.notifyIncoming(order); // the tavern it will go to can start packing
     return "COMPLETED";
   } catch (err) {
     // A Yoco lookup that failed is not a failed payment: let the next
@@ -1260,10 +1263,11 @@ app.patch("/order/:code/assign", requireAdmin, async (req, res) => {
     const order = await prisma.order.update({
       where: { code: req.params.code },
       // A fresh collection PIN goes to the tavern only (18 Nov 2026).
-      data: { tavernId, driverName, driverPhone: phone, driverVehicle, driverShareToken, collectionPin: newPin(), assignedAt: new Date() },
+      data: { tavernId, driverName, driverPhone: phone, driverVehicle, driverShareToken, collectionPin: newPin(), assignedAt: new Date(), readyAt: null },
       include: { tavern: true },
     });
     await logAdminAction(req, "ASSIGN_ORDER", order.code, `tavern=${order.tavern?.name || tavernId}, driver=${driverName}`);
+    tavernPush.notifyAssigned(order); // closed-app "pack this order" alert for the tavern portal
     res.json(order);
   } catch (err) {
     console.error(err);
@@ -1289,6 +1293,7 @@ app.patch("/order/:code/confirm-payment", requireAdmin, async (req, res) => {
     await logAdminAction(req, "CONFIRM_PAYMENT", order.code, `EFT payment confirmed by ${req.user?.email || "api-token"}`);
     sendPaymentConfirmedEmail(updated, updated.customerEmail).catch((e) => console.error("[email] payment-confirmed failed:", e));
     driverPush.notifyNewJob(updated); // EFT order is now paid and ready for a driver
+    tavernPush.notifyIncoming(updated);
     res.json(updated);
   } catch (err) {
     console.error(err);
@@ -1659,7 +1664,7 @@ app.get("/admin/audit-log", requireAdmin, requireSuperAdmin, async (req, res) =>
 });
 
 // Feature routes that live in their own files (driver reports, delivery fees, ...).
-require("./routes/index.js")(app, { prisma, requireUser, requireAdmin, requireSuperAdmin, writeLimiter, trackLimiter, logAdminAction, quoteDelivery, push, completePaidCheckout, appBaseUrl, yoco: { isConfigured: isYocoConfigured, createCheckout: createYocoCheckout } });
+require("./routes/index.js")(app, { prisma, requireUser, requireAdmin, requireSuperAdmin, writeLimiter, trackLimiter, logAdminAction, quoteDelivery, push, driverPush, tavernPush, completePaidCheckout, appBaseUrl, yoco: { isConfigured: isYocoConfigured, createCheckout: createYocoCheckout } });
 
 // Malformed JSON or an oversized body gets a clear JSON answer the pages can
 // show, instead of Express's default HTML error page.

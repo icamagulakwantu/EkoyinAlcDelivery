@@ -8,4 +8,5 @@ module.exports = function mountRoutes(app, deps) {
   require("./push.js")(app, deps);
   require("./pay-qr.js")(app, deps);
   require("./drivers.js")(app, deps);
+  require("./tavern-portal.js")(app, deps);
 };

@@ -9,11 +9,12 @@ const { toSaWhatsApp } = require("../lib/phone.js");
 const { newPin } = require("../lib/dispatch.js");
 const D = require("../lib/driver-app.js");
 const { isPushEndpoint, isConfigured, DRIVER_KEY_PREFIX } = require("../lib/push.js");
+const { loadBlocked } = require("../lib/tavern-portal.js");
 
 const MAX_DEVICES_PER_DRIVER = 5;
 const short = (v, n) => (typeof v === "string" ? v.trim().slice(0, n) : "");
 
-module.exports = function mountDrivers(app, { prisma, requireAdmin, writeLimiter, logAdminAction, push }) {
+module.exports = function mountDrivers(app, { prisma, requireAdmin, writeLimiter, logAdminAction, push, tavernPush }) {
   const loginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, limit: 25, standardHeaders: true, legacyHeaders: false,
     message: { error: "Too many attempts. Please wait a few minutes and try again." },
@@ -119,26 +120,27 @@ module.exports = function mountDrivers(app, { prisma, requireAdmin, writeLimiter
       const d = req.driver;
       const now = new Date();
       const weekAgo = new Date(now.getTime() - 8 * 86400000);
-      const [mine, waiting, delivered, taverns] = await Promise.all([
+      const [mine, waiting, delivered, taverns, blocked] = await Promise.all([
         prisma.order.findMany({
           where: { driverPhone: d.phone, status: { in: ["PENDING", "DISPATCHED"] } },
           include: { tavern: true, items: true }, orderBy: { createdAt: "asc" },
         }),
         prisma.order.findMany({
           where: { status: "PENDING", driverPhone: null, driverName: null },
-          include: { items: { select: { quantity: true } } }, orderBy: { createdAt: "asc" }, take: 30,
+          include: { items: { select: { quantity: true, skuId: true } } }, orderBy: { createdAt: "asc" }, take: 30,
         }),
         prisma.order.findMany({
           where: { driverPhone: d.phone, status: "DELIVERED", deliveredAt: { gte: weekAgo } },
           select: { code: true, total: true, paymentMethod: true, deliveryFee: true, surgeFee: true, priorityFee: true, deliveredAt: true },
         }),
         prisma.tavern.findMany({ select: { id: true, name: true, area: true, latitude: true, longitude: true } }),
+        loadBlocked(prisma),
       ]);
       res.json({
         driver: publicDriver(d),
         maxJobs: D.MAX_ACTIVE_JOBS,
         jobs: mine.map((o) => D.jobView(o)),
-        board: waiting.filter(D.isOnBoard).map((o) => D.boardView(o, taverns, now)),
+        board: waiting.filter(D.isOnBoard).map((o) => D.boardView(o, taverns, now, blocked)),
         earnings: D.summariseEarnings(delivered, now),
       });
     } catch (err) {
@@ -151,12 +153,12 @@ module.exports = function mountDrivers(app, { prisma, requireAdmin, writeLimiter
   app.post("/api/driver/jobs/:id/take", writeLimiter, requireDriver, async (req, res) => {
     try {
       const d = req.driver;
-      const order = await prisma.order.findUnique({ where: { id: String(req.params.id) }, include: { tavern: true } });
+      const order = await prisma.order.findUnique({ where: { id: String(req.params.id) }, include: { tavern: true, items: { select: { skuId: true } } } });
       if (!order || !D.isOnBoard(order)) return res.status(409).json({ error: "Someone else already took this job." });
       const active = await prisma.order.count({ where: { driverPhone: d.phone, status: { in: ["PENDING", "DISPATCHED"] } } });
       if (active >= D.MAX_ACTIVE_JOBS) return res.status(400).json({ error: `You already have ${D.MAX_ACTIVE_JOBS} jobs. Finish one first.` });
       const taverns = await prisma.tavern.findMany({ select: { id: true, name: true, area: true, latitude: true, longitude: true } });
-      const tavern = D.nearestTavern(order, taverns);
+      const tavern = D.nearestTavern(order, taverns, await loadBlocked(prisma));
       if (!tavern) return res.status(400).json({ error: "Dispatch needs to pick the tavern for this one. Please ask them." });
       const driverShareToken = crypto.randomBytes(16).toString("hex");
       const { count } = await prisma.order.updateMany({
@@ -164,7 +166,8 @@ module.exports = function mountDrivers(app, { prisma, requireAdmin, writeLimiter
         data: { tavernId: tavern.id, driverName: d.name, driverPhone: d.phone, driverVehicle: d.vehicle, driverShareToken, collectionPin: newPin(), assignedAt: new Date() },
       });
       if (count === 0) return res.status(409).json({ error: "Someone else already took this job." });
-      // Admin still sends the tavern its collection PIN, so tell them right away.
+      // The tavern portal shows the tavern its PIN; a tavern without the portal still needs admin to send it.
+      if (tavernPush) tavernPush.notifyAssigned({ id: order.id, code: order.code, tavernId: tavern.id, driverName: d.name }).catch(() => {});
       if (push && push.sendToAdmins) {
         push.sendToAdmins({
           title: `${d.name} took ${order.code}`,
