@@ -263,7 +263,7 @@
         <div class="cl-save">${l.cases} case${l.cases === 1 ? '' : 's'} of ${p.unitsPerCase} · ${formatRand(perUnit)} each</div>`;
       qtyText = `${l.cases}<span class="unit">case${l.cases === 1 ? '' : 's'}</span>`;
     } else {
-      price = formatRand(l.total) + (l.qty > 1 ? ` <span class="cl-size" style="display:inline">· ${formatRand(p.retailSingleZAR)} each</span>` : '');
+      price = formatRand(l.total) + (l.qty > 1 ? `<span class="cl-each">${formatRand(p.retailSingleZAR)} each</span>` : '');
       qtyText = String(l.qty);
     }
     const isLast = (l.cases != null ? l.cases : l.qty) <= 1;
