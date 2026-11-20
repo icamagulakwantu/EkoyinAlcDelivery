@@ -15,6 +15,8 @@
 
   <style>
     .optin-row { display: flex; gap: 10px; align-items: flex-start; margin: 4px 0 16px; font-size: 13px; color: var(--muted); line-height: 1.45; text-align: left; cursor: pointer; }
+    .legal-note { font-size: 12.5px; color: var(--muted); line-height: 1.5; margin: 0 0 14px; text-align: left; }
+    .legal-note a { color: var(--terra); }
     .optin-row input { width: 18px; height: 18px; margin-top: 1px; flex-shrink: 0; }
   </style>
 </head>
@@ -37,6 +39,7 @@
       </div>
       <!-- POPIA: marketing only with consent, so this starts unticked. -->
       <label class="optin-row"><input type="checkbox" id="marketingOptIn"> <span>Send me Ekoyini specials and new arrivals on WhatsApp or email. Optional; switch it off any time in your profile.</span></label>
+      <p class="legal-note">By signing up you agree to our <a href="terms.html" target="_blank" rel="noopener">Terms &amp; Conditions</a> and <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a>, and confirm you are 18 or older.</p>
       <button type="submit" class="cta-btn" id="submitBtn">Sign Up</button>
     </form>
 
