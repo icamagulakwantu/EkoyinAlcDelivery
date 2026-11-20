@@ -120,7 +120,7 @@ module.exports = function mountDrivers(app, { prisma, requireAdmin, writeLimiter
       const d = req.driver;
       const now = new Date();
       const weekAgo = new Date(now.getTime() - 8 * 86400000);
-      const [mine, waiting, delivered, taverns, blocked] = await Promise.all([
+      const [mine, waiting, delivered, taverns, blocked, rated] = await Promise.all([
         prisma.order.findMany({
           where: { driverPhone: d.phone, status: { in: ["PENDING", "DISPATCHED"] } },
           include: { tavern: true, items: true }, orderBy: { createdAt: "asc" },
@@ -135,6 +135,7 @@ module.exports = function mountDrivers(app, { prisma, requireAdmin, writeLimiter
         }),
         prisma.tavern.findMany({ select: { id: true, name: true, area: true, latitude: true, longitude: true } }),
         loadBlocked(prisma),
+        prisma.order.findMany({ where: { driverPhone: d.phone, status: "DELIVERED", rating: { not: null } }, select: { rating: true }, orderBy: { deliveredAt: "desc" }, take: 200 }),
       ]);
       res.json({
         driver: publicDriver(d),
@@ -142,6 +143,7 @@ module.exports = function mountDrivers(app, { prisma, requireAdmin, writeLimiter
         jobs: mine.map((o) => D.jobView(o)),
         board: waiting.filter(D.isOnBoard).map((o) => D.boardView(o, taverns, now, blocked)),
         earnings: D.summariseEarnings(delivered, now),
+        ratings: D.summariseRatings(rated),
       });
     } catch (err) {
       console.error(err);

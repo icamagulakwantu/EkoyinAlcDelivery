@@ -62,26 +62,28 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .pin-card input:focus { outline: none; border-color: var(--terra) !important; box-shadow: 0 0 0 4px var(--glow); }
 
 /* ── Header ── */
+/* 21 Nov 2026: the header scrolls away on its own. Sticky, it filled half a phone screen
+   and slid under the section tabs; only the tabs stay pinned now. */
 .admin-header {
-  position: sticky; top: 0; z-index: 100; padding: 18px 20px 16px; text-align: center;
+  position: relative; padding: 14px 16px 12px; text-align: center;
   background: linear-gradient(180deg, #1d1810, #17140e); color: #faf6ee;
   box-shadow: 0 6px 24px rgba(23,20,14,.18);
 }
 .admin-header h1 {
   font-family: var(--font-display); font-size: 22px; font-weight: 700; color: var(--gold);
-  display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 14px; letter-spacing: -.01em;
+  display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px; letter-spacing: -.01em;
 }
 .admin-header h1 img { height: 32px; width: 32px; object-fit: contain; border-radius: 8px; }
 .header-stats { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
 .stat-box {
   background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
-  border-radius: 14px; padding: 10px 16px; min-width: 92px;
+  border-radius: 14px; padding: 8px 14px; min-width: 84px;
 }
-.stat-number { display: block; font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; color: #fff; }
+.stat-number { display: block; font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; color: #fff; }
 .stat-label { display: block; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: rgba(250,246,238,.6); margin-top: 2px; }
 .admin-header .secondary-btn {
   background: transparent; color: rgba(250,246,238,.75); border: 1px solid rgba(255,255,255,.18);
-  border-radius: 999px; padding: 8px 16px; font-size: 12px; margin: 12px auto 0; display: block; min-height: 0;
+  border-radius: 999px; padding: 7px 16px; font-size: 12px; margin: 10px auto 0 !important; display: block; min-height: 0; max-width: none !important; width: auto;
 }
 
 /* ── Section nav ── */
@@ -90,7 +92,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
   border-bottom: 1px solid var(--hair); position: sticky; top: 0; z-index: 101; overflow-x: auto;
 }
 .section-tab {
-  flex: 1; padding: 10px 14px; border: none; background: transparent; border-radius: 999px;
+  flex: 0 0 auto; padding: 10px 14px; border: none; background: transparent; border-radius: 999px;
   color: var(--muted); font-size: 13px; font-weight: 600; white-space: nowrap; transition: all .2s var(--ease);
 }
 .section-tab:hover { background: var(--black); }
@@ -231,7 +233,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 @media (prefers-reduced-motion: reduce) { * { transition-duration: .01ms !important; animation-duration: .01ms !important; } }
 
 /* ── New-order alerts (order-alerts.js) ── */
-.order-alert-switch { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.order-alert-switch { display: flex; flex-direction: column; align-items: center; gap: 4px; margin: 0 auto 10px; text-align: center; }
 .order-alert-switch small { font-size: 11px; opacity: .7; max-width: 220px; }
 .alert-switch { border: 1px solid var(--border); background: var(--surface); color: #17140e; border-radius: 999px; padding: 8px 14px; font-weight: 700; font-size: 13px; cursor: pointer; }
 .alert-switch.on { background: #1a6b3a; border-color: #1a6b3a; color: #fff; }

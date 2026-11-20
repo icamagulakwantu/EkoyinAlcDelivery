@@ -214,11 +214,16 @@
         + (board.length ? board.map(boardCard).join('') : `<div class="empty"><b>Nothing waiting</b>New jobs show here the moment a paid order needs a driver.</div>`);
 
       const e = data.earnings;
+      const r = data.ratings || { avg: null, count: 0 };
+      const rating = r.avg != null
+        ? `<div class="card" style="margin-bottom:12px"><div class="row"><span class="earn">${esc(r.avg.toFixed(1))} &#9733;<small>customer rating</small></span><span class="meta" style="margin:0">${r.count} rated deliveries</span></div></div>`
+        : (r.count ? `<p class="note">${r.count} customer rating${r.count === 1 ? '' : 's'} so far. Your average shows once you have 3.</p>` : '');
       $('paneEarn').innerHTML = `
         <div class="stats">
           <div class="stat"><span>Today</span><b>${rand(e.today.earned)}</b><small>${e.today.deliveries} deliver${e.today.deliveries === 1 ? 'y' : 'ies'}</small></div>
           <div class="stat"><span>Last 7 days</span><b>${rand(e.week.earned)}</b><small>${e.week.deliveries} deliver${e.week.deliveries === 1 ? 'y' : 'ies'}</small></div>
         </div>
+        ${rating}
         ${e.week.cash ? `<div class="cash" style="margin-bottom:12px">Cash you collected this week: ${rand(e.week.cash)}. It is taken off what you are owed, so you will be paid ${rand(e.week.net)} for the week.</div>` : ''}
         <p class="note">Earnings are the delivery, surge and priority fees (100% yours). Payouts are made daily at 12:00 for yesterday.</p>
         <div class="card">${e.recent.length ? e.recent.map((o) => `<div class="list-row"><span><span class="code">${esc(o.code)}</span><br><small style="color:var(--mute)">${esc(o.day)}${o.cash ? ' · cash ' + rand(o.cash) : ''}</small></span><b>${rand(o.earned)}</b></div>`).join('') : '<div class="empty" style="padding:24px 10px">Your deliveries will show here.</div>'}</div>`;

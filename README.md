@@ -4,6 +4,10 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 21 Nov 2026 (later): admin header fix and driver ratings, no database change
+- **Admin dashboard on a phone:** the dark header (stats, alerts switch, log out) was sticky and filled about half a phone screen, sliding under the section tabs while scrolling. It now scrolls away on its own and is more compact; only the section tabs and filter tabs stay pinned. Section tabs no longer squash (they scroll sideways). The "Turn on order alerts" switch is centred. CSS only (`admin/admin.css`).
+- **Driver ratings:** the driver's Earnings tab shows the average of customers' 1 to 5 ratings on their delivered orders (existing `Order.rating`, no new table). The average only shows from 3 ratings so one unhappy customer does not define a new driver (`summariseRatings` in `lib/driver-app.js`). Service worker cache is now `ekoyini-shell-v37`. 160 tests.
+
 ### 21 Nov 2026: tavern portal (founder approved, new migration)
 - **Tavern portal at `/tavern.html`:** a partner tavern signs in with its saved cell number + a 6-digit PIN (made by admin) and gets three screens. **Orders:** "Pack these now" (items, driver name, the 4-digit collection PIN to read out, "Ready for collection" button), "Coming your way" (paid orders heading to this tavern before a driver takes them: area and items only, no code, no customer) and "Collected in the last 24 hours". **Items:** search the catalogue and tap "Sold out" / "Back in stock". **Money:** yesterday, today so far and the last 7 days of what Ekoyini owes the tavern (same sums as admin Payouts, `payoutsFor`), with "Paid" once admin marks it paid.
 - **Sold out steers orders, nothing else:** stock and prices stay shared. A tavern marked sold out of an item is skipped when an order picks its tavern (job board, taking a job, tavern alerts), so the order goes to the next nearest tavern that has everything. If no tavern can supply it, the job shows "Dispatch will assign". Orders already assigned never move.

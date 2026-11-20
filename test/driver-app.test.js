@@ -208,3 +208,11 @@ test('the driver page and admin tab are wired in, noindex and safe', () => {
   assert.ok(/model Driver \{/.test(schema));
   assert.ok(fs.existsSync(path.join(__dirname, '../prisma/migrations/20261120120000_add_drivers/migration.sql')));
 });
+
+test('a driver rating needs 3 ratings, ignores junk and rounds to one decimal', () => {
+  assert.deepEqual(D.summariseRatings([{ rating: 5 }, { rating: 1 }]), { avg: null, count: 2 });
+  assert.deepEqual(D.summariseRatings([{ rating: 5 }, { rating: 4 }, { rating: 4 }, { rating: null }, { rating: 9 }]), { avg: 4.3, count: 3 });
+  assert.deepEqual(D.summariseRatings([]), { avg: null, count: 0 });
+  const page = fs.readFileSync(path.join(__dirname, '../public/driver.html'), 'utf8');
+  assert.ok(page.includes('data.ratings') && page.includes('customer rating'));
+});
