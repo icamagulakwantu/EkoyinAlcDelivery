@@ -374,6 +374,7 @@ const FORMAT_PHOTO_MAP = {
   "[\"Bonaqua Still Water\",\"1.5L\"]": "/images/brands/bonaqua-still-1-5l.webp",
   "[\"Aquelle Still Water\",\"1.5L\"]": "/images/brands/aquelle-still-1-5l.webp",
   "[\"Thirsti Still Water\",\"1.5L\"]": "/images/brands/thirsti-still-1-5l.webp",
+  "[\"Thirsti Sparkling Water\",\"1.5L\"]": "/images/brands/thirsti-sparkling-1-5l.webp",
   "[\"Valpre Natural Spring Water\",\"1.5L\"]": "/images/brands/valpre-still-1-5l.webp",
   "[\"Valpre Sparkling Water\",\"1L\"]": "/images/brands/valpre-sparkling-1l.webp",
   "[\"Tsitsikamma Still Water\",\"1.5L\"]": "/images/brands/tsitsikamma-still-1-5l.webp",
