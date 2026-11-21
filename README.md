@@ -4,6 +4,9 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 21 Nov 2026 (late night): trading name is Ekoyini Holdings (Pty) Ltd, no database change
+- Founder confirmed: the legal name stays K2020465422 (South Africa) (Pty) Ltd (reg. 2020/465422/07) and the trading name is **Ekoyini Holdings (Pty) Ltd**. Terms 1.1, 1.2, 30.1 and Privacy 1.1, 1.2 now say "trading as Ekoyini Holdings (Pty) Ltd". The customer-facing brand stays "Ekoyini". Service worker cache bumped to `ekoyini-shell-v41`.
+
 ### 21 Nov 2026 (night): company details from the CIPC certificate go into Terms and Privacy, no database change
 - Terms 1.1, 1.2, 30.1 and Privacy 1.1 now name **K2020465422 (South Africa) (Pty) Ltd, registration number 2020/465422/07, trading as Ekoyini** (registered 11 Jun 2020; registered office 11 Main Avenue, 303 Riviera Mansions, Killarney, Johannesburg 2193; trading address stays 7 Torquay Street, Summerstrand). Replaces "Ekoyini Holdings" (not on the certificate). The Information Officer is described as the director. The director's ID number is deliberately NOT in the repo. Still missing: VAT number (not on the certificate), liquor licence structure, Information Officer registration. Service worker cache `ekoyini-shell-v40`.
 

@@ -129,5 +129,5 @@ test('the service worker rings for pushes and opens the dashboard on tap', () =>
   assert.match(sw, /addEventListener\('push'/);
   assert.match(sw, /showNotification/);
   assert.match(sw, /addEventListener\('notificationclick'/);
-  assert.match(sw, /ekoyini-shell-v40/);
+  assert.match(sw, /ekoyini-shell-v41/);
 });
