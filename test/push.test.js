@@ -129,5 +129,54 @@ test('the service worker rings for pushes and opens the dashboard on tap', () =>
   assert.match(sw, /addEventListener\('push'/);
   assert.match(sw, /showNotification/);
   assert.match(sw, /addEventListener\('notificationclick'/);
-  assert.match(sw, /ekoyini-shell-v46/);
+  assert.match(sw, /ekoyini-shell-v47/);
+});
+
+// ── who has alerts on, and the test ring (22 Nov 2026) ──
+const express = require('express');
+
+async function pushApp({ rows, role = 'SUPER_ADMIN', enabled = true }) {
+  const sentTo = [];
+  const app = express(); app.use(express.json());
+  require('../routes/push.js')(app, {
+    prisma: { pushSubscription: { findMany: async () => rows } },
+    requireAdmin: (q, s, n) => n(),
+    requireSuperAdmin: (q, s, n) => (role === 'SUPER_ADMIN' ? n() : s.status(403).json({ error: 'no' })),
+    writeLimiter: (q, s, n) => n(),
+    logAdminAction: async () => {},
+    push: { isEnabled: () => enabled, sendToAdmins: async (p) => { sentTo.push(p); return { sent: 3 }; } },
+  });
+  const server = await new Promise((r) => { const s = app.listen(0, () => r(s)); });
+  const call = async (m, u) => { const res = await fetch(`http://127.0.0.1:${server.address().port}${u}`, { method: m, headers: { 'Content-Type': 'application/json' }, body: m === 'GET' ? undefined : '{}' }); return { status: res.status, body: await res.json() }; };
+  return { call, sentTo, close: () => server.close() };
+}
+
+test('super-admin sees how many devices ring per person, never drivers or taverns', async () => {
+  const t = await pushApp({ rows: [{ adminEmail: 'a@x.co.za' }, { adminEmail: 'a@x.co.za' }, { adminEmail: 'b@x.co.za' }, { adminEmail: 'driver:d1' }, { adminEmail: 'tavern:t1' }] });
+  try {
+    const r = await t.call('GET', '/admin/push/devices');
+    assert.deepEqual(r.body.counts, { 'a@x.co.za': 2, 'b@x.co.za': 1 });
+  } finally { t.close(); }
+  const d = await pushApp({ rows: [], role: 'DISPATCHER' });
+  try { assert.equal((await d.call('GET', '/admin/push/devices')).status, 403); } finally { d.close(); }
+});
+
+test('the test ring is urgent, goes to all dispatch devices, and is super-admin only', async () => {
+  const t = await pushApp({ rows: [] });
+  try {
+    const r = await t.call('POST', '/admin/push/test');
+    assert.equal(r.body.sent, 3);
+    assert.equal(t.sentTo[0].urgent, true);
+    assert.match(t.sentTo[0].title, /TEST/);
+  } finally { t.close(); }
+  const off = await pushApp({ rows: [], enabled: false });
+  try { assert.equal((await off.call('POST', '/admin/push/test')).status, 400); } finally { off.close(); }
+  const d = await pushApp({ rows: [], role: 'DISPATCHER' });
+  try { assert.equal((await d.call('POST', '/admin/push/test')).status, 403); assert.equal(d.sentTo.length, 0); } finally { d.close(); }
+});
+
+test('urgent pushes vibrate for longer and the sound is never muted by the app', () => {
+  const sw = fs.readFileSync(path.join(__dirname, '..', 'public', 'sw.js'), 'utf8');
+  assert.match(sw, /silent: false/);
+  assert.match(sw, /data\.urgent \? \[500/);
 });

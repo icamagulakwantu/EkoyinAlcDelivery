@@ -800,28 +800,50 @@ async function loadAdmins() {
         const res = await adminFetch('/admin/admins');
         if (!res.ok) throw new Error('Failed to load admins');
         const data = await res.json();
-        renderAdmins(data.admins, data.bootstrapped);
+        let counts = {};
+        try { const d = await adminFetch('/admin/push/devices'); if (d.ok) counts = (await d.json()).counts || {}; } catch {}
+        renderAdmins(data.admins, data.bootstrapped, counts);
     } catch (err) {
         console.error(err);
         list.innerHTML = '<div class="no-orders">Failed to load admins</div>';
     }
 }
 
-function renderAdmins(admins, bootstrapped) {
+function alertBadge(counts, email) {
+    const n = (counts || {})[String(email).toLowerCase()] || 0;
+    return n
+        ? `<span style="font-size:11px;color:#1a7f37;margin-left:8px;">🔔 rings on ${n} device${n === 1 ? '' : 's'}</span>`
+        : '<span style="font-size:11px;color:#b42318;margin-left:8px;">⚠ no phone rings yet (they must tap "Turn on order alerts")</span>';
+}
+
+async function sendTestRing() {
+    const btn = document.getElementById('testRingBtn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
+    try {
+        const res = await adminFetch('/admin/push/test', { method: 'POST', body: '{}' });
+        const d = await res.json().catch(() => ({}));
+        alert(res.ok ? `Test sent to ${d.sent} device${d.sent === 1 ? '' : 's'}. Each phone should ring and vibrate now.` : (d.error || 'Could not send the test'));
+    } catch { alert('Could not send the test'); }
+    if (btn) { btn.disabled = false; btn.textContent = '🔔 Send test ring to all dispatchers'; }
+}
+window.sendTestRing = sendTestRing;
+
+function renderAdmins(admins, bootstrapped, counts) {
     const list = document.getElementById('adminsList');
     const bootstrappedRows = bootstrapped.map(email => `
         <div class="admin-row">
             <span class="admin-row-email">${esc(email)}<span class="admin-role-badge super">Super Admin</span></span>
-            <span style="font-size:10px;color:#999;">via ADMIN_EMAILS</span>
+            <span>${alertBadge(counts, email)}</span><span style="font-size:10px;color:#999;">via ADMIN_EMAILS</span>
         </div>
     `).join('');
     const dbRows = admins.map(a => `
         <div class="admin-row">
-            <span class="admin-row-email">${esc(a.email)}<span class="admin-role-badge${a.role === 'SUPER_ADMIN' ? ' super' : ''}">${a.role === 'SUPER_ADMIN' ? 'Super Admin' : 'Dispatcher'}</span></span>
+            <span class="admin-row-email">${esc(a.email)}<span class="admin-role-badge${a.role === 'SUPER_ADMIN' ? ' super' : ''}">${a.role === 'SUPER_ADMIN' ? 'Super Admin' : 'Dispatcher'}</span>${alertBadge(counts, a.email)}</span>
             <button onclick="removeAdmin('${esc(a.id)}')">Remove</button>
         </div>
     `).join('');
-    list.innerHTML = bootstrappedRows + dbRows || '<div class="no-orders">No admins yet</div>';
+    const testBtn = '<div style="margin:0 0 10px;"><button type="button" id="testRingBtn" onclick="sendTestRing()">🔔 Send test ring to all dispatchers</button></div>';
+    list.innerHTML = (bootstrappedRows + dbRows) ? testBtn + bootstrappedRows + dbRows : '<div class="no-orders">No admins yet</div>';
 }
 
 async function addAdmin() {

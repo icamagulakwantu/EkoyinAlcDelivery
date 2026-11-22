@@ -4,6 +4,12 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 22 Nov 2026 (afternoon): order alerts you can check, and a test ring
+- Only ONE phone (the Android on admin@ekoyini.co.za) had alerts on. Dispatchers must each log in on their own phone and tap **Turn on order alerts** (iPhone: add the admin page to the home screen first).
+- Admin → **Admins** tab now shows, beside every person, whether a phone rings for them (🔔 N devices / ⚠ none), and a **Send test ring to all dispatchers** button (super-admin, logged as `TEST_ORDER_ALERT`). New routes `GET /admin/push/devices`, `POST /admin/push/test`.
+- Urgent pushes (new orders, red delay alerts) vibrate in a long pattern and are never marked silent. Cache `ekoyini-shell-v47`. No migration.
+- Honest limit: a web push uses the phone's own notification sound and obeys silent/Do Not Disturb. Automatic WhatsApp alerts need the WhatsApp Business Platform (not built, costs money, needs Meta approval): waiting for founder's decision.
+
 ### 22 Nov 2026 (night): tavern VAT number on the receipt, and a receipt for the driver too (founder approved migration)
 - **Migration `20261122150000_add_tavern_receipt_details`:** four optional columns on `Tavern` (`legalName`, `vatNumber`, `liquorLicenceNumber`, `address`); nothing changed or deleted. Admin **Delivery** tab: each tavern has a "Receipt details" section (super-admin only, logged as `UPDATE_TAVERN_DETAILS`). A VAT number must be 10 digits starting with 4; leave it blank if the tavern is not VAT registered.
 - **Receipt names the tavern that sold and packed the order** (decision: the tavern that packs it, not chosen by the customer): legal name, VAT number (or "not supplied"), liquor licence number, address. Before a tavern packs the order the receipt says the outlet is named on the final receipt. Ekoyini's own fees are covered by a note: Ekoyini Holdings (Pty) Ltd is not yet registered for VAT and the receipt is not a tax invoice. Terms 1.2 and 7.9 updated. **Ask the accountant** how VAT should be shown when the tavern is a VAT vendor and Ekoyini adds its own markup and fees.
