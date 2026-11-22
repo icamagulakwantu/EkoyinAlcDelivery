@@ -58,3 +58,21 @@ test('wiring: public track route uses the rule and never selects customer detail
   assert.match(read('public/driver.html'), /WhatsApp customer/);
   assert.match(read('public/track.html'), /Call driver/);
 });
+
+test('at pickup the live location goes to dispatch (phone alert) and the driver gets WhatsApp buttons for customer and dispatch (22 Nov)', () => {
+  const msg = C.driverToDispatch({ driverName: 'Sipho Dlamini', code: 'EKO-AB12', origin: 'https://www.ekoyini.co.za' });
+  assert.match(msg, /collected order EKO-AB12/);
+  assert.match(msg, /track\.html\?code=EKO-AB12/);
+  assert.match(C.waLink(C.DISPATCH_WHATSAPP, msg), /^https:\/\/wa\.me\/27640045465\?text=/);
+  const server = read('server.js');
+  const pickup = server.slice(server.indexOf('app.post("/order/:code/confirm-pickup"'), server.indexOf('// 🏁 DRIVER: CONFIRM DELIVERED'));
+  assert.match(pickup, /push\.sendToAdmins\(/, 'dispatch phones are alerted at pickup');
+  assert.match(pickup, /contact: driverShareContact\(order\)/);
+  const contact = server.slice(server.indexOf('app.post("/order/:code/driver-contact"'), server.indexOf('// 🚚 DRIVER: CONFIRM PICKUP'));
+  assert.match(contact, /driverTokenMatches/, 'customer number only for the driver token holder');
+  assert.match(contact, /status !== "DISPATCHED"/, 'only while out for delivery');
+  const page = read('public/driver-track.html');
+  assert.match(page, /contact-links\.js/);
+  assert.match(page, /Send live location to the customer on WhatsApp/);
+  assert.match(page, /Send live location to dispatch on WhatsApp/);
+});

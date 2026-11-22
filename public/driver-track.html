@@ -49,6 +49,7 @@
     </div>
   </div>
 
+  <script src="/contact-links.js"></script>
   <script>
   const params = new URLSearchParams(window.location.search);
   const code = params.get('code');
@@ -62,6 +63,28 @@
 
   let watchId = null;
   let currentStatus = null;
+  let shareContact = null; // customer + driver names for the WhatsApp buttons (from the server)
+
+  // One-tap WhatsApp: live tracking link to the customer and to dispatch. The driver's phone sends it
+  // (free). Fully automatic WhatsApp would need the WhatsApp Business Platform (not built).
+  async function renderShare() {
+    const box = document.getElementById('dtShare');
+    if (!box || !window.EkoyiniContact) return;
+    if (!shareContact) {
+      try {
+        const r = await fetch(`/order/${encodeURIComponent(code)}/driver-contact`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token }) });
+        if (r.ok) shareContact = (await r.json()).contact;
+      } catch {}
+    }
+    const C = window.EkoyiniContact;
+    const c = shareContact || {};
+    const toCustomer = C.waLink(c.customerPhone, C.driverToCustomer({ customerName: c.customerName, driverName: c.driverName, code, origin: location.origin }));
+    const toDispatch = C.waLink(C.DISPATCH_WHATSAPP, C.driverToDispatch({ driverName: c.driverName, code, origin: location.origin }));
+    const btn = (href, label, bg) => `<a href="${href}" target="_blank" rel="noopener" style="display:block;text-align:center;padding:14px;margin-bottom:8px;border-radius:12px;background:${bg};color:#fff;font-weight:700;text-decoration:none;">${label}</a>`;
+    box.innerHTML = `<p class="dt-status"><b>Tap both</b> so the customer and dispatch can follow you on the map:</p>` +
+      (toCustomer ? btn(toCustomer, 'Send live location to the customer on WhatsApp', '#128c7e') : '<p class="dt-status">No customer number on this order. Call dispatch.</p>') +
+      btn(toDispatch, 'Send live location to dispatch on WhatsApp', '#17140e');
+  }
 
   async function init() {
     if (!code || !token) {
@@ -92,7 +115,7 @@
     const body = document.getElementById('dtBody');
     if (currentStatus === 'PENDING') {
       body.innerHTML = `${codeHtml}
-        <ol class="dt-steps"><li>At the tavern, ask for the 4-digit <b>collection PIN</b>.</li><li>Enter it below and allow location when your phone asks.</li><li>Your live location then goes to the customer automatically.</li></ol>
+        <ol class="dt-steps"><li>At the tavern, ask for the 4-digit <b>collection PIN</b>.</li><li>Enter it below and allow location when your phone asks.</li><li>Your live location then starts, and you send the live link to the customer and dispatch on WhatsApp.</li></ol>
         ${pinInput('dtPickupPin', 'Collection PIN from the tavern')}
         <button class="dt-btn" id="dtPickupBtn">Confirm Pickup</button>
         <div class="dt-error" id="dtError"></div>`;
@@ -100,12 +123,14 @@
     } else if (currentStatus === 'DISPATCHED') {
       body.innerHTML = `${codeHtml}
         <div class="dt-sharing" id="dtSharing"><span class="dt-pulse"></span> Sharing live location with the customer</div>
+        <div id="dtShare" style="margin:12px 0;"></div>
         <div class="dt-warn" id="dtWarn">Your location isn't reaching us. Keep this page open, screen on, and location switched on. Dispatch has been alerted.</div>
         <p class="dt-status">Keep this page open while you drive. At the gate, check ID (18+), then ask the customer for their 4-digit <b>delivery PIN</b>.</p>
         ${pinInput('dtDeliveryPin', 'Delivery PIN from the customer')}
         <button class="dt-btn dt-btn-secondary" id="dtDeliveredBtn">Mark as Delivered</button>
         <div class="dt-error" id="dtError"></div>`;
       document.getElementById('dtDeliveredBtn').onclick = confirmDelivered;
+      renderShare();
       startSharing();
     } else if (currentStatus === 'DELIVERED') {
       stopWatching();
@@ -134,6 +159,7 @@
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Something went wrong');
       currentStatus = data.status;
+      if (data.contact) shareContact = data.contact;
       render();
     } catch (err) {
       console.error(err);

@@ -4,6 +4,11 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 22 Nov 2026 (afternoon): live location at pickup goes to dispatch and customer
+- When the driver confirms pickup (tavern PIN + location), every dispatcher phone gets a push "Out for delivery: <code>" (tap opens the dashboard, which has the Driver live location link), and the driver's page (`driver-track.html`) shows two green/black one-tap buttons: **Send live location to the customer on WhatsApp** and **to dispatch on WhatsApp** (business number 064 004 5465, `DISPATCH_WHATSAPP` in `public/contact-links.js`). Both messages carry the live tracking link.
+- New token-protected `POST /order/:code/driver-contact` (customer name/number only to the driver-link holder, only while out for delivery); `confirm-pickup` also returns it. No migration, no cache bump (driver-track is not in the shell cache).
+- Not automatic: the driver must tap the buttons. Sending WhatsApp with no tap needs the WhatsApp Business Platform (not built; founder said not yet).
+
 ### 22 Nov 2026 (afternoon): order alerts you can check, and a test ring
 - Only ONE phone (the Android on admin@ekoyini.co.za) had alerts on. Dispatchers must each log in on their own phone and tap **Turn on order alerts** (iPhone: add the admin page to the home screen first).
 - Admin → **Admins** tab now shows, beside every person, whether a phone rings for them (🔔 N devices / ⚠ none), and a **Send test ring to all dispatchers** button (super-admin, logged as `TEST_ORDER_ALERT`). New routes `GET /admin/push/devices`, `POST /admin/push/test`.

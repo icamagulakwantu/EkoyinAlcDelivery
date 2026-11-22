@@ -29,6 +29,11 @@
     (driverName ? ` ${driverName}${driverVehicle ? ` (${driverVehicle})` : ''} is delivering it.` : '') +
     ` Follow it live here: ${trackUrl(origin, code)}`;
 
+  // Driver to dispatch: "I have collected it", with the live tracking link, so dispatch can follow the trip.
+  const DISPATCH_WHATSAPP = '27640045465'; // business number 064 004 5465
+  const driverToDispatch = ({ driverName, code, origin }) =>
+    `Ekoyini dispatch, it's ${first(driverName) || 'your driver'}. I have collected order ${code} and I'm on my way. Live location: ${trackUrl(origin, code)}`;
+
   // Dispatch to driver (a quick check-in on a job that is already assigned).
   const dispatchToDriver = ({ driverName, code }) =>
     `Hi ${first(driverName) || 'driver'}, Ekoyini dispatch here about order ${code}. `;
@@ -40,7 +45,7 @@
     return `https://www.google.com/maps?q=${Number(order.driverLat)},${Number(order.driverLng)}`;
   }
 
-  const api = { waNumber, waLink, telLink, trackUrl, customerToDriver, driverToCustomer, dispatchToCustomer, dispatchToDriver, driverMapUrl };
+  const api = { waNumber, waLink, telLink, trackUrl, customerToDriver, driverToCustomer, dispatchToCustomer, dispatchToDriver, driverToDispatch, DISPATCH_WHATSAPP, driverMapUrl };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   root.EkoyiniContact = api;
 })(typeof window !== 'undefined' ? window : globalThis);

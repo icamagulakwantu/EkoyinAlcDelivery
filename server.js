@@ -1347,6 +1347,25 @@ app.post("/order/:code/location", locationLimiter, async (req, res) => {
   }
 });
 
+// What the driver's page needs to send the live location on WhatsApp (22 Nov 2026).
+// Only ever returned to the holder of the order's driver token, and only while it is out for delivery.
+function driverShareContact(order) {
+  return { customerName: order.customerName || "", customerPhone: order.customerPhone || "", driverName: order.driverName || "" };
+}
+
+app.post("/order/:code/driver-contact", driverActionLimiter, async (req, res) => {
+  try {
+    const order = await prisma.order.findUnique({ where: { code: req.params.code } });
+    if (!driverTokenMatches(order, (req.body || {}).token)) return res.status(403).json({ error: "Invalid or expired share link" });
+    if (order.status !== "DISPATCHED") return res.status(400).json({ error: "This order isn't out for delivery" });
+    res.set("Cache-Control", "no-store");
+    res.json({ contact: driverShareContact(order) });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to load contact" });
+  }
+});
+
 // 🚚 DRIVER: CONFIRM PICKUP
 app.post("/order/:code/confirm-pickup", driverActionLimiter, async (req, res) => {
   try {
@@ -1377,7 +1396,16 @@ app.post("/order/:code/confirm-pickup", driverActionLimiter, async (req, res) =>
       data: { status: "DISPATCHED", pickedUpAt: now, driverLat: parsedLat, driverLng: parsedLng, driverLocationAt: now },
     });
     if (count === 0) return res.status(409).json({ error: "This order was just updated — refresh the page" });
-    res.json({ ok: true, status: "DISPATCHED" });
+    // Dispatch hears about it at once (phone alert with the live link), and the driver gets
+    // one-tap WhatsApp buttons for the customer and dispatch (public/driver-track.html).
+    push.sendToAdmins({
+      title: `Out for delivery: ${order.code}`,
+      body: `${order.driverName || "Driver"} collected it. Live location is on. Tap to follow.`,
+      tag: "picked-up-" + order.code,
+      url: "/admin/admin.html",
+      urgent: false,
+    }).catch(() => {});
+    res.json({ ok: true, status: "DISPATCHED", contact: driverShareContact(order) });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to confirm pickup" });
