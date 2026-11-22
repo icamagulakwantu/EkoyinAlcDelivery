@@ -174,11 +174,15 @@
         <input type="radio" name="payment" value="eft" id="eftPaymentRadio">
         <div>
           <div class="p-label">EFT bank transfer</div>
-          <div class="p-desc">Pay with <b>Immediate payment</b> or <b>PayShap</b> only. We dispatch once the money has reflected in our account.</div>
+          <div class="p-desc">Pay with <b>Immediate payment</b> or <b>PayShap</b> only. We dispatch once the money has reflected in our account. A POP is not proof.</div>
         </div>
       </div>
-      <div id="eftNotice" hidden style="margin:8px 0 12px;padding:12px 14px;border-radius:12px;background:#fff3cd;font-size:13px;line-height:1.45;">
-        <b>Important: choose "Immediate payment" or PayShap in your banking app.</b> A normal EFT can take until the next business day to reflect. We will not pack or send your order until the money has reflected in our account. Use your order code as the reference; you will see our banking details on the next page and in your email.
+      <div id="eftNotice" hidden style="margin:8px 0 12px;padding:12px 14px;border-radius:12px;background:#fff3cd;font-size:13px;line-height:1.5;">
+        <b>EFT: pay by "Immediate payment" or PayShap only.</b> A normal EFT is slow, and we dispatch only once the money has reflected in our account. A proof of payment (POP) is not accepted: only funds in our account count. Choosing the wrong option is your responsibility, and no refund is made for it (<a href="terms.html#s7" target="_blank" rel="noopener">Terms 7.4</a>).
+        <label style="display:flex;gap:8px;align-items:flex-start;margin-top:10px;font-weight:700;cursor:pointer;">
+          <input type="checkbox" id="eftAck" style="margin-top:3px;flex:none;">
+          <span>I understand, and I will pay by Immediate payment or PayShap.</span>
+        </label>
       </div>
       <div class="payment-option disabled" id="codPaymentOption" data-method="cod">
         <input type="radio" name="payment" value="cod" id="codPaymentRadio" disabled>
@@ -713,6 +717,11 @@
   async function submitOrder() {
     if (submitting) return;
     if (!validate()) return;
+    if (selectedPayment === 'eft' && !document.getElementById('eftAck').checked) {
+      showToast('Please tick the box to confirm you will pay by Immediate payment or PayShap.', 5000);
+      document.getElementById('eftNotice').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
 
     const address = document.getElementById('deliveryAddress').value.trim();
     const customerName = document.getElementById('customerName').value.trim();
@@ -758,7 +767,7 @@
       const res = await authedFetch('/order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...orderPayload, paymentMethod: selectedPayment }),
+        body: JSON.stringify({ ...orderPayload, paymentMethod: selectedPayment, eftAck: selectedPayment === 'eft' ? document.getElementById('eftAck').checked : undefined }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || 'We couldn’t place your order');

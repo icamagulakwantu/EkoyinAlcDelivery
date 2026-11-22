@@ -19,7 +19,7 @@
       const b = d.details;
       slot.innerHTML = `<div style="text-align:left;margin:14px 0;padding:14px 16px;border-radius:16px;background:#fff;border:1px solid rgba(0,0,0,.1);">
         <div style="font-weight:800;margin-bottom:4px;">Pay by EFT</div>
-        <div style="background:#fff3cd;border-radius:10px;padding:10px 12px;margin:0 0 6px;font-size:13px;font-weight:700;line-height:1.45;">Pay now, and choose <u>Immediate payment</u> or <u>PayShap</u> in your banking app. A normal EFT can take until the next business day. We will not pack or send your order until the money has reflected in our account.</div>
+        <div style="background:#fff3cd;border-radius:10px;padding:10px 12px;margin:0 0 6px;font-size:13px;font-weight:700;line-height:1.45;">Pay now, and choose <u>Immediate payment</u> or <u>PayShap</u> in your banking app. A normal EFT can take until the next business day. We will not pack or send your order until the money has reflected in our account. A proof of payment (POP) is not accepted: only funds in our account count.</div>
         ${row('Amount to pay', rand(d.amount), Number(d.amount).toFixed(2))}
         ${row('Bank', b.bankName)}
         ${row('Account name', b.accountName)}

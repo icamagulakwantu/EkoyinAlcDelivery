@@ -58,6 +58,19 @@ test('customers are told to pay immediately everywhere the banking details appea
 test('choosing EFT at checkout shows the reminder, and only then', () => {
   const c = read('public/checkout.html');
   assert.match(c, /id="eftNotice"/);
-  assert.match(c, /choose "Immediate payment" or PayShap/);
+  assert.match(c, /pay by "Immediate payment" or PayShap only/);
   assert.match(c, /eftNotice\.hidden = method !== 'eft'/);
+});
+
+test('EFT needs the customer to confirm, at checkout and on the server, and the Terms spell out the rules (22 Nov)', () => {
+  const c = read('public/checkout.html');
+  assert.match(c, /id="eftAck"/);
+  assert.match(c, /!document\.getElementById\('eftAck'\)\.checked/);
+  assert.match(c, /eftAck: selectedPayment === 'eft'/);
+  assert.match(c, /A proof of payment \(POP\) is not accepted/);
+  const server = read('server.js');
+  assert.match(server, /paymentMethod === "eft" && \(req\.body \|\| \{\}\)\.eftAck !== true/);
+  const terms = read('public/terms.html');
+  for (const must of ['7.4C', '7.4D', '11.6', 'no refund will be made', 'not</b> proof of payment', 'reflecting in our bank account', 'we are not liable for the delay']) assert.ok(terms.includes(must), must);
+  for (const f of ['public/eft-box.js', 'public/order-confirmation.html', 'emails.js']) assert.match(read(f), /POP/, f);
 });

@@ -764,6 +764,11 @@ app.post("/order", writeLimiter, requireUser, async (req, res) => {
     });
     if (priced.error) return res.status(400).json({ error: priced.error });
 
+    // EFT must be an immediate payment or PayShap, and the customer confirms they understand (Terms 7.4A to 7.4D).
+    if (paymentMethod === "eft" && (req.body || {}).eftAck !== true) {
+      return res.status(400).json({ error: "Please confirm that you will pay by Immediate payment or PayShap. A proof of payment is not accepted: only funds in our account count." });
+    }
+
     let codFlagged = false;
     let codFlagReason = null;
     if (paymentMethod === "cod") {

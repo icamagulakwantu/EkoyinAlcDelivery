@@ -88,7 +88,7 @@ function eftEmailBlock(order) {
   const r = (label, value) => `<tr><td style="padding:6px 0;color:#888;font-size:12px;">${label}</td><td style="padding:6px 0;text-align:right;font-weight:700;font-size:14px;">${escapeHtml(value)}</td></tr>`;
   return `<div style="border:2px solid #17140e;border-radius:10px;padding:14px;margin:0 0 16px;">
     <div style="font-weight:800;margin-bottom:6px;">Pay by EFT, then we start packing</div>
-    <div style="background:#fff3cd;border-radius:8px;padding:10px;margin:0 0 8px;font-size:13px;font-weight:700;line-height:1.45;">Please pay now and choose <u>Immediate payment</u> or <u>PayShap</u> in your banking app. A normal EFT can take until the next business day. We will not pack or send your order until the money has reflected in our account.</div>
+    <div style="background:#fff3cd;border-radius:8px;padding:10px;margin:0 0 8px;font-size:13px;font-weight:700;line-height:1.45;">Please pay now and choose <u>Immediate payment</u> or <u>PayShap</u> in your banking app. A normal EFT can take until the next business day. We will not pack or send your order until the money has reflected in our account. A proof of payment (POP) is not accepted: only funds in our account count.</div>
     <table style="width:100%;border-collapse:collapse;">
       ${r("Amount", "R" + Number(order.total || 0).toFixed(2))}
       ${r("Bank", b.bankName)}
