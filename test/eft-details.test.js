@@ -74,3 +74,12 @@ test('EFT needs the customer to confirm, at checkout and on the server, and the 
   for (const must of ['7.4C', '7.4D', '11.6', 'no refund will be made', 'not</b> proof of payment', 'reflecting in our bank account', 'we are not liable for the delay']) assert.ok(terms.includes(must), must);
   for (const f of ['public/eft-box.js', 'public/order-confirmation.html', 'emails.js']) assert.match(read(f), /POP/, f);
 });
+
+test('Terms: no returns, breakage after handover, no-delivery areas; driver rules page carries the liability (22 Nov)', () => {
+  const terms = read('public/terms.html');
+  for (const must of ['13.6', '13.7', '8.11', 'We do not accept returns, exchanges or refunds', 'not liable for breakage, spillage, loss, theft', 'Areas we do not deliver to', 'we do not accept returns, and we are not liable for breakage after handover']) assert.ok(terms.includes(must), must);
+  const d = read('public/driver-terms.html');
+  for (const must of ['fully liable', 'nearest police station', 'accident', 'robbery', 'vigilant', 'no-delivery areas']) assert.match(d, new RegExp(must), must);
+  assert.match(d, /noindex/);
+  assert.match(read('public/driver.html'), /driver-terms\.html/);
+});

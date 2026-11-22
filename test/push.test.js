@@ -129,7 +129,7 @@ test('the service worker rings for pushes and opens the dashboard on tap', () =>
   assert.match(sw, /addEventListener\('push'/);
   assert.match(sw, /showNotification/);
   assert.match(sw, /addEventListener\('notificationclick'/);
-  assert.match(sw, /ekoyini-shell-v52/);
+  assert.match(sw, /ekoyini-shell-v53/);
 });
 
 // ── who has alerts on, and the test ring (22 Nov 2026) ──

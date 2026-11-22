@@ -17,7 +17,7 @@ test("sitemap lists only public pages", () => {
 });
 
 test("private pages are noindex", () => {
-  for (const f of ["cart", "checkout", "track", "driver-track", "driver", "tavern", "profile", "login", "signup", "forgot-password", "update-password", "order-confirmation", "unsubscribe", "404"]) {
+  for (const f of ["cart", "checkout", "track", "driver-track", "driver", "driver-terms", "tavern", "profile", "login", "signup", "forgot-password", "update-password", "order-confirmation", "unsubscribe", "404"]) {
     assert.match(read(`${f}.html`), /name="robots" content="noindex/, f);
   }
 });
