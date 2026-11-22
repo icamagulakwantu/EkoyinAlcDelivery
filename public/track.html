@@ -198,7 +198,7 @@
     const s = order.status;
     const eft = order.paymentMethod === 'eft';
     const map = {
-      PAYMENT_PENDING: [eft ? 'Waiting for your EFT' : 'Order placed', eft ? 'Pay now, with an immediate or instant payment if your bank offers it, and use this order code as the reference. We start packing the moment it reflects.' : "We've got your order.", null],
+      PAYMENT_PENDING: [eft ? 'Waiting for your EFT' : 'Order placed', eft ? 'Pay now with Immediate payment or PayShap, and use this order code as the reference. We will not pack or send it until the money has reflected in our account.' : "We've got your order.", null],
       PENDING: ['Packing your order', order.driverName ? `${order.driverName} will collect it from the tavern shortly.` : "We're matching a driver who's already heading your way.", '20–45 min after your driver picks up'],
       DISPATCHED: ['On the way', order.driverName ? `${order.driverName}${order.driverVehicle ? ` (${order.driverVehicle})` : ''} is bringing your order. Have your ID ready.` : 'Your driver is on the way. Have your ID ready.', 'Usually 20–45 min from pickup'],
       DELIVERED: ['Delivered', 'Enjoy, and thanks for ordering with Ekoyini.', null],

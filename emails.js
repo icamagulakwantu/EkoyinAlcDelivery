@@ -84,11 +84,11 @@ function wrapper(bodyHtml) {
 function eftEmailBlock(order) {
   if (!order || order.paymentMethod !== "eft" || order.status !== "PAYMENT_PENDING") return "";
   const b = getEftDetails();
-  if (!b) return `<p style="font-size:14px;color:#555;line-height:1.5;"><strong>Next: pay by EFT right now.</strong> Pay immediately so it reflects and we can send your order. Our team will WhatsApp you the banking details. Use <strong>${escapeHtml(order.code)}</strong> as the payment reference.</p>`;
+  if (!b) return `<p style="font-size:14px;color:#555;line-height:1.5;"><strong>Next: pay by EFT right now.</strong> Use Immediate payment or PayShap. We will not pack or send your order until the money has reflected in our account. Our team will WhatsApp you the banking details. Use <strong>${escapeHtml(order.code)}</strong> as the payment reference.</p>`;
   const r = (label, value) => `<tr><td style="padding:6px 0;color:#888;font-size:12px;">${label}</td><td style="padding:6px 0;text-align:right;font-weight:700;font-size:14px;">${escapeHtml(value)}</td></tr>`;
   return `<div style="border:2px solid #17140e;border-radius:10px;padding:14px;margin:0 0 16px;">
     <div style="font-weight:800;margin-bottom:6px;">Pay by EFT, then we start packing</div>
-    <div style="background:#fff3cd;border-radius:8px;padding:10px;margin:0 0 8px;font-size:13px;font-weight:700;line-height:1.4;">Please pay immediately, using an immediate or instant payment if your bank offers it. We cannot pack or send your order until the money reflects, and a normal EFT can take hours.</div>
+    <div style="background:#fff3cd;border-radius:8px;padding:10px;margin:0 0 8px;font-size:13px;font-weight:700;line-height:1.45;">Please pay now and choose <u>Immediate payment</u> or <u>PayShap</u> in your banking app. A normal EFT can take until the next business day. We will not pack or send your order until the money has reflected in our account.</div>
     <table style="width:100%;border-collapse:collapse;">
       ${r("Amount", "R" + Number(order.total || 0).toFixed(2))}
       ${r("Bank", b.bankName)}
@@ -110,7 +110,7 @@ async function sendOrderConfirmationEmail(order, customerEmail) {
   const link = `${APP_BASE_URL.replace(/\/$/, "")}/receipt.html?code=${encodeURIComponent(order.code)}`;
   const html = wrapper(`
     <h1 style="font-size:18px;color:#222;margin:0 0 8px;">${waitingForEft ? "Order received, waiting for your EFT" : "Order confirmed"}</h1>
-    <p style="font-size:14px;color:#555;line-height:1.5;">Thanks${order.customerName ? `, ${escapeHtml(order.customerName)}` : ""}! ${waitingForEft ? "We have saved your order and reserved your drinks. Pay immediately: once your payment shows in our account we pack it and match a driver." : "Your order is in — a driver will be matched within 5–10 minutes."} Keep this receipt: it shows what you ordered and when.</p>
+    <p style="font-size:14px;color:#555;line-height:1.5;">Thanks${order.customerName ? `, ${escapeHtml(order.customerName)}` : ""}! ${waitingForEft ? "We have saved your order and reserved your drinks. Pay with Immediate payment or PayShap: once the money has reflected in our account we pack it and match a driver." : "Your order is in — a driver will be matched within 5–10 minutes."} Keep this receipt: it shows what you ordered and when.</p>
     ${eftEmailBlock(order)}
     ${order.deliveryPin ? `<div style="border:2px dashed ${BRAND.terra};border-radius:8px;padding:12px;margin:0 0 16px;text-align:center;">
       <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.5px;">Your delivery PIN</div>

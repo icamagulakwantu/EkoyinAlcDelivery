@@ -174,8 +174,11 @@
         <input type="radio" name="payment" value="eft" id="eftPaymentRadio">
         <div>
           <div class="p-label">EFT bank transfer</div>
-          <div class="p-desc">We confirm your payment, then dispatch. Use your order code as the reference.</div>
+          <div class="p-desc">Pay with <b>Immediate payment</b> or <b>PayShap</b> only. We dispatch once the money has reflected in our account.</div>
         </div>
+      </div>
+      <div id="eftNotice" hidden style="margin:8px 0 12px;padding:12px 14px;border-radius:12px;background:#fff3cd;font-size:13px;line-height:1.45;">
+        <b>Important: choose "Immediate payment" or PayShap in your banking app.</b> A normal EFT can take until the next business day to reflect. We will not pack or send your order until the money has reflected in our account. Use your order code as the reference; you will see our banking details on the next page and in your email.
       </div>
       <div class="payment-option disabled" id="codPaymentOption" data-method="cod">
         <input type="radio" name="payment" value="cod" id="codPaymentRadio" disabled>
@@ -603,6 +606,8 @@
       o.classList.toggle('selected', on);
       o.querySelector('input').checked = on;
     });
+    const eftNotice = document.getElementById('eftNotice');
+    if (eftNotice) eftNotice.hidden = method !== 'eft';
     renderSubmitBar(computeTotals().total);
   }
   document.querySelectorAll('.payment-option').forEach((o) => {

@@ -6,8 +6,8 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ### 22 Nov 2026 (afternoon): EFT banking details shown to the customer
 - The customer who chooses EFT now sees the bank account, the exact amount and the payment reference (the order code) with copy buttons on the order-confirmation page and the tracking page (`public/eft-box.js`, `GET /api/order/:code/eft`, only for an EFT order still waiting for payment, rate limited, never cached), and in the confirmation email ("Pay by EFT to start your order"). Terms 7.4: only pay into the account shown, banking details never change by WhatsApp or phone.
-- The details are NOT in the code: Render env vars `EFT_BANK_NAME`, `EFT_ACCOUNT_NAME`, `EFT_ACCOUNT_NUMBER`, `EFT_ACCOUNT_TYPE`, `EFT_BRANCH_CODE` (`lib/eft-details.js`). Unset or malformed = the old behaviour (dispatch sends the details). To move to a company account later, change the env vars only. A test keeps the number out of the repo. Cache `ekoyini-shell-v50`. 220 tests.
-- Every place that shows the banking details also tells the customer to pay immediately (an immediate or instant payment if their bank offers it), so the money reflects and the order can go out at once.
+- The details are NOT in the code: Render env vars `EFT_BANK_NAME`, `EFT_ACCOUNT_NAME`, `EFT_ACCOUNT_NUMBER`, `EFT_ACCOUNT_TYPE`, `EFT_BRANCH_CODE` (`lib/eft-details.js`). Unset or malformed = the old behaviour (dispatch sends the details). To move to a company account later, change the env vars only. A test keeps the number out of the repo. Cache `ekoyini-shell-v51`. 220 tests.
+- Founder rule (22 Nov): EFT must be **Immediate payment or PayShap**, never a normal EFT; the order is not packed or dispatched until the money has reflected in our account. Said at checkout when EFT is selected (yellow notice), in the banking box, the confirmation page, the tracking status, the email and Terms 7.4/7.4A/7.4B.
 - Note for the accountant: the account in use is a personal account in the founder's name, not a company account.
 
 ### 22 Nov 2026 (afternoon): the closed communication loop (customer, dispatcher, tavern, driver)
