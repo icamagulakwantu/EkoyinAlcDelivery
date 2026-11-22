@@ -4,6 +4,15 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 22 Nov 2026 (afternoon): the closed communication loop (customer, dispatcher, tavern, driver)
+- **One hub, `lib/order-events.js`**, decides who hears about each step; every send is best effort and never touches the order:
+  - driver takes the job → customer; dispatch assigns a driver → customer + that driver's phone;
+  - tavern taps **Ready** → the assigned driver ("collect it now") + customer (before this nobody was told);
+  - driver confirms pickup → dispatchers, customer (phone alert + automatic email with the live link, `sendOutForDeliveryEmail`);
+  - delivered → customer; cancelled → driver, tavern ("stop packing"), customer, and dispatchers when the customer cancelled.
+- **Customer phone updates (free web push):** track page button "Get updates on this phone" (`public/order-updates.js`, `lib/customer-push.js`, `routes/customer-push.js`, `GET /api/push/key`, `POST /api/order/:code/push-subscribe`). Saved in `PushSubscription` as `customer:<order code>` (no migration); never sent admin alerts; a phone that already rings for admin/driver/tavern is never taken over; removed when the order is delivered or cancelled. No PIN or address in any notification. iPhone needs the Home Screen app. Privacy section 3 updated.
+- New in `lib/driver-push.js`: `notifyAssigned/notifyReady/notifyCancelled` (the one assigned driver); `lib/tavern-push.js`: `notifyCancelled`. The service worker now reopens the right order's tab (compares the tracking code). Cache `ekoyini-shell-v48`. 213 tests.
+
 ### 22 Nov 2026 (afternoon): live location at pickup goes to dispatch and customer
 - When the driver confirms pickup (tavern PIN + location), every dispatcher phone gets a push "Out for delivery: <code>" (tap opens the dashboard, which has the Driver live location link), and the driver's page (`driver-track.html`) shows two green/black one-tap buttons: **Send live location to the customer on WhatsApp** and **to dispatch on WhatsApp** (business number 064 004 5465, `DISPATCH_WHATSAPP` in `public/contact-links.js`). Both messages carry the live tracking link.
 - New token-protected `POST /order/:code/driver-contact` (customer name/number only to the driver-link holder, only while out for delivery); `confirm-pickup` also returns it. No migration, no cache bump (driver-track is not in the shell cache).

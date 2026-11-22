@@ -11,7 +11,7 @@ const { isPushEndpoint, isConfigured, TAVERN_KEY_PREFIX } = require("../lib/push
 const short = (v, n) => (typeof v === "string" ? v.trim().slice(0, n) : "");
 const DAY_MS = 86400000;
 
-module.exports = function mountTavernPortal(app, { prisma, requireAdmin, writeLimiter, logAdminAction }) {
+module.exports = function mountTavernPortal(app, { prisma, requireAdmin, writeLimiter, logAdminAction, orderEvents }) {
   const loginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, limit: 25, standardHeaders: true, legacyHeaders: false,
     message: { error: "Too many attempts. Please wait a few minutes and try again." },
@@ -156,6 +156,7 @@ module.exports = function mountTavernPortal(app, { prisma, requireAdmin, writeLi
         data: { readyAt: ready ? new Date() : null },
       });
       if (!count) return res.status(404).json({ error: "That order is no longer waiting for collection." });
+      if (ready && orderEvents) orderEvents.fire("READY", String(req.params.code)); // the driver and the customer hear it
       res.json({ ok: true, ready });
     } catch (err) {
       console.error(err);

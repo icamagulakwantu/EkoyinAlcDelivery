@@ -113,7 +113,7 @@ const {
 } = require("./payments.js");
 const { applyVenue, findVenue } = require("./lib/venues.js");
 const { parseOrderPayment, settleOrderPayment, isPayable: isOrderPayable } = require("./lib/order-payment.js");
-const { sendOrderConfirmationEmail, sendDeliveryReceiptEmail, sendAdminOrderAlertEmail, sendPaymentFailureAlertEmail, sendPaymentConfirmedEmail } = require("./emails.js");
+const { sendOutForDeliveryEmail, sendOrderConfirmationEmail, sendDeliveryReceiptEmail, sendAdminOrderAlertEmail, sendPaymentFailureAlertEmail, sendPaymentConfirmedEmail } = require("./emails.js");
 
 // Basic browser security headers. A Content-Security-Policy is deliberately
 // not set yet (it could break the map and address lookup; add with testing).
@@ -192,6 +192,8 @@ const push = require("./lib/push.js").createPusher({
 // Closed-app "new job" alerts for drivers who turned them on in the driver app.
 const driverPush = require("./lib/driver-push.js").createDriverPush({ prisma, push });
 const tavernPush = require("./lib/tavern-push.js").createTavernPush({ prisma, push });
+const customerPush = require("./lib/customer-push.js").createCustomerPush({ prisma, push });
+const orderEvents = require("./lib/order-events.js").createOrderEvents({ prisma, push, driverPush, tavernPush, customerPush, sendOutForDeliveryEmail });
 
 // The shared ADMIN_API_TOKEN (for scripts) is only honoured when it is long
 // enough to be unguessable, is compared in constant time, and repeated wrong
@@ -1287,6 +1289,7 @@ app.patch("/order/:code/assign", requireAdmin, async (req, res) => {
     });
     await logAdminAction(req, "ASSIGN_ORDER", order.code, `tavern=${order.tavern?.name || tavernId}, driver=${driverName}`);
     tavernPush.notifyAssigned(order); // closed-app "pack this order" alert for the tavern portal
+    orderEvents.fire("ASSIGNED_BY_ADMIN", order.code); // customer + the assigned driver's phone
     res.json(order);
   } catch (err) {
     console.error(err);
@@ -1396,15 +1399,8 @@ app.post("/order/:code/confirm-pickup", driverActionLimiter, async (req, res) =>
       data: { status: "DISPATCHED", pickedUpAt: now, driverLat: parsedLat, driverLng: parsedLng, driverLocationAt: now },
     });
     if (count === 0) return res.status(409).json({ error: "This order was just updated — refresh the page" });
-    // Dispatch hears about it at once (phone alert with the live link), and the driver gets
-    // one-tap WhatsApp buttons for the customer and dispatch (public/driver-track.html).
-    push.sendToAdmins({
-      title: `Out for delivery: ${order.code}`,
-      body: `${order.driverName || "Driver"} collected it. Live location is on. Tap to follow.`,
-      tag: "picked-up-" + order.code,
-      url: "/admin/admin.html",
-      urgent: false,
-    }).catch(() => {});
+    // Dispatch, the customer (phone alert + email) and the driver's WhatsApp buttons: see lib/order-events.js.
+    orderEvents.fire("PICKED_UP", order.code);
     res.json({ ok: true, status: "DISPATCHED", contact: driverShareContact(order) });
   } catch (err) {
     console.error(err);
@@ -1434,6 +1430,7 @@ app.post("/order/:code/confirm-delivered", driverActionLimiter, async (req, res)
     });
     if (count === 0) return res.status(409).json({ error: "This order was just updated — refresh the page" });
     emailDeliveryReceipt(req.params.code);
+    orderEvents.fire("DELIVERED", req.params.code);
     res.json({ ok: true, status: "DELIVERED" });
   } catch (err) {
     console.error(err);
@@ -1478,6 +1475,7 @@ app.patch("/order/:code/status", requireAdmin, async (req, res) => {
     const order = await prisma.order.findUnique({ where: { code: req.params.code } });
     await logAdminAction(req, "UPDATE_STATUS", order.code, `${current.status} -> ${status}`);
     if (status === "DELIVERED") emailDeliveryReceipt(order.code);
+    if (status === "DELIVERED" || status === "DISPATCHED") orderEvents.fire(status === "DELIVERED" ? "DELIVERED" : "PICKED_UP", order.code);
     res.json(order);
   } catch (err) {
     console.error(err);
@@ -1548,6 +1546,7 @@ app.post("/order/:code/cancel", writeLimiter, requireUser, async (req, res) => {
       return res.status(400).json({ error: "This order is already out for delivery — contact us to cancel it" });
     }
     const updated = await cancelOrderTransaction(req.params.code, "Cancelled by customer");
+    orderEvents.fire("CANCELLED", req.params.code, { by: "customer" });
     res.json({ ok: true, order: updated });
   } catch (err) {
     cancelErrorResponse(err, res);
@@ -1585,6 +1584,7 @@ app.post("/order/:code/admin-cancel", requireAdmin, async (req, res) => {
     const reason = typeof req.body?.reason === "string" ? req.body.reason.trim().slice(0, 300) : null;
     const updated = await cancelOrderTransaction(req.params.code, reason || "Cancelled by admin");
     await logAdminAction(req, "CANCEL_ORDER", req.params.code, reason || "Cancelled by admin");
+    orderEvents.fire("CANCELLED", req.params.code, { by: "admin" });
     res.json({ ok: true, order: updated });
   } catch (err) {
     cancelErrorResponse(err, res);
@@ -1713,7 +1713,7 @@ app.get("/admin/audit-log", requireAdmin, requireSuperAdmin, async (req, res) =>
 });
 
 // Feature routes that live in their own files (driver reports, delivery fees, ...).
-require("./routes/index.js")(app, { prisma, requireUser, requireAdmin, requireSuperAdmin, writeLimiter, trackLimiter, logAdminAction, quoteDelivery, push, driverPush, tavernPush, completePaidCheckout, appBaseUrl, yoco: { isConfigured: isYocoConfigured, createCheckout: createYocoCheckout } });
+require("./routes/index.js")(app, { prisma, requireUser, requireAdmin, requireSuperAdmin, writeLimiter, trackLimiter, logAdminAction, quoteDelivery, push, driverPush, tavernPush, orderEvents, completePaidCheckout, appBaseUrl, yoco: { isConfigured: isYocoConfigured, createCheckout: createYocoCheckout } });
 
 // Malformed JSON or an oversized body gets a clear JSON answer the pages can
 // show, instead of Express's default HTML error page.

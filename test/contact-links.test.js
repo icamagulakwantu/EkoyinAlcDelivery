@@ -66,7 +66,7 @@ test('at pickup the live location goes to dispatch (phone alert) and the driver 
   assert.match(C.waLink(C.DISPATCH_WHATSAPP, msg), /^https:\/\/wa\.me\/27640045465\?text=/);
   const server = read('server.js');
   const pickup = server.slice(server.indexOf('app.post("/order/:code/confirm-pickup"'), server.indexOf('// 🏁 DRIVER: CONFIRM DELIVERED'));
-  assert.match(pickup, /push\.sendToAdmins\(/, 'dispatch phones are alerted at pickup');
+  assert.match(pickup, /orderEvents\.fire\("PICKED_UP"/, 'dispatch and the customer are alerted at pickup');
   assert.match(pickup, /contact: driverShareContact\(order\)/);
   const contact = server.slice(server.indexOf('app.post("/order/:code/driver-contact"'), server.indexOf('// 🚚 DRIVER: CONFIRM PICKUP'));
   assert.match(contact, /driverTokenMatches/, 'customer number only for the driver token holder');

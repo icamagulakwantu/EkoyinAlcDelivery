@@ -15,7 +15,7 @@ const { loadBlocked } = require("../lib/tavern-portal.js");
 const MAX_DEVICES_PER_DRIVER = 5;
 const short = (v, n) => (typeof v === "string" ? v.trim().slice(0, n) : "");
 
-module.exports = function mountDrivers(app, { prisma, requireAdmin, writeLimiter, logAdminAction, push, tavernPush }) {
+module.exports = function mountDrivers(app, { prisma, requireAdmin, writeLimiter, logAdminAction, push, tavernPush, orderEvents }) {
   const loginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, limit: 25, standardHeaders: true, legacyHeaders: false,
     message: { error: "Too many attempts. Please wait a few minutes and try again." },
@@ -178,6 +178,7 @@ module.exports = function mountDrivers(app, { prisma, requireAdmin, writeLimiter
           tag: "driver-took-job", url: "/admin/admin.html", urgent: true,
         }).catch((e) => console.error("[push] driver took job alert failed:", e));
       }
+      if (orderEvents) orderEvents.fire("DRIVER_TOOK", order.code); // tells the customer
       res.json({ ok: true, code: order.code });
     } catch (err) {
       console.error(err);

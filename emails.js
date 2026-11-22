@@ -163,6 +163,21 @@ async function sendPaymentConfirmedEmail(order, customerEmail, { method = "eft" 
   await sendEmail({ to: customerEmail, subject: `Payment received — ${order.code} is being packed`, html });
 }
 
+// Sent automatically when the driver collects the order: the live tracking link, no driver tap needed.
+async function sendOutForDeliveryEmail(order) {
+  if (!order || !order.customerEmail) return;
+  const code = escapeHtml(order.code);
+  const link = `${APP_BASE_URL.replace(/\/$/, "")}/track.html?code=${encodeURIComponent(order.code)}`;
+  const driver = order.driverName ? escapeHtml(String(order.driverName).trim().split(/\s+/)[0]) : "Your driver";
+  const html = wrapper(`
+    <h1 style="font-size:18px;color:#222;margin:0 0 8px;">Your order is on its way</h1>
+    <p style="font-size:14px;color:#555;line-height:1.5;">${driver} has collected order <strong>${code}</strong> and is heading to you. Follow the driver live on the map:</p>
+    <p style="text-align:center;margin:18px 0;"><a href="${link}" style="display:inline-block;background:#17140e;color:#faf6ee;padding:13px 22px;border-radius:999px;font-weight:700;text-decoration:none;">Follow my order live</a></p>
+    <p style="font-size:13px;color:#555;line-height:1.5;">Please have your ID ready (18+) and your 4-digit delivery PIN. It is in your order confirmation email and on your tracking page. Give the PIN to the driver only at your gate.</p>
+  `);
+  await sendEmail({ to: order.customerEmail, subject: `Your Ekoyini order ${order.code} is on its way`, html });
+}
+
 async function sendPaymentFailureAlertEmail(pendingCheckout, reason) {
   const adminEmails = adminEmailList();
   if (adminEmails.length === 0) return;
@@ -218,6 +233,7 @@ module.exports = {
   escapeHtml,
   sendOrderConfirmationEmail,
   sendDeliveryReceiptEmail,
+  sendOutForDeliveryEmail,
   sendAdminOrderAlertEmail,
   sendPaymentFailureAlertEmail,
   sendPaymentConfirmedEmail,

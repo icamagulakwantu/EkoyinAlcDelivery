@@ -120,6 +120,7 @@
   <script src="script.js"></script>
   <script src="contact-links.js"></script>
   <script src="receipt.js"></script>
+  <script src="order-updates.js"></script>
   <script>
   renderNavAuth();
 
@@ -259,6 +260,11 @@
       html += `<a class="track-help" href="https://wa.me/?text=${encodeURIComponent(text)}" target="_blank" rel="noopener">Share live tracking on WhatsApp</a>`;
     }
     slot.innerHTML = html;
+    if (active && window.EkoyiniOrderUpdates) {
+      const holder = document.createElement('div');
+      slot.appendChild(holder);
+      EkoyiniOrderUpdates.mount(holder, order.code);
+    }
     if (order.status !== 'DELIVERED') return;
     try {
       if (!(await getSession())) return;

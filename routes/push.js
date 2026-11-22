@@ -1,6 +1,6 @@
 // Saves and removes the devices that get order alerts (web push).
 // All routes are admin only. See lib/push.js.
-const { isPushEndpoint, isDriverKey, isTavernKey } = require("../lib/push.js");
+const { isPushEndpoint, isDriverKey, isTavernKey, isCustomerKey } = require("../lib/push.js");
 
 const MAX_DEVICES_PER_ADMIN = 10;
 const short = (v, n) => (typeof v === "string" ? v.slice(0, n) : "");
@@ -18,7 +18,7 @@ module.exports = function mountPush(app, { prisma, requireAdmin, requireSuperAdm
       const rows = await prisma.pushSubscription.findMany({ select: { adminEmail: true } });
       const counts = {};
       for (const r of rows) {
-        if (isDriverKey(r.adminEmail) || isTavernKey(r.adminEmail)) continue;
+        if (isDriverKey(r.adminEmail) || isTavernKey(r.adminEmail) || isCustomerKey(r.adminEmail)) continue;
         counts[r.adminEmail] = (counts[r.adminEmail] || 0) + 1;
       }
       res.json({ counts, enabled: push.isEnabled() });

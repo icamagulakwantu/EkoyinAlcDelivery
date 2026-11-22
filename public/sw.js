@@ -2,8 +2,8 @@
 // app shell loading on flaky township data. Deliberately NEVER caches
 // API, order, admin or webhook requests: prices, stock and order status
 // must always be live.
-const CACHE = 'ekoyini-shell-v47';
-const SHELL = ['/driver.html', '/tavern.html', '/index.html', '/shop.html', '/cart.html', '/track.html', '/profile.html', '/style.css', '/premium.css', '/home.css', '/home-app.css', '/app.css', '/script.js', '/auth.js', '/pricing.js', '/contact-links.js', '/receipt.js', '/shelf-order.js', '/images/brand/ekoyini-icon.png'];
+const CACHE = 'ekoyini-shell-v48';
+const SHELL = ['/driver.html', '/tavern.html', '/index.html', '/shop.html', '/cart.html', '/track.html', '/profile.html', '/style.css', '/premium.css', '/home.css', '/home-app.css', '/app.css', '/script.js', '/auth.js', '/pricing.js', '/contact-links.js', '/receipt.js', '/order-updates.js', '/shelf-order.js', '/images/brand/ekoyini-icon.png'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
@@ -64,8 +64,9 @@ self.addEventListener('notificationclick', (e) => {
   const target = (e.notification.data && e.notification.data.url) || '/admin/admin.html';
   e.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
-      const path = new URL(target, self.location.origin).pathname;
-      const open = list.find((c) => new URL(c.url).pathname === path);
+      const want = new URL(target, self.location.origin);
+      // Same page, and for a tracking link the same order code.
+      const open = list.find((c) => { const u = new URL(c.url); return u.pathname === want.pathname && (!want.search || u.search === want.search); });
       return open ? open.focus() : self.clients.openWindow(target);
     })
   );
