@@ -250,6 +250,7 @@ function renderOrderCard(order) {
                     <span>${formatRand(order.total)}</span>
                 </div>
             </div>
+            ${window.EkoyiniReceipt ? `<p class="order-times" style="font-size:12px;opacity:.8;margin:6px 0;">${esc(window.EkoyiniReceipt.timelineText(order))}</p>` : ''}
             ${order.tavern ? `
                 <div class="assigned-info">
                     <p><strong>Tavern:</strong> ${esc(order.tavern.name)} (${esc(order.tavern.area)})</p>

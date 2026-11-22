@@ -113,7 +113,7 @@ const {
 } = require("./payments.js");
 const { applyVenue, findVenue } = require("./lib/venues.js");
 const { parseOrderPayment, settleOrderPayment, isPayable: isOrderPayable } = require("./lib/order-payment.js");
-const { sendOrderConfirmationEmail, sendAdminOrderAlertEmail, sendPaymentFailureAlertEmail, sendPaymentConfirmedEmail } = require("./emails.js");
+const { sendOrderConfirmationEmail, sendDeliveryReceiptEmail, sendAdminOrderAlertEmail, sendPaymentFailureAlertEmail, sendPaymentConfirmedEmail } = require("./emails.js");
 
 // Basic browser security headers. A Content-Security-Policy is deliberately
 // not set yet (it could break the map and address lookup; add with testing).
@@ -1164,6 +1164,17 @@ app.get("/api/my-orders", requireUser, async (req, res) => {
 // 📍 PUBLIC ORDER TRACKING — no login required, just the order code
 const LOCATION_STALE_AFTER_MS = 3 * 60 * 1000;
 
+// Emails the customer their final receipt (order time + the delivery time the driver confirmed). Each delivery
+// transition is a guarded one-time update, so this runs once per order.
+async function emailDeliveryReceipt(code) {
+  try {
+    const order = await prisma.order.findUnique({ where: { code }, include: { items: true, tavern: true } });
+    if (order && order.status === "DELIVERED") await sendDeliveryReceiptEmail(order);
+  } catch (e) {
+    console.error("[email] delivery receipt failed:", e);
+  }
+}
+
 app.get("/api/order/:code/track", trackLimiter, async (req, res) => {
   try {
     const order = await prisma.order.findUnique({
@@ -1178,6 +1189,10 @@ app.get("/api/order/:code/track", trackLimiter, async (req, res) => {
         driverName: true,
         driverVehicle: true,
         driverPhone: true,
+        pickedUpAt: true,
+        readyAt: true,
+        assignedAt: true,
+        deliveredAt: true,
         driverLat: true,
         driverLng: true,
         driverLocationAt: true,
@@ -1390,6 +1405,7 @@ app.post("/order/:code/confirm-delivered", driverActionLimiter, async (req, res)
       data: { status: "DELIVERED", driverShareToken: null, deliveredAt: new Date() },
     });
     if (count === 0) return res.status(409).json({ error: "This order was just updated — refresh the page" });
+    emailDeliveryReceipt(req.params.code);
     res.json({ ok: true, status: "DELIVERED" });
   } catch (err) {
     console.error(err);
@@ -1433,6 +1449,7 @@ app.patch("/order/:code/status", requireAdmin, async (req, res) => {
     }
     const order = await prisma.order.findUnique({ where: { code: req.params.code } });
     await logAdminAction(req, "UPDATE_STATUS", order.code, `${current.status} -> ${status}`);
+    if (status === "DELIVERED") emailDeliveryReceipt(order.code);
     res.json(order);
   } catch (err) {
     console.error(err);

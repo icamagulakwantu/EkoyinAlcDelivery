@@ -4,6 +4,12 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 22 Nov 2026 (evening): detailed receipts with time stamps, no database change
+- **Two receipts by email:** when an order is placed (order time) and again the moment the driver confirms delivery (delivery time). Both come from one shared layout, `public/receipt.js`: every item with unit price, every fee (delivery, surge, Super Priority, Care & Handling, Safety Seal, bottles & crates, promo or Cooler Box discount), total paid, how it was paid, outlet, driver, delivery address, a time-stamp table in South African time with seconds (ordered, paid, packed, driver assigned, collected, delivered) and how long it took (order to door, pickup to door). Any unexplained difference shows as "Other charges" so the lines always add up to the total.
+- **Receipt page:** `/receipt.html?code=...` (customer must be signed in and own the order; print or save as PDF). Linked from the track page ("View your receipt") and from both emails. API: `GET /api/order/:code/receipt` (owner only, no PINs or phone numbers).
+- **Track page** now lists every stage with its time. **Admin order card** shows a one-line time stamp summary (`Ordered 14:02 · Paid 14:03 · Collected 14:15 · Delivered 14:38 (23 min from pickup)`).
+- Delivery receipts go out from both delivery paths (driver PIN-proven link and admin Deliver button); each is a one-time status change, so one email per order. The receipt says we are not VAT-registered and is not a tax invoice; seller details match the Terms (a test checks). Terms 7.9 rewritten. Cache `ekoyini-shell-v45`. 196 tests.
+
 ### 22 Nov 2026 (afternoon): one-tap WhatsApp between customer, driver and dispatcher, no database change
 - **Customer to driver:** once the order is out for delivery (picked up), the track page shows **WhatsApp [driver]** and **Call driver** next to the driver's name and live map. The server (`lib/track-contact.js`) only sends the driver's number while the status is DISPATCHED; before pickup, after delivery and after cancellation it is withheld.
 - **Driver to customer:** the driver app job card gets **WhatsApp customer** (next to Call customer) with a pre-filled message that includes the customer's live tracking link, so the customer can follow the driver on the map.

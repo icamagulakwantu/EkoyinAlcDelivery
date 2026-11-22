@@ -119,6 +119,7 @@
   <script src="auth.js"></script>
   <script src="script.js"></script>
   <script src="contact-links.js"></script>
+  <script src="receipt.js"></script>
   <script>
   renderNavAuth();
 
@@ -297,6 +298,17 @@
     } catch {}
   }
 
+  // Every stage that has happened, with its time (South African time), plus the receipt link (22 Nov 2026).
+  function stampsBlock(order) {
+    const R = window.EkoyiniReceipt;
+    if (!R) return '';
+    const rows = R.timelineRows(order).filter((r) => r.at)
+      .map((r) => `<div style="display:flex;justify-content:space-between;gap:10px;font-size:12.5px;padding:2px 0;"><span>${escapeHtml(r.label)}</span><span style="white-space:nowrap;opacity:.8;">${escapeHtml(R.stamp(r.at))}</span></div>`).join('');
+    const took = order.deliveredAt && order.pickedUpAt ? `<div style="font-size:12px;opacity:.75;margin-top:4px;">Delivered ${escapeHtml(R.duration(order.pickedUpAt, order.deliveredAt))} after pickup.</div>` : '';
+    return `<div class="track-driver" style="margin-top:8px"><strong>Time stamps</strong>${rows}${took}
+      <a href="receipt.html?code=${encodeURIComponent(order.code)}" style="display:inline-block;margin-top:8px;font-weight:700;color:var(--terra-light);">View your receipt</a></div>`;
+  }
+
   function driverBlock(order) {
     if (!order.tavern) return '';
     const tavern = `<strong>${escapeHtml(order.tavern.name)}</strong> — picking up in ${escapeHtml(order.tavern.area)}`;
@@ -348,6 +360,7 @@
         <div class="track-result-card">
           <div class="track-result-meta">${itemCount} item${itemCount !== 1 ? 's' : ''} · placed ${new Date(order.createdAt).toLocaleString('en-ZA')}</div>
           ${isCancelled ? '' : driverBlock(order)}
+          ${isCancelled ? '' : stampsBlock(order)}
         </div>
         ${summaryHTML(order)}
         <a class="track-help" href="${supportWhatsAppUrl(`Hi Ekoyini, I have a question about my order ${order.code}.`)}" target="_blank" rel="noopener">

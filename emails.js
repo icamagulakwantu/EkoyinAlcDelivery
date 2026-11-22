@@ -6,6 +6,8 @@
 // Uses Resend's plain REST API directly (no SDK dependency to install).
 // ═══════════════════════════════════════════════
 
+const { buildReceipt, renderReceiptHtml } = require("./public/receipt.js");
+
 const RESEND_API_URL = "https://api.resend.com/emails";
 
 // Resend's own testing address — works with zero setup (no domain
@@ -75,32 +77,39 @@ function wrapper(bodyHtml) {
     </div>`;
 }
 
+// The receipt for an order, with every fee and every time stamp (founder, 22 Nov 2026). Sent when the order is
+// placed (order time) and again when the driver confirms delivery (delivery time).
 async function sendOrderConfirmationEmail(order, customerEmail) {
   if (!customerEmail) return;
   const code = escapeHtml(order.code);
-  const itemsHtml = order.items
-    .map((i) => `<tr><td style="padding:4px 0;">${escapeHtml(i.name)} × ${Number(i.quantity)}</td><td style="padding:4px 0;text-align:right;">R${(i.price * i.quantity).toFixed(2)}</td></tr>`)
-    .join("");
+  const receipt = buildReceipt(order);
+  const link = `${APP_BASE_URL.replace(/\/$/, "")}/receipt.html?code=${encodeURIComponent(order.code)}`;
   const html = wrapper(`
     <h1 style="font-size:18px;color:#222;margin:0 0 8px;">Order confirmed</h1>
-    <p style="font-size:14px;color:#555;line-height:1.5;">Thanks${order.customerName ? `, ${escapeHtml(order.customerName)}` : ""}! Your order is in — a driver will be matched within 5–10 minutes.</p>
-    <div style="background:#f7f4ec;border-radius:8px;padding:14px;margin:16px 0;text-align:center;">
-      <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.5px;">Order Code</div>
-      <div style="font-family:monospace;font-size:20px;font-weight:700;color:${BRAND.terra};">${code}</div>
-    </div>
+    <p style="font-size:14px;color:#555;line-height:1.5;">Thanks${order.customerName ? `, ${escapeHtml(order.customerName)}` : ""}! Your order is in — a driver will be matched within 5–10 minutes. Keep this receipt: it shows what you ordered and when.</p>
     ${order.deliveryPin ? `<div style="border:2px dashed ${BRAND.terra};border-radius:8px;padding:12px;margin:0 0 16px;text-align:center;">
       <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.5px;">Your delivery PIN</div>
       <div style="font-family:monospace;font-size:26px;font-weight:700;letter-spacing:6px;">${escapeHtml(order.deliveryPin)}</div>
       <div style="font-size:12px;color:#666;">Give it to the driver only when you have your drinks in hand.</div>
     </div>` : ""}
-    <table style="width:100%;font-size:13px;color:#333;border-collapse:collapse;">${itemsHtml}</table>
-    <div style="border-top:1px solid #e8dcc0;margin-top:10px;padding-top:10px;display:flex;justify-content:space-between;font-weight:700;font-size:14px;">
-      <span>Total</span><span>R${order.total.toFixed(2)}</span>
-    </div>
-    <p style="font-size:12px;color:#888;margin-top:20px;">Delivering to: ${escapeHtml(order.address)}</p>
-    <p style="font-size:12px;color:#888;">Track this order any time at ${APP_BASE_URL}/track.html with code ${code}.</p>
+    ${renderReceiptHtml(receipt, { link })}
+    <p style="font-size:12px;color:#888;margin-top:20px;">Track this order any time at ${APP_BASE_URL}/track.html with code ${code}.</p>
   `);
   await sendEmail({ to: customerEmail, subject: `Order confirmed — ${order.code}`, html });
+}
+
+// The final receipt, sent the moment the driver confirms delivery: proof of the order, the order time and the
+// delivery time. `order` must include items (and the tavern, for the outlet name).
+async function sendDeliveryReceiptEmail(order) {
+  if (!order || !order.customerEmail) return;
+  const receipt = buildReceipt(order);
+  const link = `${APP_BASE_URL.replace(/\/$/, "")}/receipt.html?code=${encodeURIComponent(order.code)}`;
+  const html = wrapper(`
+    <h1 style="font-size:18px;color:#222;margin:0 0 8px;">Your order was delivered</h1>
+    <p style="font-size:14px;color:#555;line-height:1.5;">Thanks${order.customerName ? `, ${escapeHtml(order.customerName)}` : ""}! Here is your final receipt with the order time and the delivery time. Please keep it as proof of your order.</p>
+    ${renderReceiptHtml(receipt, { link })}
+  `);
+  await sendEmail({ to: order.customerEmail, subject: `Your Ekoyini receipt — ${order.code} (delivered ${receipt.deliveredAt})`, html });
 }
 
 function adminEmailList() {
@@ -208,6 +217,7 @@ module.exports = {
   sendEmail,
   escapeHtml,
   sendOrderConfirmationEmail,
+  sendDeliveryReceiptEmail,
   sendAdminOrderAlertEmail,
   sendPaymentFailureAlertEmail,
   sendPaymentConfirmedEmail,
