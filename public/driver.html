@@ -114,9 +114,11 @@
       <button type="button" data-tab="Earn">Earnings</button>
     </nav>
   </main>
+  <div class="hidden" id="receiptSheet" style="position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:50;display:flex;align-items:flex-end;padding:12px"></div>
   <div class="toast hidden" id="toast" role="status"></div>
 
   <script src="/contact-links.js"></script>
+  <script src="/receipt.js"></script>
   <script>
   (function () {
     const KEY = 'ekoyini_driver_token';
@@ -233,8 +235,26 @@
         ${rating}
         ${e.week.cash ? `<div class="cash" style="margin-bottom:12px">Cash you collected this week: ${rand(e.week.cash)}. It is taken off what you are owed, so you will be paid ${rand(e.week.net)} for the week.</div>` : ''}
         <p class="note">Earnings are the delivery, surge and priority fees (100% yours). Payouts are made daily at 12:00 for yesterday.</p>
-        <div class="card">${e.recent.length ? e.recent.map((o) => `<div class="list-row"><span><span class="code">${esc(o.code)}</span><br><small style="color:var(--mute)">${esc(o.day)}${o.cash ? ' · cash ' + rand(o.cash) : ''}</small></span><b>${rand(o.earned)}</b></div>`).join('') : '<div class="empty" style="padding:24px 10px">Your deliveries will show here.</div>'}</div>`;
+        <div class="card">${e.recent.length ? e.recent.map((o) => `<div class="list-row"><span><span class="code">${esc(o.code)}</span><br><small style="color:var(--mute)">${esc(window.EkoyiniReceipt ? window.EkoyiniReceipt.shortStamp(o.deliveredAt) : o.day)}${o.cash ? ' · cash ' + rand(o.cash) : ''}</small></span><span style="text-align:right"><b>${rand(o.earned)}</b><br><button type="button" class="btn alt" style="padding:4px 10px;font-size:12px;margin-top:4px" data-receipt="${esc(o.code)}">Receipt</button></span></div>`).join('') : '<div class="empty" style="padding:24px 10px">Your deliveries will show here.</div>'}</div>`;
     }
+
+    // The driver's copy of the receipt for a finished delivery (22 Nov 2026).
+    $('paneEarn').addEventListener('click', async (e) => {
+      const btn = e.target.closest('[data-receipt]');
+      if (!btn) return;
+      btn.disabled = true;
+      const r = await api('/api/driver/receipt/' + encodeURIComponent(btn.dataset.receipt));
+      btn.disabled = false;
+      if (!r.ok) { toast(r.body.error || 'Could not open the receipt'); return; }
+      const R = window.EkoyiniReceipt, rec = r.body.receipt;
+      const wa = 'https://wa.me/?text=' + encodeURIComponent(R.receiptText(rec) + `\n\nYou earned ${rand(r.body.earned)}${r.body.cash ? `. Cash to hand in: ${rand(r.body.cash)}` : ''}`);
+      $('receiptSheet').innerHTML = `<div class="card" style="max-height:88vh;overflow:auto;margin:0">
+        ${R.renderReceiptHtml(rec)}
+        <div class="cash" style="margin:12px 0">You earned ${rand(r.body.earned)} on this delivery.${r.body.cash ? ` Cash collected from the customer: ${rand(r.body.cash)}.` : ''}</div>
+        <div class="btns"><a class="btn big" href="${esc(wa)}" target="_blank" rel="noopener">Send on WhatsApp</a><button type="button" class="btn alt" id="receiptClose">Close</button></div></div>`;
+      $('receiptSheet').classList.remove('hidden');
+      $('receiptClose').onclick = () => $('receiptSheet').classList.add('hidden');
+    });
 
     $('paneBoard').addEventListener('click', async (e) => {
       const btn = e.target.closest('[data-take]');

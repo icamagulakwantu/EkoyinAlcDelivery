@@ -8,6 +8,7 @@ const rateLimit = require("express-rate-limit");
 const { toSaWhatsApp } = require("../lib/phone.js");
 const { newPin } = require("../lib/dispatch.js");
 const D = require("../lib/driver-app.js");
+const { buildReceipt } = require("../public/receipt.js");
 const { isPushEndpoint, isConfigured, DRIVER_KEY_PREFIX } = require("../lib/push.js");
 const { loadBlocked } = require("../lib/tavern-portal.js");
 
@@ -181,6 +182,20 @@ module.exports = function mountDrivers(app, { prisma, requireAdmin, writeLimiter
     } catch (err) {
       console.error(err);
       res.status(500).json({ error: "Could not take the job" });
+    }
+  });
+
+  // ── The driver's copy of the receipt for a delivery they made (founder, 22 Nov 2026) ──
+  // Same receipt the customer gets (items, fees, order time, delivery time) plus what the driver earned and any
+  // cash to hand in. Only for the driver who delivered it; no phone numbers or PINs.
+  app.get("/api/driver/receipt/:code", pollLimiter, requireDriver, async (req, res) => {
+    try {
+      const order = await prisma.order.findUnique({ where: { code: String(req.params.code) }, include: { items: true, tavern: true } });
+      if (!order || order.driverPhone !== req.driver.phone || order.status !== "DELIVERED") return res.status(404).json({ error: "Receipt not found" });
+      res.set("Cache-Control", "no-store").json({ receipt: buildReceipt(order), earned: D.driverEarn(order), cash: D.cashHeld(order) });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "Could not load the receipt" });
     }
   });
 

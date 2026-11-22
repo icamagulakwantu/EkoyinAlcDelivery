@@ -22,6 +22,17 @@ function renderTavernLocationRow(t) {
                 <button class="dispatch-btn" onclick="saveTavernLocation('${id}')">Save</button>
                 ${hasLocation ? `<button class="secondary-btn" onclick="clearTavernLocation('${id}')">Clear</button>` : ''}
             </div>
+            <details class="activity-detail" style="margin-top:8px;">
+                <summary>Receipt details: ${t.vatNumber ? 'VAT ' + esc(t.vatNumber) : 'no VAT number saved'}${t.liquorLicenceNumber ? ' · licence saved' : ''}</summary>
+                <p style="font-size:12.5px;opacity:.8;margin:6px 0;">Shown on the customer's receipt when this tavern sells and packs an order. Leave the VAT number blank if the tavern is not VAT registered.</p>
+                <div class="admin-add-row">
+                    <input type="text" id="tavernLegal-${id}" placeholder="Legal or trading name on their receipt" maxlength="100" value="${esc(t.legalName || '')}">
+                    <input type="text" id="tavernVat-${id}" placeholder="VAT number (10 digits, starts with 4)" maxlength="14" inputmode="numeric" value="${esc(t.vatNumber || '')}">
+                    <input type="text" id="tavernLicence-${id}" placeholder="Liquor licence number" maxlength="40" value="${esc(t.liquorLicenceNumber || '')}">
+                    <input type="text" id="tavernAddress-${id}" placeholder="Street address" maxlength="150" value="${esc(t.address || '')}">
+                    <button class="dispatch-btn" onclick="saveTavernDetails('${id}')">Save details</button>
+                </div>
+            </details>
         </div>`;
 }
 
@@ -145,3 +156,19 @@ window.showSection = function (name, tabEl) {
     document.getElementById('deliverySection').style.display = name === 'delivery' ? 'block' : 'none';
     if (name === 'delivery') loadDeliverySettings();
 };
+
+
+// Receipt details for a tavern: legal name, VAT number, liquor licence, address (22 Nov 2026, super-admin only).
+async function saveTavernDetails(id) {
+    const val = (k) => document.getElementById(`${k}-${id}`).value;
+    const body = { legalName: val('tavernLegal'), vatNumber: val('tavernVat'), liquorLicenceNumber: val('tavernLicence'), address: val('tavernAddress') };
+    try {
+        const res = await adminFetch(`/admin/taverns/${encodeURIComponent(id)}/details`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || 'Could not save the details');
+        loadDeliverySettings();
+    } catch (err) {
+        alert(err.message);
+    }
+}
+window.saveTavernDetails = saveTavernDetails;

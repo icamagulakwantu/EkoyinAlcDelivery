@@ -11,4 +11,5 @@ module.exports = function mountRoutes(app, deps) {
   require("./tavern-portal.js")(app, deps);
   require("./staff.js")(app, deps);
   require("./receipt.js")(app, deps);
+  require("./tavern-details.js")(app, deps);
 };

@@ -128,3 +128,71 @@ test('wiring: both delivery paths email the receipt; pages and service worker ca
   assert.match(read('public/sw.js'), /\/receipt\.js/);
   assert.match(read('public/terms.html'), /final receipt when the driver confirms delivery/);
 });
+
+// ── tavern details on the receipt, and the driver's copy (22 Nov 2026) ──
+const { cleanTaxDetails } = require('../lib/tavern-tax.js');
+
+test('the receipt names the tavern that sold and packed the order, with its VAT and licence numbers', () => {
+  const tavern = { name: 'KwaSiba', area: 'Motherwell', legalName: 'Siba Trading CC', vatNumber: '4123456789', liquorLicenceNumber: 'EC/123/45', address: '5 Main Rd, Motherwell' };
+  const html = R.renderReceiptHtml(R.buildReceipt(order({ tavern })));
+  for (const must of ['Siba Trading CC', 'VAT number: 4123456789', 'Liquor licence no.: EC/123/45', '5 Main Rd, Motherwell', 'Sold and packed by']) assert.ok(html.includes(must), must);
+  const noVat = R.renderReceiptHtml(R.buildReceipt(order({ tavern: { name: 'KwaSiba', area: 'Motherwell' } })));
+  assert.match(noVat, /VAT number: not supplied/);
+  const placed = R.renderReceiptHtml(R.buildReceipt(order({ status: 'PENDING', deliveredAt: null, tavern: null })));
+  assert.match(placed, /outlet is named on your final receipt/, 'before a tavern packs it, the receipt says so');
+  assert.ok(R.receiptText(R.buildReceipt(order({ tavern }))).includes('VAT 4123456789'));
+});
+
+test('tavern receipt details: VAT numbers are 10 digits starting with 4; blank clears', () => {
+  assert.equal(cleanTaxDetails({ vatNumber: '4123 456 789' }).clean.vatNumber, '4123456789');
+  assert.equal(cleanTaxDetails({ vatNumber: '' }).clean.vatNumber, null);
+  for (const bad of ['123', '3123456789', '41234567890', 'abcdefghij']) assert.ok(cleanTaxDetails({ vatNumber: bad }).errors.length, bad);
+  assert.ok(cleanTaxDetails({ liquorLicenceNumber: '<script>' }).errors.length);
+  assert.equal(cleanTaxDetails({ legalName: '  Siba   Trading  CC ' }).clean.legalName, 'Siba Trading CC');
+});
+
+test('route: only a super-admin can save tavern details, and the change is logged', async () => {
+  const taverns = [{ id: 't1', name: 'KwaSiba' }];
+  const logs = [];
+  const prisma = { tavern: { findUnique: async ({ where }) => taverns.find((t) => t.id === where.id) || null, update: async ({ where, data }) => Object.assign(taverns.find((t) => t.id === where.id), data) } };
+  let role = 'SUPER_ADMIN';
+  const app = express(); app.use(express.json());
+  require('../routes/tavern-details.js')(app, { prisma, requireAdmin: (q, s, n) => n(), requireSuperAdmin: (q, s, n) => (role === 'SUPER_ADMIN' ? n() : s.status(403).json({ error: 'no' })), writeLimiter: (q, s, n) => n(), logAdminAction: async (req, a, t, d) => logs.push({ a, d }) });
+  const server = await new Promise((r) => { const s = app.listen(0, () => r(s)); });
+  const patch = async (id, body) => { const res = await fetch(`http://127.0.0.1:${server.address().port}/admin/taverns/${id}/details`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); return { status: res.status, body: await res.json() }; };
+  try {
+    assert.equal((await patch('t1', { vatNumber: '4123456789', legalName: 'Siba CC' })).status, 200);
+    assert.equal(taverns[0].vatNumber, '4123456789');
+    assert.equal(logs[0].a, 'UPDATE_TAVERN_DETAILS');
+    assert.equal((await patch('t1', { vatNumber: '99' })).status, 400);
+    assert.equal((await patch('nope', {})).status, 404);
+    role = 'DISPATCHER';
+    assert.equal((await patch('t1', { vatNumber: '' })).status, 403);
+  } finally { server.close(); }
+});
+
+test("route: a driver can open the receipt only for a delivery they made, with their earnings and cash", async () => {
+  const delivered = { ...order({ driverPhone: '27712345678', paymentMethod: 'cod' }), items: order().items };
+  const orders = [delivered, { ...order({ code: 'EKO-OTHER000', driverPhone: '27799999999' }) }, { ...order({ code: 'EKO-NOTDONE0', status: 'DISPATCHED', deliveredAt: null, driverPhone: '27712345678' }) }];
+  const prisma = { order: { findUnique: async ({ where }) => orders.find((o) => o.code === where.code) || null } };
+  const D = require('../lib/driver-app.js');
+  const app = express();
+  // The drivers module mounts many routes; give it a minimal stand-in database and auth.
+  const prismaFull = new Proxy(prisma, { get: (t, k) => (k in t ? t[k] : {}) });
+  require('../routes/drivers.js')(app, { prisma: prismaFull, requireAdmin: (q, s, n) => n(), writeLimiter: (q, s, n) => n(), logAdminAction: async () => {}, push: null, tavernPush: null });
+  // requireDriver looks the driver up by session hash:
+  prisma.driver = { findFirst: async () => ({ id: 'd1', phone: '27712345678', name: 'Sipho', active: true, sessionExpiresAt: new Date(Date.now() + 3600000) }) };
+  const token = D.newSessionToken();
+  const server = await new Promise((r) => { const s = app.listen(0, () => r(s)); });
+  const get = async (code) => { const res = await fetch(`http://127.0.0.1:${server.address().port}/api/driver/receipt/${code}`, { headers: { Authorization: 'Bearer ' + token } }); return { status: res.status, body: await res.json() }; };
+  try {
+    const mine = await get('EKO-AB12CD34');
+    assert.equal(mine.status, 200, JSON.stringify(mine.body));
+    assert.equal(mine.body.receipt.deliveredAt, '22 Nov 2026, 14:38:07');
+    assert.equal(mine.body.earned, 40);
+    assert.equal(mine.body.cash, 316);
+    assert.ok(!JSON.stringify(mine.body).match(/customerPhone|deliveryPin|collectionPin|driverPhone/));
+    assert.equal((await get('EKO-OTHER000')).status, 404, "another driver's delivery");
+    assert.equal((await get('EKO-NOTDONE0')).status, 404, 'not delivered yet');
+  } finally { server.close(); }
+});

@@ -10,7 +10,7 @@
     whatsapp: '064 004 5465',
     email: 'support@ekoyini.co.za',
     website: 'www.ekoyini.co.za',
-    vatNote: 'We are not yet registered for VAT, so this receipt is not a tax invoice and no VAT is included.',
+    vatNote: "Ekoyini's delivery and service fees are charged by Ekoyini Holdings (Pty) Ltd, which is not yet registered for VAT. This receipt is not a tax invoice.",
   };
   const PAYMENT_LABEL = { card: 'Card (Yoco)', eft: 'EFT', cod: 'Cash on delivery' };
 
@@ -80,6 +80,8 @@
       address: o.address || '',
       landmark: o.landmark || '',
       outlet: o.tavern ? `${o.tavern.name} (${o.tavern.area})` : '',
+      // The tavern that sold and packed the order: its own name, VAT number and liquor licence number (22 Nov 2026).
+      outletInfo: o.tavern ? { name: o.tavern.name, area: o.tavern.area, legalName: o.tavern.legalName || '', vatNumber: o.tavern.vatNumber || '', licence: o.tavern.liquorLicenceNumber || '', address: o.tavern.address || '' } : null,
       driver: o.driverName ? `${o.driverName}${o.driverVehicle ? ' (' + o.driverVehicle + ')' : ''}` : '',
       payment: PAYMENT_LABEL[o.paymentMethod] || o.paymentMethod || '',
       items, subtotal, lines, total: r2(o.total),
@@ -126,7 +128,11 @@
         <div style="font-size:12px;color:#555;margin-top:14px;line-height:1.6;">
           ${r.customerName ? `<b>Customer:</b> ${esc(r.customerName)}<br>` : ''}
           <b>Delivered to:</b> ${esc(r.address)}${r.landmark ? ` (${esc(r.landmark)})` : ''}<br>
-          ${r.outlet ? `<b>Sold and packed by:</b> ${esc(r.outlet)}<br>` : ''}
+          ${r.outletInfo
+            ? `<b>Sold and packed by:</b> ${esc(r.outletInfo.legalName || r.outletInfo.name)} (${esc(r.outletInfo.area)})<br>
+               VAT number: ${r.outletInfo.vatNumber ? esc(r.outletInfo.vatNumber) : 'not supplied'}<br>
+               ${r.outletInfo.licence ? `Liquor licence no.: ${esc(r.outletInfo.licence)}<br>` : ''}${r.outletInfo.address ? `${esc(r.outletInfo.address)}<br>` : ''}`
+            : (r.status === 'CANCELLED' ? '' : '<b>Sold and packed by:</b> the outlet is named on your final receipt.<br>')}
           ${r.driver ? `<b>Delivered by:</b> ${esc(r.driver)}<br>` : ''}
         </div>
         <div style="font-size:11px;color:#999;margin-top:14px;border-top:1px solid #f0ebe0;padding-top:10px;line-height:1.5;">
@@ -134,6 +140,20 @@
           WhatsApp ${esc(s.whatsapp)} · ${esc(s.email)} · ${esc(s.website)}<br>${esc(s.vatNote)}${opts.link ? `<br><a href="${esc(opts.link)}" style="color:#7a5c00;">Open or print this receipt online</a>` : ''}
         </div>
       </div>`;
+  }
+
+  // Plain-text copy for WhatsApp (the driver's copy and quick shares).
+  function receiptText(r) {
+    const L = [];
+    L.push(`*Ekoyini ${r.title}* - ${r.code}`);
+    L.push(`Ordered: ${r.orderedAt}`);
+    if (r.deliveredAt) L.push(`Delivered: ${r.deliveredAt}${r.pickupToDelivery ? ` (${r.pickupToDelivery} after pickup)` : ''}`);
+    L.push('');
+    r.items.forEach((i) => L.push(`${i.quantity} x ${i.name}  ${money(i.line)}`));
+    r.lines.forEach((l) => L.push(`${l.label}  ${l.amount < 0 ? '-' : ''}${money(Math.abs(l.amount))}`));
+    L.push(`*Total ${money(r.total)}* (${r.payment})`);
+    if (r.outletInfo) L.push('', `Sold by ${r.outletInfo.legalName || r.outletInfo.name}${r.outletInfo.vatNumber ? `, VAT ${r.outletInfo.vatNumber}` : ''}${r.outletInfo.licence ? `, licence ${r.outletInfo.licence}` : ''}`);
+    return L.join('\n');
   }
 
   // One line for the admin card: "Ordered 22 Nov 14:02 · Paid 14:03 · Collected 14:15 · Delivered 22 Nov 14:38 (23 min from pickup)"
@@ -148,7 +168,7 @@
     return bits.join(' · ');
   }
 
-  const api = { SELLER, buildReceipt, renderReceiptHtml, timelineText, timelineRows, stamp, shortStamp, duration, money };
+  const api = { SELLER, buildReceipt, renderReceiptHtml, receiptText, timelineText, timelineRows, stamp, shortStamp, duration, money };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   root.EkoyiniReceipt = api;
 })(typeof window !== 'undefined' ? window : globalThis);

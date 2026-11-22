@@ -211,6 +211,12 @@ model Tavern {
   // measuring distance.
   latitude  Float?
   longitude Float?
+  // Receipt details (founder approved 22 Nov 2026): the outlet that sells and packs an order is named on the
+  // customer's receipt with its VAT number and liquor licence number. All optional; edited in the admin Delivery tab.
+  legalName           String?
+  vatNumber           String?
+  liquorLicenceNumber String?
+  address             String?
   orders Order[]
 }
 

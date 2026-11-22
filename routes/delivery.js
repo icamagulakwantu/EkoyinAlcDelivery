@@ -55,7 +55,7 @@ module.exports = function mountDelivery(app, { prisma, requireAdmin, requireSupe
       const [settings, taverns] = await Promise.all([
         prisma.deliverySettings.findUnique({ where: { id: "default" } }),
         prisma.tavern.findMany({
-          select: { id: true, name: true, area: true, latitude: true, longitude: true },
+          select: { id: true, name: true, area: true, latitude: true, longitude: true, legalName: true, vatNumber: true, liquorLicenceNumber: true, address: true },
           orderBy: { name: "asc" },
         }),
       ]);
