@@ -299,6 +299,14 @@ function getActionButtons(order) {
     if (order.status === 'DISPATCHED') {
         buttons += `<button class="btn btn-deliver" onclick="markDelivered('${code}')">Deliver</button>`;
     }
+    // One-tap WhatsApp to the customer and the driver, and the driver's live position (22 Nov 2026).
+    // The customer message carries the live tracking link; each button opens one chat per tap.
+    if (order.status === 'PENDING' || order.status === 'DISPATCHED') {
+        if (order.customerPhone) buttons += `<button class="btn btn-dispatch" onclick="whatsAppCustomer('${code}')">WhatsApp customer</button>`;
+        if (order.driverPhone) buttons += `<button class="btn btn-dispatch" onclick="whatsAppDriverCheckIn('${code}')">WhatsApp driver</button>`;
+        const live = window.EkoyiniContact && window.EkoyiniContact.driverMapUrl(order);
+        if (live) buttons += `<a class="btn btn-assign" href="${esc(live)}" target="_blank" rel="noopener" style="text-decoration:none;">Driver live location</a>`;
+    }
     // Cancellation restores stock atomically — available at any stage up
     // to DELIVERED/CANCELLED themselves, for any admin (not super-admin
     // only), since it's recoverable (unlike delete) and dispatchers are
@@ -537,6 +545,25 @@ function sendTavernOnly(orderCode) {
     if (!order.tavern.phone) { alert(`${order.tavern.name} has no phone number saved. Add it in the Delivery tab.`); return; }
     sendTavernWhatsApp(orderCode, order.tavern, order);
 }
+
+function whatsAppCustomer(orderCode) {
+    const order = allOrders.find(o => o.code === orderCode);
+    const C = window.EkoyiniContact;
+    if (!order || !order.customerPhone || !C) { alert('No customer cell number on this order'); return; }
+    const url = C.waLink(order.customerPhone, C.dispatchToCustomer({ customerName: order.customerName, code: orderCode, driverName: order.driverName, driverVehicle: order.driverVehicle, origin: window.location.origin }));
+    if (!url) { alert('That customer cell number is not a valid South African number'); return; }
+    window.open(url, '_blank');
+}
+
+function whatsAppDriverCheckIn(orderCode) {
+    const order = allOrders.find(o => o.code === orderCode);
+    const C = window.EkoyiniContact;
+    if (!order || !order.driverPhone || !C) { alert('No driver number on this order'); return; }
+    const url = C.waLink(order.driverPhone, C.dispatchToDriver({ driverName: order.driverName, code: orderCode }));
+    if (!url) { alert('That driver number is not valid'); return; }
+    window.open(url, '_blank');
+}
+Object.assign(window, { whatsAppCustomer, whatsAppDriverCheckIn });
 
 function sendDriverOnly(orderCode) {
     const order = allOrders.find(o => o.code === orderCode);

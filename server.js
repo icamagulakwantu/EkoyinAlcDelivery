@@ -261,6 +261,7 @@ async function logAdminAction(req, action, targetId, detail) {
 // ── Pricing — shared with the browser via public/pricing.js, so the cart,
 // checkout and server can never disagree on discounts or the delivery fee.
 const { toSaWhatsApp } = require("./lib/phone.js");
+const { driverContactFor } = require("./lib/track-contact.js");
 const { newPin, pinMatches } = require("./lib/dispatch.js");
 const { COOLER_ELIGIBLE, COOLER_FIRST_ORDERS, coolerDiscountPct, coolerDiscountFor, MIN_ORDER_SUBTOTAL, safetySealFeeFor, orderWeightKg, isReturnableQuart, bottleDepositFor, noPinProblem } = require("./public/pricing.js");
 // Shelf order (shared with the shop and admin): sensible sections, brands together.
@@ -1176,6 +1177,7 @@ app.get("/api/order/:code/track", trackLimiter, async (req, res) => {
         updatedAt: true,
         driverName: true,
         driverVehicle: true,
+        driverPhone: true,
         driverLat: true,
         driverLng: true,
         driverLocationAt: true,
@@ -1190,6 +1192,8 @@ app.get("/api/order/:code/track", trackLimiter, async (req, res) => {
     // Lets the tracking page offer "Pay by card" only when it would work.
     order.payable = isYocoConfigured() && isOrderPayable(order);
     delete order.paidAt;
+    // The driver's cell is only shown while the order is out for delivery (lib/track-contact.js).
+    order.driverPhone = driverContactFor(order);
 
     const isFresh = order.driverLocationAt && Date.now() - new Date(order.driverLocationAt).getTime() < LOCATION_STALE_AFTER_MS;
     if (!isFresh) {

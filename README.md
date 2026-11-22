@@ -4,6 +4,13 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 22 Nov 2026 (afternoon): one-tap WhatsApp between customer, driver and dispatcher, no database change
+- **Customer to driver:** once the order is out for delivery (picked up), the track page shows **WhatsApp [driver]** and **Call driver** next to the driver's name and live map. The server (`lib/track-contact.js`) only sends the driver's number while the status is DISPATCHED; before pickup, after delivery and after cancellation it is withheld.
+- **Driver to customer:** the driver app job card gets **WhatsApp customer** (next to Call customer) with a pre-filled message that includes the customer's live tracking link, so the customer can follow the driver on the map.
+- **Dispatcher to both:** admin order cards (packing and out for delivery) get **WhatsApp customer** (message includes the live tracking link and who is delivering), **WhatsApp driver** (check-in) and **Driver live location** (Google Maps link, only while the driver's position is under 10 minutes old).
+- Shared helper `public/contact-links.js` (also in the service worker shell). Messages are free click-to-chat: one tap to send. Fully automatic WhatsApp sending would need the WhatsApp Business Platform (Meta verification, approved templates, cost per message): not built, founder chose one-tap buttons on 22 Nov.
+- Privacy 5.1 and 15.2 now say customer and driver see each other's contact while an order is out for delivery. Cache `ekoyini-shell-v44`. 186 tests.
+
 ### 22 Nov 2026 (midday): staff files for drivers and dispatchers (founder approved migration)
 - New table `StaffProfile` (migration `20261122120000_add_staff_profiles`, new table only, nothing changed or deleted; row level security applies automatically). Admin **Staff files** tab (super-admin only) lists every driver and dispatcher with a status: no file, filed but not verified, verified, or a document expired, plus warnings 30 days before a licence or vehicle disc expires.
 - **Driver file:** full name, SA ID number, email, cell, home address, driver's licence number + code + expiry, vehicle make/model/colour/year, number plate, registration certificate number, licence disc expiry, bank details (bank, holder, account number, 6-digit branch code, type). **Dispatcher file:** name, ID, email, cell, home address; bank optional but complete if started.

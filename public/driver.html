@@ -116,6 +116,7 @@
   </main>
   <div class="toast hidden" id="toast" role="status"></div>
 
+  <script src="/contact-links.js"></script>
   <script>
   (function () {
     const KEY = 'ekoyini_driver_token';
@@ -169,6 +170,11 @@
     }
 
     // ── render ──
+    // One-tap WhatsApp to the customer with the live tracking link, so they can follow the driver (22 Nov 2026).
+    function waCustomer(j) {
+      const C = window.EkoyiniContact;
+      return C ? C.waLink(j.customerPhone, C.driverToCustomer({ customerName: j.customerName, driverName: (data && data.driver && data.driver.name) || '', code: j.code, origin: location.origin })) : '';
+    }
     function jobCard(j) {
       const onWay = j.status === 'DISPATCHED';
       const nav = j.lat != null && j.lng != null
@@ -186,6 +192,7 @@
           <a class="btn alt" href="${esc(nav)}" target="_blank" rel="noopener">Navigate</a>
           ${!onWay && j.tavern && j.tavern.phone ? `<a class="btn alt" href="${esc(phoneHref(j.tavern.phone))}">Call tavern</a>` : ''}
           ${onWay && j.customerPhone ? `<a class="btn alt" href="${esc(phoneHref(j.customerPhone))}">Call customer</a>` : ''}
+          ${onWay && j.customerPhone && waCustomer(j) ? `<a class="btn alt" href="${esc(waCustomer(j))}" target="_blank" rel="noopener">WhatsApp customer</a>` : ''}
         </div>
       </article>`;
     }

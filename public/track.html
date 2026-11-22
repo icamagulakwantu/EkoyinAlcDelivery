@@ -118,6 +118,7 @@
   <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="auth.js"></script>
   <script src="script.js"></script>
+  <script src="contact-links.js"></script>
   <script>
   renderNavAuth();
 
@@ -302,7 +303,14 @@
     const driver = order.driverName
       ? `<br><strong>${escapeHtml(order.driverName)}</strong>${order.driverVehicle ? ` (${escapeHtml(order.driverVehicle)})` : ''} is heading your way from ${escapeHtml(order.tavern.area)}`
       : '';
-    return `<div class="track-driver">${tavern}${driver}</div>`;
+    // Driver contact only appears while the order is out for delivery (the server withholds the number otherwise).
+    const C = window.EkoyiniContact;
+    const wa = order.driverPhone && order.driverName ? C.waLink(order.driverPhone, C.customerToDriver({ driverName: order.driverName, code: order.code })) : '';
+    const call = order.driverPhone ? C.telLink(order.driverPhone) : '';
+    const contact = wa ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+        <a class="track-help" style="margin:0" href="${escapeHtml(wa)}" target="_blank" rel="noopener">WhatsApp ${escapeHtml(order.driverName.split(' ')[0])}</a>
+        ${call ? `<a class="track-help" style="margin:0" href="${escapeHtml(call)}">Call driver</a>` : ''}</div>` : '';
+    return `<div class="track-driver">${tavern}${driver}${contact}</div>`;
   }
 
   async function fetchAndRender(code) {
