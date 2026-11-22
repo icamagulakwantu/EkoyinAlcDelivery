@@ -6,7 +6,7 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ### 22 Nov 2026 (afternoon): EFT banking details shown to the customer
 - The customer who chooses EFT now sees the bank account, the exact amount and the payment reference (the order code) with copy buttons on the order-confirmation page and the tracking page (`public/eft-box.js`, `GET /api/order/:code/eft`, only for an EFT order still waiting for payment, rate limited, never cached), and in the confirmation email ("Pay by EFT to start your order"). Terms 7.4: only pay into the account shown, banking details never change by WhatsApp or phone.
-- The details are NOT in the code: Render env vars `EFT_BANK_NAME`, `EFT_ACCOUNT_NAME`, `EFT_ACCOUNT_NUMBER`, `EFT_ACCOUNT_TYPE`, `EFT_BRANCH_CODE` (`lib/eft-details.js`). Unset or malformed = the old behaviour (dispatch sends the details). To move to a company account later, change the env vars only. A test keeps the number out of the repo. Cache `ekoyini-shell-v49`. 219 tests.
+- The details are NOT in the code: Render env vars `EFT_BANK_NAME`, `EFT_ACCOUNT_NAME`, `EFT_ACCOUNT_NUMBER`, `EFT_ACCOUNT_TYPE`, `EFT_BRANCH_CODE` (`lib/eft-details.js`). Unset or malformed = the old behaviour (dispatch sends the details). To move to a company account later, change the env vars only. A test keeps the number out of the repo. Cache `ekoyini-shell-v50`. 220 tests.
 - Every place that shows the banking details also tells the customer to pay immediately (an immediate or instant payment if their bank offers it), so the money reflects and the order can go out at once.
 - Note for the accountant: the account in use is a personal account in the founder's name, not a company account.
 
