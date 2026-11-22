@@ -4,6 +4,10 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 22 Nov 2026: web push keys set on Render, Terms say we are not VAT-registered yet
+- **VAPID keys generated and set** on Render (`VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`), which triggered a redeploy. Closed-app phone alerts for admin, drivers and taverns now work once a device taps "Turn on order alerts" (iPhone: add the page to the home screen first). Keys are not in the repo; keep a copy in your password manager.
+- Terms 1.2, 6.1 and 7.9: founder confirmed the company is not VAT-registered yet (registration in progress), so prices do not include VAT and no VAT invoices are offered. When the VAT number is issued, add it to Terms 1.2 and revisit 6.1 and 7.9. Cache `ekoyini-shell-v42`.
+
 ### 21 Nov 2026 (late night): trading name is Ekoyini Holdings (Pty) Ltd, no database change
 - Founder confirmed: the legal name stays K2020465422 (South Africa) (Pty) Ltd (reg. 2020/465422/07) and the trading name is **Ekoyini Holdings (Pty) Ltd**. Terms 1.1, 1.2, 30.1 and Privacy 1.1, 1.2 now say "trading as Ekoyini Holdings (Pty) Ltd". The customer-facing brand stays "Ekoyini". Service worker cache bumped to `ekoyini-shell-v41`.
 
