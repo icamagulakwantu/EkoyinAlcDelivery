@@ -49,3 +49,7 @@ test('both customer pages show the box and the Terms warn about other accounts',
   assert.match(read('public/sw.js'), /\/eft-box\.js/);
   assert.match(read('public/terms.html'), /Never pay into any other account/);
 });
+
+test('customers are told to pay immediately everywhere the banking details appear', () => {
+  for (const f of ['public/eft-box.js', 'public/order-confirmation.html', 'public/track.html', 'emails.js', 'public/terms.html']) assert.match(read(f), /immediate/i, f);
+});

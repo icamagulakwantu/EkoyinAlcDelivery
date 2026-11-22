@@ -19,6 +19,7 @@
       const b = d.details;
       slot.innerHTML = `<div style="text-align:left;margin:14px 0;padding:14px 16px;border-radius:16px;background:#fff;border:1px solid rgba(0,0,0,.1);">
         <div style="font-weight:800;margin-bottom:4px;">Pay by EFT</div>
+        <div style="background:#fff3cd;border-radius:10px;padding:10px 12px;margin:0 0 6px;font-size:13px;font-weight:700;line-height:1.4;">Pay immediately, and choose <u>immediate / instant payment</u> in your banking app if it offers it. We cannot pack or send your order until the money reflects, and a normal EFT can take hours.</div>
         ${row('Amount to pay', rand(d.amount), Number(d.amount).toFixed(2))}
         ${row('Bank', b.bankName)}
         ${row('Account name', b.accountName)}
@@ -26,7 +27,7 @@
         ${row('Branch code', b.branchCode, b.branchCode)}
         ${row('Account type', b.accountType)}
         ${row('Payment reference (important)', d.reference, d.reference)}
-        <p style="font-size:12px;opacity:.75;margin:10px 0 0;line-height:1.4;">Use the reference exactly, so we can match your payment. We start packing as soon as it reflects. Only pay into the account shown here, on this page or in your confirmation email. We never change banking details by WhatsApp or phone.</p>
+        <p style="font-size:12px;opacity:.75;margin:10px 0 0;line-height:1.4;">Use the reference exactly, so we can match your payment. We start packing the moment it reflects. Only pay into the account shown here, on this page or in your confirmation email. We never change banking details by WhatsApp or phone.</p>
       </div>`;
       slot.querySelectorAll('[data-copy]').forEach((btn) => {
         btn.onclick = async () => {
