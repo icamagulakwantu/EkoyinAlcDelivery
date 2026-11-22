@@ -170,8 +170,9 @@
       <p id="confirmLead">Your order is in. A driver will be matched within 5–10 minutes.</p>
       <div class="confirm-total" id="confirmTotal" hidden></div>
       <div class="confirm-pay-note" id="eftNote" hidden>
-        <strong>Next: pay by EFT.</strong> Our team will WhatsApp or call you with the banking details. Use your order code below as the payment reference — we pack and dispatch as soon as the payment reflects.
+        <strong>Next: pay by EFT.</strong> Use your order code below as the payment reference — we pack and dispatch as soon as the payment reflects. If no banking details show below, our team will WhatsApp or call you with them.
       </div>
+      <div id="eftBox"></div>
 
       <!-- ORDER CODE -->
       <div class="order-code-box">
@@ -243,6 +244,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="auth.js"></script>
   <script src="script.js"></script>
+  <script src="eft-box.js"></script>
   <script>
   const params = new URLSearchParams(window.location.search);
   let orderCode = params.get('code') || 'EKO-?????';
@@ -260,6 +262,7 @@
     document.getElementById('confirmTitle').textContent = 'Order received!';
     document.getElementById('confirmLead').textContent = "We've saved your order and reserved your drinks.";
     document.getElementById('eftNote').hidden = false;
+    if (window.EkoyiniEft) EkoyiniEft.mount(document.getElementById('eftBox'), orderCode);
     document.getElementById('step1Text').textContent = "Once your EFT reflects, we match a driver within 5–10 min. You'll see their name and vehicle on Track.";
   }
 

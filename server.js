@@ -1177,6 +1177,22 @@ async function emailDeliveryReceipt(code) {
   }
 }
 
+// 🏦 CUSTOMER: banking details for an EFT order that is still waiting for payment (22 Nov 2026).
+// Only the order code holder sees them, and only while the order is waiting for its EFT.
+app.get("/api/order/:code/eft", trackLimiter, async (req, res) => {
+  try {
+    const order = await prisma.order.findUnique({ where: { code: req.params.code }, select: { code: true, status: true, paymentMethod: true, total: true } });
+    if (!order || order.paymentMethod !== "eft" || order.status !== "PAYMENT_PENDING") return res.status(404).json({ error: "No EFT is waiting for this order" });
+    const details = require("./lib/eft-details.js").getEftDetails();
+    res.set("Cache-Control", "no-store");
+    if (!details) return res.json({ configured: false });
+    res.json({ configured: true, details: { ...details, accountNumberSpaced: require("./lib/eft-details.js").spaced(details.accountNumber) }, reference: order.code, amount: order.total });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Could not load the banking details" });
+  }
+});
+
 app.get("/api/order/:code/track", trackLimiter, async (req, res) => {
   try {
     const order = await prisma.order.findUnique({

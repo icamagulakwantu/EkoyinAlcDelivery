@@ -7,6 +7,7 @@
 // ═══════════════════════════════════════════════
 
 const { buildReceipt, renderReceiptHtml } = require("./public/receipt.js");
+const { getEftDetails, spaced } = require("./lib/eft-details.js");
 
 const RESEND_API_URL = "https://api.resend.com/emails";
 
@@ -79,14 +80,37 @@ function wrapper(bodyHtml) {
 
 // The receipt for an order, with every fee and every time stamp (founder, 22 Nov 2026). Sent when the order is
 // placed (order time) and again when the driver confirms delivery (delivery time).
+// Banking details for an EFT order that is waiting for payment (22 Nov 2026); empty for every other order.
+function eftEmailBlock(order) {
+  if (!order || order.paymentMethod !== "eft" || order.status !== "PAYMENT_PENDING") return "";
+  const b = getEftDetails();
+  if (!b) return `<p style="font-size:14px;color:#555;line-height:1.5;"><strong>Next: pay by EFT.</strong> Our team will WhatsApp you the banking details. Use <strong>${escapeHtml(order.code)}</strong> as the payment reference.</p>`;
+  const r = (label, value) => `<tr><td style="padding:6px 0;color:#888;font-size:12px;">${label}</td><td style="padding:6px 0;text-align:right;font-weight:700;font-size:14px;">${escapeHtml(value)}</td></tr>`;
+  return `<div style="border:2px solid #17140e;border-radius:10px;padding:14px;margin:0 0 16px;">
+    <div style="font-weight:800;margin-bottom:6px;">Pay by EFT, then we start packing</div>
+    <table style="width:100%;border-collapse:collapse;">
+      ${r("Amount", "R" + Number(order.total || 0).toFixed(2))}
+      ${r("Bank", b.bankName)}
+      ${r("Account name", b.accountName)}
+      ${r("Account number", spaced(b.accountNumber))}
+      ${r("Branch code", b.branchCode)}
+      ${r("Account type", b.accountType)}
+      ${r("Reference (important)", order.code)}
+    </table>
+    <div style="font-size:12px;color:#666;margin-top:8px;line-height:1.4;">Use the reference exactly so we can match your payment. Only pay into the account in this email or on your order page. We never change banking details by WhatsApp or phone.</div>
+  </div>`;
+}
+
 async function sendOrderConfirmationEmail(order, customerEmail) {
   if (!customerEmail) return;
   const code = escapeHtml(order.code);
+  const waitingForEft = order.paymentMethod === "eft" && order.status === "PAYMENT_PENDING";
   const receipt = buildReceipt(order);
   const link = `${APP_BASE_URL.replace(/\/$/, "")}/receipt.html?code=${encodeURIComponent(order.code)}`;
   const html = wrapper(`
-    <h1 style="font-size:18px;color:#222;margin:0 0 8px;">Order confirmed</h1>
-    <p style="font-size:14px;color:#555;line-height:1.5;">Thanks${order.customerName ? `, ${escapeHtml(order.customerName)}` : ""}! Your order is in — a driver will be matched within 5–10 minutes. Keep this receipt: it shows what you ordered and when.</p>
+    <h1 style="font-size:18px;color:#222;margin:0 0 8px;">${waitingForEft ? "Order received, waiting for your EFT" : "Order confirmed"}</h1>
+    <p style="font-size:14px;color:#555;line-height:1.5;">Thanks${order.customerName ? `, ${escapeHtml(order.customerName)}` : ""}! ${waitingForEft ? "We have saved your order and reserved your drinks. Once your payment shows in our account we pack it and match a driver." : "Your order is in — a driver will be matched within 5–10 minutes."} Keep this receipt: it shows what you ordered and when.</p>
+    ${eftEmailBlock(order)}
     ${order.deliveryPin ? `<div style="border:2px dashed ${BRAND.terra};border-radius:8px;padding:12px;margin:0 0 16px;text-align:center;">
       <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.5px;">Your delivery PIN</div>
       <div style="font-family:monospace;font-size:26px;font-weight:700;letter-spacing:6px;">${escapeHtml(order.deliveryPin)}</div>
@@ -95,7 +119,7 @@ async function sendOrderConfirmationEmail(order, customerEmail) {
     ${renderReceiptHtml(receipt, { link })}
     <p style="font-size:12px;color:#888;margin-top:20px;">Track this order any time at ${APP_BASE_URL}/track.html with code ${code}.</p>
   `);
-  await sendEmail({ to: customerEmail, subject: `Order confirmed — ${order.code}`, html });
+  await sendEmail({ to: customerEmail, subject: waitingForEft ? `Pay by EFT to start your order — ${order.code}` : `Order confirmed — ${order.code}`, html });
 }
 
 // The final receipt, sent the moment the driver confirms delivery: proof of the order, the order time and the

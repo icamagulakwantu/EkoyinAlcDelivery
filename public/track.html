@@ -121,6 +121,7 @@
   <script src="contact-links.js"></script>
   <script src="receipt.js"></script>
   <script src="order-updates.js"></script>
+  <script src="eft-box.js"></script>
   <script>
   renderNavAuth();
 
@@ -362,6 +363,7 @@
       document.getElementById('trackMine').hidden = true;
       result.innerHTML = `
         ${heroHTML(order)}
+        <div id="eftBox"></div>
         <div id="trackPin"></div>
         <div class="track-result-card">
           <div class="track-result-meta">${itemCount} item${itemCount !== 1 ? 's' : ''} · placed ${new Date(order.createdAt).toLocaleString('en-ZA')}</div>
@@ -382,6 +384,7 @@
         <div id="ratingSlot"></div>
       `;
       showDeliveryPin(order);
+      if (order.paymentMethod === 'eft' && order.status === 'PAYMENT_PENDING' && window.EkoyiniEft) EkoyiniEft.mount(document.getElementById('eftBox'), order.code);
       renderActions(order);
 
       if (!isCancelled) updateDriverMap(order);
