@@ -301,3 +301,18 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .da-amber .da-code { color: #b45309; }
 .da-red .da-code { color: #b91c1c; }
 .da-act { grid-column: 2; font-weight: 700; font-size: 12px; opacity: .8; }
+
+/* Staff files (22 Nov 2026) */
+.sf-wrap { max-width: 900px; margin: 0 auto; padding: 16px; }
+.sf-chip { display: inline-block; font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 999px; background: #f3f4f6; color: #374151; }
+.sf-chip.ok { background: #dcfce7; color: #166534; }
+.sf-chip.warn { background: #fef3c7; color: #92400e; }
+.sf-chip.bad { background: #fee2e2; color: #991b1b; }
+.sf-flag { display: block; font-size: 12px; color: #b91c1c; margin-top: 2px; }
+.sf-form h3 { margin: 20px 0 8px; font-family: Georgia, serif; }
+.sf-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+.sf-grid label { display: block; font-size: 12px; font-weight: 700; opacity: .8; }
+.sf-grid input, .sf-grid select { width: 100%; box-sizing: border-box; margin-top: 4px; padding: 10px; font-size: 15px; border: 1px solid var(--border); border-radius: 10px; background: #fff; }
+.sf-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+.sf-reveal { background: #fffbeb; border: 1px solid #fcd34d; border-radius: 12px; padding: 12px; margin-top: 12px; font-size: 14px; }
+.sf-error { background: #fef2f2; border: 1px solid #fca5a5; color: #991b1b; border-radius: 12px; padding: 10px 12px; margin: 10px 0; font-size: 14px; }

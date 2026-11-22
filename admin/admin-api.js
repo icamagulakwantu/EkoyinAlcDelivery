@@ -108,6 +108,8 @@ async function tryEnterDashboard() {
         if (currentAdminRole === 'SUPER_ADMIN') {
             document.getElementById('sectionTabAdmins').style.display = 'block';
             document.getElementById('sectionTabActivity').style.display = 'block';
+            const staffTab = document.getElementById('sectionTabStaff');
+            if (staffTab) staffTab.style.display = 'block';
         }
     } catch (err) {
         console.error('Failed to load admin role:', err);

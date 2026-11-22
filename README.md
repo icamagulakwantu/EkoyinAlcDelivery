@@ -4,6 +4,12 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 22 Nov 2026 (midday): staff files for drivers and dispatchers (founder approved migration)
+- New table `StaffProfile` (migration `20261122120000_add_staff_profiles`, new table only, nothing changed or deleted; row level security applies automatically). Admin **Staff files** tab (super-admin only) lists every driver and dispatcher with a status: no file, filed but not verified, verified, or a document expired, plus warnings 30 days before a licence or vehicle disc expires.
+- **Driver file:** full name, SA ID number, email, cell, home address, driver's licence number + code + expiry, vehicle make/model/colour/year, number plate, registration certificate number, licence disc expiry, bank details (bank, holder, account number, 6-digit branch code, type). **Dispatcher file:** name, ID, email, cell, home address; bank optional but complete if started.
+- Checks: the SA ID must be 13 digits with a real birth date and a valid check digit, and the person must be 18+; an expired licence or disc is refused; the same ID cannot be filed twice; the number plate is cleaned up (CA 123-456 becomes CA123456).
+- **Privacy:** ID, licence and account numbers are encrypted (AES-256-GCM) with the Render env `STAFF_DATA_KEY`; the list and form show only the last 4 digits; "Show full details" is written to the Activity log (`VIEW_STAFF_SENSITIVE`); any edit removes the verified tick. Without the key set, nothing can be saved. Privacy page sections 15.3 to 15.5 added. Founder choices: typed details now (scans later), drivers and dispatchers are NOT blocked while unverified. Cache `ekoyini-shell-v43`.
+
 ### 22 Nov 2026: web push keys set on Render, Terms say we are not VAT-registered yet
 - **VAPID keys generated and set** on Render (`VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`), which triggered a redeploy. Closed-app phone alerts for admin, drivers and taverns now work once a device taps "Turn on order alerts" (iPhone: add the page to the home screen first). Keys are not in the repo; keep a copy in your password manager.
 - Terms 1.2, 6.1 and 7.9: founder confirmed the company is not VAT-registered yet (registration in progress), so prices do not include VAT and no VAT invoices are offered. When the VAT number is issued, add it to Terms 1.2 and revisit 6.1 and 7.9. Cache `ekoyini-shell-v42`.

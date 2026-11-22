@@ -421,3 +421,49 @@ model PayoutEmail {
   day    String   @id
   sentAt DateTime @default(now())
 }
+
+// ── Staff files (founder approved 22 Nov 2026) ────────────────────────
+// One proper record per driver or dispatcher: SA ID, home address, driver's
+// licence, vehicle and number plate, and bank details for payouts. ID, licence
+// and account numbers are stored ENCRYPTED (AES-256-GCM, Render env
+// STAFF_DATA_KEY, lib/staff-profile.js); only the last 4 digits are kept in
+// the clear for display. Super-admin only, every reveal is audit-logged.
+// kind DRIVER links by driverId; kind DISPATCHER links by adminEmail (lowercase).
+model StaffProfile {
+  id                String    @id @default(cuid())
+  kind              String // DRIVER | DISPATCHER
+  driverId          String?   @unique
+  adminEmail        String?   @unique
+  fullName          String
+  idNumberEnc       String
+  idNumberHash      String    @unique // HMAC, stops the same person being filed twice
+  idLast4           String
+  email             String
+  phone             String
+  addressLine       String
+  suburb            String
+  city              String
+  postalCode        String
+  licenceNumberEnc  String?
+  licenceLast4      String?
+  licenceCode       String?
+  licenceExpiry     DateTime?
+  vehicleMake       String?
+  vehicleModel      String?
+  vehicleColour     String?
+  vehicleYear       Int?
+  numberPlate       String?
+  vehicleRegNumber  String? // number on the vehicle registration certificate
+  vehicleDiscExpiry DateTime?
+  bankName          String?
+  accountHolder     String?
+  accountNumberEnc  String?
+  accountLast4      String?
+  branchCode        String?
+  accountType       String?
+  verified          Boolean   @default(false)
+  verifiedAt        DateTime?
+  verifiedBy        String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}

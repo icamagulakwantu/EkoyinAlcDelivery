@@ -83,6 +83,7 @@
     <button class="section-tab" id="sectionTabSales" onclick="showSection('sales', this)">Reports</button>
     <button class="section-tab" id="sectionTabPayouts" onclick="showSection('payouts', this)">Payouts</button>
     <button class="section-tab" id="sectionTabDrivers" onclick="showSection('drivers', this)">Drivers</button>
+    <button class="section-tab" id="sectionTabStaff" onclick="showSection('staff', this)" style="display:none;">Staff files</button>
     <button class="section-tab" id="sectionTabAdmins" onclick="showSection('admins', this)" style="display:none;">Admins</button>
     <button class="section-tab" id="sectionTabActivity" onclick="showSection('activity', this)" style="display:none;">Activity</button>
   </div>
@@ -136,6 +137,11 @@
     <div id="driversBody"></div>
     <h2 style="font-family:Georgia,serif;margin:26px 0 6px;">Tavern portal</h2>
     <div id="tavernAccessBody"></div>
+  </div>
+
+  <!-- STAFF FILES SECTION (super-admin only) -->
+  <div id="staffSection" style="display:none;">
+    <div id="staffBody"></div>
   </div>
 
   <!-- ADMINS SECTION (super-admin only) -->
@@ -192,7 +198,8 @@
   <script src="delivery-settings.js"></script>
   <script src="reports.js"></script>
   <script src="payouts.js?v=20261111b"></script>
-  <script src="drivers.js?v=20261121a"></script>
+  <script src="drivers.js?v=20261122a"></script>
+  <script src="staff.js?v=20261122a"></script>
   <script src="dispatch-alerts.js?v=20261118"></script>
   <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});</script>
 </body>

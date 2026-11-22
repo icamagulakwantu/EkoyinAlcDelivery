@@ -38,7 +38,7 @@ function renderDrivers() {
         <div class="po-card" style="border:2px solid #1f7a4d;border-radius:16px;padding:14px;margin-bottom:14px;">
             <b>${escapeHtml(pin.name)}'s sign-in</b>
             <p style="margin:6px 0;font-size:14px;">Cell <b>${escapeHtml(pin.phone)}</b> &middot; PIN <b style="font-size:20px;letter-spacing:.1em;">${escapeHtml(pin.pin)}</b></p>
-            <p style="margin:0 0 10px;font-size:12.5px;opacity:.8;">This PIN is shown once. Send it now.</p>
+            <p style="margin:0 0 10px;font-size:12.5px;opacity:.8;">This PIN is shown once. Send it now. Next: complete their staff file (Staff files tab) with ID, licence, vehicle and bank details.</p>
             <a class="dispatch-btn" href="${escapeHtml(driverWaLink(pin))}" target="_blank" rel="noopener">Send on WhatsApp</a>
         </div>` : ''}
         <form class="admin-add-row" onsubmit="addDriver(event)" style="margin-bottom:14px;">
