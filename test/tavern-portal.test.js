@@ -314,7 +314,7 @@ test('files are wired in: page, manifest, migration, admin switch, service worke
   assert.ok(!/model Tavern \{[^}]*pinHash/.test(schema), 'PIN hashes never sit on the Tavern table');
   const sql = read('prisma/migrations/20261121090000_add_tavern_portal/migration.sql');
   assert.ok(sql.includes('"TavernAccess"') && sql.includes('"TavernSoldOut"') && sql.includes('"readyAt"') && !/\b(DROP|DELETE|TRUNCATE)\b/i.test(sql.replace(/--.*$/gm, '')));
-  assert.ok(read('admin/drivers.js').includes('tavernAccessAction') && read('admin/admin.html').includes('tavernAccessBody'));
+  assert.ok(read('admin/taverns.js').includes('/admin/tavern-access/') && read('admin/admin.html').includes('tavernsBody'), 'the portal switch is in the Taverns tab (23 Nov 2026)');
   assert.ok(read('public/sw.js').includes('/tavern.html'));
   assert.ok(read('routes/index.js').includes('tavern-portal.js'));
 });

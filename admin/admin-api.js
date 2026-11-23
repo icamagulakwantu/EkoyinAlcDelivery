@@ -543,7 +543,7 @@ window.postDriverJob = postDriverJob;
 function sendTavernOnly(orderCode) {
     const order = allOrders.find(o => o.code === orderCode);
     if (!order || !order.tavern) { alert('Please assign a tavern first'); return; }
-    if (!order.tavern.phone) { alert(`${order.tavern.name} has no phone number saved. Add it in the Delivery tab.`); return; }
+    if (!order.tavern.phone) { alert(`${order.tavern.name} has no phone number saved. Add it in the Taverns tab.`); return; }
     sendTavernWhatsApp(orderCode, order.tavern, order);
 }
 

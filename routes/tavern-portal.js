@@ -274,7 +274,7 @@ module.exports = function mountTavernPortal(app, { prisma, requireAdmin, writeLi
       let pin = null;
       let access;
       if (action === "enable") {
-        if (!toSaWhatsApp(tavern.phone)) return res.status(400).json({ error: "Save a valid cell number for this tavern first (Delivery tab). It is the tavern's sign-in." });
+        if (!toSaWhatsApp(tavern.phone)) return res.status(400).json({ error: "Save a valid cell number for this tavern first (Taverns tab). It is the tavern's sign-in." });
         if (existing) return res.status(409).json({ error: "The portal is already on for this tavern. Use Reset PIN instead." });
         pin = D.newDriverPin();
         access = await prisma.tavernAccess.create({ data: { tavernId: tavern.id, pinHash: D.hashPin(pin) } });

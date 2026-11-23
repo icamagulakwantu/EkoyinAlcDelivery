@@ -55,7 +55,7 @@ module.exports = function mountDelivery(app, { prisma, requireAdmin, requireSupe
       const [settings, taverns] = await Promise.all([
         prisma.deliverySettings.findUnique({ where: { id: "default" } }),
         prisma.tavern.findMany({
-          select: { id: true, name: true, area: true, latitude: true, longitude: true, legalName: true, vatNumber: true, liquorLicenceNumber: true, address: true },
+          select: { id: true, name: true, area: true, phone: true, latitude: true, longitude: true, legalName: true, vatNumber: true, liquorLicenceNumber: true, address: true },
           orderBy: { name: "asc" },
         }),
       ]);
@@ -115,6 +115,28 @@ module.exports = function mountDelivery(app, { prisma, requireAdmin, requireSupe
     } catch (err) {
       console.error(err);
       res.status(500).json({ error: "Failed to add the tavern" });
+    }
+  });
+
+  // ADMIN: change a tavern's WhatsApp number (founder, 23 Nov 2026: the
+  // Taverns tab). It is also the tavern's portal sign-in, so a new number
+  // signs the tavern out; their PIN stays the same. Saved as 27XXXXXXXXX.
+  app.patch("/admin/taverns/:id/phone", requireAdmin, requireSuperAdmin, async (req, res) => {
+    try {
+      const typed = typeof req.body?.phone === "string" ? req.body.phone.trim().slice(0, 20) : "";
+      const phone = typed ? toSaWhatsApp(typed) : "";
+      if (typed && !phone) return res.status(400).json({ error: "Enter a South African phone number, e.g. 072 123 4567" });
+      const before = await prisma.tavern.findUnique({ where: { id: String(req.params.id) }, select: { id: true, name: true, phone: true } });
+      if (!before) return res.status(404).json({ error: "Tavern not found" });
+      const tavern = await prisma.tavern.update({ where: { id: before.id }, data: { phone }, select: { id: true, name: true, phone: true } });
+      if (before.phone !== phone) {
+        await prisma.tavernAccess.updateMany({ where: { tavernId: before.id }, data: { sessionHash: null, sessionExpiresAt: null } });
+      }
+      await logAdminAction(req, "UPDATE_TAVERN_PHONE", tavern.name, phone ? `${phone}` : "cleared");
+      res.json(tavern);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "Could not save the number" });
     }
   });
 
