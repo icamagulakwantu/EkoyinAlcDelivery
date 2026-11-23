@@ -11,6 +11,7 @@ const FORMAT_PHOTO_MAP = {
   "[\"Redd's Berry\",\"Quart (660ml)\"]": "/images/brands/redds-berry-quart-660ml.webp",
   "[\"Redd's Original\",\"Quart (660ml)\"]": "/images/brands/redds-original-quart-660ml.webp",
   "[\"Schweppes Dry Lemon\",\"1L\"]": "/images/brands/schweppes-dry-lemon-1l.webp",
+  "[\"Schweppes Tonic Water\",\"1L\"]": "/images/brands/schweppes-tonic-water-1l.webp", // founder, 23 Nov 2026 (label: TONIC WATER)
   // 11 Nov 2026: new products, photos cut from the founder's Shoprite screenshots
   "[\"KWV 3 Year Old\",\"750ml Bottle\"]": "/images/brands/kwv-3-year-brandy.webp",
   "[\"KWV 5 Year Old\",\"750ml Bottle\"]": "/images/brands/kwv-5-year-brandy.webp",
