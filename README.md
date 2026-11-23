@@ -4,6 +4,9 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 23 Nov 2026: Russian Bear Flavours photo rebuilt (founder)
+- The old picture was a small screenshot of the six flavours with a grey-and-white checkerboard baked into the background. `public/images/brands/russian-bear-flavours-750ml-bottle.jpg` is now the same six bottles cut out cleanly, upscaled and sharpened, evenly spaced on a clean white square (720px) with a soft floor shadow. Same file name, so the photo map and the live product need no change. The source is still the small screenshot, so a sharper original from the supplier would look better still.
+
 ### 23 Nov 2026: sign-up said "check your email" for an existing account
 - **Cause:** the email system works (every sign-up since September got its confirmation email within seconds). The tester signed up with an address that already had a confirmed account; Supabase then sends no email by design and pretends it worked, and our page still said "Check your email".
 - **Fix:** `public/signup.html` detects that case (no identities returned) and shows "This email already has an account" with Log in / Reset password links. Cache `ekoyini-shell-v54`.
