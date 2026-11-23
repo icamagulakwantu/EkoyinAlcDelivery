@@ -4,6 +4,10 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 23 Nov 2026: four product photos from the founder
+- Ice Tropez dumpy (275ml), Castle Lite Draught can (500ml), Redd's Berry quart (660ml) and Redd's Original quart (660ml) now have their own photos (`public/images/brands/*.webp`, trimmed and centred at 480px like the rest, mapped in `prisma/catalogue-photo-config.js`; `prisma/sync-images.js` puts them on the live products at deploy).
+- Not used: the Castle Lite draught tap picture (not a pack we sell). The Schweppes bottle sent is Soda Water, which already had this photo; Tonic Water 1L still needs one.
+
 ### 23 Nov 2026: green WhatsApp button for new PINs (founder)
 - The "Send on WhatsApp" button in the PIN box (Taverns tab and Drivers tab) is now a green WhatsApp button with the WhatsApp logo, "Send PIN on WhatsApp" (`.wa-btn` in `admin/admin.css`), so it is not missed. It still opens WhatsApp with the message ready; you press send.
 

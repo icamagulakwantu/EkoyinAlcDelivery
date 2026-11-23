@@ -5,6 +5,11 @@ const FORMAT_PHOTO_MAP = {
   // 18 Nov 2026: founder's photos
   "[\"Coca-Cola Original\",\"Can (500ml)\"]": "/images/brands/coca-cola-original-can-500ml.webp",
   "[\"Schweppes Soda Water\",\"1L\"]": "/images/brands/schweppes-soda-water-1l.webp",
+  // Founder's photos, 23 Nov 2026 (exact packs).
+  "[\"Ice Tropez\",\"Dumpy (275ml)\"]": "/images/brands/ice-tropez-dumpy-275ml.webp",
+  "[\"Castle Lite Draught\",\"Can (500ml)\"]": "/images/brands/castle-lite-draught-can-500ml.webp",
+  "[\"Redd's Berry\",\"Quart (660ml)\"]": "/images/brands/redds-berry-quart-660ml.webp",
+  "[\"Redd's Original\",\"Quart (660ml)\"]": "/images/brands/redds-original-quart-660ml.webp",
   "[\"Schweppes Dry Lemon\",\"1L\"]": "/images/brands/schweppes-dry-lemon-1l.webp",
   // 11 Nov 2026: new products, photos cut from the founder's Shoprite screenshots
   "[\"KWV 3 Year Old\",\"750ml Bottle\"]": "/images/brands/kwv-3-year-brandy.webp",
