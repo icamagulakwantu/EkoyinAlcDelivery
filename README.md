@@ -4,6 +4,9 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 23 Nov 2026: green WhatsApp button for new PINs (founder)
+- The "Send on WhatsApp" button in the PIN box (Taverns tab and Drivers tab) is now a green WhatsApp button with the WhatsApp logo, "Send PIN on WhatsApp" (`.wa-btn` in `admin/admin.css`), so it is not missed. It still opens WhatsApp with the message ready; you press send.
+
 ### 23 Nov 2026: one Taverns tab in admin (founder)
 - New **Taverns** tab (`admin/taverns.js`): add a tavern, change its WhatsApp number, save or clear its map location, switch its portal on, reset its PIN or pause it (PIN shown once with a WhatsApp button), and its receipt details, all on one card per tavern. Super admins edit; dispatchers see the list and can send portal PINs, as before.
 - **New:** a tavern's WhatsApp number can now be changed after it is added (`PATCH /admin/taverns/:id/phone`, super admin, saved as 27XXXXXXXXX, logged as `UPDATE_TAVERN_PHONE`). It is also the portal sign-in, so a new number signs the tavern out (same PIN). Before this only KwaSiba had a number and the other 15 taverns could not get the portal.

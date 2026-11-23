@@ -316,3 +316,8 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .sf-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
 .sf-reveal { background: #fffbeb; border: 1px solid #fcd34d; border-radius: 12px; padding: 12px; margin-top: 12px; font-size: 14px; }
 .sf-error { background: #fef2f2; border: 1px solid #fca5a5; color: #991b1b; border-radius: 12px; padding: 10px 12px; margin: 10px 0; font-size: 14px; }
+
+/* Green WhatsApp button for sending a new PIN (founder, 23 Nov 2026). */
+.wa-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; padding: 0 20px; border-radius: 999px; background: #25d366; color: #fff !important; font-weight: 800; font-size: 15px; text-decoration: none !important; box-shadow: 0 8px 18px -10px rgba(18, 140, 126, 0.9); }
+.wa-btn:hover, .wa-btn:focus-visible { background: #1ebe5a; }
+.wa-btn svg { width: 20px; height: 20px; flex-shrink: 0; fill: currentColor; }
