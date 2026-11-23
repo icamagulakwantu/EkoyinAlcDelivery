@@ -83,3 +83,9 @@ test('Terms: no returns, breakage after handover, no-delivery areas; driver rule
   assert.match(d, /noindex/);
   assert.match(read('public/driver.html'), /driver-terms\.html/);
 });
+
+test('Driver rules: breakage paid like a restaurant, fair steps, 25% cap, signed written agreement (23 Nov)', () => {
+  const d = read('public/driver-terms.html');
+  for (const must of ['like breakage at a restaurant', 'actual|real loss|What it costs us|real loss', '48 hours', '25%', 'in writing, in advance', 'Driver agreement', 'Witness', 'Version 1.1']) assert.match(d, new RegExp(must), must);
+  assert.match(d, /never more than/i);
+});

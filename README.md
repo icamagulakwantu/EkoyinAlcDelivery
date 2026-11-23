@@ -4,6 +4,10 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 23 Nov 2026: driver breakage works like breakage at a restaurant (founder)
+- `public/driver-terms.html` v1.1, section 4: if a driver is liable (section 3) they pay for the broken or lost items, at the real replacement cost only, after being told in writing and given 48 hours to explain; payable in cash/EFT or deducted from payouts, at most 25% of what is due on any payday, the rest carried over. Genuine accident or robbery reported to police = no deduction. New section 7: a printable "Driver agreement (sign once)" with signature and witness lines, which is the written advance agreement the law asks for. Print it, get it signed, keep it in the driver's staff file.
+- **Why these steps:** BCEA s34 only allows a deduction for loss or damage if the worker agreed in writing in advance, was given a fair chance to explain, the amount is no more than the actual loss, and a single deduction is no more than a quarter of pay. We apply the same steps to every driver, whether employee or contractor, so the rule is safe either way. Still not lawyer-reviewed; a cheap one-hour check by an attorney or a labour consultant is worth it before the first deduction.
+
 ### 23 Nov 2026: Russian Bear Flavours photo rebuilt (founder)
 - The old picture was a small screenshot of the six flavours with a grey-and-white checkerboard baked into the background. `public/images/brands/russian-bear-flavours-750ml-bottle.jpg` is now the same six bottles cut out cleanly, upscaled and sharpened, evenly spaced on a clean white square (720px) with a soft floor shadow. Same file name, so the photo map and the live product need no change. The source is still the small screenshot, so a sharper original from the supplier would look better still.
 

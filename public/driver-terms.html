@@ -16,12 +16,17 @@
     .mute { color:#6b6354; font-size: 13px; }
     .box { background:#fff3cd; border-radius:12px; padding:12px 14px; margin:12px 0; }
     a { color:#17140e; }
+    .sign { background:#fff; border:1.5px solid #17140e; border-radius:12px; padding:14px 16px; margin-top:12px; }
+    .line { border-bottom:1px solid #17140e; height:30px; margin:10px 0 2px; }
+    .lbl { font-size:12px; color:#6b6354; margin:0 0 6px; }
+    button.print { background:#17140e; color:#fff; border:0; border-radius:999px; padding:10px 18px; font-size:14px; margin-top:12px; cursor:pointer; }
+    @media print { button.print, .noprint { display:none; } body { background:#fff; } }
   </style>
 </head>
 <body>
 <main>
   <h1>Driver rules and liability</h1>
-  <p class="mute">Ekoyini Holdings (Pty) Ltd. Version 1.0, 22 Nov 2026. By taking a job in the driver app you agree to these rules.</p>
+  <p class="mute">Ekoyini Holdings (Pty) Ltd. Version 1.1, 23 Nov 2026. By taking a job in the driver app you agree to these rules.</p>
 
   <h2>1. The order is in your care</h2>
   <p>From the moment you confirm pickup (collection PIN) until the customer's delivery PIN is accepted, the order is in <b>your care</b>. Keep it with you or locked and in sight at all times.</p>
@@ -43,10 +48,16 @@
   <div class="box"><b>Accident or robbery must be reported.</b> Tell dispatch immediately, and report it at the <b>nearest police station</b> (call 10111 if you are in danger). Send dispatch the police case number within 24 hours. If you do not report it, you are liable as if it were your fault.</div>
   <p>Your safety comes first. Do not resist a robbery. Goods can be replaced; you cannot.</p>
 
-  <h2>4. How a loss is handled</h2>
+  <h2>4. Breakage and loss are paid for by the driver, like breakage at a restaurant</h2>
+  <p>If you are liable under section 3, you pay for what was broken or lost, the same way a waiter pays for a glass they drop. This is how it works:</p>
   <ul>
-    <li>We check what happened, using the time stamps, the location trail, the outlet's packing record and your account. You get a fair chance to explain.</li>
-    <li>If you are liable, you pay what we have to replace or refund for the affected items. We may recover it from your payouts, but only as the law allows and as you have agreed in writing.</li>
+    <li><b>Only the real loss.</b> You pay what it costs us to replace or refund the affected items, and never more. There are no fines or extra charges.</li>
+    <li><b>You are told first and you can explain.</b> We check what happened (time stamps, location trail, the outlet's packing record). We tell you in writing, on WhatsApp is fine, what happened and the amount. You then have <b>48 hours</b> to tell us why you should not pay. We consider what you say and tell you our decision.</li>
+    <li><b>No deduction without that.</b> We never take money from you for a loss before you have had the chance to explain.</li>
+    <li><b>How it is paid.</b> You can pay it back in cash or by EFT. If you do not, we may deduct it from the payouts we owe you. By signing below you agree to this in advance, in writing.</li>
+    <li><b>Never more than a quarter at a time.</b> On any one payday we deduct at most <b>25%</b> of what is due to you on that payday. Whatever is left carries over to the next payouts until it is paid.</li>
+    <li><b>Genuine accident or robbery, reported properly:</b> you pay nothing (section 3).</li>
+    <li>If you stop driving with us, what you still owe stays payable, but only as far as the law allows. You keep all your rights under the law.</li>
   </ul>
 
   <h2>5. Areas we do not deliver to</h2>
@@ -54,6 +65,19 @@
 
   <h2>6. Alcohol rules</h2>
   <p>Check ID (18+) at the door. No ID, under 18 or drunk means no handover. Never hand over without the customer's delivery PIN. Never leave alcohol unattended.</p>
+
+
+  <h2>7. Driver agreement (sign once)</h2>
+  <p class="mute noprint">Print this page, sign it and give it to dispatch. We keep a copy in your staff file.</p>
+  <div class="sign">
+    <p>I have read and understood sections 1 to 6. I agree to follow them. I agree <b>in writing, in advance</b>, that Ekoyini Holdings (Pty) Ltd may deduct from money due to me the amount of any loss or breakage I am liable for under section 3, following the steps in section 4 (including my right to explain first, the actual cost only, and a limit of 25% per payday).</p>
+    <div class="line"></div><p class="lbl">Full name</p>
+    <div class="line"></div><p class="lbl">ID number</p>
+    <div class="line"></div><p class="lbl">Signature</p>
+    <div class="line"></div><p class="lbl">Date</p>
+    <div class="line"></div><p class="lbl">Witness name and signature (Ekoyini dispatcher)</p>
+  </div>
+  <button class="print" onclick="window.print()">Print this agreement</button>
 
   <p class="mute" style="margin-top:28px;">Questions: <a href="mailto:support@ekoyini.co.za">support@ekoyini.co.za</a> or WhatsApp 064 004 5465.</p>
 </main>
