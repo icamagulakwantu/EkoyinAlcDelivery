@@ -4,6 +4,13 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 23 Nov 2026: estimate prices checked against real shelf prices (founder)
+- Checked the estimate rows that customers actually see (TinyFish, highest regular shelf price, promotions ignored, + 7% beer/cider/wine, + 5% spirits/water). Founder rule kept: when a real price is LOWER than what we charge, the higher price stays (as with Bernini).
+- **Up:** Guinness Draught 6 x 440ml cans R179.70 → R186.12 (Checkers single R28.99 x 6); Kopparberg 6 x 330ml bottles (Mixed Fruit, Pear, Raspberry, Strawberry & Lime) R208.64 → R237.54 (Pick n Pay single R37.00 x 6); Flying Fish Chill 6 x 330ml R112.34 → R116.63 (R109.00 regular); Tsitsikamma Sparkling 1L R18.89 → R19.94 (Shoprite R18.99); Nederburg Sauvignon Blanc (The Winemasters, as in our photo) R106.99 → R123.04 (Checkers R114.99).
+- **Confirmed, same price:** Breezer Blueberry 6 x 440ml cans (R164.99), Chillers Punch Milano Spritz 6 x 440ml (R154.99), Ciroc Apple (R599.99).
+- **Kept higher:** Butlers liqueurs stay R241.49 (takealot regular R219.00 is lower); Bernini dumpies stay R117.69 (Shoprite R104.99).
+- **Still estimates (no reliable shelf price found):** Guinness Foreign Extra cans, Kopparberg 440ml cans, Redd's 6 x 330ml dumpies, Ponchos Blanco, Flowstone African Bush, Sol quart, Flying Fish Dry Apple quart. Monin syrups stay at the founder's R230.99. Note: Sol quarts are now sold as 660ml in the shops; our row still says 640ml.
+
 ### 23 Nov 2026: Schweppes Tonic Water 1L photo (founder)
 - `public/images/brands/schweppes-tonic-water-1l.webp` (label reads "TONIC WATER", yellow top), mapped to Schweppes Tonic Water 1L. Soda Water 1L keeps its own photo (label reads "SODA WATER").
 
