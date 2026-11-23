@@ -67,6 +67,16 @@
     try {
       const wantsSpecials = document.getElementById('marketingOptIn').checked;
       const data = await signUp(document.getElementById('email').value.trim(), document.getElementById('password').value);
+      // Supabase never emails an address that already has an account (it
+      // pretends to succeed and returns no identities). Say so instead of
+      // "check your email", and point to log in / reset password.
+      if (data && data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+        errEl.innerHTML = 'This email already has an account, so no new email was sent. <a href="login.html">Log in</a> or <a href="forgot-password.html">reset your password</a>.';
+        errEl.classList.add('show');
+        btn.disabled = false;
+        btn.textContent = 'Sign Up';
+        return;
+      }
       if (wantsSpecials) {
         // Saved once the account is signed in (now, or after email confirmation).
         try { localStorage.setItem('ekoyini_pending_marketing', 'true'); } catch {}

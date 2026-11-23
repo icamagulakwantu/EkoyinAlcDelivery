@@ -37,3 +37,12 @@ test("home and shop have title, description, canonical; home has one h1 and JSON
   const data = JSON.parse(m[1]);
   assert.ok(data["@graph"].some((n) => n["@type"] === "LiquorStore"));
 });
+
+test('sign-up page tells people when the email already has an account', () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const html = fs.readFileSync(path.join(__dirname, '..', 'public', 'signup.html'), 'utf8');
+  assert.match(html, /identities\.length === 0/);
+  assert.match(html, /already has an account/);
+  assert.match(html, /forgot-password\.html/);
+});
