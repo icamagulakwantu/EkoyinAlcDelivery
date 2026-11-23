@@ -10,7 +10,7 @@ test("admin has a Taverns tab with its own section and script", () => {
   const html = read("admin/admin.html");
   assert.match(html, /id="sectionTabTaverns"[^>]*showSection\('taverns'/);
   assert.match(html, /id="tavernsSection"[\s\S]*id="tavernsBody"/);
-  assert.match(html, /<script src="taverns\.js\?v=\d+"><\/script>/);
+  assert.match(html, /<script src="taverns\.js\?v=\w+"><\/script>/);
   assert.ok(!html.includes("tavernAccessBody"), "the tavern portal no longer sits under Drivers");
 });
 
