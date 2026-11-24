@@ -35,7 +35,7 @@ const note = (n) => current.notes.push(n);
 // A Zwide pin: since 10 Nov 2026 the 16 partner taverns have locations, so
 // every order needs the customer's pin to work out the delivery distance.
 const PIN = { deliveryLat: -33.8670, deliveryLng: 25.5660 };
-const base = { address: '12 Vilakazi St, Zwide', customerName: 'Thandeka', customerPhone: '072 123 4567', priorityFee: 0, ...PIN };
+const base = { address: '12 Vilakazi St, Zwide', customerName: 'Thandeka', customerPhone: '072 123 4567', priorityFee: 0, eftAck: true, ...PIN }; // eftAck: EFT tick box (Terms 7.4A, 23 Nov 2026)
 
 (async () => {
   const products = (await call('GET', '/api/products')).json;
@@ -54,12 +54,12 @@ const base = { address: '12 Vilakazi St, Zwide', customerName: 'Thandeka', custo
 
   // ───────── STAGE 1: catalogue & content ─────────
   await scenario('1 Catalogue', '1.1', 'Every product is priced, in stock data, and no cost data leaks', async () => {
-    check(products.length === 349, `349 products (got ${products.length})`);
+    check(products.length === 356, `356 products (got ${products.length})`); // CLAUDE.md section 4, 19 Nov 2026
     check(products.every((p) => p.retailSingleZAR > 0), 'every product has a price > 0');
     const leaked = ['listPriceZAR', 'supplierCaseZAR', 'supplierPortfolio', 'palletPackQty'].filter((k) => products.some((p) => k in p));
     check(leaked.length === 0, `no supplier/cost fields in the public API (${leaked.join(',') || 'none'})`);
     const quarts = products.filter((p) => /^Quart/.test(p.bottleFormat));
-    check(quarts.every((p) => p.retailSingleZAR < 35), `all quarts under R35 (max R${Math.max(...quarts.map((q) => q.retailSingleZAR))})`);
+    check(quarts.every((p) => p.retailSingleZAR < 40), `all quarts under R40 (max R${Math.max(...quarts.map((q) => q.retailSingleZAR))}; Hunter's Iced 660ml quarts are R37.36)`);
     const caseOk = products.every((p) => p.unitsPerCase <= 1 || p.retailCaseZAR < p.retailSingleZAR * p.unitsPerCase + 0.01);
     check(caseOk, 'a case never costs more than the same number of singles');
   });
@@ -223,7 +223,7 @@ const base = { address: '12 Vilakazi St, Zwide', customerName: 'Thandeka', custo
     const items = [{ skuId: beer6.id, quantity: 4 }];
     const fresh = await call('POST', '/order', { headers: H('tok-newbie'), body: { ...base, items, paymentMethod: 'cod' } });
     check(fresh.status === 400 && /delivered order/.test(fresh.json?.error), `new account: ${fresh.json?.error}`);
-    for (const c of ['TRUSTA1', 'TRUSTA2']) sql(`insert into "Order"(id,code,"userId",address,total,status,"updatedAt") values ('${c}','${c}','user-trusted','x',400,'DELIVERED',now()) on conflict do nothing`);
+    for (const c of Array.from({ length: 10 }, (_, i) => 'TRUSTA' + (i + 1))) sql(`insert into "Order"(id,code,"userId",address,total,status,"updatedAt") values ('${c}','${c}','user-trusted','x',400,'DELIVERED',now()) on conflict do nothing`);
     const trusted = await call('POST', '/order', { headers: H('tok-trusted-old'), body: { ...base, items, paymentMethod: 'cod' } });
     check(trusted.status === 200 && trusted.json.order.status === 'PENDING', `trusted account COD → ${trusted.status} ${trusted.json?.order?.status}`);
     const big = await call('POST', '/order', { headers: H('tok-trusted-old'), body: { ...base, items: [{ skuId: whisky.id, quantity: 4 }], paymentMethod: 'cod' } });
@@ -291,7 +291,8 @@ const base = { address: '12 Vilakazi St, Zwide', customerName: 'Thandeka', custo
     check(loc.status === 200, `driver location posted (${loc.status})`);
     const tr = await call('GET', `/api/order/${o.code}/track`);
     check(tr.json.status === 'DISPATCHED' && tr.json.driverLat && tr.json.driverName === 'Sipho', 'customer sees driver + live location');
-    check(!('driverPhone' in tr.json) && !('address' in tr.json) && !('customerPhone' in tr.json), 'public tracking hides phone numbers and address');
+    check(!('address' in tr.json) && !('customerPhone' in tr.json), 'public tracking hides the customer address and phone');
+    check(tr.json.driverPhone, 'driver number shown only while out for delivery, so the customer can WhatsApp the driver (22 Nov 2026)');
     const earlyRate = await call('POST', `/order/${o.code}/rate`, { headers: H('tok-life'), body: { rating: 5 } });
     check(earlyRate.status === 400, 'cannot rate before delivery');
     const wrongPin = await call('POST', `/order/${o.code}/confirm-delivered`, { body: { token: tok, pin: dpin === '0000' ? '1111' : '0000' } });
@@ -345,7 +346,7 @@ const base = { address: '12 Vilakazi St, Zwide', customerName: 'Thandeka', custo
     check(blocked, `same IP guessing promo codes is blocked (last HTTP ${last})`);
     let spoofBlocked = false;
     for (let i = 0; i < 18; i++) {
-      const r = await fetch(B + '/api/promo/validate', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Forwarded-For': `198.51.100.${i}` }, body: JSON.stringify({ code: 'GUESS' + i, subtotal: 500 }) });
+      const r = await fetch(B + '/api/promo/validate', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Forwarded-For': `198.51.100.${i}, 203.0.113.7` } /* fake address first, then the real one the proxy adds (run the server with TRUST_PROXY_HOPS=1) */, body: JSON.stringify({ code: 'GUESS' + i, subtotal: 500 }) });
       if (r.status === 429) spoofBlocked = true;
     }
     check(spoofBlocked, 'changing the X-Forwarded-For header must not reset the limit');

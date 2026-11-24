@@ -22,11 +22,12 @@ node staging/mock-yoco.js & node staging/mock-supabase.js &
 SUPABASE_URL=http://localhost:54321 SUPABASE_ANON_KEY=x ADMIN_API_TOKEN=ekoyini-staging-admin-token-0123456789abcdef \
 YOCO_SECRET_KEY=sk_test_x YOCO_WEBHOOK_SECRET=whsec_dGVzdHNlY3JldA== \
 YOCO_API_BASE=http://localhost:4010/api APP_BASE_URL=http://localhost:3000 \
-PORT=3000 node server.js &
+PORT=3000 TRUST_PROXY_HOPS=1 node server.js &
 
 # 4. Run (results also saved to staging/results.json)
 STAGING_DATABASE_URL="$DATABASE_URL" node staging/scenarios.js
 ```
 
-Expected today: 25/26 pass. 6.3 (rate limits vs a faked X-Forwarded-For)
-passes only once `TRUST_PROXY_HOPS` is set; see MARKET_READINESS.md.
+Expected: 26/26 pass (23 Nov 2026). 6.3 acts like the live proxy: the faked
+address comes first and the proxy appends the real one, so start the app with
+`TRUST_PROXY_HOPS=1` locally (the live site uses 3: Cloudflare + Render).

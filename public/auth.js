@@ -1,8 +1,8 @@
 // ═══════════════════════════════════════════════
 // EKOYINI — Supabase Auth wrapper (auth.js)
-// Load the Supabase JS SDK (CDN) BEFORE this file, then this file BEFORE
+// Load the Supabase JS SDK BEFORE this file, then this file BEFORE
 // script.js on any page that needs auth:
-//   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+//   <script src="/vendor/supabase-js-2.119.0.js"></script>
 //   <script src="auth.js"></script>
 //   <script src="script.js"></script>
 // ═══════════════════════════════════════════════
