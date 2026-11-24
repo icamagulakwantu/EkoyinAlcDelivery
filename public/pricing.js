@@ -80,21 +80,21 @@
   //                      of the delivery line. 100% to the driver.
   //   3. Surge fee     — time of day (South African time), 100% to the driver
   //   4. Priority fee  — optional "Super Priority" the customer adds
-  //   5. Care & Handling fee — 5% of items, min R10, max R75, same for every payment method
+  //   5. Care & Handling fee — 5% of items, min R30, max R75, same for every payment method
   //
   // There is no free delivery: every order pays the distance fee.
 
   // Care & Handling fee (formerly "service fee"), framed as customer
   // protection: order checks so the right products arrive sealed and correct.
   // Founder decision 19 Nov 2026 (late): 5% of the items, at least R10 and
-  // never more than R75, THE SAME for card, EFT and cash. (Earlier: 3%/R10/R40
+  // never more than R75 (minimum raised to R30 by the founder on 24 Nov 2026), THE SAME for card, EFT and cash. (Earlier: 3%/R10/R40
   // on 10 Nov, with a card-only R75 cap added 19 Nov. A card-only fee is a card
   // surcharge, which South African card rules and the CPA do not allow, so the
   // fee is uniform.) Heavy orders pay for the driver's work through the load
   // fee instead. One rate, no jumps between bands. The R10 Safety Seal for
   // spirits is a separate line and is NOT part of this fee.
   const CARE_FEE_PCT = 0.05;
-  const CARE_FEE_MIN = 10;
+  const CARE_FEE_MIN = 30; // founder, 24 Nov 2026: never less than R30
   const CARE_FEE_MAX = 75;
   // Kept for any older code that still reads the band list.
   const CARE_FEE_BANDS = [{ upTo: Infinity, pct: CARE_FEE_PCT, min: CARE_FEE_MIN, max: CARE_FEE_MAX }];

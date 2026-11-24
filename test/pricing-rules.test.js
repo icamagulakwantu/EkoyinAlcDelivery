@@ -8,13 +8,13 @@ const C = require('../lib/catalogue-2026-11.js');
 // South Africa is UTC+2 all year, so 17:59Z is 19:59 and 18:00Z is 20:00 there.
 const at = (hhmmUtc) => new Date(`2026-11-04T${hhmmUtc}:00Z`);
 
-test('Care & Handling is 5% of items, at least R10 and at most R75, with no jumps (founder, 19 Nov 2026)', () => {
-  const cases = [[100, 10], [300, 15], [500, 25], [1000, 50], [1500, 75], [2000, 75], [5000, 75]];
+test('Care & Handling is 5% of items, at least R30 and at most R75, with no jumps (founder, 19 Nov 2026; minimum R30 from 24 Nov 2026)', () => {
+  const cases = [[100, 30], [300, 30], [600, 30], [700, 35], [1000, 50], [1500, 75], [2000, 75], [5000, 75]];
   for (const [subtotal, fee] of cases) assert.equal(P.serviceFeeFor(subtotal), fee, `R${subtotal}`);
   assert.equal(P.serviceFeeFor('abc'), 0);
   assert.equal(P.careFeeFor(0), 0);
   assert.equal(P.CARE_FEE_PCT, 0.05);
-  assert.equal(P.CARE_FEE_MIN, 10);
+  assert.equal(P.CARE_FEE_MIN, 30);
   assert.equal(P.CARE_FEE_MAX, 75);
   // Never goes down as the basket grows.
   let last = 0;

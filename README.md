@@ -4,6 +4,10 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 24 Nov 2026: Care & Handling minimum is R30; "How Ekoyini works" document (founder)
+- **Care & Handling is now never less than R30** (5% of the drinks, minimum R30, maximum R75; was minimum R10). `CARE_FEE_MIN = 30` in `public/pricing.js` (cart, checkout and server all use it). Orders of R300 to R600 of drinks pay R30. Terms 6.7 updated (Terms version 2.1, 24 Nov 2026); `test/legal-pages.test.js` keeps the Terms in step with the code.
+- New `onboarding-pack/Ekoyini-8-How-Ekoyini-Works.pdf`: the whole flow for anyone (partners, investors, new staff): the four apps, the customer's steps and every checkout line (incl. the R10 Safety Seal sticker on spirits and Care & Handling from R30), what happens behind the scenes (job board, nearest tavern, collection PIN, live tracking, ID check, delivery PIN), safety and privacy. It shows nothing about how the money is divided between taverns, drivers, dispatchers and Ekoyini. The other pack documents now show the R30 minimum too.
+
 ### 24 Nov 2026: onboarding pack for taverns, drivers and dispatchers (founder)
 - `onboarding-pack/` (build with `node onboarding-pack/build.js`): 7 PDFs with the logo, every figure taken from the app's own rules (the builder refuses to build if `public/pricing.js` changes and the pack does not):
   1. How Ekoyini works + team proposal (roles, one order start to finish, money split of a R700 order, dispatcher pay proposal: R32/hour (founder, 24 Nov 2026), 8-hour shift R256, + R5 per delivered order; part-time employment because dispatchers work set shifts: minimum wage R30.23/hour from 1 Mar 2026, UIF 1% + 1%, COIDA; three growth stages)

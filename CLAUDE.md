@@ -4,7 +4,7 @@
 These points replace anything older in the sections below.
 - **Cart and checkout are restyled** to the shop style (shared `public/app.css`, dark `#17140e` buttons, sticky total bars). Section 8 item 1 is done.
 - **The R10 tamper-proof Safety Seal is built**: spirits only, charged by the server, saved in `Order.safetySealFee`, shown on the admin order card.
-- **The service fee is "Care & Handling"**: 5% of the items, minimum R10, maximum R75, the SAME for card, EFT and cash (`CARE_FEE_PCT/MIN/MAX` in `public/pricing.js`, founder decision 19 Nov late; was 3%/R10/R40 on 10 Nov). Never make it card-only: that is a card surcharge (PASA/Visa/Mastercard rules, CPA s23). The R10 Safety Seal for spirits is a separate line.
+- **The service fee is "Care & Handling"**: 5% of the items, minimum R30 (founder, 24 Nov 2026; was R10), maximum R75, the SAME for card, EFT and cash (`CARE_FEE_PCT/MIN/MAX` in `public/pricing.js`, founder decision 19 Nov late; was 3%/R10/R40 on 10 Nov). Never make it card-only: that is a card surcharge (PASA/Visa/Mastercard rules, CPA s23). The R10 Safety Seal for spirits is a separate line.
 - **Delivery fee (10 Nov)** = distance (R40 covers 3 km, founder 10 Nov, then R6/km to the nearest tavern/dark store with a location) + load (R1.50/kg above 20 kg, weight estimated per pack by `itemWeightKg`, server weighs from the catalogue). Load rides inside `Order.deliveryFee`; all delivery, load, surge and priority money goes to the driver. Admin Delivery tab can add taverns (`POST /admin/taverns`). The 16 founder taverns (dark stores, with pins) are created by `prisma/seed.js` when missing; the old sample taverns are removed by the seed.
 - **Bottles & crates (10 Nov)**: returnable quarts (SAB + Windhoek, Flying Fish, Redd's MXD, Strongbow; NOT Amstel/Corona/Heineken/Sol/Stella/Hunter's) pay R52 per crate of 12 or R3 a loose bottle (`bottleDepositFor` in `public/pricing.js`), saved in `Order.bottleDepositFee`; customer picks crate or loose at checkout.
 - **One total calculation**: cart, checkout and server all use `priceOrder()` in `public/pricing.js`. Change fees there, not in page code.
@@ -56,7 +56,7 @@ Stack: Node/Express 4, Prisma 5, Supabase Postgres, Yoco payments, vanilla HTML/
 
 ## 5. Fees and orders (founder decisions)
 - No free delivery. Minimum order R300.
-- Service fee (now "Care & Handling", see section 0) is its own line, saved in `Order.serviceFee`, included in the server total and the Yoco amount. Decided 19 Nov (late): 5% of items, min R10, max R75, same for every payment method.
+- Service fee (now "Care & Handling", see section 0) is its own line, saved in `Order.serviceFee`, included in the server total and the Yoco amount. Decided 19 Nov (late): 5% of items, min R10 (raised to R30 by the founder, 24 Nov), max R75, same for every payment method.
 - Cooler Box discount: flat 2.5% from R2000 (founder, 11 Nov; was 2.5%/3.5%, before that 5%/8%), only until 20:00 SA time (comes back 04:00). No other discounts: the case discount was removed 11 Nov.
 - Drivers keep 100% of delivery, surge and priority fees. Admin can still assign by hand (WhatsApp), and since 20 Nov drivers can also take jobs from the driver app's job board. One shared stock and one platform price (no per-tavern stock). Low commission while taverns are onboarded.
 - Yoco fee is 3.25% + R2.50 per transaction. The founder floated 6% / 8% markups to absorb it, then said the workbook prices already include 5% / 7%. Not applied. Ask before touching.
@@ -89,7 +89,7 @@ Stack: Node/Express 4, Prisma 5, Supabase Postgres, Yoco payments, vanilla HTML/
 
 ## 8. Open work (suggested order)
 1. ~~Restyle cart + checkout~~ (done 8 Nov).
-2. Fee decisions are done (Care & Handling 5%/R10/R75 for all payment methods, R10 seal). Optional: make the fee editable in admin settings instead of hard-coded.
+2. Fee decisions are done (Care & Handling 5%/R30/R75 for all payment methods, R10 seal). Optional: make the fee editable in admin settings instead of hard-coded.
 3. Case reservations: customer-facing AND stock reservations (atomic, expiring, released on cancel). Needs a Prisma migration, so do it where tests can run.
 4. Driver pay: distance + load, configurable rates in settings, 100% of delivery/surge/priority fees, payout shown to admin before assigning a driver. Rand rates not decided yet.
 5. Dependency vulnerabilities (npm audit: 1 critical, 2 high, 1 moderate).

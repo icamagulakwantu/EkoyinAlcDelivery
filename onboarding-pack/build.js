@@ -37,7 +37,7 @@ const LINKS = { admin: 'www.ekoyini.co.za/admin/admin.html', driver: 'www.ekoyin
 const RULES = {
   deliveryBase: 40, baseKm: 3, perKm: 6, loadPerKg: 1.5, loadFreeKg: 20,
   peak: 20, late: 30, priority: [10, 20, 30, 40, 50],
-  carePct: 5, careMin: 10, careMax: 75, seal: 10, minOrder: 300,
+  carePct: 5, careMin: 30, careMax: 75, seal: 10, minOrder: 300,
   crate: 52, looseBottle: 3, beerMarkup: 7, spiritMarkup: 5,
   maxJobs: 3, codOrders: 10, codMax: 1500,
   alert: { assign: 10, collect: 20, silent: 3, slow: 45 },
@@ -211,7 +211,8 @@ ${cover('For the Ekoyini team · ' + VERSION, 'How Ekoyini works, and the team w
   <tr><td>Driver Onboarding Guide</td><td>Every driver</td></tr>
   <tr><td>Driver Agreement</td><td>Driver signs (with the Driver rules, version 1.1)</td></tr>
   <tr><td>Dispatcher Operations Manual</td><td>Every dispatcher; keep it open during shifts</td></tr>
-  <tr><td>Dispatcher Agreement</td><td>Dispatcher signs</td></tr></table>
+  <tr><td>Dispatcher Agreement</td><td>Dispatcher signs</td></tr>
+  <tr><td>How Ekoyini works</td><td>Anyone: partners, investors, new staff (no money split shown)</td></tr></table>
 ${LIAISON}`);
 
 // ═════════════════════ 2. TAVERN ONBOARDING GUIDE ═════════════════════
@@ -529,6 +530,89 @@ ${DRAFT}
 <p>☐ I have received and read the Dispatcher Operations Manual.</p>
 ${signEkoyini('Dispatcher')}`);
 
+// ═════════════════════ 8. HOW THE APP WORKS (shareable, no money split) ═
+// Founder, 24 Nov 2026: the flow from the customer ordering to the gate,
+// for anyone (partners, investors, new staff). It never shows how the money
+// is divided between taverns, drivers, dispatchers and Ekoyini.
+function flowSvg() {
+  const steps = [
+    ['Customer', 'orders & pays'], ['Dispatch', 'checks & confirms'], ['Driver', 'takes the job'],
+    ['Tavern', 'packs, cold'], ['Pickup', 'collection PIN'], ['On the way', 'live tracking'], ['At the gate', 'ID + delivery PIN'],
+  ];
+  const w = 700, bw = 88, gap = (w - steps.length * bw) / (steps.length - 1);
+  const boxes = steps.map(([t, s], i) => {
+    const x = i * (bw + gap);
+    const fill = i === 0 || i === steps.length - 1 ? C.orange : C.green;
+    const arrow = i < steps.length - 1 ? `<path d="M${x + bw + 3} 42 L${x + bw + gap - 4} 42" stroke="${C.muted}" stroke-width="2" marker-end="url(#a)"/>` : '';
+    return `<rect x="${x}" y="12" width="${bw}" height="60" rx="12" fill="${fill}"/>
+      <text x="${x + bw / 2}" y="38" text-anchor="middle" font-size="12" font-weight="800" fill="#fff">${t}</text>
+      <text x="${x + bw / 2}" y="56" text-anchor="middle" font-size="9.5" fill="#fff">${s}</text>${arrow}`;
+  }).join('');
+  return `<svg viewBox="0 0 ${w} 84" width="100%" role="img" aria-label="Order flow"><defs><marker id="a" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="${C.muted}"/></marker></defs>${boxes}</svg>`;
+}
+
+const howItWorks = doc('How Ekoyini works', `
+${cover('Ekoyini · ' + VERSION, 'How Ekoyini works', 'From the customer tapping "Order" to drinks at the gate: the four apps, every step of an order, and how we keep it safe, legal and on time.')}
+<h2>1. What Ekoyini is</h2>
+<p>Ekoyini is a drinks delivery service for Nelson Mandela Bay. Customers order from <b>licensed partner taverns</b> near them on ${CO.web}; a driver who is already on the road collects the order and brings it to the gate, usually <b>20 to 45 minutes after pickup</b>. Customers must be 18 or older.</p>
+${flowSvg()}
+
+<h2>2. Four apps, one order</h2>
+<div class="grid2">
+  <div class="card hl"><b>Customer website</b> · ${CO.web}<br>Shop, cart, checkout, live tracking, receipts and order history. Works on any phone; can be added to the home screen like an app.</div>
+  <div class="card hl"><b>Tavern portal</b> · ${LINKS.tavern}<br>Orders to pack with the collection PIN, a Ready button, sold-out items, and an order alert that rings the counter phone.</div>
+  <div class="card hl"><b>Driver app</b> · ${LINKS.driver}<br>Job board, my jobs with navigation and one-tap calls, pickup and delivery with PINs, live location, and job alerts.</div>
+  <div class="card hl"><b>Dispatch (admin)</b><br>Every order in one place: payment checks, tavern and driver assignment, WhatsApp messages, live driver location, and delay alerts.</div>
+</div>
+
+<h2>3. The customer orders</h2>
+<ol class="steps">
+  <li><b>Confirms they are 18 or older</b> before browsing.</li>
+  <li><b>Shops</b> about 350 drinks: beer, ciders, spirits, wine, mixers, water and ice, sorted by section and brand. Beer, cider and coolers come in six-packs; quarts come loose or in a crate.</li>
+  <li><b>Checks out</b> with an account: delivery address, a map pin (or a landmark), and a contact number. Minimum order R${RULES.minOrder}.</li>
+  <li><b>Sees the full price before paying.</b> The checkout shows every line:
+    <table><tr><th>Line</th><th>What it is</th></tr>
+      <tr><td>Drinks</td><td>The price of each item</td></tr>
+      <tr><td>Delivery</td><td>By distance from the nearest tavern; heavy orders (crates) and late nights cost a little more</td></tr>
+      <tr><td>Care &amp; Handling</td><td>Order checks so the right drinks arrive correct and sealed: ${RULES.carePct}% of the drinks, from R${RULES.careMin} to R${RULES.careMax}</td></tr>
+      <tr><td>Safety Seal</td><td><b>R${RULES.seal}</b> tamper-proof seal sticker on spirits, so the bottle reaches the customer exactly as it left the shelf</td></tr>
+      <tr><td>Bottles &amp; crates</td><td>Returnable quarts: a crate or a deposit per loose bottle</td></tr>
+      <tr><td>Super Priority (optional)</td><td>The customer can add R10 to R50 to be delivered first</td></tr></table>
+  </li>
+  <li><b>Pays</b> by card, Apple Pay or Google Pay (Yoco), by EFT (immediate payment or PayShap only), or in cash once they have 10 delivered orders.</li>
+  <li><b>Gets an order code and a 4-digit delivery PIN</b> on screen and by email. The PIN is only for the driver at the gate.</li>
+</ol>
+
+<h2>4. Behind the scenes</h2>
+<ol class="steps">
+  <li><b>Payment is checked.</b> Card payments are confirmed instantly. For EFT, dispatch confirms the order only once the money is in the bank.</li>
+  <li><b>The job goes to drivers.</b> It appears on the Job board and drivers' phones ring. Drivers see only the area, distance and number of items: no address and no customer until one driver takes it. If nobody takes it quickly, dispatch assigns a driver.</li>
+  <li><b>The nearest tavern gets the order.</b> The system picks the closest partner tavern that has every item. The tavern's phone rings with the list and a 4-digit <b>collection PIN</b>; dispatch also sends it on WhatsApp. Taverns never see the customer's name, address or number.</li>
+  <li><b>The tavern packs it cold within 10 minutes</b> and taps Ready.</li>
+  <li><b>Proven pickup.</b> The driver checks the items and seals, and the tavern gives the collection PIN in person. The driver enters it with location on: the order is now in the driver's care and live tracking starts.</li>
+  <li><b>Live tracking.</b> The customer follows the driver on the map and can WhatsApp the driver while the order is on the way.</li>
+  <li><b>Proven delivery.</b> At the gate the driver checks ID (18+), then enters the customer's delivery PIN. No PIN, no ID, under 18 or drunk: no handover.</li>
+  <li><b>Done.</b> The customer gets a receipt with the delivery time and can rate the delivery; the driver and tavern see the completed order in their apps.</li>
+</ol>
+
+<h2>5. Keeping it safe, legal and on time</h2>
+<div class="grid2">
+  <div class="card"><b>18+ only</b><br>Age check on the website, ID check at the gate, no delivery to minors, schools or places of worship.</div>
+  <div class="card"><b>Licensed sellers</b><br>Every drink is sold by a licensed partner tavern from its own premises; Ekoyini is its agent.</div>
+  <div class="card"><b>Two PINs</b><br>Collection PIN at the tavern, delivery PIN at the gate: every handover is proven.</div>
+  <div class="card"><b>Safety Seal</b><br>R${RULES.seal} tamper-proof sticker on spirits.</div>
+  <div class="card"><b>Delay alerts</b><br>Dispatch is warned when an order waits for a driver (${RULES.alert.assign} min), is not collected (${RULES.alert.collect} min), when a driver's location stops (${RULES.alert.silent} min) or a delivery takes too long (${RULES.alert.slow} min).</div>
+  <div class="card"><b>Privacy</b><br>Customer details go only to the driver who took the job, only for that delivery (POPIA). Taverns never get them.</div>
+</div>
+
+<h2>6. If something changes</h2>
+<ul>
+  <li><b>The customer can cancel</b> until the order is out for delivery.</li>
+  <li><b>An item is sold out</b> at the nearest tavern: the order goes to the next tavern that has everything, or dispatch contacts the customer.</li>
+  <li><b>Questions or problems:</b> WhatsApp ${CO.whatsapp} or ${CO.email}.</li>
+</ul>
+${LIAISON}`);
+
 // ── Build ─────────────────────────────────────────────────────────────────
 const DOCS = [
   ['Ekoyini-1-How-It-Works-and-Team-Proposal', overview, 'For the Ekoyini team'],
@@ -538,6 +622,7 @@ const DOCS = [
   ['Ekoyini-5-Driver-Agreement', driverAgreement, 'Independent Driver Agreement'],
   ['Ekoyini-6-Dispatcher-Operations-Manual', dispatcherManual, 'Dispatcher Operations Manual'],
   ['Ekoyini-7-Dispatcher-Agreement', dispatcherAgreement, 'Dispatcher Agreement'],
+  ['Ekoyini-8-How-Ekoyini-Works', howItWorks, 'How Ekoyini works'],
 ];
 module.exports = { RULES, EX, PAY, breakEvenOrders, DOCS };
 
