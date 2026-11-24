@@ -4,6 +4,14 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 24 Nov 2026: onboarding pack for taverns, drivers and dispatchers (founder)
+- `onboarding-pack/` (build with `node onboarding-pack/build.js`): 7 PDFs with the logo, every figure taken from the app's own rules (the builder refuses to build if `public/pricing.js` changes and the pack does not):
+  1. How Ekoyini works + team proposal (roles, one order start to finish, money split of a R700 order, dispatcher pay proposal: R40/hour, 8-hour shift R320, + R5 per delivered order; part-time employment because dispatchers work set shifts: minimum wage R30.23/hour from 1 Mar 2026, UIF 1% + 1%, COIDA; three growth stages)
+  2. Tavern Onboarding Guide  3. Partner Tavern Agreement (tavern is the seller, Ekoyini its agent; shelf price + bottles paid daily at 12:00; 14 days' notice)
+  4. Driver Onboarding Guide  5. Independent Driver Agreement (100% of delivery, surge, priority; cash paid in same day; breakage per Driver rules v1.1 with written advance consent)
+  6. Dispatcher Operations Manual (tools, tabs, every order-card button, shift checklists, alert table, problem playbook, never-break rules)  7. Dispatcher Agreement (part-time employment)
+- Contracts are marked as drafts: have an attorney / labour consultant check them once before the first signature. Contact person: Thanduxolo Makeleni, Township Onboarding Liaison Officer.
+
 ### 24 Nov 2026: full audit, front-end to back-end, all portals (founder)
 - **Wiring check:** every call the pages make (shop, admin, driver app, tavern portal, tracking, receipts) matches a real server route and method. No broken links.
 - **End to end on a local copy:** `staging/scenarios.js` 26/26 (prices, card/EFT/cash, stock races, order journey, security, errors). Three scenarios had gone stale and were updated to today's rules, not the app: EFT needs the Immediate payment/PayShap tick (`eftAck`), cash needs 10 delivered orders, and the customer may see the driver's number while out for delivery (customer address and phone stay hidden). Scenario 6.3 now acts like the real proxy (start the app with `TRUST_PROXY_HOPS=1` locally).
