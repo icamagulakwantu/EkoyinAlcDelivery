@@ -70,9 +70,10 @@ const EX = (() => {
 
 // ── Dispatcher pay proposal ────────────────────────────────────────────────
 const PAY = {
-  hourly: 40, shiftHours: 8, perOrder: 5,
+  hourly: 32, shiftHours: 8, perOrder: 5, // founder, 24 Nov 2026: R32 an hour for now
   shift() { return this.hourly * this.shiftHours; },
 };
+if (PAY.hourly < RULES.nmw) throw new Error('dispatcher hourly rate is below the national minimum wage');
 const breakEvenOrders = Math.ceil(PAY.shift() / EX.ekoyiniNet);
 
 // ── Shared look ────────────────────────────────────────────────────────────
@@ -188,7 +189,7 @@ ${cover('For the Ekoyini team · ' + VERSION, 'How Ekoyini works, and the team w
 
 <h3>Proposed pay</h3>
 <table><tr><th>Part</th><th class="n">Amount</th><th>Why</th></tr>
-  <tr><td>Hourly rate</td><td class="n">${R(PAY.hourly)} an hour</td><td>About 32% above the minimum wage; competitive for evening and weekend work</td></tr>
+  <tr><td>Hourly rate</td><td class="n">${R(PAY.hourly)} an hour</td><td>Above the minimum wage (${R(RULES.nmw, 2)}); the order bonus adds more on busy shifts</td></tr>
   <tr><td>Shift (${PAY.shiftHours} hours)</td><td class="n">${R(PAY.shift())}</td><td>Paid whether it is busy or quiet</td></tr>
   <tr><td>Order bonus</td><td class="n">${R(PAY.perOrder)} per order</td><td>For every order dispatched in the shift that is <b>delivered</b> (not cancelled)</td></tr></table>
 <p>A shift pays for itself after about <b>${breakEvenOrders} card orders</b> (${R(PAY.shift())} ÷ about ${R(EX.ekoyiniNet)} per order).</p>

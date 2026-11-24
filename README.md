@@ -6,7 +6,7 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ### 24 Nov 2026: onboarding pack for taverns, drivers and dispatchers (founder)
 - `onboarding-pack/` (build with `node onboarding-pack/build.js`): 7 PDFs with the logo, every figure taken from the app's own rules (the builder refuses to build if `public/pricing.js` changes and the pack does not):
-  1. How Ekoyini works + team proposal (roles, one order start to finish, money split of a R700 order, dispatcher pay proposal: R40/hour, 8-hour shift R320, + R5 per delivered order; part-time employment because dispatchers work set shifts: minimum wage R30.23/hour from 1 Mar 2026, UIF 1% + 1%, COIDA; three growth stages)
+  1. How Ekoyini works + team proposal (roles, one order start to finish, money split of a R700 order, dispatcher pay proposal: R32/hour (founder, 24 Nov 2026), 8-hour shift R256, + R5 per delivered order; part-time employment because dispatchers work set shifts: minimum wage R30.23/hour from 1 Mar 2026, UIF 1% + 1%, COIDA; three growth stages)
   2. Tavern Onboarding Guide  3. Partner Tavern Agreement (tavern is the seller, Ekoyini its agent; shelf price + bottles paid daily at 12:00; 14 days' notice)
   4. Driver Onboarding Guide  5. Independent Driver Agreement (100% of delivery, surge, priority; cash paid in same day; breakage per Driver rules v1.1 with written advance consent)
   6. Dispatcher Operations Manual (tools, tabs, every order-card button, shift checklists, alert table, problem playbook, never-break rules)  7. Dispatcher Agreement (part-time employment)
