@@ -4,6 +4,9 @@ A **mobile-first, ride-along delivery app** for alcohol, tobacco, and beverages 
 
 ## Changelog — 6 November 2026 (Receipt calibration & Care fee)
 
+### 24 Nov 2026: link previews: sharing the link shows a picture card (founder)
+- Sharing www.ekoyini.co.za (or the shop link) on WhatsApp, Facebook or X now shows a large preview: the founder's "Cold drinks to your gate" design (logo, bottles, www.ekoyini.co.za, 18+), the title "Ekoyini · Cold drinks to your gate" and a short description. Image `public/images/brand/ekoyini-share.jpg` (1200 x 630, about 100 KB); Open Graph + `twitter:card=summary_large_image` on `index.html` and `shop.html`; the home page's business card for Google uses the same picture. Test `test/share-preview.test.js`. Service worker cache `ekoyini-shell-v56`.
+
 ### 24 Nov 2026: Care & Handling minimum is R30; "How Ekoyini works" document (founder)
 - **Care & Handling is now never less than R30** (5% of the drinks, minimum R30, maximum R75; was minimum R10). `CARE_FEE_MIN = 30` in `public/pricing.js` (cart, checkout and server all use it). Orders of R300 to R600 of drinks pay R30. Terms 6.7 updated (Terms version 2.1, 24 Nov 2026); `test/legal-pages.test.js` keeps the Terms in step with the code.
 - New `onboarding-pack/Ekoyini-8-How-Ekoyini-Works.pdf`: the whole flow for anyone (partners, investors, new staff): the four apps, the customer's steps and every checkout line (incl. the R10 Safety Seal sticker on spirits and Care & Handling from R30), what happens behind the scenes (job board, nearest tavern, collection PIN, live tracking, ID check, delivery PIN), safety and privacy. It shows nothing about how the money is divided between taverns, drivers, dispatchers and Ekoyini. The other pack documents now show the R30 minimum too.
